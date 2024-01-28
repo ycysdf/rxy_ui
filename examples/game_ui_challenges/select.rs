@@ -117,7 +117,7 @@ where
             });
 
             rx(move || {
-                element_view_extra_members(
+                add_members(
                     f(SelectionItem {
                         value: value.clone(),
                         is_selected: is_selected.get(),
