@@ -37,6 +37,7 @@ where
     Builder(f, Default::default())
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct BuildFlags {
     pub will_rebuild: bool,
     pub is_rebuild: bool,
