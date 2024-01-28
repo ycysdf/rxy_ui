@@ -1,4 +1,6 @@
-use crate::{ConstIndex, PropState, Renderer, RendererNodeId, RendererWorld, TypeIdHashMapState};
+use crate::{
+    ConstIndex, Either, PropState, Renderer, RendererNodeId, RendererWorld, TypeIdHashMapState,
+};
 use alloc::boxed::Box;
 use bevy_utils::synccell::SyncCell;
 use std::any::TypeId;
@@ -14,15 +16,13 @@ impl<'a, R: Renderer> SchemaPropCtx<'a, R> {
         let state_node_id = self.state_node_id.clone();
         let prop_type_id = self.prop_type_id;
         R::get_state_mut::<TypeIdHashMapState<S>>(self.world, &state_node_id)
-            .map(|s| s.0.get().get_mut(&prop_type_id))
-            .flatten()
+            .and_then(|s| s.0.get().get_mut(&prop_type_id))
     }
     pub fn take_prop_state<S: Send + 'static>(&mut self) -> Option<S> {
         let state_node_id = self.state_node_id.clone();
         let prop_type_id = self.prop_type_id;
         R::get_state_mut::<TypeIdHashMapState<S>>(self.world, &state_node_id)
-            .map(|s| s.0.get().remove(&prop_type_id))
-            .flatten()
+            .and_then(|s| s.0.get().remove(&prop_type_id))
     }
     pub fn set_prop_state<S: Send + 'static>(&mut self, state: S) {
         let state_node_id = self.state_node_id.clone();
@@ -126,5 +126,42 @@ where
 
     fn rebuild(self, ctx: SchemaPropCtx<R>, state: &mut dyn PropState<R>) {
         self.0.rebuild(ctx, state);
+    }
+}
+
+impl<R, T> SchemaProp<R> for Option<T>
+where
+    R: Renderer,
+    T: SchemaProp<R>,
+{
+    type Value = T::Value;
+
+    fn get_init_value(&mut self) -> Option<Self::Value> {
+        self.as_mut().and_then(|v| v.get_init_value())
+    }
+
+    fn build(self, _ctx: SchemaPropCtx<R>, _state: &mut dyn PropState<R>, _will_rebuild: bool) {
+        if let Some(v) = self {
+            v.build(_ctx, _state, _will_rebuild);
+        }
+    }
+
+    fn rebuild(mut self, ctx: SchemaPropCtx<R>, state: &mut dyn PropState<R>) {
+        if let Some(v) = self.take() {
+            v.rebuild(ctx, state);
+        }
+    }
+}
+
+impl<R, T, PV> IntoSchemaProp<R, PV> for Option<T>
+where
+    PV: Send + 'static,
+    R: Renderer,
+    T: IntoSchemaProp<R, PV>,
+{
+    type Prop = Option<T::Prop>;
+
+    fn into_schema_prop<const I: usize>(self) -> Self::Prop {
+        self.map(|v| v.into_schema_prop::<I>())
     }
 }
