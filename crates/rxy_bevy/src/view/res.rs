@@ -3,20 +3,17 @@ use core::marker::PhantomData;
 use bevy_ecs::prelude::Entity;
 use bevy_ecs::system::Resource;
 use rxy_bevy_macro::BevyIntoView;
-use rxy_core::{DeferredWorldScoped, Renderer, View, ViewCtx, ViewKey};
+use rxy_core::{
+    prelude::{ViewMember, ViewMemberCtx},
+    DeferredWorldScoped, Renderer, View, ViewCtx, ViewKey,
+};
 
-use crate::{BevyRenderer, ResChangeWorldExt};
+use crate::{BevyRenderer, ResChangeReceiver, ResChangeWorldExt};
 use rxy_core::IntoView;
 
-#[derive(BevyIntoView)]
-pub struct XRes<T, F, V>
-where
-    T: Resource,
-    F: Fn(&T) -> V + Clone + Send + Sync + 'static,
-    V: View<BevyRenderer>,
-{
+pub struct XRes<T, F, V> {
     pub f: F,
-    _marker: PhantomData<T>,
+    _marker: PhantomData<(T, V)>,
 }
 
 pub struct XResViewState {
@@ -24,15 +21,15 @@ pub struct XResViewState {
     task: <BevyRenderer as Renderer>::Task<()>,
 }
 
-fn x_res_build<T, F, V>(
-    res: XRes<T, F, V>,
-    key: V::Key,
+fn x_res_view_build<T, F, IV>(
+    res: XRes<T, F, IV>,
+    key: <IV::View as View<BevyRenderer>>::Key,
     state_node_id: &Entity,
     ctx: ViewCtx<BevyRenderer>,
 ) where
     T: Resource,
-    F: Fn(&T) -> V + Clone + Send + Sync + 'static,
-    V: View<BevyRenderer>,
+    F: Fn(&T) -> IV + Clone + Send + Sync + 'static,
+    IV: IntoView<BevyRenderer> + Send,
 {
     let deferred_world_scoped = BevyRenderer::deferred_world_scoped(ctx.world);
 
@@ -47,22 +44,22 @@ fn x_res_build<T, F, V>(
                 let key = key.clone();
                 deferred_world_scoped.deferred_world(move |world| {
                     let resource = world.resource::<T>();
-                    let view = f(resource);
+                    let view = f(resource).into_view();
                     view.rebuild(ViewCtx { world, parent }, key);
                 })
             }
         }
     });
-    BevyRenderer::set_state(ctx.world, &state_node_id, XResViewState { task });
+    BevyRenderer::set_state(ctx.world, state_node_id, XResViewState { task });
 }
 
-impl<T, F, V> View<BevyRenderer> for XRes<T, F, V>
+impl<T, F, IV> View<BevyRenderer> for XRes<T, F, IV>
 where
     T: Resource,
-    F: Fn(&T) -> V + Clone + Send + Sync + 'static,
-    V: View<BevyRenderer>,
+    F: Fn(&T) -> IV + Clone + Send + Sync + 'static,
+    IV: IntoView<BevyRenderer> + Send,
 {
-    type Key = V::Key;
+    type Key = <IV::View as View<BevyRenderer>>::Key;
 
     fn build(
         self,
@@ -70,7 +67,7 @@ where
         reserve_key: Option<Self::Key>,
         will_rebuild: bool,
     ) -> Self::Key {
-        let view = (self.f)(ctx.world.resource::<T>());
+        let view = (self.f)(ctx.world.resource::<T>()).into_view();
         let key = view.build(
             ViewCtx {
                 world: &mut *ctx.world,
@@ -82,12 +79,12 @@ where
         let Some(state_node_id) = key.state_node_id() else {
             return key;
         };
-        x_res_build(self, key.clone(), &state_node_id, ctx);
+        x_res_view_build(self, key.clone(), &state_node_id, ctx);
         key
     }
 
     fn rebuild(self, ctx: ViewCtx<BevyRenderer>, key: Self::Key) {
-        let view = (self.f)(ctx.world.resource::<T>());
+        let view = (self.f)(ctx.world.resource::<T>()).into_view();
         view.rebuild(
             ViewCtx {
                 world: &mut *ctx.world,
@@ -104,19 +101,107 @@ where
             &state_node_id,
         ));
 
-        x_res_build(self, key, &state_node_id, ctx);
+        x_res_view_build(self, key, &state_node_id, ctx);
     }
 }
 
-pub fn x_res<T, U>(
-    f: impl Fn(&T) -> U + Clone + Send + Sync + 'static,
-) -> impl IntoView<BevyRenderer>
+impl<T, F, IV> rxy_core::IntoView<BevyRenderer> for XRes<T, F, IV>
 where
     T: Resource,
-    U: IntoView<BevyRenderer> + Send + 'static,
+    F: Fn(&T) -> IV + Clone + Send + Sync + 'static,
+    IV: IntoView<BevyRenderer> + Send,
+{
+    type View = XRes<T, F, IV>;
+    fn into_view(self) -> Self::View {
+        self
+    }
+}
+
+pub fn x_res<T, U, F>(f: F) -> XRes<T, F, U>
+where
+    F: Fn(&T) -> U + Clone + Send + Sync + 'static,
+    T: Resource,
+    U: Send + 'static,
 {
     XRes {
-        f: move |r| f(r).into_view(),
+        f,
         _marker: Default::default(),
+    }
+}
+
+fn x_res_view_member_build<T, F, VM>(res: XRes<T, F, VM>, mut ctx: ViewMemberCtx<BevyRenderer>)
+where
+    T: Resource,
+    F: Fn(&T) -> VM + Clone + Send + Sync + 'static,
+    VM: ViewMember<BevyRenderer>,
+{
+    let deferred_world_scoped = BevyRenderer::deferred_world_scoped(ctx.world);
+
+    let task = BevyRenderer::spawn({
+        let ctx = ViewMemberCtx::<BevyRenderer> {
+            index: ctx.index,
+            type_id: ctx.type_id,
+            world: &mut *ctx.world,
+            node_id: ctx.node_id,
+        };
+        let res_change_receiver = ctx.world.get_res_change_receiver::<T>();
+        let f = res.f;
+        async move {
+            while let Ok(()) = res_change_receiver.recv().await {
+                let f = f.clone();
+                deferred_world_scoped.deferred_world(move |world| {
+                    let resource = world.resource::<T>();
+                    let vm = f(resource);
+                    vm.rebuild(ViewMemberCtx {
+                        index: ctx.index,
+                        type_id: ctx.type_id,
+                        world,
+                        node_id: ctx.node_id,
+                    });
+                })
+            }
+        }
+    });
+    ctx.set_indexed_view_member_state(XResViewState { task });
+}
+
+impl<T, F, VM> ViewMember<BevyRenderer> for XRes<T, F, VM>
+where
+    T: Resource,
+    F: Fn(&T) -> VM + Clone + Send + Sync + 'static,
+    VM: ViewMember<BevyRenderer>,
+{
+    fn count() -> u8 {
+        VM::count()
+    }
+
+    fn unbuild(ctx: ViewMemberCtx<BevyRenderer>) {
+        VM::unbuild(ctx)
+    }
+
+    fn build(self, ctx: ViewMemberCtx<BevyRenderer>, will_rebuild: bool) {
+        let vm = (self.f)(ctx.world.resource::<T>());
+        vm.build(
+            ViewMemberCtx {
+                index: ctx.index,
+                type_id: ctx.type_id,
+                world: &mut *ctx.world,
+                node_id: ctx.node_id,
+            },
+            will_rebuild,
+        );
+        x_res_view_member_build(self, ctx);
+    }
+
+    fn rebuild(self, mut ctx: ViewMemberCtx<BevyRenderer>) {
+        let vm = (self.f)(ctx.world.resource::<T>());
+        vm.rebuild(ViewMemberCtx {
+            index: ctx.index,
+            type_id: ctx.type_id,
+            world: &mut *ctx.world,
+            node_id: ctx.node_id,
+        });
+        drop(ctx.take_indexed_view_member_state::<XResViewState>());
+        x_res_view_member_build(self, ctx);
     }
 }
