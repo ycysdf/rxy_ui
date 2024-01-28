@@ -20,7 +20,7 @@
 - 高复用、可组合
 - 高性能、零成本抽象
 - 最小的样板
-- 支持多个渲染器 ( 目前只支持 [Bevy](https://github.com/bevyengine/bevy) )，使其能够应用在多种场景中，比如：游戏、桌面软件、嵌入式等
+- 支持多个渲染器 ( 目前只支持 [Bevy](https://github.com/bevyengine/bevy) )，使其能够应用在多种场景中，比如：游戏、桌面软件、裸机/嵌入式平台 、本机 UI等
 - 支持主流操作系统、Web 平台
 
 ## 计划
@@ -28,7 +28,7 @@
 - Text Edit
 - 更多的 UI 组件 与 示例
 - 更多 Debug 功能、更多的测试用例、Element inspector
-- 其他渲染器：wgpu (vello)、html、裸机/嵌入式平台 
+- 其他渲染器
 - bevy 更加深入的集成，作为场景来使用？（类似 `@react-three/fiber`），Schema 作为 Prefab ？
 - 主题，tailwind
 - DSL、样式热更新、动态样式
@@ -1087,5 +1087,27 @@ fn sample_context() -> impl IntoView<BevyRenderer> {
             )),
         ),
     )
+}
+```
+
+### 泛型 Schema
+
+`schema` 支持使用泛型
+
+示例：
+
+```rust
+#[schema]
+pub fn schema_select<T>(
+    mut ctx: SchemaCtx,
+    content: CloneableSlot,
+    value: ReadSignal<T>,
+    readonly: ReadSignal<bool>,
+    onchange: Sender<T>,
+) -> impl IntoElementView<BevyRenderer>
+where
+    T: Default + Debug + Send + Sync + PartialEq + Clone + 'static,
+{
+    ///...
 }
 ```
