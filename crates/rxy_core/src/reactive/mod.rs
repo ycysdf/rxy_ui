@@ -37,6 +37,7 @@ impl<'a, I, T> FnOnceCell<'a, I, T> {
     }
 }
 
+#[derive(Clone)]
 pub struct Reactive<F, T, M = ()>(pub F, pub PhantomData<(T, M)>)
 where
     F: Fn() -> T + Send + 'static;
