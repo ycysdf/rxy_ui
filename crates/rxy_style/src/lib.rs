@@ -14,17 +14,15 @@ use std::hash::Hash;
 use thiserror::Error;
 
 pub mod prelude {
-    pub use super::{
-        x_active, x_hover, x
-    };
+    pub use super::{x, x_active, x_hover};
 }
 
 pub type StyleAttrId = u8;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, PartialOrd, Ord)]
 pub enum StyleSheetLocation {
-    Inline,
     Shared,
+    Inline,
 }
 
 pub type StyleItemIndex = u8;
@@ -34,6 +32,22 @@ pub type StyleSheetIndex = u8;
 pub struct NodeStyleItemId {
     pub item_index: StyleItemIndex,
     pub sheet_id: NodeStyleSheetId,
+}
+
+impl PartialOrd for NodeStyleItemId {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for NodeStyleItemId {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.sheet_id
+            .location
+            .cmp(&other.sheet_id.location)
+            .then_with(|| self.sheet_id.index.cmp(&other.sheet_id.index))
+            .then_with(|| self.item_index.cmp(&other.item_index))
+    }
 }
 
 impl From<NodeStyleItemId> for NodeStyleSheetId {
@@ -65,39 +79,6 @@ impl Deref for NodeInterStyleItemId {
 
     fn deref(&self) -> &Self::Target {
         &self.style_item_id
-    }
-}
-
-impl PartialOrd for NodeStyleItemId {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for NodeStyleItemId {
-    fn cmp(&self, other: &Self) -> Ordering {
-        match self.sheet_id.location {
-            StyleSheetLocation::Inline => match other.sheet_id.location {
-                StyleSheetLocation::Inline => {
-                    if self.sheet_id.index == other.sheet_id.index {
-                        self.item_index.cmp(&other.item_index)
-                    } else {
-                        self.sheet_id.index.cmp(&other.sheet_id.index)
-                    }
-                }
-                StyleSheetLocation::Shared => Ordering::Less,
-            },
-            StyleSheetLocation::Shared => match other.sheet_id.location {
-                StyleSheetLocation::Inline => Ordering::Greater,
-                StyleSheetLocation::Shared => {
-                    if self.sheet_id.index == other.sheet_id.index {
-                        self.item_index.cmp(&other.item_index)
-                    } else {
-                        self.sheet_id.index.cmp(&other.sheet_id.index)
-                    }
-                }
-            },
-        }
     }
 }
 
