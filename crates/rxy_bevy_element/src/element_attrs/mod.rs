@@ -1,14 +1,10 @@
 #![allow(non_camel_case_types)]
 
-
-use crate::{
-    attrs_trait_define,
-};
+use crate::attrs_trait_define;
 
 pub mod attr_values;
 
 pub(crate) mod attrs;
-// pub(crate) mod composite_attrs;
 
 pub trait MyFromStr: Sized {
     fn from_str(s: &str) -> Option<Self>;
