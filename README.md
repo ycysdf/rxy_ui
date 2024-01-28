@@ -582,8 +582,9 @@ fn sample_x_if() -> impl IntoView<BevyRenderer> {
 
 > 第二个 x_if 使用 view_builder 是因为目前 带有孩子的视图都不是 Clone 的 （由于一些原因，后面可能回改善），但是 x_if 要求视图实现 Clone 的，所以此处使用 view_builder 并传入一个回调函数，使得它 Clone
 
-`x_iter` 用于构建列表视图，要求实现了 `IntoIterator` 的类型，并且`Item` 需要实现 `IntoView`，它将项的索引作为 key，
-`x_iter_keyed` 则需要手动指定 key，需要 `Item` 为 `Keyed<K,IV>` 类型，它由两个成员，第一个为 key (要求实现 `Hash`，第二个为视图)
+`x_iter` 用于构建列表视图，它传入`IntoIterator`，并且`Item` 需要实现 `IntoView`，它将项的索引作为 key
+
+`x_iter_keyed` 则需要手动指定 key，需要 `Item` 为 `Keyed<K,IV>` 类型，它由两个成员，第一个为 key (要求实现 `Hash`)，第二个为视图
 
 ```rust 
 fn sample_x_iter() -> impl IntoView<BevyRenderer> {
@@ -638,15 +639,15 @@ fn sample_x_iter_keyed_rx() -> impl IntoView<BevyRenderer> {
 }
 ```
 
-对应会进行更改的列表视图，你还可以使用 `x_iter_source`与`use_list`，它比 `x_iter_keyed` 更加擅长更新列表，并且性能很好
+对于会频繁进行更改的列表视图，你还可以使用 `x_iter_source`与`use_list`，它比 `x_iter_keyed` 更加擅长更新列表，并且性能很好
 
-[iter_source](examples/iter_source.rs)
+详细请看示例：[iter_source](https://github.com/ycysdf/rxy_ui/blob/main/examples/iter_source.rs)
 
 ### 层叠样式
 
-之前用例中的样式都是直接写在视图上的，这样的样式时无法层叠的。虽然可以覆盖（但是也有问题）并且不支持 悬浮与按下的 样式。
+之前用例中的样式都是直接写在视图上的，这样的样式是无法层叠的。虽然可以覆盖（但是也存在一些问题）并且不支持 悬浮与按下 等交互样式。
 
-层叠样式就是可以层叠的，它们有优先级，优先级如下：
+而层叠样式是可以层叠的，它们有优先级，优先级如下：
 
 直接设置属性 > 交互样式 > 内联样式 > 共享样式 > 位置靠后的样式
 
@@ -669,7 +670,9 @@ fn sample_style_sheet() -> impl IntoView<BevyRenderer> {
 
 目前样式表里面的样式都是静态的，不允许使用`rx`、`Future`、`Stream`、`Option` 等，但是你可以多次调用 `style` 方法来添加样式，
 
-`style` 可以直接接受 `Reactive`、`Future`、`Option`、`Stream` 等，也有 `style_rx`、`style_future`、`style_option`、`style_stream` 等便捷方法（最好优先使用这些方法，比如 使用`style_future` 内部可以避免 `boxed`，性能更好
+`style` 与其他成员一样可以接受 `Reactive`、`Future`、`Option`、`Stream` 等类型
+
+也有 `style_rx`、`style_builder`、`style_option`、`style_stream` 等便捷方法 ( 最好优先使用这些方法，比如 使用`style_future` 内部可以避免 `boxed`，性能更好 )
 
 ```rust
 fn sample_dynamic_style_sheet() -> impl IntoView<BevyRenderer> {
@@ -689,7 +692,7 @@ fn sample_dynamic_style_sheet() -> impl IntoView<BevyRenderer> {
 
 ### 共享的类型化层叠样式
 
-使用 derive 宏 `TypedStyle`，并且调用 `def` 方法来定义一个共享的类型化层叠样式，并将其放入场景中。
+在结构上使用 derive 宏 `TypedStyle` 去定义一个共享样式标识，然后在视图里调用 `def` 方法来定义一个共享的类型化层叠样式
 
 要使用共享样式，直接调用 `style` 方法并传入此类型即可
 
@@ -720,7 +723,7 @@ fn sample_shared_typed_style_sheet() -> impl IntoView<BevyRenderer> {
 
 > 目前共享样式表的样式不能修改手段，后续将增加修改的手段
 
-### 组件化 schema
+### Schema 组件化
 
 首先，你可以直接通过函数来重用视图。但是有以下问题：
 
@@ -731,44 +734,42 @@ fn sample_shared_typed_style_sheet() -> impl IntoView<BevyRenderer> {
 
 所以，我们需要一种更好的方式来重用视图，这就是 `Schema`，这是暂定名称，如果你有更好的名称，欢迎提出。
 
-`Schema` 基本解决了 上述提出的全部问题，
+> 这个名称最好是单个单词，不使用 Component 是因为它已经被 ECS 暂用了。不用 Widget 是因为后续我准备将它用于自绘的控件。
+
+> 后续将探索是否可以把 Schema 作为 游戏场景的 Prefab 预制件来使用
+
+`Schema` 基本解决了 上述提出的全部问题:
 
 - `Schema` 保证了函数只会运行一次，也就是说里面的视图只会构建一次。
 - 默认属性都是可选的，也支持必填属性
 - 支持 槽、事件、上下文等等
 
-> 这个名称最好是单个单词，不使用 Component 是因为它已经被 ECS 暂用了。不用 Widget 是因为后续我准备将它用于自绘的控件。
-
-> 后续将探索是否可以把 Schema 作为 游戏场景的 Prefab 预制件来使用
-
-定义 `Schema` 的约定，
+定义 `Schema` 的约定:
 
 - 使用属性宏 `schema`
 - 函数名以 `schema_` 开头
 - 返回值类型只能是 `impl IntoView<渲染器>` 或 `impl IntoElementView<渲染器>`（后面将介绍 `IntoElementView`与 `IntoView`的区别）
-- 有效的参数类型
+- 有效的参数类型，通过函数的参数来定义 `Schema` 的属性、事件、槽 等
 
-通过函数的参数来定义 `schema` 的属性、事件、槽
-
-目前支持以下属性：
+有以下种类的属性：
 
 - `ReadSignal`：信号
 - `ReceiverProp`：简单的反应式属性，目前不推荐使用，主要是因为它相对与信号来说，功能弱且没有信号好用。
 - `Static`：静态属性，不会更新
 
-默认情况下，属性都是可选的，如果你想要必须传入，可以使用 `Required` 将它类型包裹起来
+默认情况下，属性都是可选的，如果你想要必须传入，可以使用 `Required` 将类型包裹起来 ( 后面会详细介绍 )
 
-事件：`Sender` 类型的参数就表示它是一个事件（实际上它是 `async-channel` 的 `Sender` 类型的重新导出）
+事件类型：`Sender`，这表示一个事件 ( 实际上它是 `async-channel` 的 `Sender` 类型的重新导出 )
 
-槽：`Slot` 类型的参数就表示它是一个槽，`CloneableSlot` 表示一个可以克隆的槽，槽实现了 `IntoView`，所以可以直接放入视图中
+槽类型：`Slot`, 一个槽，`CloneableSlot`, 一个可以克隆的槽，槽实现了 `IntoView`，所以可以直接放入视图中
 
-`SchemaCtx`：上下文类型目前可以使用它:
+`SchemaCtx`：上下文类型, 目前可以使用它:
 
 - 来获取 `World`
 - 在视图外定义共享样式或者默认共享样式
 - `use_controlled_state` 来获取一个受控的状态
 
-下面是 自定义`Checkbox` 的代码示例：
+下面是 自定义 `Checkbox` 的代码示例：
 
 ```rust
 #[derive(TypedStyle)]
@@ -806,9 +807,9 @@ pub fn schema_checkbox(
 
 在上面示例中使用了 `use_controlled_state`，它通过传入信号与事件，返回一个新的信号。
 
-当传入的信号 或者 返回的信号发生改变时，都会发送事件，将新的值发送出去。
+当传入的信号 或者 返回的信号发生改变时，就会发送事件，将最新的值作为参数。
 
-`schema` 属性宏做了什么？它没有修改原函数，它根据函数信息，生成了一个新的函数，原函数去除`schema_`前缀就是它的名字，并且为这个函数的返回值类型添加了一个 `Trait` 实现
+`schema` 属性宏做了什么？它没有修改原函数，它根据函数信息，生成了一个新的函数，原函数去除`schema_`前缀就是它的名字，并且为这个函数的返回值类型添加了一个 `Trait` 实现 ( 详细请可以查看宏生成的代码 )
 
 看下面它的使用示例：
 
@@ -832,14 +833,14 @@ fn sample_checkbox() -> impl IntoView<BevyRenderer> {
 
 可以向 `schema_checkbox` 的根元素传入 `padding`、`style`、`on_pointer_up` 等等属性或事件，这些属性或事件会传递给根元素。 
 
-除了它们，还有 `value`、`readonly`、`onchange` 等属性，通过它们去设置 `schema_checkbox` 的同名属性或者事件
+除了它们，还有 `value`、`readonly`、`onchange` 等属性，通过它们去设置 `schema_checkbox` `Schema` 的同名属性或者事件
 
 属性除了接受静态值。你也可以使用 `Option` 与 `Reactive`、`ReadSignal`等反应式类型 对值进行包装
 
 > 与 `ViewMember` 不同, Schema 属性 目前无法在 `Reactive`、`Memo` 等反应式类型里面嵌套 `Option`
 
 
-### IntoView 与 IntoElementView
+### IntoView 与 IntoElementView 的区别
 
 `IntoView` 中根元素可以有 0 到 多个，而`IntoElementView` 只能有 1个根元素
 
@@ -847,7 +848,7 @@ fn sample_checkbox() -> impl IntoView<BevyRenderer> {
 
 ### Schema 槽
 
-在 `Schema` 中定义槽后，就可以使用 `slot_<槽名称>` 去指定槽的视图，它接收 `IntoView`，如果槽是 `CloneableSlot` 类型，那么它接收 `IntoView` 也要实现 `Clone` （许多视图都没有实现 `Clone`，就像前面说的，遇到这种情况，你可以使用 `viwe_builder` 来包裹它）
+在 `Schema` 中定义槽后，就可以使用 `slot_<槽名称>` 方法去指定槽的内容，它接收 `IntoView` 类型，如果槽是 `CloneableSlot` 类型，那么它接收的 `IntoView` 类型需要实现 `Clone` （许多视图都没有实现 `Clone`，就像前面说的，遇到这种情况，你可以使用 `viwe_builder` 来包裹它）
 
 代码示例：
 
@@ -878,7 +879,7 @@ fn sample_schema_sample() -> impl IntoView<BevyRenderer> {
 
 你可以对 `Static`、`ReadSignal`、`ReceiverProp`、`Slot`、`CloneableSlot` 等属性使用 `Required` 来包裹它，以表示它是必填，属性值类型 `T` 就不必实现 `Default` 了
 
-指定为必填后，`Schema` 生成的函数将不再是无参的，你需要按照必填参数的顺序传入
+指定为必填后，`Schema` 生成的函数将不再是无参的，而是需要你按照必填参数的顺序依次传入
 
 代码示例：
 
@@ -900,11 +901,11 @@ fn sample_schema_required_sample() -> impl IntoView<BevyRenderer> {
 
 有时需要返回不同的类型，而 `impl` 不允许返回不同的类型
 
-对于两种不同的类型，你可以使用 `Either<LeftView, RightView>` 来包裹它们
+对于两种不同的类型，你可以使用 `Either<LeftView, RightView>` 来包裹它们去解决问题，
 
 对于多种不同的类型，你也可以使用 `Either<LeftView, Either<RightView, Either<...>>>` 这种 `Either` 嵌套来解决此问题，但是这样写起来太繁琐了
 
-这时，你可以使用 `into_dynamic()` 将 `IntoView` 转换为动态类型
+这时，你可以使用 `into_dynamic()` 将 `IntoView` 转换为动态类型来解决此问题
 
 > 注意: `View` 的类型包裹了 `ViewMember，也就是说` `ViewMember` 成员不同，也会导致 `View` 类型不同
 
@@ -953,7 +954,7 @@ fn sample_dynamic() -> impl IntoView<BevyRenderer> {
 
 ### Bevy `system_once`
 
-`system_once` 将运行传入的 `System` 一次
+`system_once` 会在构建它时会运行传入的`System`一次 ( 如果在 `rx` 中，那么每次信号变化都会运行一次 )
 
 ```rust
 fn sample_system_once() -> impl IntoView<BevyRenderer> {
@@ -993,16 +994,15 @@ fn sample_system_once() -> impl IntoView<BevyRenderer> {
 
 ### x_res
 
-`x_res` 获取 `Res<T>` 类型的资源，并在资源变化时重新构建视图
+`x_res` 获取 `Res<T>` 类型的资源，并在资源变化时重新构建
 
-如下代码示例，每当 `Time` 或 `FrameCount` 资源变化时，都会重新构建视图：
+如下代码示例，每当 `FrameCount` 资源变化时，都会重新构建视图：
 
 ```rust
 fn sample_x_res() -> impl IntoView<BevyRenderer> {
     div().gap(10).p(20).flex_col().children((
-        x_res(|time: &Time| span(format!("Time: {:?}", time)).p(20).font_size(30)),
         x_res(|frame_count: &FrameCount| {
-            span(format!("Time: {:?}", frame_count.0))
+            span(format!("FrameCount: {:?}", frame_count.0))
                 .p(20)
                 .font_size(30)
         }),
@@ -1012,16 +1012,17 @@ fn sample_x_res() -> impl IntoView<BevyRenderer> {
 
 ### view_builder
 
-`view_builder` 视图构建器 接受一个回调函数，此回调函数接受两个参数，第一个参数是 `SchemaCtx`，第二个参数是 `Flags`.
+`view_builder` 视图构建器 接受一个回调函数，此回调函数接受两个参数，第一个参数是 `ViewCtx`，第二个参数是 `Flags`.
 
-`view_builder` 可以让你获取额外的信息去构建你的视图，例如：获取父节点 Id，
+`view_builder` 可以在回调中使用`ViewCtx`去构建你的视图
 
-前面也说过，`view_builder`还可以可以让不能 `Clone` 的 `View` 去实现 `Clone`
+前面也说过，`view_builder`还可以让不能 `Clone` 的 `View` 放入 `view_builder` 中，`view_builder` 返回的类型实现了`Clone`
 
 ```rust
 fn sample_view_builder() -> impl IntoView<BevyRenderer> {
     view_builder(|ctx, flags| {
         let parent = ctx.parent;
+        // let world = ctx.world;
         format!("Parent: {:?}, Flags: {:?}", parent, flags)
     })
 }

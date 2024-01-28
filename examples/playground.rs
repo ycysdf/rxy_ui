@@ -24,7 +24,7 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
-    commands.spawn_rxy_ui(sample_context);
+    commands.spawn_rxy_ui(sample_x_res);
 }
 
 fn signal_sample() -> impl IntoView<BevyRenderer> {
@@ -438,12 +438,16 @@ fn sample_system_once() -> impl IntoView<BevyRenderer> {
 
 fn sample_x_res() -> impl IntoView<BevyRenderer> {
     div().gap(10).p(20).flex_col().children((
-        x_res(|time: &Time| span(format!("Time: {:?}", time)).p(20).font_size(30)),
+        // x_res(|time: &Time| span(format!("Time: {:.1}", time.elapsed_seconds())).p(20).font_size(30)),
         x_res(|frame_count: &FrameCount| {
-            span(format!("Time: {:?}", frame_count.0))
+            span(format!("FrameCount: {:?}", frame_count.0))
                 .p(20)
                 .font_size(30)
         }),
+        div().p(30).member(x_res(|time: &Time| {
+            let t = time.elapsed_seconds();
+            ().bg_color(Color::rgb(t.sin(), t.cos(), t.sin() * t.cos()))
+        })),
     ))
 }
 
