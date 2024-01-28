@@ -1,0 +1,18 @@
+[package]
+edition = "2021"
+name = "hooked_collection"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ahash.workspace = true
+async-channel.workspace = true
+hashbrown.workspace = true
+serde = {workspace = true, optional = true}
+smallvec.workspace = true
+
+[features]
+default = ["std"]
+serde = ["dep:serde"]
+std = ["async-channel/std"]

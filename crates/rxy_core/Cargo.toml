@@ -1,0 +1,33 @@
+[package]
+edition = "2021"
+name = "rxy_core"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rxy_macro.workspace = true
+xy_reactive = {workspace = true, optional = true}
+
+bevy_reflect.workspace = true
+bevy_utils.workspace = true
+
+count-macro.workspace = true
+paste.workspace = true
+pin-project.workspace = true
+smallvec.workspace = true
+
+ahash.workspace = true
+async-channel = {workspace = true, optional = true}
+drain_filter_polyfill.workspace = true
+futures-lite.workspace = true
+hooked_collection.workspace = true
+indexmap.workspace = true
+once_cell.workspace = true
+oneshot.workspace = true
+# serde.workspace = true
+
+[features]
+default = ["std", "view_erasure"]
+std = []
+view_erasure = []

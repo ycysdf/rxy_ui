@@ -1,0 +1,144 @@
+[package]
+edition = "2021"
+name = "rxy_ui"
+version = "0.1.0"
+
+[dependencies]
+bevy.workspace = true
+
+rxy_bevy.workspace = true
+rxy_core.workspace = true
+
+ahash.workspace = true
+async-channel.workspace = true
+async-stream.workspace = true
+bevy-inspector-egui.workspace = true
+bevy_mod_picking.workspace = true
+flume.workspace = true
+futures-lite.workspace = true
+pin-project-lite.workspace = true
+rxy_bevy_element.workspace = true
+rxy_bevy_style.workspace = true
+rxy_style.workspace = true
+xy_reactive.workspace = true
+
+bevy_app.workspace = true
+bevy_asset.workspace = true
+bevy_core.workspace = true
+bevy_derive.workspace = true
+bevy_ecs.workspace = true
+bevy_hierarchy.workspace = true
+bevy_reflect.workspace = true
+bevy_render.workspace = true
+bevy_sprite.workspace = true
+bevy_tasks.workspace = true
+bevy_text.workspace = true
+bevy_transform.workspace = true
+bevy_ui.workspace = true
+bevy_utils.workspace = true
+
+[workspace]
+members = ["crates/*"]
+
+[workspace.dependencies]
+bevy = {version = "0.12.1", features = [
+  "animation",
+  "bevy_asset", #    "bevy_audio",  #    "bevy_gilrs",
+  "bevy_scene",
+  "bevy_winit",
+  "bevy_core_pipeline",
+  "bevy_pbr", #    "bevy_gltf",
+  "bevy_render",
+  "bevy_sprite",
+  "bevy_text",
+  "bevy_ui",
+  "multi-threaded", #    "png",  #    "hdr",  #    "vorbis",  #    "x11",  #    "bevy_gizmos",  #    "android_shared_stdcxx",  #    "tonemapping_luts",
+  "default_font", #    "webgl2",
+]}
+
+hooked_collection = {path = "crates/hooked_collection"}
+rxy_bevy = {path = "crates/rxy_bevy", features = ["xy_reactive"]}
+rxy_bevy_element = {path = "crates/rxy_bevy_element"}
+rxy_bevy_macro = {path = "crates/rxy_bevy_macro"}
+rxy_bevy_style = {path = "crates/rxy_bevy_style"}
+rxy_core = {path = "crates/rxy_core", features = ["xy_reactive"]}
+rxy_macro = {path = "crates/rxy_macro"}
+rxy_style = {path = "crates/rxy_style"}
+rxy_style_macro = {path = "crates/rxy_style_macro"}
+xy_reactive = {version = "0.1", features = ["bevy"], path = "../xy_reactive"}
+
+async-channel = {version = "2.1"}
+glam = "0.24"
+hashbrown = "0.14"
+indexmap = "2.1"
+once_cell = {version = "1.19", default-features = false}
+oneshot = "0.1"
+pin-project = {version = "1"}
+serde = {version = "1", features = ["derive"]}
+
+ahash = {version = "0.8", default-features = false}
+async-stream = "0.3"
+bevy-inspector-egui = "0.21"
+bevy_mod_picking = {version = "0.17", default-features = false, features = ["backend_bevy_ui"]}
+derive_more = "0.99"
+drain_filter_polyfill = "0.1"
+flume = "0.11"
+futures-lite = "1.13"
+pin-project-lite = {version = "0.2"}
+thiserror = "1.0"
+
+smallvec = "1.13"
+
+bevy_app = "0.12"
+bevy_asset = {version = "0.12", optional = false}
+bevy_core = "0.12"
+bevy_derive = "0.12"
+bevy_ecs = "0.12"
+bevy_hierarchy = "0.12"
+bevy_reflect = "0.12"
+bevy_render = "0.12"
+bevy_sprite = "0.12"
+bevy_tasks = "0.12"
+bevy_text = {version = "0.12", optional = false}
+bevy_transform = {version = "0.12", optional = false}
+bevy_ui = {version = "0.12", features = ["bevy_text"]}
+bevy_utils = "0.12"
+
+count-macro = "0.2.2"
+paste = "1"
+
+convert_case = "^0.6.0"
+proc-macro2 = "1.0.66"
+quote = "^1.0.26"
+syn = {version = "2", features = ["full"]}
+
+# cosmic-text = {version = "0.10"}
+[[example]]
+doc-scrape-examples = true
+name = "game_menu"
+path = "examples/game_ui_challenges/game_menu.rs"
+
+[[example]]
+doc-scrape-examples = true
+name = "counter"
+path = "examples/counter.rs"
+
+[[example]]
+doc-scrape-examples = true
+name = "counter_by_channel"
+path = "examples/counter_by_channel.rs"
+
+[[example]]
+doc-scrape-examples = true
+name = "if_else"
+path = "examples/if_else.rs"
+
+[[example]]
+doc-scrape-examples = true
+name = "iter_source"
+path = "examples/iter_source.rs"
+
+[[example]]
+doc-scrape-examples = true
+name = "style"
+path = "examples/style.rs"

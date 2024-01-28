@@ -1,0 +1,284 @@
+use core::any::TypeId;
+
+use crate::either::{Either, EitherExt};
+use crate::mutable_view::{MutableView, MutableViewKey};
+use crate::{
+    to_mutable, virtual_container, IntoView, Renderer, RendererNodeId, RendererWorld,
+    ToMutableWrapper, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, VirtualContainer,
+};
+
+impl<R, LV, RV> MutableView<R> for Either<LV, RV>
+where
+    R: Renderer,
+    LV: MutableView<R>,
+    RV: MutableView<R>,
+{
+    type Key = Either<LV::Key, RV::Key>;
+
+    fn build(
+        self,
+        ViewCtx { world, parent }: ViewCtx<R>,
+        will_rebuild: bool,
+        state_node_id: RendererNodeId<R>,
+    ) -> Self::Key {
+        let ctx = ViewCtx {
+            world: &mut *world,
+            parent,
+        };
+        let key = match self {
+            Either::Left(r) => r
+                .build(ctx, will_rebuild, state_node_id.clone())
+                .either_left(),
+            Either::Right(r) => r
+                .build(ctx, will_rebuild, state_node_id.clone())
+                .either_right(),
+        };
+        key
+    }
+
+    fn rebuild(
+        self,
+        ctx: ViewCtx<R>,
+        key: Self::Key,
+        state_node_id: RendererNodeId<R>,
+    ) -> Option<Self::Key> {
+        fn change<R: Renderer, K: MutableViewKey<R>, V: MutableView<R>>(
+            key: K,
+            view: V,
+            ctx: ViewCtx<R>,
+            state_node_id: RendererNodeId<R>,
+        ) -> V::Key {
+            key.remove(&mut *ctx.world, &state_node_id);
+            let new_key = view.build(
+                ViewCtx {
+                    world: &mut *ctx.world,
+                    parent: ctx.parent.clone(),
+                },
+                true,
+                state_node_id.clone(),
+            );
+            new_key.insert_before(
+                &mut *ctx.world,
+                Some(&ctx.parent),
+                Some(&state_node_id),
+                &state_node_id,
+            );
+            // let is_hidden = R::get_is_hidden(&mut *ctx.world, &state_node_id);
+            // new_key.set_visibility(&mut *ctx.world, is_hidden, &state_node_id);
+            new_key
+        }
+        match (key, self) {
+            (Either::Left(key), Either::Left(view)) => {
+                view.rebuild(ctx, key, state_node_id).map(Either::Left)
+            }
+            (Either::Right(key), Either::Right(view)) => {
+                view.rebuild(ctx, key, state_node_id).map(Either::Right)
+            }
+            (Either::Left(key), Either::Right(view)) => {
+                Some(change(key, view, ctx, state_node_id).either_right())
+            }
+            (Either::Right(key), Either::Left(view)) => {
+                Some(change(key, view, ctx, state_node_id).either_left())
+            }
+        }
+    }
+}
+impl<LK, RK, R> MutableViewKey<R> for Either<LK, RK>
+where
+    LK: MutableViewKey<R>,
+    RK: MutableViewKey<R>,
+    R: Renderer,
+{
+    fn remove(self, world: &mut RendererWorld<R>, state_node_id: &RendererNodeId<R>) {
+        match self {
+            Either::Left(l) => l.remove(world, state_node_id),
+            Either::Right(r) => r.remove(world, state_node_id),
+        }
+    }
+
+    fn insert_before(
+        &self,
+        world: &mut RendererWorld<R>,
+        parent: Option<&RendererNodeId<R>>,
+        before_node_id: Option<&RendererNodeId<R>>,
+        state_node_id: &RendererNodeId<R>,
+    ) {
+        match self {
+            Either::Left(l) => {
+                l.insert_before(world, parent, before_node_id, state_node_id);
+            }
+            Either::Right(r) => {
+                r.insert_before(world, parent, before_node_id, state_node_id);
+            }
+        }
+    }
+
+    fn set_visibility(
+        &self,
+        world: &mut RendererWorld<R>,
+        hidden: bool,
+        state_node_id: &RendererNodeId<R>,
+    ) {
+        match self {
+            Either::Left(l) => {
+                l.set_visibility(world, hidden, state_node_id);
+            }
+            Either::Right(r) => {
+                r.set_visibility(world, hidden, state_node_id);
+            }
+        }
+        R::set_visibility(world, hidden, state_node_id);
+    }
+
+    fn first_node_id(
+        &self,
+        world: &RendererWorld<R>,
+        state_node_id: &RendererNodeId<R>,
+    ) -> Option<RendererNodeId<R>> {
+        match self {
+            Either::Left(l) => l.first_node_id(world, state_node_id),
+            Either::Right(r) => r.first_node_id(world, state_node_id),
+        }
+    }
+}
+
+impl<R, LV, RV> IntoView<R> for Either<LV, RV>
+where
+    R: Renderer,
+    LV: IntoView<R>,
+    RV: IntoView<R>,
+{
+    type View = VirtualContainer<R, Either<ToMutableWrapper<LV::View>, ToMutableWrapper<RV::View>>>;
+
+    fn into_view(self) -> Self::View {
+        virtual_container(
+            match self {
+                Either::Left(n) => Either::Left(to_mutable(n.into_view())),
+                Either::Right(n) => Either::Right(to_mutable(n.into_view())),
+            },
+            "[Either Placeholder]",
+        )
+    }
+}
+
+impl<R, LVM, RVM> ViewMember<R> for Either<LVM, RVM>
+where
+    R: Renderer,
+    LVM: ViewMember<R>,
+    RVM: ViewMember<R>,
+{
+
+    fn count() -> u8 {
+        LVM::count() + LVM::count()
+    }
+
+    fn unbuild(ctx: ViewMemberCtx<R>) {
+        LVM::unbuild(ViewMemberCtx {
+            index: ctx.index,
+            type_id: TypeId::of::<LVM>(),
+            world: &mut *ctx.world,
+            node_id: ctx.node_id.clone(),
+        });
+        RVM::unbuild(ViewMemberCtx {
+            index: ctx.index + LVM::count(),
+            type_id: TypeId::of::<RVM>(),
+            world: ctx.world,
+            node_id: ctx.node_id,
+        });
+    }
+
+    fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
+        match self {
+            Either::Left(l) => l.build(ctx, will_rebuild),
+            Either::Right(r) => r.build(ctx, will_rebuild),
+        }
+    }
+
+    fn rebuild(self, ctx: ViewMemberCtx<R>) {
+        match self {
+            Either::Left(l) => {
+                RVM::unbuild(ViewMemberCtx {
+                    index: ctx.index + LVM::count(),
+                    type_id: TypeId::of::<RVM>(),
+                    world: &mut *ctx.world,
+                    node_id: ctx.node_id.clone(),
+                });
+                l.rebuild(ctx);
+            }
+            Either::Right(r) => {
+                LVM::unbuild(ViewMemberCtx {
+                    index: ctx.index,
+                    type_id: TypeId::of::<LVM>(),
+                    world: &mut *ctx.world,
+                    node_id: ctx.node_id.clone(),
+                });
+                r.rebuild(ctx)
+            }
+        }
+    }
+}
+
+// impl<L: CloneTo, R: CloneTo> CloneTo for Either<L, R> {
+//     type To = Either<L::To, R::To>;
+//
+//     fn clone_to(&self) -> Self::To {
+//         match self {
+//             Either::Left(l) => Either::Left(l.clone_to()),
+//             Either::Right(r) => Either::Right(r.clone_to()),
+//         }
+//     }
+// }
+/*
+impl<LK, RK, R> ViewKey<R> for Either<LK, RK>
+    where
+        LK: ViewKey<R>,
+        RK: ViewKey<R>,
+        R: Renderer,
+{
+    fn remove(self, world: &mut RendererWorld<R>) {
+        match self {
+            Either::Left(l) => l.remove(world),
+            Either::Right(r) => r.remove(world),
+        }
+    }
+
+    fn insert_before(&self, world: &mut RendererWorld<R>, parent: Option<&RendererNodeId<R>>, before_node_id: Option<&RendererNodeId<R>>) {
+        match self {
+            Either::Left(l) => {
+                l.insert_before(world, parent, before_node_id);
+            }
+            Either::Right(r) => {
+                r.insert_before(world, parent, before_node_id);
+            }
+        }
+    }
+
+    fn set_visibility(&self, world: &mut RendererWorld<R>, hidden: bool) {
+        match self {
+            Either::Left(l) => {
+                l.set_visibility(world, hidden);
+            }
+            Either::Right(r) => {
+                r.set_visibility(world, hidden);
+            }
+        }
+    }
+
+    fn state_node_id(&self) -> Option<RendererNodeId<R>> {
+        match self {
+            Either::Left(l) => l.state_node_id(),
+            Either::Right(r) => r.state_node_id(),
+        }
+    }
+
+    fn reserve_key(world: &mut RendererWorld<R>, will_rebuild: bool) -> Self {
+        Either::Left(LK::reserve_key(world, will_rebuild))
+    }
+
+    fn first_node_id(&self, world: &RendererWorld<R>) -> Option<RendererNodeId<R>> {
+        match self {
+            Either::Left(l) => l.first_node_id(world),
+            Either::Right(r) => r.first_node_id(world),
+        }
+    }
+}*/

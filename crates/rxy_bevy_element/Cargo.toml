@@ -1,0 +1,31 @@
+[package]
+edition = "2021"
+name = "rxy_bevy_element"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+count-macro = "0.2.2"
+glam = "0.24"
+paste = "1"
+serde = {version = "1", features = ["derive"]}
+smallvec = "1.11.0"
+
+bevy_app.workspace = true
+bevy_core.workspace = true
+bevy_derive.workspace = true
+bevy_ecs.workspace = true
+bevy_hierarchy.workspace = true
+bevy_reflect.workspace = true
+bevy_render.workspace = true
+bevy_sprite.workspace = true
+bevy_tasks.workspace = true
+bevy_ui.workspace = true
+bevy_utils.workspace = true
+
+bevy_asset = {workspace = true, optional = false}
+bevy_text = {workspace = true, optional = false}
+bevy_transform = {workspace = true, optional = false}
+
+bevy_mod_picking.workspace = true

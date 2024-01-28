@@ -1,0 +1,130 @@
+use crate::{ConstIndex, PropState, Renderer, RendererNodeId, RendererWorld, TypeIdHashMapState};
+use alloc::boxed::Box;
+use bevy_utils::synccell::SyncCell;
+use std::any::TypeId;
+
+pub struct SchemaPropCtx<'a, R: Renderer> {
+    pub world: &'a mut RendererWorld<R>,
+    pub state_node_id: RendererNodeId<R>,
+    pub prop_type_id: TypeId,
+}
+
+impl<'a, R: Renderer> SchemaPropCtx<'a, R> {
+    pub fn prop_state_mut<S: Send + 'static>(&mut self) -> Option<&mut S> {
+        let state_node_id = self.state_node_id.clone();
+        let prop_type_id = self.prop_type_id;
+        R::get_state_mut::<TypeIdHashMapState<S>>(self.world, &state_node_id)
+            .map(|s| s.0.get().get_mut(&prop_type_id))
+            .flatten()
+    }
+    pub fn take_prop_state<S: Send + 'static>(&mut self) -> Option<S> {
+        let state_node_id = self.state_node_id.clone();
+        let prop_type_id = self.prop_type_id;
+        R::get_state_mut::<TypeIdHashMapState<S>>(self.world, &state_node_id)
+            .map(|s| s.0.get().remove(&prop_type_id))
+            .flatten()
+    }
+    pub fn set_prop_state<S: Send + 'static>(&mut self, state: S) {
+        let state_node_id = self.state_node_id.clone();
+        let prop_type_id = self.prop_type_id;
+        if let Some(map) = R::get_state_mut::<TypeIdHashMapState<S>>(self.world, &state_node_id) {
+            map.0.get().insert(prop_type_id, state);
+        } else {
+            let mut map = bevy_utils::HashMap::default();
+            map.insert(prop_type_id, state);
+            R::set_state(
+                self.world,
+                &state_node_id,
+                TypeIdHashMapState(SyncCell::new(map)),
+            );
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct SchemaPropValue<T>(Option<T>);
+
+impl<T> SchemaPropValue<T> {
+    pub fn new(value: T) -> Self {
+        Self(Some(value))
+    }
+}
+
+impl<R, T> SchemaProp<R> for SchemaPropValue<T>
+where
+    R: Renderer,
+    T: Send + 'static,
+{
+    type Value = T;
+
+    fn get_init_value(&mut self) -> Option<Self::Value> {
+        Some(self.0.take().unwrap())
+    }
+
+    fn build(self, _ctx: SchemaPropCtx<R>, _state: &mut dyn PropState<R>, _will_rebuild: bool) {}
+
+    fn rebuild(mut self, ctx: SchemaPropCtx<R>, state: &mut dyn PropState<R>) {
+        state.apply(Box::new(self.0.take().unwrap()), ctx.world);
+    }
+}
+
+pub trait IntoSchemaProp<R, T>
+where
+    R: Renderer,
+    T: Send + 'static,
+{
+    // refactor variant
+    type Prop: SchemaProp<R, Value = T>;
+    fn into_schema_prop<const I: usize>(self) -> Self::Prop;
+}
+
+pub trait SchemaProp<R>: Send + 'static
+where
+    R: Renderer,
+{
+    type Value: Send + 'static;
+
+    fn prop_type_id() -> Option<TypeId> {
+        None
+    }
+
+    fn get_init_value(&mut self) -> Option<Self::Value>;
+    fn build(self, ctx: SchemaPropCtx<R>, state: &mut dyn PropState<R>, will_rebuild: bool);
+    fn rebuild(self, ctx: SchemaPropCtx<R>, state: &mut dyn PropState<R>);
+}
+
+impl<R, T> IntoSchemaProp<R, T> for SchemaPropValue<T>
+where
+    R: Renderer,
+    T: Send + 'static,
+{
+    type Prop = Self;
+
+    fn into_schema_prop<const I: usize>(self) -> Self::Prop {
+        self
+    }
+}
+
+impl<R, const I: usize, T> SchemaProp<R> for ConstIndex<I, T>
+where
+    R: Renderer,
+    T: SchemaProp<R>,
+{
+    type Value = T::Value;
+
+    fn prop_type_id() -> Option<TypeId> {
+        Some(TypeId::of::<ConstIndex<I>>())
+    }
+
+    fn get_init_value(&mut self) -> Option<Self::Value> {
+        self.0.get_init_value()
+    }
+
+    fn build(self, ctx: SchemaPropCtx<R>, state: &mut dyn PropState<R>, will_rebuild: bool) {
+        self.0.build(ctx, state, will_rebuild);
+    }
+
+    fn rebuild(self, ctx: SchemaPropCtx<R>, state: &mut dyn PropState<R>) {
+        self.0.rebuild(ctx, state);
+    }
+}

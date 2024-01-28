@@ -1,0 +1,34 @@
+[package]
+edition = "2021"
+name = "rxy_bevy_style"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rxy_bevy.workspace = true
+rxy_bevy_element.workspace = true
+rxy_core.workspace = true
+rxy_style.workspace = true
+rxy_style_macro.workspace = true
+
+ahash.workspace = true
+derive_more.workspace = true
+futures-lite.workspace = true
+thiserror.workspace = true
+
+bevy_app.workspace = true
+bevy_asset.workspace = true
+bevy_core.workspace = true
+bevy_ecs.workspace = true
+bevy_hierarchy.workspace = true
+bevy_render.workspace = true
+bevy_sprite.workspace = true
+bevy_text.workspace = true
+bevy_transform.workspace = true
+bevy_ui.workspace = true
+bevy_utils.workspace = true
+
+[features]
+default = ["tailwind"]
+tailwind = []

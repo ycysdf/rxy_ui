@@ -1,0 +1,14 @@
+[package]
+edition = "2021"
+name = "rxy_macro"
+version = "0.1.0"
+[lib]
+proc-macro = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+convert_case.workspace = true
+proc-macro2.workspace = true
+quote.workspace = true
+syn.workspace = true
