@@ -1,13 +1,14 @@
 use bevy_render::prelude::Visibility;
 use bevy_text::{BreakLineOn, TextAlignment};
 use bevy_ui::{
-    AlignItems, Display, FlexDirection, FlexWrap, JustifyContent, OverflowAxis,
-    PositionType, Val, ZIndex,
+    AlignItems, Display, FlexDirection, FlexWrap, JustifyContent, OverflowAxis, PositionType, Val,
+    ZIndex,
 };
 use rxy_bevy::{BevyRenderer, BevyWrapper, CommonAttrsViewBuilder, CompositeAttrs, ViewAttr};
 use rxy_bevy_element::all_attrs::*;
 use rxy_core::MemberOwner;
 
+// todo: IntoViewAttrMember
 pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
     fn visible(self) -> Self::AddMember<ViewAttr<visibility>> {
         self.member(ViewAttr::<visibility>(Visibility::Visible))
@@ -88,11 +89,11 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
     }
     fn gap_x<T: Into<BevyWrapper<Val>>>(self, value: T) -> Self::AddMember<ViewAttr<row_gap>> {
         let value = value.into().0;
-        self.member(ViewAttr::<row_gap>(value))
+        self.row_gap(value)
     }
     fn gap_y<T: Into<BevyWrapper<Val>>>(self, value: T) -> Self::AddMember<ViewAttr<column_gap>> {
         let value = value.into().0;
-        self.member(ViewAttr::<column_gap>(value))
+        self.column_gap(value)
     }
     fn relative(self) -> Self::AddMember<ViewAttr<position_type>> {
         self.member(ViewAttr::<position_type>(PositionType::Relative))
@@ -221,17 +222,31 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
         self.member(ViewAttr::<padding_right>(value))
     }
 
-    fn px<T: Into<BevyWrapper<Val>>>(self, value: T) -> Self::AddMember<(ViewAttr<padding_left>, ViewAttr<padding_right>)> {
+    fn px<T: Into<BevyWrapper<Val>>>(
+        self,
+        value: T,
+    ) -> Self::AddMember<(ViewAttr<padding_left>, ViewAttr<padding_right>)> {
         let value = value.into().0;
         self.padding_horizontal(value)
     }
 
-    fn py<T: Into<BevyWrapper<Val>>>(self, value: T) -> Self::AddMember<(ViewAttr<padding_top>, ViewAttr<padding_bottom>)> {
+    fn py<T: Into<BevyWrapper<Val>>>(
+        self,
+        value: T,
+    ) -> Self::AddMember<(ViewAttr<padding_top>, ViewAttr<padding_bottom>)> {
         let value = value.into().0;
         self.padding_vertical(value)
     }
 
-    fn p<T: Into<BevyWrapper<Val>>>(self, value: T) -> Self::AddMember<(ViewAttr<padding_left>, ViewAttr<padding_right>, ViewAttr<padding_top>, ViewAttr<padding_bottom>)> {
+    fn p<T: Into<BevyWrapper<Val>>>(
+        self,
+        value: T,
+    ) -> Self::AddMember<(
+        ViewAttr<padding_left>,
+        ViewAttr<padding_right>,
+        ViewAttr<padding_top>,
+        ViewAttr<padding_bottom>,
+    )> {
         let value = value.into().0;
         self.padding(value)
     }
@@ -256,17 +271,31 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
         self.member(ViewAttr::<margin_right>(value))
     }
 
-    fn mx<T: Into<BevyWrapper<Val>>>(self, value: T) -> Self::AddMember<(ViewAttr<margin_left>, ViewAttr<margin_right>)> {
+    fn mx<T: Into<BevyWrapper<Val>>>(
+        self,
+        value: T,
+    ) -> Self::AddMember<(ViewAttr<margin_left>, ViewAttr<margin_right>)> {
         let value = value.into().0;
         self.margin_horizontal(value)
     }
 
-    fn my<T: Into<BevyWrapper<Val>>>(self, value: T) -> Self::AddMember<(ViewAttr<margin_top>, ViewAttr<margin_bottom>)> {
+    fn my<T: Into<BevyWrapper<Val>>>(
+        self,
+        value: T,
+    ) -> Self::AddMember<(ViewAttr<margin_top>, ViewAttr<margin_bottom>)> {
         let value = value.into().0;
         self.margin_vertical(value)
     }
 
-    fn m<T: Into<BevyWrapper<Val>>>(self, value: T) -> Self::AddMember<(ViewAttr<margin_left>, ViewAttr<margin_right>, ViewAttr<margin_top>, ViewAttr<margin_bottom>)> {
+    fn m<T: Into<BevyWrapper<Val>>>(
+        self,
+        value: T,
+    ) -> Self::AddMember<(
+        ViewAttr<margin_left>,
+        ViewAttr<margin_right>,
+        ViewAttr<margin_top>,
+        ViewAttr<margin_bottom>,
+    )> {
         let value = value.into().0;
         self.margin(value)
     }
