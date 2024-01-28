@@ -558,9 +558,7 @@ fn sample_future() -> impl IntoView<BevyRenderer> {
 
 ### 控制流：x_if、x_iter、x_iter_keyed、x_iter_source
 
-`x_if` 用于控制是否构建对应视图，`x_if`传入的第一个参数 与 视图成员类似，可以是 `bool`、`rx` 返回 `bool` 的闭包、`bool` 信号 等
-
-```rust
+`x_if` 用于控制是否构建对应视图，`x_if`传入的第一个参数 与 视图成员类似，可以是 `bool`、`Reactive`、`ReadSingal` 等
 
 ```rust
 fn sample_x_if() -> impl IntoView<BevyRenderer> {
