@@ -42,9 +42,9 @@ pub mod prelude {
         rx, style_builder, use_list, view_builder, x_future, x_if, x_if_else, x_iter, x_iter_keyed,
         x_iter_source, x_stream, BoxedCloneableDynamicView, BoxedDynamicView, BoxedErasureView,
         DeferredWorldScoped, DynamicView, Either, EitherExt, ElementView, ErasureView,
-        IntoDynamicView, IntoElementView, IntoView, IntoViewErasureExt, Keyed, MemberOwnerRxExt,
-        Renderer, RendererElementType, RendererViewExt, Required, Sender, SoloView, View, ViewCtx,
-        ViewKey, ViewMember, ViewMemberCtx,
+        IntoDynamicView, IntoElementView, IntoView, IntoViewErasureExt, Keyed, MemberOwner,
+        MemberOwnerRxExt, Renderer, RendererElementType, RendererViewExt, Required, Sender,
+        SoloView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
     };
 }
 
