@@ -8,8 +8,8 @@ use bevy_utils::tracing::error;
 use core::any::Any;
 use core::marker::PhantomData;
 use xy_reactive::prelude::{
-    create_effect, use_memo, Memo, ReadSignal, RwSignal, SignalGet, SignalGetUntracked,
-    SignalSet, WriteSignal,
+    create_effect, use_memo, Memo, ReadSignal, RwSignal, SignalGet, SignalGetUntracked, SignalSet,
+    WriteSignal,
 };
 
 fn schema_prop_build<R, S>(signal: S, mut ctx: SchemaPropCtx<R>)
@@ -91,6 +91,40 @@ where
     }
 }
 
+// impl<R, T> SchemaProp<R> for Memo<T>
+// where
+//     R: Renderer,
+//     T: SchemaProp<R> + Sync,
+// {
+//     type Value = T::Value;
+
+//     fn get_init_value(&mut self) -> Option<Self::Value> {
+//         self.get_untracked().get_init_value()
+//     }
+
+//     fn build(self, ctx: SchemaPropCtx<R>, _state: &mut dyn PropState<R>, _will_rebuild: bool) {
+//         schema_prop_build(self, ctx);
+//     }
+
+//     fn rebuild(self, mut ctx: SchemaPropCtx<R>, _state: &mut dyn PropState<R>) {
+//         drop(ctx.take_prop_state::<ReactiveDisposerState>());
+//         schema_prop_build(self, ctx);
+//     }
+// }
+
+// impl<R, PV, T> IntoSchemaProp<R, PV> for ReadSignal<T>
+// where
+//     R: Renderer,
+//     T: IntoSchemaProp<R, PV> + Send + Sync + 'static,
+//     PV: Clone + Send + Sync + 'static,
+// {
+//     type Prop = Memo<T::Prop>;
+
+//     fn into_schema_prop<const I: usize>(self) -> Self::Prop {
+//         use_memo(move |_| self.get().into_schema_prop::<I>())
+//     }
+// }
+
 impl<R, T> IntoSchemaProp<R, T> for ReadSignal<T>
 where
     R: Renderer,
@@ -102,6 +136,7 @@ where
         self
     }
 }
+
 impl<R, T> IntoSchemaProp<R, T> for Memo<T>
 where
     R: Renderer,
