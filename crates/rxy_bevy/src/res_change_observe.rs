@@ -67,7 +67,11 @@ impl ResChangeWorldExt for World {
             .observer_count
             .fetch_add(1, Ordering::Relaxed);
         fn res_observe<T: Resource>(res_change: Res<ResChangeObserve<T>>) {
-            res_change.sender.send_blocking(()).unwrap();
+            for _ in 0..res_change.sender.receiver_count() {
+                if res_change.sender.try_send(()).is_err() {
+                    break;
+                }
+            }
         }
         let r = ResChangeReceiver {
             inner: res_change_observe.receiver.clone(),
