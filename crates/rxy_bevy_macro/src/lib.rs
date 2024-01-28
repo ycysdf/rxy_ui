@@ -58,8 +58,8 @@ pub fn schema(_input: TokenStream, item: TokenStream) -> TokenStream {
     let schema_generic_params_must_with_bound = item_fn
         .sig
         .generics
-        .type_params().filter(|n| !n.bounds.is_empty())
-
+        .type_params()
+        .filter(|n| !n.bounds.is_empty())
         .collect::<Punctuated<&TypeParam, syn::token::Comma>>();
 
     let schema_generic_params_with_bound = if schema_generic_params_with_bound.is_empty() {
@@ -126,20 +126,29 @@ pub fn schema(_input: TokenStream, item: TokenStream) -> TokenStream {
                         return None;
                     };
 
-                    let Type::Path(path) = &*ty else { return None };
-                    let Some(last_segment) = path.path.segments.last() else {
-                        return None;
-                    };
+                    let Type::Path(path) = ty else { return None };
+                    let last_segment = path.path.segments.last()?;
 
                     (last_segment.ident.to_string(), last_segment, true)
                 } else {
                     (param_type_ident, last_segment, false)
                 };
 
-                let pat = get_parameter_ident(&*arg.pat);
+                let pat = get_parameter_ident(&arg.pat);
                 let param_type = if param_type_ident == "Sender" {
                     ParamType::Event
                 } else if param_type_ident == "Static" {
+                    if is_required_prop {
+                        let PathArguments::AngleBracketed(prop_value_ty) =
+                            &prop_value_ty.arguments else {
+                            return None;
+                        };
+                        required_props.push((
+                            pat,
+                            prop_value_ty.args.last().unwrap().to_token_stream(),
+                            RequiredPropType::Prop,
+                        ));
+                    }
                     ParamType::Static
                 } else if param_type_ident == "Slot" {
                     if is_required_prop {
@@ -180,7 +189,7 @@ pub fn schema(_input: TokenStream, item: TokenStream) -> TokenStream {
             }
             None
         })
-        .filter_map(|(index, name, ty, param_type)| {
+        .map(|(index, name, ty, param_type)| {
             let inner_ty = {
                 if let PathArguments::AngleBracketed(prop_value_ty) =
                     &ty.arguments {
@@ -292,7 +301,7 @@ pub fn schema(_input: TokenStream, item: TokenStream) -> TokenStream {
                 },
             };
 
-            Some((prop_fn_sig, prop_fn_impl))
+            (prop_fn_sig, prop_fn_impl)
         })
         .unzip();
 
@@ -445,7 +454,7 @@ fn get_parameter_ident(pat: &Pat) -> &Ident {
         })
     } else if let Pat::Ident(pat) = pat {
         &pat.ident
-    }else{
+    } else {
         panic!("parse parameter name failed!")
     }
 }
