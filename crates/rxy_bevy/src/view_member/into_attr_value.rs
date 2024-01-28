@@ -8,9 +8,9 @@ use std::borrow::Cow;
 macro_rules! impl_bevy_wrapper_into {
     ($($ty:ty,)*) => {
         $(
-            impl Into<BevyWrapper<Self>> for $ty {
-                fn into(self) -> BevyWrapper<Self> {
-                    BevyWrapper(self)
+            impl From<$ty> for BevyWrapper<$ty> {
+                fn from(val: $ty) -> Self {
+                    BevyWrapper(val)
                 }
             }
         )*
@@ -20,11 +20,6 @@ macro_rules! impl_bevy_wrapper_into {
 macro_rules! impl_into_bevy_wrapper_into {
     ($($from:ty => $to:ty,)*) => {
         $(
-            // impl Into<BevyWrapper<$to>> for $from {
-            //     fn into(self) -> BevyWrapper<$to> {
-            //         BevyWrapper(self.into())
-            //     }
-            // }
             impl From<$from> for BevyWrapper<$to> {
                 fn from(val: $from) -> Self {
                     BevyWrapper(val.into())
