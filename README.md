@@ -27,7 +27,7 @@
 - Text Edit
 - 更多的 UI 组件 与 示例
 - 更多 Debug 功能、更多的测试用例、Element inspector
-- 其他渲染器：wgpu (vello)、html、嵌入式 
+- 其他渲染器：wgpu (vello)、html、裸机/嵌入式平台 
 - bevy 更加深入的集成，作为场景来使用？（类似 `@react-three/fiber`），Schema 作为 Prefab ？
 - 主题，tailwind
 - DSL、样式热更新、动态样式
