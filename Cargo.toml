@@ -36,6 +36,7 @@ bevy_text.workspace = true
 bevy_transform.workspace = true
 bevy_ui.workspace = true
 bevy_utils.workspace = true
+oneshot.workspace = true
 
 [workspace]
 members = ["crates/*"]
@@ -142,3 +143,8 @@ path = "examples/iter_source.rs"
 doc-scrape-examples = true
 name = "style"
 path = "examples/style.rs"
+
+[[example]]
+doc-scrape-examples = true
+name = "playground"
+path = "examples/playground.rs"
