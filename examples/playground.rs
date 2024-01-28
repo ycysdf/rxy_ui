@@ -296,7 +296,7 @@ pub fn schema_checkbox(
     onchange: Sender<bool>,
 ) -> impl IntoElementView<BevyRenderer> {
     let is_checked = ctx.use_controlled_state(value, onchange);
-    ctx.default_tpyed_style(CheckboxStyle, || {
+    ctx.default_typed_style(CheckboxStyle, || {
         let size = 20;
         (
             x().center()

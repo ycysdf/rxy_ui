@@ -41,7 +41,7 @@ pub fn schema_slider(
         let thumb_height = 26.;
         let thumb_width = 26.;
 
-        ctx.default_tpyed_style(SliderRootStyle, || {
+        ctx.default_typed_style(SliderRootStyle, || {
             x().h(height)
                 .flex()
                 .min_w(150.)
@@ -49,21 +49,21 @@ pub fn schema_slider(
                 .relative()
                 .items_center()
         });
-        ctx.default_tpyed_style(SliderBgStyle, || {
+        ctx.default_typed_style(SliderBgStyle, || {
             x().h_full()
                 .bg_color(COLOR_PRIMARY)
                 .absolute()
                 .left(0)
                 .top(0)
         });
-        ctx.default_tpyed_style(SliderIndicatorStyle, || {
+        ctx.default_typed_style(SliderIndicatorStyle, || {
             x().h(indicator_height)
                 .w(indicator_width)
                 .ml(-indicator_width / 2.0)
                 .center()
                 .top(-(indicator_height + thumb_height) / 2.0 - indicator_spacing)
         });
-        ctx.default_tpyed_style(SliderThumbStyle, || {
+        ctx.default_typed_style(SliderThumbStyle, || {
             (
                 x().bg_color(Color::DARK_GRAY)
                     .h(thumb_height)

@@ -101,7 +101,7 @@ pub fn schema_checkbox(
     onchange: Sender<bool>,
 ) -> impl IntoElementView<BevyRenderer> {
     let is_checked = ctx.use_controlled_state(value, onchange);
-    ctx.default_tpyed_style(CheckboxStyle, || {
+    ctx.default_typed_style(CheckboxStyle, || {
         let size = 20;
         (
             x().center()
@@ -784,7 +784,7 @@ pub fn schema_checkbox(
     onchange: Sender<bool>,
 ) -> impl IntoElementView<BevyRenderer> {
     let is_checked = ctx.use_controlled_state(value, onchange); // 获取一个受控的状态
-    ctx.default_tpyed_style(CheckboxStyle, || { // 定义默认共享样式
+    ctx.default_typed_style(CheckboxStyle, || { // 定义默认共享样式
         let size = 20;
         (
             x().center()

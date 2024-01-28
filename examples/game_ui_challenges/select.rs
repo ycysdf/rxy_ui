@@ -28,7 +28,7 @@ where
     let value = ctx.use_controlled_state(value, onchange);
     let is_open = use_rw_signal(false);
 
-    ctx.default_tpyed_style(SelectStyle, || {
+    ctx.default_typed_style(SelectStyle, || {
         (
             x().flex()
                 .border(1)
@@ -40,7 +40,7 @@ where
             x_hover().bg_color(Color::DARK_GRAY),
         )
     });
-    ctx.default_tpyed_style(SelectSelectionListStyle, || {
+    ctx.default_typed_style(SelectSelectionListStyle, || {
         x().absolute()
             .z(1)
             .top(Val::Percent(100.))

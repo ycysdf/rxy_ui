@@ -13,7 +13,7 @@ use rxy_style::StyleSheetCtx;
 use std::any::TypeId;
 
 pub trait SchemaCtxExt {
-    fn default_tpyed_style<SS>(
+    fn default_typed_style<SS>(
         &mut self,
         typed_style: impl TypedStyleLabel,
         style_f: impl FnOnce() -> SS,
@@ -24,7 +24,7 @@ pub trait SchemaCtxExt {
 
 impl SchemaCtxExt for SchemaCtx {
     #[inline(always)]
-    fn default_tpyed_style<SS>(
+    fn default_typed_style<SS>(
         &mut self,
         typed_style: impl TypedStyleLabel,
         style_f: impl FnOnce() -> SS,
@@ -32,7 +32,7 @@ impl SchemaCtxExt for SchemaCtx {
     where
         SS: StyleSheets<BevyRenderer>,
     {
-        self.world_mut_scoped(|world| world.default_tpyed_style(typed_style, style_f))
+        self.world_mut_scoped(|world| world.default_typed_style(typed_style, style_f))
     }
 }
 
@@ -45,7 +45,7 @@ pub trait TypedStlyeWorldExt {
     ) -> Entity
     where
         SS: StyleSheets<BevyRenderer>;
-    fn default_tpyed_style<SS>(
+    fn default_typed_style<SS>(
         &mut self,
         typed_style: impl TypedStyleLabel,
         style_f: impl FnOnce() -> SS,
@@ -91,7 +91,7 @@ impl TypedStlyeWorldExt for World {
         node_id
     }
 
-    fn default_tpyed_style<SS>(
+    fn default_typed_style<SS>(
         &mut self,
         typed_style: impl TypedStyleLabel,
         style_f: impl FnOnce() -> SS,
