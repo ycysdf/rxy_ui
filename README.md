@@ -381,7 +381,7 @@ Rxy UI 支持使用信号来重新构建视图与其成员。
 
 此外信号类型本身`RwSignal<T>`或`ReadSignal<T>`，如果 `T` 实现了 `IntoView` 或 `IntoViewAttrMember`，那么它也实现了 `View` 或 `ViewMember`
 
-> `IntoViewAttrMember` 表示可以转换到 `ViewMember` 的类型，例如：width 属性值要求是 `[Val](https://docs.rs/bevy/latest/bevy/ui/enum.Val.html)` 类型，但是你可以传入一个 `i32`，`IntoViewAttrMember`内部会帮你转换为 `Val::Px(100)`
+> `IntoViewAttrMember` 表示可以转换到 `ViewMember` 的类型，例如：width 属性值要求是 [Val](https://docs.rs/bevy/latest/bevy/ui/enum.Val.html) 类型，但是你可以传入一个 `i32`，`IntoViewAttrMember`内部会帮你转换为 `Val::Px(100)`
 
 ```rust
 fn signal_example() -> impl IntoView<BevyRenderer> {
