@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 pub use cmd::*;
 pub use command::*;
 pub use element::*;
