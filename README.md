@@ -35,7 +35,7 @@
 
 ## 许可证
 
-MIT License ([LICENSE-MIT](./LICENSE-MIT))
+MIT License ([LICENSE-MIT](https://github.com/ycysdf/rxy_ui/blob/main/LICENSE-MIT))
 
 ## 贡献
 
@@ -332,11 +332,11 @@ fn my_view() -> impl IntoView<BevyRenderer> {
 }
 ```
 
-通过链式调用向 `View` 类型添加成员，`children` 可以设置视图的子视图
+通过链式调用向 `View` 类型添加成员，`children` 方法用于设置视图的子视图
 
 可以通过`width`、`height`、`flex`、`border`、`outline` 等等去设置视图的属性
 
-> 目前支持的全部属性请看：[attrs](./crates/rxy_bevy_element/src/element_attrs/attrs.rs)，基本 NodeBundle 里面成员都有对应的属性
+> 目前支持的全部属性请看：[attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy_element/src/element_attrs/attrs.rs)，基本 NodeBundle 里面成员都有对应的属性
 
 所有实现了 `ViewMember` 的类型都可以作为视图的成员，可通过 `member` 方法来手动添加成员
 
