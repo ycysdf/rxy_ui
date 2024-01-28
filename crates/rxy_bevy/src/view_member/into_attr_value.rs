@@ -20,42 +20,47 @@ macro_rules! impl_bevy_wrapper_into {
 macro_rules! impl_into_bevy_wrapper_into {
     ($($from:ty => $to:ty,)*) => {
         $(
-            impl Into<BevyWrapper<$to>> for $from {
-                fn into(self) -> BevyWrapper<$to> {
-                    BevyWrapper(self.into())
+            // impl Into<BevyWrapper<$to>> for $from {
+            //     fn into(self) -> BevyWrapper<$to> {
+            //         BevyWrapper(self.into())
+            //     }
+            // }
+            impl From<$from> for BevyWrapper<$to> {
+                fn from(val: $from) -> Self {
+                    BevyWrapper(val.into())
                 }
             }
         )*
     };
 }
 
-impl Into<BevyWrapper<ZIndex>> for i32 {
-    fn into(self) -> BevyWrapper<ZIndex> {
-        BevyWrapper(ZIndex::Global(self))
+impl From<i32> for BevyWrapper<ZIndex> {
+    fn from(val: i32) -> Self {
+        BevyWrapper(ZIndex::Global(val))
     }
 }
 
-impl Into<BevyWrapper<Val>> for f32 {
-    fn into(self) -> BevyWrapper<Val> {
-        BevyWrapper(Val::Px(self))
+impl From<f32> for BevyWrapper<Val> {
+    fn from(val: f32) -> Self {
+        BevyWrapper(Val::Px(val))
     }
 }
 
-impl Into<BevyWrapper<Val>> for i32 {
-    fn into(self) -> BevyWrapper<Val> {
-        BevyWrapper(Val::Px(self as _))
+impl From<i32> for BevyWrapper<Val> {
+    fn from(val: i32) -> Self {
+        BevyWrapper(Val::Px(val as _))
     }
 }
 
-impl Into<BevyWrapper<glam::Quat>> for f32 {
-    fn into(self) -> BevyWrapper<glam::Quat> {
-        BevyWrapper(glam::Quat::from_rotation_z(self))
+impl From<f32> for BevyWrapper<glam::Quat> {
+    fn from(val: f32) -> Self {
+        BevyWrapper(glam::Quat::from_rotation_z(val))
     }
 }
 
-impl Into<BevyWrapper<Visibility>> for bool {
-    fn into(self) -> BevyWrapper<Visibility> {
-        BevyWrapper(if self {
+impl From<bool> for BevyWrapper<Visibility> {
+    fn from(val: bool) -> Self {
+        BevyWrapper(if val {
             Visibility::Visible
         } else {
             Visibility::Hidden
