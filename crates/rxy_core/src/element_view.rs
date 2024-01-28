@@ -69,7 +69,7 @@ where
     _marker: std::marker::PhantomData<R>,
 }
 
-pub fn element_view_extra_members<R, EV, VM>(
+pub fn add_members<R, EV, VM>(
     element_view: EV,
     view_members: VM,
 ) -> ElementViewExtraMembers<R, EV::View, VM>
