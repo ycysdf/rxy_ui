@@ -189,3 +189,15 @@ where
         }
     }
 }
+
+impl<R, T> IntoView<R> for futures_lite::future::Boxed<T>
+where
+    R: Renderer,
+    T: IntoView<R> + Send + 'static,
+{
+    type View = XFuture<Self>;
+
+    fn into_view(self) -> Self::View {
+        XFuture(self)
+    }
+}
