@@ -47,6 +47,12 @@ impl From<i32> for BevyWrapper<Val> {
     }
 }
 
+impl From<i32> for BevyWrapper<f32> {
+    fn from(val: i32) -> Self {
+        BevyWrapper(val as _)
+    }
+}
+
 impl From<f32> for BevyWrapper<glam::Quat> {
     fn from(val: f32) -> Self {
         BevyWrapper(glam::Quat::from_rotation_z(val))
