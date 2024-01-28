@@ -1,6 +1,7 @@
 use core::marker::PhantomData;
 
-use crate::{BevyRenderer, BevyWrapper, ViewAttr};
+use crate::{BevyRenderer, BevyWrapper, ViewAttr, XRes};
+use bevy_ecs::prelude::Resource;
 use bevy_reflect::{FromReflect, TypePath};
 use futures_lite::{prelude::Future, StreamExt};
 use rxy_bevy_element::{AttrIndex, AttrValue, ElementAttr, ElementUnitAttr, HasIndex};
@@ -28,6 +29,7 @@ where
     }
 }
 
+// todo: extract into_other_attr to other trait
 pub trait IntoViewAttrMember<EA>
 where
     EA: ElementUnitAttr,
@@ -205,5 +207,26 @@ where
             })
             .boxed(),
         )
+    }
+}
+
+// todo: 
+impl<EA, T, F, VM> IntoViewAttrMember<EA> for XRes<T, F, VM>
+where
+    EA: ElementUnitAttr,
+    T: Resource,
+    F: Fn(&T) -> VM + Clone + Send + Sync + 'static,
+    VM: ViewMember<BevyRenderer>,
+{
+    type Attr = Self;
+
+    fn into_attr(self) -> Self::Attr {
+        self
+    }
+
+    type OtherAttr<OEA: ElementUnitAttr<Value = <EA>::Value>> = Self;
+
+    fn into_other_attr<OEA: ElementUnitAttr<Value = <EA>::Value>>(self) -> Self::OtherAttr<OEA> {
+        self
     }
 }
