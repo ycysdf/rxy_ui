@@ -406,7 +406,7 @@ fn signal_example() -> impl IntoView<BevyRenderer> {
 
 下面是它们的一些用例
 
-`Option` 用例：控制是否应用 视图 或 视图成员
+`Option` 用例：控制是否去构建 视图 或 视图成员
 
 > 虽然 rx 配合 Option 可以实现控制视图的显示，但是 `x_if` 是更好的选择，之后会介绍
 
