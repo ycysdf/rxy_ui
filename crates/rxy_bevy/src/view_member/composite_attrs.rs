@@ -1,4 +1,4 @@
-use crate::{BevyRenderer, BevyWrapper, ViewAttr};
+use crate::{BevyRenderer, BevyWrapper, ElementAttrAgent, IntoViewAttrMember, ViewAttr};
 use bevy_transform::components::Transform;
 use bevy_ui::Val;
 use rxy_bevy_element::all_attrs::*;
@@ -6,21 +6,51 @@ use rxy_core::MemberOwner;
 
 pub trait CompositeAttrs: MemberOwner<BevyRenderer> + Sized {
     #[inline(always)]
-    fn border<T: Into<BevyWrapper<Val>>>(
+    fn border_x<T: IntoViewAttrMember<ElementAttrAgent<Val>>>(
+        self,
+        value: T,
+    ) -> Self::AddMember<(T::OtherAttr<border_left>, T::OtherAttr<border_right>)>
+    where
+        T: Clone,
+    {
+        self.member((
+            value.clone().into_other_attr::<border_left>(),
+            value.into_other_attr::<border_right>(),
+        ))
+    }
+
+    #[inline(always)]
+    fn border_y<T: IntoViewAttrMember<ElementAttrAgent<Val>>>(
+        self,
+        value: T,
+    ) -> Self::AddMember<(T::OtherAttr<border_top>, T::OtherAttr<border_bottom>)>
+    where
+        T: Clone,
+    {
+        self.member((
+            value.clone().into_other_attr::<border_top>(),
+            value.into_other_attr::<border_bottom>(),
+        ))
+    }
+
+    #[inline(always)]
+    fn border<T: IntoViewAttrMember<ElementAttrAgent<Val>>>(
         self,
         value: T,
     ) -> Self::AddMember<(
-        ViewAttr<border_left>,
-        ViewAttr<border_right>,
-        ViewAttr<border_top>,
-        ViewAttr<border_bottom>,
-    )> {
-        let value = value.into().0;
+        T::OtherAttr<border_left>,
+        T::OtherAttr<border_right>,
+        T::OtherAttr<border_top>,
+        T::OtherAttr<border_bottom>,
+    )>
+    where
+        T: Clone,
+    {
         self.member((
-            ViewAttr::<border_left>(value),
-            ViewAttr::<border_right>(value),
-            ViewAttr::<border_top>(value),
-            ViewAttr::<border_bottom>(value),
+            value.clone().into_other_attr::<border_left>(),
+            value.clone().into_other_attr::<border_right>(),
+            value.clone().into_other_attr::<border_top>(),
+            value.into_other_attr::<border_bottom>(),
         ))
     }
 
@@ -38,88 +68,100 @@ pub trait CompositeAttrs: MemberOwner<BevyRenderer> + Sized {
     }
 
     #[inline(always)]
-    fn margin_horizontal<T: Into<BevyWrapper<Val>>>(
+    fn margin_horizontal<T: IntoViewAttrMember<ElementAttrAgent<Val>>>(
         self,
         value: T,
-    ) -> Self::AddMember<(ViewAttr<margin_left>, ViewAttr<margin_right>)> {
-        let value = value.into().0;
+    ) -> Self::AddMember<(T::OtherAttr<margin_left>, T::OtherAttr<margin_right>)>
+    where
+        T: Clone,
+    {
         self.member((
-            ViewAttr::<margin_left>(value),
-            ViewAttr::<margin_right>(value),
+            value.clone().into_other_attr::<margin_left>(),
+            value.into_other_attr::<margin_right>(),
         ))
     }
 
     #[inline(always)]
-    fn margin_vertical<T: Into<BevyWrapper<Val>>>(
+    fn margin_vertical<T: IntoViewAttrMember<ElementAttrAgent<Val>>>(
         self,
         value: T,
-    ) -> Self::AddMember<(ViewAttr<margin_top>, ViewAttr<margin_bottom>)> {
-        let value = value.into().0;
+    ) -> Self::AddMember<(T::OtherAttr<margin_top>, T::OtherAttr<margin_bottom>)>
+    where
+        T: Clone,
+    {
         self.member((
-            ViewAttr::<margin_top>(value),
-            ViewAttr::<margin_bottom>(value),
+            value.clone().into_other_attr::<margin_top>(),
+            value.into_other_attr::<margin_bottom>(),
         ))
     }
 
     #[inline(always)]
-    fn margin<T: Into<BevyWrapper<Val>>>(
+    fn margin<T: IntoViewAttrMember<ElementAttrAgent<Val>>>(
         self,
         value: T,
     ) -> Self::AddMember<(
-        ViewAttr<margin_left>,
-        ViewAttr<margin_right>,
-        ViewAttr<margin_top>,
-        ViewAttr<margin_bottom>,
-    )> {
-        let value = value.into().0;
+        T::OtherAttr<margin_left>,
+        T::OtherAttr<margin_right>,
+        T::OtherAttr<margin_top>,
+        T::OtherAttr<margin_bottom>,
+    )>
+    where
+        T: Clone,
+    {
         self.member((
-            ViewAttr::<margin_left>(value),
-            ViewAttr::<margin_right>(value),
-            ViewAttr::<margin_top>(value),
-            ViewAttr::<margin_bottom>(value),
+            value.clone().into_other_attr::<margin_left>(),
+            value.clone().into_other_attr::<margin_right>(),
+            value.clone().into_other_attr::<margin_top>(),
+            value.into_other_attr::<margin_bottom>(),
         ))
     }
 
     #[inline(always)]
-    fn padding_horizontal<T: Into<BevyWrapper<Val>>>(
+    fn padding_horizontal<T: IntoViewAttrMember<ElementAttrAgent<Val>>>(
         self,
         value: T,
-    ) -> Self::AddMember<(ViewAttr<padding_left>, ViewAttr<padding_right>)> {
-        let value = value.into().0;
+    ) -> Self::AddMember<(T::OtherAttr<padding_left>, T::OtherAttr<padding_right>)>
+    where
+        T: Clone,
+    {
         self.member((
-            ViewAttr::<padding_left>(value),
-            ViewAttr::<padding_right>(value),
+            value.clone().into_other_attr::<padding_left>(),
+            value.into_other_attr::<padding_right>(),
         ))
     }
 
     #[inline(always)]
-    fn padding_vertical<T: Into<BevyWrapper<Val>>>(
+    fn padding_vertical<T: IntoViewAttrMember<ElementAttrAgent<Val>>>(
         self,
         value: T,
-    ) -> Self::AddMember<(ViewAttr<padding_top>, ViewAttr<padding_bottom>)> {
-        let value = value.into().0;
+    ) -> Self::AddMember<(T::OtherAttr<padding_top>, T::OtherAttr<padding_bottom>)>
+    where
+        T: Clone,
+    {
         self.member((
-            ViewAttr::<padding_top>(value),
-            ViewAttr::<padding_bottom>(value),
+            value.clone().into_other_attr::<padding_top>(),
+            value.into_other_attr::<padding_bottom>(),
         ))
     }
 
     #[inline(always)]
-    fn padding<T: Into<BevyWrapper<Val>>>(
+    fn padding<T: IntoViewAttrMember<ElementAttrAgent<Val>>>(
         self,
         value: T,
     ) -> Self::AddMember<(
-        ViewAttr<padding_left>,
-        ViewAttr<padding_right>,
-        ViewAttr<padding_top>,
-        ViewAttr<padding_bottom>,
-    )> {
-        let value = value.into().0;
+        T::OtherAttr<padding_left>,
+        T::OtherAttr<padding_right>,
+        T::OtherAttr<padding_top>,
+        T::OtherAttr<padding_bottom>,
+    )>
+    where
+        T: Clone,
+    {
         self.member((
-            ViewAttr::<padding_left>(value),
-            ViewAttr::<padding_right>(value),
-            ViewAttr::<padding_top>(value),
-            ViewAttr::<padding_bottom>(value),
+            value.clone().into_other_attr::<padding_left>(),
+            value.clone().into_other_attr::<padding_right>(),
+            value.clone().into_other_attr::<padding_top>(),
+            value.into_other_attr::<padding_bottom>(),
         ))
     }
 }
