@@ -10,9 +10,9 @@ pub trait StyleSheetItems<R>: Send + 'static
 where
     R: Renderer,
 {
-    fn iter<'a>(
+    fn iter(
         self,
-        ctx: StyleSheetCtx<'a, R>,
+        ctx: StyleSheetCtx<R>,
     ) -> impl Iterator<Item = StyleItemValue> + 'static;
 }
 
