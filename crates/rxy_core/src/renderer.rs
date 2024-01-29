@@ -73,8 +73,8 @@ pub trait Renderer:
                 r
             }
             None => {
-                let r = f(world, None);
-                r
+                
+                f(world, None)
             }
         }
     }

@@ -77,7 +77,7 @@ pub fn parse_size_val(text: &str) -> Val {
             } else if class.ends_with("px") {
                 Val::Px(class.parse::<f32>().unwrap_or(0.0))
             } else {
-                class.parse::<f32>().map(|n|Val::Px(n)).unwrap_or_else(|_| {
+                class.parse::<f32>().map(Val::Px).unwrap_or_else(|_| {
                     warn!("Invalid size value: {}", class);
                     Val::Auto
                 })

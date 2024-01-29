@@ -109,7 +109,6 @@ macro_rules! impl_schema_props_for_tuples {
                 Self::Props<P>: SchemaProps<R>
 
             {
-                ()
             }
 
             fn get_init_values(&mut self)->HashMap<core::any::TypeId, BoxedPropValue> {

@@ -25,15 +25,15 @@ where
             world: &mut *world,
             parent,
         };
-        let key = match self {
+
+        match self {
             Either::Left(r) => r
                 .build(ctx, will_rebuild, state_node_id.clone())
                 .either_left(),
             Either::Right(r) => r
                 .build(ctx, will_rebuild, state_node_id.clone())
                 .either_right(),
-        };
-        key
+        }
     }
 
     fn rebuild(
@@ -167,7 +167,6 @@ where
     LVM: ViewMember<R>,
     RVM: ViewMember<R>,
 {
-
     fn count() -> u8 {
         LVM::count() + LVM::count()
     }

@@ -31,7 +31,7 @@ where
     }
 
     pub fn call(&mut self, args: Args) {
-        let f = self.call_f.clone();
+        let f = self.call_f;
         f(&mut self.f, args);
     }
 }

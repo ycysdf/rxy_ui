@@ -1,17 +1,21 @@
-use crate::{CloneableDynamicView, DynamicMutableViewKey, DynamicView, IntoView, MutableView, MutableViewKey, Renderer, RendererNodeId, RendererViewExt, RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx};
+use crate::{
+    CloneableDynamicView, DynamicMutableViewKey, DynamicView, IntoView, MutableView,
+    MutableViewKey, Renderer, RendererNodeId, RendererViewExt, RendererWorld, View, ViewCtx,
+    ViewKey, ViewMember, ViewMemberCtx,
+};
+use alloc::boxed::Box;
 use core::any::Any;
 use core::hash::{Hash, Hasher};
 use core::ops::Deref;
-use alloc::boxed::Box;
 
 #[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
 pub struct ErasureViewFns<R>
-    where
-        R: Renderer,
+where
+    R: Renderer,
 {
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub remove_fn:
-    Option<fn(key: Box<dyn Any>, world: &mut R::World, state_node_id: &RendererNodeId<R>)>,
+        Option<fn(key: Box<dyn Any>, world: &mut R::World, state_node_id: &RendererNodeId<R>)>,
 
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub insert_before_fn: Option<
@@ -26,25 +30,25 @@ pub struct ErasureViewFns<R>
 
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub set_visibility_fn:
-    Option<fn(key: &dyn Any, &mut R::World, hidden: bool, state_node_id: &RendererNodeId<R>)>,
+        Option<fn(key: &dyn Any, &mut R::World, hidden: bool, state_node_id: &RendererNodeId<R>)>,
 
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub state_node_id: Option<fn(key: &dyn Any) -> Option<RendererNodeId<R>>>,
 
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub reserve_key:
-    Option<fn(world: &mut RendererWorld<R>, will_rebuild: bool) -> DynamicMutableViewKey>,
+        Option<fn(world: &mut RendererWorld<R>, will_rebuild: bool) -> DynamicMutableViewKey>,
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub first_node_id:
-    Option<fn(key: &dyn Any, world: &RendererWorld<R>) -> Option<RendererNodeId<R>>>,
+        Option<fn(key: &dyn Any, world: &RendererWorld<R>) -> Option<RendererNodeId<R>>>,
 }
 
 pub fn get_erasure_view_fns<'a, R>(
     world: &'a RendererWorld<R>,
     state_node_id: &<R as Renderer>::NodeId,
 ) -> &'a ErasureViewFns<R>
-    where
-        R: Renderer,
+where
+    R: Renderer,
 {
     let Some(erasure_fns) = R::get_view_state_ref::<ErasureViewFns<R>>(world, state_node_id) else {
         panic!("no found view type data!")
@@ -89,8 +93,8 @@ pub fn set_erasure_view_fns<R: Renderer, V: View<R>>(
 }
 
 pub trait ErasureView<R>: Send + 'static
-    where
-        R: Renderer,
+where
+    R: Renderer,
 {
     fn as_any(&self) -> &(dyn Any + Send);
     fn build(
@@ -104,8 +108,8 @@ pub trait ErasureView<R>: Send + 'static
 }
 
 pub trait CloneableErasureView<R>: ErasureView<R>
-    where
-        R: Renderer,
+where
+    R: Renderer,
 {
     fn as_dynamic(&self) -> &dyn ErasureView<R>;
     fn into_dynamic(self: Box<Self>) -> Box<dyn ErasureView<R>>;
@@ -116,49 +120,56 @@ pub type BoxedErasureView<R> = Box<dyn ErasureView<R>>;
 pub type BoxedCloneableErasureView<R> = Box<dyn CloneableErasureView<R>>;
 
 pub trait IntoViewErasureExt<R> {
-    // SAFETY: The returned view must be the same type as the view that was
+    /// # Safety
+    /// The returned view must be the same type as the view that was
+    /// .
     unsafe fn into_erasure_view(self) -> BoxedErasureView<R>
-        where
-            R: Renderer;
+    where
+        R: Renderer;
 }
 
 impl<R, V> IntoViewErasureExt<R> for V
-    where
-        R: Renderer,
-        V: IntoView<R>,
+where
+    R: Renderer,
+    V: IntoView<R>,
 {
     unsafe fn into_erasure_view(self) -> BoxedErasureView<R>
-        where
-            R: Renderer,
+    where
+        R: Renderer,
     {
         Box::new(self.into_view())
     }
 }
 
 pub trait IntoViewCloneableErasureExt<R> {
-    // SAFETY: The returned view must be the same type as the view that was
+    
+    /// .
+    ///
+    /// # Safety
+    /// The returned view must be the same type as the view that was
+    /// .
     unsafe fn into_cloneable_erasure_view(self) -> BoxedCloneableErasureView<R>
-        where
-            R: Renderer;
+    where
+        R: Renderer;
 }
 
 impl<R, V> IntoViewCloneableErasureExt<R> for V
-    where
-        R: Renderer,
-        V: IntoView<R>,
-        V::View: Clone,
+where
+    R: Renderer,
+    V: IntoView<R>,
+    V::View: Clone,
 {
     unsafe fn into_cloneable_erasure_view(self) -> BoxedCloneableErasureView<R>
-        where
-            R: Renderer,
+    where
+        R: Renderer,
     {
         Box::new(self.into_view())
     }
 }
 
 impl<R> Clone for BoxedCloneableErasureView<R>
-    where
-        R: Renderer,
+where
+    R: Renderer,
 {
     fn clone(&self) -> Self {
         CloneableErasureView::clone(self.deref())
@@ -166,9 +177,9 @@ impl<R> Clone for BoxedCloneableErasureView<R>
 }
 
 impl<R, V> CloneableErasureView<R> for V
-    where
-        R: Renderer,
-        V: View<R> + Clone,
+where
+    R: Renderer,
+    V: View<R> + Clone,
 {
     fn as_dynamic(&self) -> &dyn ErasureView<R> {
         self
@@ -187,20 +198,20 @@ impl<R, V> CloneableErasureView<R> for V
 #[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
 #[derive(Clone, Debug)]
 pub struct ErasureViewKey<R>
-    where
-        R: Renderer,
+where
+    R: Renderer,
 {
     state_node_id: Option<RendererNodeId<R>>,
     is_reserve: bool,
 }
 
 impl<R> ErasureViewKey<R>
-    where
-        R: Renderer,
+where
+    R: Renderer,
 {
     pub fn new<K>(state_node_id: Option<RendererNodeId<R>>, is_reserve: bool) -> Self
-        where
-            K: ViewKey<R>,
+    where
+        K: ViewKey<R>,
     {
         Self {
             state_node_id,
@@ -210,8 +221,8 @@ impl<R> ErasureViewKey<R>
 }
 
 impl<R> Hash for ErasureViewKey<R>
-    where
-        R: Renderer,
+where
+    R: Renderer,
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.state_node_id.hash(state);
@@ -220,19 +231,19 @@ impl<R> Hash for ErasureViewKey<R>
 }
 
 impl<R> ErasureViewKey<R>
-    where
-        R: Renderer,
+where
+    R: Renderer,
 {
     pub fn get_view_key<K>(&self, world: &RendererWorld<R>) -> Option<K>
-        where
-            K: ViewKey<R>,
+    where
+        K: ViewKey<R>,
     {
         self.get_node_id_and_dyn_view_key(world)
             .and_then(|(_, n)| n.downcast::<K>().ok().map(|n| *n))
     }
-    pub fn get_node_id_and_dyn_view_key<'a>(
+    pub fn get_node_id_and_dyn_view_key(
         &self,
-        world: &'a RendererWorld<R>,
+        world: &RendererWorld<R>,
     ) -> Option<(RendererNodeId<R>, Box<(dyn Any + Send + Sync)>)> {
         self.state_node_id.as_ref().and_then(|node_id| {
             R::get_view_state_ref::<ErasureViewKeyViewState>(world, node_id)
@@ -246,8 +257,8 @@ impl<R> ErasureViewKey<R>
 }
 
 impl<R> ViewKey<R> for ErasureViewKey<R>
-    where
-        R: Renderer,
+where
+    R: Renderer,
 {
     fn remove(self, world: &mut RendererWorld<R>) {
         let Some((state_node_id, view_key)) = self.get_node_id_and_dyn_view_key(world) else {
@@ -296,18 +307,16 @@ impl<R> ViewKey<R> for ErasureViewKey<R>
     }
 
     fn first_node_id(&self, world: &RendererWorld<R>) -> Option<RendererNodeId<R>> {
-        let Some((state_node_id, view_key)) = self.get_node_id_and_dyn_view_key(world) else {
-            return None;
-        };
+        let (state_node_id, view_key) = self.get_node_id_and_dyn_view_key(world)?;
         let erasure_fns = get_erasure_view_fns::<R>(world, &state_node_id);
         erasure_fns.first_node_id.unwrap()(&*view_key, world)
     }
 }
 
 #[cfg_attr(
-feature = "bevy_reflect",
-derive(bevy_reflect::Reflect),
-reflect(type_path = false)
+    feature = "bevy_reflect",
+    derive(bevy_reflect::Reflect),
+    reflect(type_path = false)
 )]
 pub struct ErasureViewKeyViewState {
     view_key: Option<Box<dyn Any + Sync + Send>>,
@@ -317,24 +326,24 @@ pub struct ErasureViewKeyViewState {
 
 impl ErasureViewKeyViewState {
     pub fn new<R, K>(view_key: K) -> Self
-        where
-            R: Renderer,
-            K: ViewKey<R>,
+    where
+        R: Renderer,
+        K: ViewKey<R>,
     {
         Self {
-            view_key: Some(Box::new(view_key)),
+            view_key: Some(Box::new(view_key) as _),
             clone_fn: Some(|view_key| {
                 let key: &K = view_key.downcast_ref::<K>().unwrap();
-                Box::new(key.clone())
+                Box::new(key.clone()) as _
             }),
         }
     }
 }
 
 impl<R, V> ErasureView<R> for V
-    where
-        R: Renderer,
-        V: View<R>,
+where
+    R: Renderer,
+    V: View<R>,
 {
     fn as_any(&self) -> &(dyn Any + Send) {
         self
@@ -354,14 +363,13 @@ impl<R, V> ErasureView<R> for V
             None,
             will_rebuild,
         );
-        let node_id = key.state_node_id();
-        let state_node_id = if let Some(node_id) = &node_id {
+        let state_node_id = if let Some(node_id) = key.state_node_id() {
             let state_node_id = if let Some(reserve_key) = reserve_key {
                 assert!(reserve_key.is_reserve);
                 assert!(reserve_key.state_node_id.is_some());
                 reserve_key.state_node_id.unwrap()
             } else {
-                node_id.clone()
+                node_id
             };
             set_erasure_view_fns::<R, V>(&mut *ctx.world, &state_node_id);
             if will_rebuild {
@@ -390,8 +398,8 @@ impl<R, V> ErasureView<R> for V
 }
 
 impl<R> View<R> for BoxedErasureView<R>
-    where
-        R: Renderer,
+where
+    R: Renderer,
 {
     type Key = ErasureViewKey<R>;
 
@@ -410,8 +418,8 @@ impl<R> View<R> for BoxedErasureView<R>
 }
 
 impl<R> View<R> for BoxedCloneableErasureView<R>
-    where
-        R: Renderer,
+where
+    R: Renderer,
 {
     type Key = ErasureViewKey<R>;
 
@@ -430,8 +438,8 @@ impl<R> View<R> for BoxedCloneableErasureView<R>
 }
 
 impl<R> IntoView<R> for BoxedErasureView<R>
-    where
-        R: Renderer,
+where
+    R: Renderer,
 {
     type View = Self;
 
@@ -441,8 +449,8 @@ impl<R> IntoView<R> for BoxedErasureView<R>
 }
 
 impl<R> IntoView<R> for BoxedCloneableErasureView<R>
-    where
-        R: Renderer,
+where
+    R: Renderer,
 {
     type View = Self;
 

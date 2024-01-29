@@ -38,6 +38,16 @@ where
     }
 }
 
+impl<R, T> Default for ReceiverPropState<R, T>
+where
+    R: Renderer,
+    T: Clone + PartialEq + Send + 'static,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<R, T> PropState<R> for ReceiverPropState<R, T>
 where
     R: Renderer,

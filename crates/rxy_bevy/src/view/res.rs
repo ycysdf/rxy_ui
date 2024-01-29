@@ -70,7 +70,7 @@ where
         let key = view.build(
             ViewCtx {
                 world: &mut *ctx.world,
-                parent: ctx.parent.clone(),
+                parent: ctx.parent,
             },
             reserve_key,
             will_rebuild,
@@ -87,7 +87,7 @@ where
         view.rebuild(
             ViewCtx {
                 world: &mut *ctx.world,
-                parent: ctx.parent.clone(),
+                parent: ctx.parent,
             },
             key.clone(),
         );

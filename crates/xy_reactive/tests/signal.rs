@@ -1,4 +1,4 @@
-use tachy_reaccy::prelude::*;
+use xy_reactive::prelude::*;
 
 #[test]
 fn create_signal() {

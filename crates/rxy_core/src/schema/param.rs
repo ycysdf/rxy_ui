@@ -1,8 +1,11 @@
 use crate::r#static::Static;
-use crate::{rebuild_fn, rebuild_fn_channel, MaybeReflect, ReBuildFn, RebuildFnReceiver, ReceiverPropState, Renderer, InnerSchemaCtx, ConstIndex};
+use crate::{
+    rebuild_fn, rebuild_fn_channel, ConstIndex, InnerSchemaCtx, MaybeReflect, ReBuildFn,
+    RebuildFnReceiver, ReceiverPropState, Renderer,
+};
 use alloc::boxed::Box;
-use core::any::TypeId;
 use bevy_utils::all_tuples;
+use core::any::TypeId;
 
 pub trait SchemaParam<R>: Send + 'static
 where
@@ -29,11 +32,8 @@ impl<R> SchemaParams<R> for ()
 where
     R: Renderer,
 {
-    fn from(_: &mut InnerSchemaCtx<R>) -> Self {
-        ()
-    }
+    fn from(_: &mut InnerSchemaCtx<R>) -> Self {}
 }
-
 
 pub trait SchemaParamDefault<R>
 where
@@ -59,7 +59,8 @@ where
 {
     fn from<const I: usize>(ctx: &mut InnerSchemaCtx<R>) -> Self {
         let prop_type_id = TypeId::of::<ConstIndex<I>>();
-        let value: T = ctx.get_init_value::<T>(prop_type_id)
+        let value: T = ctx
+            .get_init_value::<T>(prop_type_id)
             .unwrap_or_else(|| T::param_default(ctx));
         Static(value)
     }

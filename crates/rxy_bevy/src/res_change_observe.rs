@@ -37,8 +37,11 @@ pub struct ResChangeObserve<T: Resource> {
     _marker: PhantomData<T>,
 }
 
-impl<T: Resource> ResChangeObserve<T> {
-    pub fn new() -> Self {
+impl<T> Default for ResChangeObserve<T>
+where
+    T: Resource,
+{
+    fn default() -> Self {
         let (sender, receiver) = async_channel::unbounded();
         Self {
             sender,
@@ -46,6 +49,12 @@ impl<T: Resource> ResChangeObserve<T> {
             observer_count: Default::default(),
             _marker: Default::default(),
         }
+    }
+}
+
+impl<T: Resource> ResChangeObserve<T> {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 

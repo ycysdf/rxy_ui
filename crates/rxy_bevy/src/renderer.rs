@@ -415,7 +415,7 @@ impl ViewReBuilder<BevyRenderer> for CmdViewReBuilder {
         node_id: &<BevyRenderer as Renderer>::NodeId,
     ) {
         let parent = self.parent;
-        let node_id = node_id.clone();
+        let node_id = *node_id;
         self.cmd_sender.add(move |world: &mut World| {
             let ctx = ViewCtx { world, parent };
             mutable_view_rebuild(view, ctx, node_id);

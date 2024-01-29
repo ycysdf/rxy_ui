@@ -57,7 +57,7 @@ impl NodeStyleSheetsState {
             .chain(
                 shared_style_sheet_ids
                     .into_iter()
-                    .filter_map(|n| n)
+                    .flatten()
                     .map(|n| AppliedStyleSheet::Shared(n.clone())),
             )
     }
@@ -158,10 +158,10 @@ impl NodeStyleSheetsState {
         }
     }
 
-    pub fn take_inline_style_sheets_from_member<'a>(
-        &'a mut self,
+    pub fn take_inline_style_sheets_from_member(
+        &mut self,
         member_state: ApplyStyleSheetsMemberState,
-    ) -> impl Iterator<Item = (StyleSheetIndex, StyleSheetDefinition)> + 'a {
+    ) -> impl Iterator<Item = (StyleSheetIndex, StyleSheetDefinition)> + '_ {
         self.inline_style_sheet
             .iter_mut()
             .enumerate()
@@ -170,10 +170,10 @@ impl NodeStyleSheetsState {
             .filter_map(|n| n.1.take().map(|s| (n.0 as _, s)))
     }
 
-    pub fn take_shared_style_sheets_from_member<'a>(
-        &'a mut self,
+    pub fn take_shared_style_sheets_from_member(
+        &mut self,
         member_state: ApplyStyleSheetsMemberState,
-    ) -> impl Iterator<Item = (StyleSheetIndex, StyleSheetId<BevyRenderer>)> + 'a {
+    ) -> impl Iterator<Item = (StyleSheetIndex, StyleSheetId<BevyRenderer>)> + '_ {
         self.shared_style_sheet_ids
             .iter_mut()
             .enumerate()

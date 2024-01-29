@@ -179,7 +179,7 @@ where
             views.push(Some(view.into_view()));
         }
         let cmds = {
-            let Some(state) = R::get_view_state_ref::<ForKeyedState<K>>(&ctx.world, &state_node_id)
+            let Some(state) = R::get_view_state_ref::<ForKeyedState<K>>(ctx.world, &state_node_id)
             else {
                 panic!("no found keyd state!")
             };
@@ -224,7 +224,7 @@ where
 }
 
 fn apply_diff<V, R>(
-    mut ctx: ViewCtx<R>,
+    ctx: ViewCtx<R>,
     placeholder_id: &R::NodeId,
     diff: Diff,
     mut views: Vec<Option<V>>,
@@ -237,7 +237,7 @@ where
     match diff {
         Diff::NoChanged => children_keys,
         Diff::Cleared => {
-            for key in children_keys.into_iter().filter_map(|n| n) {
+            for key in children_keys.into_iter().flatten() {
                 key.remove(&mut *ctx.world);
             }
             Default::default()
@@ -315,7 +315,7 @@ where
 
                 let before_node_id = get_next_some_node_id(&mut *ctx.world, &mut children_keys, to);
                 let parent = ctx.parent.clone();
-                moved_key.insert_before(&mut ctx.world, Some(&parent), before_node_id.as_ref());
+                moved_key.insert_before(ctx.world, Some(&parent), before_node_id.as_ref());
                 children_keys[to] = Some(moved_key.clone());
 
                 views[to].take().unwrap().rebuild(

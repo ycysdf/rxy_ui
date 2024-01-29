@@ -148,13 +148,11 @@ pub struct MemberHashMapState<S: Send + 'static>(pub SyncCell<HashMap<u8, S>>);
 impl<'a, R: Renderer> ViewMemberCtx<'a, R> {
     pub fn view_member_state_mut<S: Send + 'static>(&mut self) -> Option<&mut S> {
         R::get_state_mut::<TypeIdHashMapState<S>>(self.world, &self.node_id)
-            .map(|s| s.0.get().get_mut(&self.type_id))
-            .flatten()
+            .and_then(|s| s.0.get().get_mut(&self.type_id))
     }
     pub fn take_view_member_state<S: Send + 'static>(&mut self) -> Option<S> {
         R::get_state_mut::<TypeIdHashMapState<S>>(self.world, &self.node_id)
-            .map(|s| s.0.get().remove(&self.type_id))
-            .flatten()
+            .and_then(|s| s.0.get().remove(&self.type_id))
     }
     pub fn set_view_member_state<S: Send + 'static>(&mut self, state: S) {
         if let Some(map) =
@@ -174,13 +172,11 @@ impl<'a, R: Renderer> ViewMemberCtx<'a, R> {
 
     pub fn indexed_view_member_state_mut<S: Send + 'static>(&mut self) -> Option<&mut S> {
         R::get_state_mut::<MemberHashMapState<S>>(self.world, &self.node_id)
-            .map(|s| s.0.get().get_mut(&self.index))
-            .flatten()
+            .and_then(|s| s.0.get().get_mut(&self.index))
     }
     pub fn take_indexed_view_member_state<S: Send + 'static>(&mut self) -> Option<S> {
         R::get_state_mut::<MemberHashMapState<S>>(self.world, &self.node_id)
-            .map(|s| s.0.get().remove(&self.index))
-            .flatten()
+            .and_then(|s| s.0.get().remove(&self.index))
     }
     pub fn set_indexed_view_member_state<S: Send + 'static>(&mut self, state: S) {
         if let Some(map) =

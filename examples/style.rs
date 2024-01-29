@@ -1,9 +1,7 @@
 use bevy::prelude::*;
 use rxy_bevy::prelude::*;
-use rxy_bevy_style::{ElementStyleExt, RxyStyleSheetPlugin, StyleSheets, TailwindAttrs};
-use rxy_core::prelude::*;
-use rxy_style::{x, x_hover};
-use xy_reactive::prelude::{use_rw_signal, SignalGet, SignalUpdate};
+use rxy_bevy_style::prelude::*;
+use xy_reactive::prelude::*;
 
 fn main() {
     let mut app = App::new();

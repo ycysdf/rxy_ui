@@ -33,7 +33,11 @@ where
     }
 }
 
-// #[cfg_attr(feature = "dyn", bevy_force_dynamic_view)]
+/// .
+///
+/// # Safety
+/// make sure that this view is always alive
+/// .
 pub unsafe fn system<L, S, M, IV>(label: L, system: S) -> SystemView<L, S, M, IV>
 where
     M: Send + 'static,
@@ -44,7 +48,12 @@ where
     SystemView::<L, S, M, IV>(label, system, default())
 }
 
-// #[cfg_attr(feature = "dyn", bevy_force_dynamic_view)]
+
+/// .
+///
+/// # Safety
+/// make sure that this view is always alive
+/// .
 pub unsafe fn system_with_config<L, S, M, IV, F>(
     label: L,
     config_f: F,

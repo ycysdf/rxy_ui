@@ -1,16 +1,7 @@
-use core::any::TypeId;
-
 use bevy::prelude::*;
 use rxy_bevy::prelude::*;
-use rxy_bevy_style::{
-    rxy_style_macro::TypedStyle, typed_shared_style_sheets, ElementStyleExt, RxyStyleSheetPlugin,
-    StyleSheets, TailwindAttrs, TypedStyleLabel,
-};
-use rxy_core::{
-    rx, use_list, x_if, x_if_else, x_iter_source, IntoView, ListOperator, View, ViewCtx,
-};
-use rxy_style::{x, x_hover};
-use xy_reactive::prelude::{use_rw_signal, SignalGet, SignalUpdate};
+use rxy_bevy_style::prelude::*;
+// use xy_reactive::prelude::*;
 
 fn main() {
     let mut app = App::new();

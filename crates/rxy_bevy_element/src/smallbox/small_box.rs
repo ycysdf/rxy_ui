@@ -1,3 +1,4 @@
+
 use std::alloc::{self, Layout};
 use std::any::Any;
 use std::cmp::Ordering;
@@ -14,6 +15,17 @@ use std::ops::Deref;
 use std::ptr;
 
 use crate::element_core::AttrValue;
+
+impl<Space> SmallBox<dyn AttrValue, Space> {
+    #[inline]
+    pub fn downcast<T: Any>(self) -> Result<SmallBox<T, Space>, Self> {
+        if self.deref().as_any().is::<T>() {
+            unsafe { Ok(self.downcast_unchecked()) }
+        } else {
+            Err(self)
+        }
+    }
+}
 
 /*#[cfg(not(any(feature = "std", doctest)))]
 use ::core::alloc::{self, Layout};
@@ -74,7 +86,7 @@ impl<T: ?Sized, Space> SmallBox<T, Space> {
                     _phantom: PhantomData,
                 }
             } else {
-                let val: &T = &*self;
+                let val: &T = &self;
                 SmallBox::<T, ToSpace>::new_copy(val, val as *const T)
             };
 
@@ -204,17 +216,6 @@ impl<Space> SmallBox<dyn Any, Space> {
     }
 }
 
-impl<Space> SmallBox<dyn AttrValue, Space> {
-    #[inline]
-    pub fn downcast<T: Any>(self) -> Result<SmallBox<T, Space>, Self> {
-        if self.deref().as_any().is::<T>() {
-            unsafe { Ok(self.downcast_unchecked()) }
-        } else {
-            Err(self)
-        }
-    }
-}
-
 impl<Space> SmallBox<dyn Any + Send, Space> {
     #[inline]
     pub fn downcast<T: Any>(self) -> Result<SmallBox<T, Space>, Self> {
@@ -257,7 +258,7 @@ where
     T: Sized,
 {
     fn clone(&self) -> Self {
-        let val: &T = &*self;
+        let val: &T = self;
         SmallBox::new(val.clone())
     }
 }
@@ -286,9 +287,6 @@ impl<T: ?Sized, Space> fmt::Pointer for SmallBox<T, Space> {
 impl<T: ?Sized + PartialEq, Space> PartialEq for SmallBox<T, Space> {
     fn eq(&self, other: &SmallBox<T, Space>) -> bool {
         PartialEq::eq(&**self, &**other)
-    }
-    fn ne(&self, other: &SmallBox<T, Space>) -> bool {
-        PartialEq::ne(&**self, &**other)
     }
 }
 
@@ -330,6 +328,7 @@ unsafe impl<T: ?Sized + Sync, Space> Sync for SmallBox<T, Space> {}
 
 #[cfg(test)]
 mod tests {
+
     use std::any::Any;
 
     use crate::smallbox::space::*;

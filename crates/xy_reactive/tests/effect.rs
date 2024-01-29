@@ -4,7 +4,7 @@
 }; */
 use parking_lot::RwLock;
 use std::{mem, sync::Arc};
-use tachy_reaccy::prelude::*;
+use xy_reactive::prelude::*;
 
 pub async fn tick() {
     tokio::time::sleep(std::time::Duration::from_micros(1)).await;

@@ -16,8 +16,7 @@ where
     R: Renderer,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("SchemaSlot")
-            .finish()
+        f.debug_struct("SchemaSlot").finish()
     }
 }
 
@@ -26,9 +25,7 @@ where
     R: Renderer,
 {
     pub fn new(view: Option<BoxedErasureView<R>>) -> Self {
-        Self {
-            view,
-        }
+        Self { view }
     }
 }
 
@@ -44,9 +41,7 @@ where
         reserve_key: Option<Self::Key>,
         _will_rebuild: bool,
     ) -> Self::Key {
-        let Some(view) = self.view else {
-            return None;
-        };
+        let view = self.view?;
 
         let key = view.build(
             ctx,
@@ -73,8 +68,7 @@ where
     R: Renderer,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("CloneableSchemaSlot")
-            .finish()
+        f.debug_struct("CloneableSchemaSlot").finish()
     }
 }
 
@@ -83,9 +77,7 @@ where
     R: Renderer,
 {
     pub fn new(view: Option<BoxedCloneableErasureView<R>>) -> Self {
-        Self {
-            view,
-        }
+        Self { view }
     }
 }
 
@@ -101,9 +93,7 @@ where
         reserve_key: Option<Self::Key>,
         _will_rebuild: bool,
     ) -> Self::Key {
-        let Some(view) = self.view else {
-            return None;
-        };
+        let view = self.view?;
 
         let key = view.build(
             ctx,

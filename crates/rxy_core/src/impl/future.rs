@@ -41,7 +41,7 @@ where
         let Some(state_node_id) = key.state_node_id() else {
             return;
         };
-        let is_build = build_info_is_contained::<R>(&mut *ctx.world, &state_node_id);
+        let is_build = build_info_is_contained::<R>(ctx.world, &state_node_id);
         if is_build {
             let world_scoped = R::deferred_world_scoped(ctx.world);
             R::spawn_and_detach(async move {

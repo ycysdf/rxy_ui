@@ -45,24 +45,19 @@ pub fn impl_into_view(input: TokenStream) -> TokenStream {
         None
     };
     let generic_args = type_path.and_then(|n| {
-        n.path
-            .segments
-            .iter()
-            .last()
-            .map(|n| {
-                if let syn::PathArguments::AngleBracketed(n) = &n.arguments {
-                    Some(n.args.iter().map(|n| {
-                        if let GenericArgument::Type(n) = n {
-                            n
-                        } else {
-                            panic!("not type")
-                        }
-                    }))
-                } else {
-                    None
-                }
-            })
-            .flatten()
+        n.path.segments.iter().last().and_then(|n| {
+            if let syn::PathArguments::AngleBracketed(n) = &n.arguments {
+                Some(n.args.iter().map(|n| {
+                    if let GenericArgument::Type(n) = n {
+                        n
+                    } else {
+                        panic!("not type")
+                    }
+                }))
+            } else {
+                None
+            }
+        })
     });
 
     let mut generics = Generics {

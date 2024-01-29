@@ -3,7 +3,7 @@ use bevy_ecs::prelude::*;
 use bevy_reflect::prelude::*;
 
 use crate::element_core::ElementUnitAttrUntyped;
-use crate::{AttrIndex};
+use crate::AttrIndex;
 
 pub trait ElementTypeUnTyped: Reflect {
     fn tag_name(&self) -> &'static str;
@@ -21,7 +21,7 @@ pub trait ElementTypeUnTyped: Reflect {
         }
         unreachable!();
     }
-    fn spawn<'w>(&self, entity_mut: &mut EntityWorldMut);
+    fn spawn(&self, entity_mut: &mut EntityWorldMut);
     fn try_insert_no_reflect_components(
         &self,
         entity_mut: &mut EntityWorldMut,
@@ -89,7 +89,7 @@ pub trait ElementTypeBase: Reflect + FromReflect + TypePath {
             }
             map
         });
-        map.get(attr_name).map(|n| *n)
+        map.get(attr_name).copied()
     }
 }
 

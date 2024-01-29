@@ -137,7 +137,7 @@ where
                 &mut *ctx.world,
                 &state_node_id,
             );
-            return Some(DynamicView::build(self, ctx, true, state_node_id));
+            Some(DynamicView::build(self, ctx, true, state_node_id))
         } else {
             DynamicView::rebuild(self, ctx, prev_key, state_node_id);
             None
@@ -171,7 +171,7 @@ where
                 &mut *ctx.world,
                 &state_node_id,
             );
-            return Some(DynamicView::build(self, ctx, true, state_node_id));
+            Some(DynamicView::build(self, ctx, true, state_node_id))
         } else {
             DynamicView::rebuild(self, ctx, prev_key, state_node_id);
             None
@@ -272,13 +272,13 @@ impl DynamicMutableViewKey {
         R: Renderer,
         V: View<R>,
     {
-        let reflect_key: Box<dyn Any + Send + Sync> = Box::new(key);
+        let reflect_key: Box<dyn Any + Send + Sync> = Box::new(key) as _;
         Self {
-            key: Some(reflect_key.into()),
+            key: Some(reflect_key),
             view_type_id: Some(TypeId::of::<V>()),
             clone_fn: Some(|key| {
                 let key = key.downcast_ref::<V::Key>().unwrap();
-                Box::new(key.clone())
+                Box::new(key.clone()) as _
             }),
             hash_fn: Some(|key| {
                 let key = key.downcast_ref::<V::Key>().unwrap();

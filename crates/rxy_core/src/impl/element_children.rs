@@ -132,7 +132,7 @@ impl<V, CV, R> View<R> for ElementViewChildren<V, CV, R>
     fn rebuild(self, ctx: ViewCtx<R>, state_key: Self::Key) {
         {
             let Some(children_key) = R::get_view_state_ref::<ElementViewChildrenState<CV::Key>>(
-                &mut *ctx.world,
+                ctx.world,
                 V::node_id(&state_key),
             )
                 .map(|n| n.children_key.clone()) else {

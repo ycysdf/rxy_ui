@@ -97,12 +97,7 @@ impl_default_attr_values! {
 
 impl<T: AttrValue + TypePath + FromReflect + Clone + PartialEq> AttrValue for Option<T> {
     fn clone_att_value(&self) -> SmallBox<dyn AttrValue, S1> {
-        smallbox!(match self {
-            None => None,
-            Some(n) => {
-                Some(T::clone(n))
-            }
-        })
+        smallbox!(self.clone())
     }
 
     fn default_value() -> Self

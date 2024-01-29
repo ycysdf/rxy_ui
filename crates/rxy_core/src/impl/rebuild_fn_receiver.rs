@@ -138,7 +138,7 @@ where
     pub fn map<U>(self, map_f: impl Fn(T) -> U + Send + 'static) -> RebuildFnReceiver<R, U> {
         let rebuild_fn_sender_fn = self.1;
         RebuildFnReceiver(
-            self.0.map(|n| map_f(n)),
+            self.0.map(&map_f),
             Box::new(move |mut f| {
                 rebuild_fn_sender_fn(Box::new(move |iv, world| f(map_f(iv), world)))
             }),
@@ -190,7 +190,7 @@ where
     ) where
         T: ViewMember<R>,
     {
-        let _ = f({
+        f({
             let mut is_build = is_build;
             Box::new(move |vm, world| {
                 if is_build {
@@ -223,7 +223,7 @@ where
     ) where
         T: View<R>,
     {
-        let _ = f({
+        f({
             let mut is_build = is_build;
             Box::new(move |view, world| {
                 if is_build {
@@ -266,7 +266,7 @@ where
     #[inline]
     fn build(self, ctx: ViewMemberCtx<R>, _will_rebuild: bool) {
         let node_id = ctx.node_id.clone();
-        let index =ctx.index;
+        let index = ctx.index;
         let is_build = match self.0 {
             None => false,
             Some(vm) => {

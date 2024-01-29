@@ -1,3 +1,5 @@
+#![allow(clippy::blocks_in_conditions)]
+
 use crate::node_style_state::NodeStyleSheetsState;
 use crate::style_sheets::StyleSheets;
 use crate::EntityStyleAttrInfoIterArgs;
@@ -149,7 +151,7 @@ where
                                             .get_inline_style_sheet(style_sheet_id.index)?;
                                         remove_attr_style_of_definition(
                                             entity_world_mut,
-                                            &style_sheet_definition,
+                                            style_sheet_definition,
                                             NodeStyleSheetId {
                                                 index: style_sheet_index,
                                                 location: StyleSheetLocation::Shared,
@@ -274,42 +276,46 @@ where
                                             .get_and_increment_and_by_location(style_sheet_location)
                                     };
                                     if !applied_style_sheet.scoped_style_sheet_definition(
-                                    entity_world_mut,
-                                    |entity_world_mut, style_sheet_definition| {
-                                        let Some(style_sheet_definition) = style_sheet_definition
+                                        entity_world_mut,
+                                        |entity_world_mut, style_sheet_definition| {
+                                            
+
+                                            let Some(style_sheet_definition) =
+                                                style_sheet_definition
                                             else {
                                                 return Ok(false);
                                             };
-                                        if style_sheet_definition.items.is_empty() {
-                                            return Ok(false);
-                                        }
+                                            if style_sheet_definition.items.is_empty() {
+                                                return Ok(false);
+                                            }
 
-                                        if style_sheet_definition.interaction.is_some() {
-                                            recalculate_interaction_style_value = true;
-                                            entity_world_mut.scoped_inter_style_state_or_default(
-                                                move |entity_world_mut, attr_style_owner| {
-                                                    style_sheet_definition.add_to(
-                                                        attr_style_owner,
-                                                        style_sheet_location,
-                                                        style_sheet_index,
-                                                        entity_world_mut.into(),
-                                                    ).unwrap()
-                                                },
-                                            ).unwrap();
-                                        } else {
-                                            style_sheet_definition.add_to(
-                                                node_style_state,
-                                                style_sheet_location,
-                                                style_sheet_index,
-                                                entity_world_mut.into(),
-                                            ).unwrap();
-                                        }
+                                            if style_sheet_definition.interaction.is_some() {
+                                                recalculate_interaction_style_value = true;
+                                                entity_world_mut
+                                                    .scoped_inter_style_state_or_default(
+                                                    move |entity_world_mut, attr_style_owner| {
+                                                        style_sheet_definition.add_to(
+                                                            attr_style_owner,
+                                                            style_sheet_location,
+                                                            style_sheet_index,
+                                                            entity_world_mut.into(),
+                                                        )
+                                                    },
+                                                )??;
+                                            } else {
+                                                style_sheet_definition.add_to(
+                                                    node_style_state,
+                                                    style_sheet_location,
+                                                    style_sheet_index,
+                                                    entity_world_mut.into(),
+                                                )?;
+                                            }
 
-                                        Ok(true)
-                                    },
-                                )?? {
-                                    continue;
-                                }
+                                            Ok(true)
+                                        },
+                                    )?? {
+                                        continue;
+                                    }
 
                                     if is_first_build {
                                         style_sheets_state

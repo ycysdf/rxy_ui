@@ -17,7 +17,7 @@ pub fn create_effect<T>(fun: impl FnMut(Option<T>) -> T + 'static) -> Effect<T> 
 
 pub struct ErasureEffect {
     pub value: usize,
-    pub inner: Arc<RwLock<EffectInner>>,
+    pub(crate) inner: Arc<RwLock<EffectInner>>,
 }
 
 pub struct Effect<T>

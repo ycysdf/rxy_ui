@@ -43,9 +43,9 @@ pub mod prelude {
         view_builder, x_future, x_if, x_if_else, x_iter, x_iter_keyed, x_stream,
         BoxedCloneableDynamicView, BoxedDynamicView, BoxedErasureView, Context,
         DeferredWorldScoped, DynamicView, Either, EitherExt, ElementView, ErasureView,
-        IntoDynamicView, IntoElementView, IntoView, IntoViewErasureExt, Keyed, MemberOwner,
-        Renderer, RendererElementType, RendererViewExt, Required, SoloView, Static, View, ViewCtx,
-        ViewKey, ViewMember, ViewMemberCtx,
+        IntoDynamicView, IntoElementView, IntoView, IntoViewErasureExt, Keyed, ListOperator,
+        MemberOwner, Renderer, RendererElementType, RendererViewExt, Required, SoloView, Static,
+        View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
     };
     #[cfg(feature = "xy_reactive")]
     pub use crate::{rx, use_list, x_iter_source, MemberOwnerRxExt, SignalExt};

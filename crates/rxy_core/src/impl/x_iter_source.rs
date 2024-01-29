@@ -8,14 +8,14 @@ use async_channel::{Receiver, Recv, RecvError, Sender, TryRecvError};
 use bevy_utils::synccell::SyncCell;
 use bevy_utils::tracing::error;
 use core::fmt::Debug;
+use core::future::Future;
+use core::marker::PhantomData;
+use core::pin::pin;
 use futures_lite::stream::Map;
 use futures_lite::{FutureExt, StreamExt};
 use hooked_collection::{
     ApplyVecOperation, ApplyVecOperationResult, HookedVec, VecOperation, VecOperationRecord,
 };
-use core::future::Future;
-use core::marker::PhantomData;
-use core::pin::pin;
 
 pub enum UseListOperation<T> {
     WatchCount(Sender<usize>),
@@ -218,6 +218,8 @@ impl<T: Clone + Send + 'static> UseListSource<T> {
     // }
     pub fn try_apply_ops(&mut self) {
         while let Ok(op) = self.op_receiver.try_recv() {
+            // todo: 
+            #[allow(clippy::single_match)]
             match op {
                 UseListOperation::Ops(op) => {
                     self.vec.apply_op(op);
@@ -369,7 +371,6 @@ where
 
 pub fn build_for_source<R, T, F, IV>(
     mut for_source: ForSource<T, F>,
-
     ctx: ViewCtx<R>,
     _will_rebuild: bool,
     state_node_id: RendererNodeId<R>,
@@ -382,9 +383,7 @@ pub fn build_for_source<R, T, F, IV>(
     for_source.source.try_apply_ops();
 
     let UseListSource {
-        vec,
-        op_receiver,
-        ..
+        vec, op_receiver, ..
     } = for_source.source;
 
     let view_keys = vec

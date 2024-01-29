@@ -94,21 +94,21 @@ impl<R, T, V> View<R> for ProvideContext<R, T, V>
             reserve_key.unwrap_or_else(|| V::Key::reserve_key(ctx.world, will_rebuild));
         let node_id = V::element_node_id(&reserve_key);
         R::ensure_spawn(ctx.world, node_id.clone());
-        R::set_state::<Context<T>>(ctx.world, &node_id, Context(self.provide_context));
-        let key = self.view.build(
+        R::set_state::<Context<T>>(ctx.world, node_id, Context(self.provide_context));
+        
+        self.view.build(
             ViewCtx {
                 world: &mut *ctx.world,
                 parent: ctx.parent,
             },
             Some(reserve_key),
             will_rebuild,
-        );
-        key
+        )
     }
 
     fn rebuild(self, ctx: ViewCtx<R>, key: Self::Key) {
         let node_id = V::element_node_id(&key);
-        R::set_state::<Context<T>>(ctx.world, &node_id, Context(self.provide_context));
+        R::set_state::<Context<T>>(ctx.world, node_id, Context(self.provide_context));
         self.view.rebuild(ctx, key);
     }
 }

@@ -90,7 +90,7 @@ pub fn mutable_view_rebuild<R: Renderer, V: MutableView<R>>(
     state_node_id: R::NodeId,
 ) {
     let key =
-        R::get_state_ref::<MutableKeySelfStatedWrapper<V::Key>>(&mut *ctx.world, &state_node_id)
+        R::get_state_ref::<MutableKeySelfStatedWrapper<V::Key>>(ctx.world, &state_node_id)
             .map(|n| &n.0)
             .cloned();
     let new_key = if let Some(key) = key {

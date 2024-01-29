@@ -14,7 +14,7 @@ use crate::text_styled_element::TextStyledElementType;
 use super::*;
 
 impl ElementType for text {
-    fn update_entity<'w>(entity_mut: &'w mut EntityWorldMut) {
+    fn update_entity(entity_mut: &mut EntityWorldMut) {
         entity_mut.insert(TextBundle::default());
     }
 
