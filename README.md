@@ -1104,7 +1104,7 @@ fn sample_context() -> impl IntoView<BevyRenderer> {
 
 ```rust
 #[schema]
-pub fn schema_select<T>(
+fn schema_select<T>(
     mut ctx: SchemaCtx,
     content: CloneableSlot,
     value: ReadSignal<T>,
@@ -1115,5 +1115,15 @@ where
     T: Default + Debug + Send + Sync + PartialEq + Clone + 'static,
 {
     ///...
+}
+
+fn sample_schema_select() -> impl IntoView<BevyRenderer> {
+    enum SelectValue {
+        A,
+        B,
+        C,
+    }
+    schema_select::<SelectValue>()
+    // ...
 }
 ```
