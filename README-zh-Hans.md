@@ -1,55 +1,50 @@
 # Rxy UI
 
-<div>
-  <h6>
-    <a href="https://github.com/ycysdf/rxy_ui/blob/main/README-zh-Hans.md"> 中文 </a>
-  </h6>
-</div>
+> 项目还在进行中，处于早期阶段，不建议在生产环境中使用。目前缺少大量测试用例。
 
-> The project is ongoing and in its early stages, and is not recommended for use in a production environment. A large number of test cases are missing.
+受 [xilem](https://github.com/linebender/xilem) [tachys](https://github.com/gbj/tachys) 等项目的启发.
 
-Inspired by projects such as [xilem](https://github.com/linebender/xilem),[tachys](https://github.com/gbj/tachys).
+## 特征：
 
-## Features:
+- 编译时视图、无过程宏：通过元组 Type Builder 的方式去构建视图、成员、样式
+- 性能：视图默认仅构建一次，仅在反应式数据发生变化的可控范围里进行重新构建，采用了编译时视图，可以全部在栈上
+- 细粒度更新、支持信号 （fork 自 [tachy_reaccy](https://github.com/gbj/tachys/tree/main/tachy_reaccy)）
+- 组件化：静态属性、信号属性、事件、槽
+- 控制流
+- 层叠样式
 
-- Compile-time view, No procedural  macro, Use tuple Type Builder to build views, members, and styles
-- Performance: Views are constructed only once by default, and reconstruction occurs only within the controllable range of changes in reactive data. Compiled-time views are utilized, and can be placed on the stack.
-- Fine-grained reactivity, support signals（fork from [tachy_reaccy](https://github.com/gbj/tachys/tree/main/tachy_reaccy)）
-- Componentization: static prop, signal prop, events, slots
-- Control flow
-- Cascading style
+## 目标
 
-## Goal
+- 灵活、可扩展
+- 高复用、可组合
+- 高性能、零成本抽象
+- 最小的样板
+- 支持多个渲染器 ( 目前只支持 [Bevy](https://github.com/bevyengine/bevy) )，使其能够应用在多种场景中，比如：游戏、桌面软件、裸机/嵌入式平台 、本机 UI等
+- 支持主流操作系统、Web 平台
 
-- Flexible and scalable
-- High reuse, composable 
-- High performance, zero cost abstraction
-- Minimal boilerplate
-- Support multiple renderer (currently only support [Bevy](https://github.com/bevyengine/bevy), make its can be used in a variety of scenarios, such as: games, desktop software, embedded platform, the native UI, etc
-- Supports mainstream operating systems and Web platforms
+## 计划
 
-## The plan
-
+- Error Boundary、Suspense
 - Text Edit
-- More UI components and examples
-- More Debug features, more test cases, Element inspector
-- Other Renderers
-- Bevy deeper integration, as a scenario to use? (like '@react-three/fiber'), Schema as Prefab?
-- Theme，tailwind
-- DSL, style hot reload, dynamic styles
-- View Designer
+- 更多的 UI 组件 与 示例
+- 更多 Debug 功能、更多的测试用例、Element inspector
+- 其他渲染器
+- bevy 更加深入的集成，作为场景来使用？（类似 `@react-three/fiber`），Schema 作为 Prefab ？
+- 主题，tailwind
+- DSL、样式热更新、动态样式
+- 视图设计器
 
-## License
+## 许可证
 
 MIT License ([LICENSE-MIT](https://github.com/ycysdf/rxy_ui/blob/main/LICENSE-MIT))
 
-## Contributions
+## 贡献
 
-Code sharing is welcome!
+欢迎共享代码！
 
-## Examples
+## 示例
 
-Counter
+计数器
 
 <img src="./assets/counter.gif" />
 
@@ -95,7 +90,7 @@ fn counter_by_signal() -> impl IntoView<BevyRenderer> {
 }
 ```
 
-Custom Checkbox UI Component
+自定义 Checkbox UI 组件
 
 ```rust
 #[derive(TypedStyle)]
@@ -131,7 +126,7 @@ pub fn schema_checkbox(
 }
 ```
 
-Game Menu and Setting
+游戏菜单与设置
 
 <img src="./assets/game_menu.gif" />
 
@@ -311,27 +306,27 @@ fn schema_in_game() -> impl IntoView<BevyRenderer> {
 }
 ```
 
-## More Examples
+## 更多示例
 
-- Counter：[examples/counter](examples/counter.rs)
-- [10 Challenges for Bevy UI Frameworks](https://github.com/bevyengine/bevy/discussions/11100)
-   - 1. Game Menu：[examples/game_ui_challenges/game_menu](examples/game_ui_challenges/game_menu.rs)
+- 计数器：[examples/counter](examples/counter.rs)
+- [Bevy UI 框架的 10 个挑战](https://github.com/bevyengine/bevy/discussions/11100)
+   - 1. 游戏菜单与自定义 UI 组件：[examples/game_ui_challenges/game_menu](examples/game_ui_challenges/game_menu.rs)
    - `todo!()`
 - [7GUIs](https://eugenkiss.github.io/7guis/)
    - `todo!()`
 - TodoList: `todo!()`
 
-## Tutorials
+## 教程
 
-### Basics
+### 基础
 
-Rxy UI's view is composed of a tuple of `View` elements. Any type that implements `IntoView` can be a part of the view.
+Rxy UI 的视图由 `View` 元组组合而成。所有实现了 `IntoView` 的类型都可以作为视图的一部分。
 
-As long as all members of the tuple implement `View`, the tuple itself also implements `View`, allowing views to be composed in this way.
+只要元组的成员全部实现了 `View`，那么该元组也实现了`View`，通过这样来组合视图
 
-Since strings implement `IntoView`, they can be directly included in the view.
+字符串实现了 `IntoView`，所以可以直接放入视图中。
 
-`div` is the most commonly used view type (analogous to `NodeBundle` in Bevy and similar to the HTML div).
+`div` 是最常用的视图类型（ 相当与 Bevy 中的 `NodeBundle`，也类似于 HTML 中的 div ）
 
 ```rust
 fn my_view() -> impl IntoView<BevyRenderer> {
@@ -342,19 +337,19 @@ fn my_view() -> impl IntoView<BevyRenderer> {
 }
 ```
 
-Adding members to the `View` type through chained calls, the `children` method is used to configure the view's child views.
+通过链式调用向 `View` 类型添加成员，`children` 方法用于设置视图的子视图
 
-You can also use the `erasure_children` method to set a view's child views, The only difference from `children` method is that `erasure_children` performs type erasure on the child views, which can help avoid overly complex types.
+你也可以通过 `erasure_children`方法去用于设置视图的子视图，它与`children`方法唯一的不同是，它会将子视图进行类型擦除，这样可以避免类型过于复杂
 
-> Currently, the `view_erasure` feature is enabled by default, forcing all child views to under go erasure and be placed on the heap. This is becasue if erasure is not performed. the types will become overly complex, causing the compiler to fail and type evaluation to overflow. You can also disable this feature and manually use `erasure_children` to erasure some child views, Avoid making your types too complex and causing compilation failures.
+> 目前默认开启了 view_erasure feature, 强制将所有子视图进行了擦除，放入了堆中，因为如果不进行擦除，类型将过于复杂，导致编译器罢工，类型评估溢出. 你也可以关闭此 feature, 并使用 `erasure_children` 手动擦除一些子视图，避免让类型过于复杂，导致编译失败.
 
-You can set the attrs of the view using attributes such as `width`, `height`, `flex`, `border`, `outline`, and so on.
+可以通过`width`、`height`、`flex`、`border`、`outline` 等等去设置视图的属性
 
-> a complete list of currently supported attributes: [attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy_element/src/element_attrs/attrs.rs),[composite_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy/src/view_member/composite_attrs.rs),[tailwind_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy_style/src/tailwind_attrs.rs)
+> 目前支持的全部属性请看：[attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy_element/src/element_attrs/attrs.rs),[composite_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy/src/view_member/composite_attrs.rs),[tailwind_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy_style/src/tailwind_attrs.rs) .基本 NodeBundle 里面成员都有对应的属性
 
-Any type that implements `ViewMember` can be used as a member of the view, and members can be manually added using the `member` method.
+所有实现了 `ViewMember` 的类型都可以作为视图的成员，可通过 `member` 方法来手动添加成员
 
-Similar to `View`, as long as all members of the tuple implement `ViewMember`, the tuple itself also implements `ViewMember`.
+与 `View`一样，只要元组的成员全部实现了 `ViewMember`，那么该元组也实现了`ViewMember`
 
 ```rust
 fn my_view() -> impl IntoView<BevyRenderer> {
@@ -366,9 +361,11 @@ fn my_view() -> impl IntoView<BevyRenderer> {
 }
 ```
 
-### Event
+`View` 只是描述了视图所需的数据，并不是真正的视图，得利于类型化的编译时视图，并且这些数据全部在栈上的。性能非常好。
 
-You can add events using methods like `on_pointer_click`, and the callback function provided is a Bevy `System`. This means you can use `Res`, `Commands`, `EventWriter`, etc. as parameters for the callback function.
+### 事件
+
+可以通过 `on_pointer_click`、等方法来添加事件，传入的回调函数是个 Bevy `System`，也就是说可以使用 `Res`、`Commands`、`EventWriter` 等作为它的参数。
 
 ```rust
 fn signal_example()-> impl IntoView<BevyRenderer> {
@@ -379,23 +376,23 @@ fn signal_example()-> impl IntoView<BevyRenderer> {
 }
 ```
 
-### Signal
+### 信号
 
-> The current signal implementation at [xy_reactive](https://github.com/ycysdf/xy_reactive), is forked from [tachy_reaccy](https://github.com/gbj/tachys/tree/main/tachy_reaccy). It serves as the next-generation signal library for leptos, and its usage is generally similar to the leptos_reactive library.
+> 当前信号的[实现](https://github.com/ycysdf/xy_reactive) fork 自 [tachy_reaccy](https://github.com/gbj/tachys/tree/main/tachy_reaccy)，它是 leptos 的下一代信号库，信号的用法基本与 leptos_reactive 类似
 
-Rxy UI supports the use of signals to rebuild views and their members.
+Rxy UI 支持使用信号来重新构建视图与其成员。
 
-An important function is `rx`, which requires passing a closure. Inside this closure, you can use the get method of the signal to retrieve its value. `rx` returns a type of `Reactive`.
+一个重要的函数是`rx`，它要求传入一个闭包，在此闭包中可以使用信号的 `get` 方法来获取信号的值，`rx` 返回一个 `Reactive`类型
 
-When the value of the signal changes, the associated `View` or `ViewMember` will be rebuilt.
+当信号的值发生变化时，将重新构建 `View`或`ViewMember`
 
-If the closure's return value implements `IntoView`, then the `Reactive` type implements `View`, and the `rx` function can be directly used in view,
+如果闭包返回值实现了 `IntoView`，那么此`Reactive`类型就实现了 `View`, `rx`函数就可以直接在视图中使用
 
-If the closure's return value implements `IntoViewAttrMember`, then the `Reactive` type implements `ViewMember`, and the `rx` function can be directly used in view member.
+如果闭包返回值实现了 `IntoViewAttrMember`，那么此`Reactive`类型就实现了 `ViewMember`，`rx`函数就可以直接在视图成员中使用
 
-If the signal types `RwSignal<T>` or `ReadSignal`, where `T` implements `IntoView` or `IntoViewAttrMember`, then the signal also implements `View` or `ViewMember`.
+此外如果信号类型`RwSignal<T>`或`ReadSignal<T>` `T` 实现了 `IntoView` 或 `IntoViewAttrMember`，那么它也实现了 `View` 或 `ViewMember`
 
-> `IntoViewAttrMember` represents types that can be converted to `ViewMember`. For example, the width attribute value requires a type of [Val](https://docs.rs/bevy/latest/bevy/ui/enum.Val.html), but you can pass an `i32`, and `IntoViewAttrMember` will internally convert it to `Val::Px(100)` for you.
+> `IntoViewAttrMember` 表示可以转换到 `ViewMember` 的类型，例如：width 属性值要求是 [Val](https://docs.rs/bevy/latest/bevy/ui/enum.Val.html) 类型，但是你可以传入一个 `i32`，`IntoViewAttrMember`内部会帮你转换为 `Val::Px(100)`
 
 ```rust
 fn signal_example() -> impl IntoView<BevyRenderer> {
@@ -416,13 +413,13 @@ fn signal_example() -> impl IntoView<BevyRenderer> {
 
 ### Option、Either、Stream、Future
 
-`Option<T>`,`Either<A,B>`,`Stream<T>`、`Future<T>`, and similar types all implement `IntoView` or `IntoViewAttrMember`. Thereforce, they can be used directly as views or view members.
+`Option<T>`、`Either<A, B>`、`Stream<T>`、`Future<T>` 等也都实现了 `IntoView` 或者 `IntoViewAttrMember`，可以直接作为视图或视图成员
 
-For examples:
+下面是它们的一些用例
 
-Use case for `Option`: Controlling whether to build a view or view member
+`Option` 用例：控制是否去构建 视图 或 视图成员
 
-> while `rx` combined with `Option` can control the visibility of the view, `x_if` is better choice for this purpose, and it will be introduced later.
+> 虽然 rx 配合 Option 可以实现控制视图的显示，但是 `x_if` 是更好的选择，之后会介绍
 
 ```rust
 fn btn(is_show: RwSignal<bool>) -> impl IntoView<BevyRenderer> {
@@ -473,7 +470,7 @@ fn sample_option_view_member() -> impl IntoView<BevyRenderer> {
                         .outline_width(2),
                 )
             }))
-            // The following syntax is equivalent to the one above.
+            // 下面写法与上面写法是等价的
             // .rx_member(move || {
             //     is_show.get().then_some(
             //         ().bg_color(Color::BLUE)
@@ -484,9 +481,10 @@ fn sample_option_view_member() -> impl IntoView<BevyRenderer> {
     )
 }
 ```
-Use case for `Either`: Chossing which view or view member to build
 
-> While `rx` combined with `Either` can achieve switching between views, `x_if_else` is a better choice for this purpose, and it will be introduced later.
+`Either` 用例：选择构建的 视图 或 视图成员
+
+> 虽然 rx 配合 Either 可以实现控制视图的切换，但是 `x_if_else` 是更好的选择，之后会介绍
 
 ```rust
 fn sample_either_view() -> impl IntoView<BevyRenderer> {
@@ -497,9 +495,9 @@ fn sample_either_view() -> impl IntoView<BevyRenderer> {
             let left_view = "Left";
             let right_view = "Right";
             if is_show.get() {
-                left_view.either_left() // This is equivalent to Either::Left(left_view)
+                left_view.either_left() // 这等同于 Either::Left(left_view)
             } else {
-                right_view.either_right() // This is equivalent to Either::Right(right_view)
+                right_view.either_right() // 这等同于 Either::Right(right_view)
             }
         }),
     )
@@ -518,16 +516,16 @@ fn sample_either_view_member() -> impl IntoView<BevyRenderer> {
                 let left_vm = ().bg_color(Color::BLUE);
                 let right_vm = ().outline_color(Color::RED).outline_width(2);
                 if is_show.get() {
-                    left_vm.either_left() // This is equivalent to Either::Left(left_vm)
+                    left_vm.either_left() // 这等同于 Either::Left(left_vm)
                 } else {
-                    right_vm.either_right() // This is equivalent to Either::Right(right_vm)
+                    right_vm.either_right() // 这等同于 Either::Right(right_vm)
                 }
             }))
     )
 }
 ```
 
-`Future` Example:
+`Future` 用例：
 
 ```rust
 fn sample_future() -> impl IntoView<BevyRenderer> {
@@ -550,12 +548,12 @@ fn sample_future() -> impl IntoView<BevyRenderer> {
                     sender.send("Ok").unwrap();
                 }
             }),
-        // For non-Boxed Future, you can use rx_future
+        // 非 Boxed Future 使用 x_future
         x_future(async {
             let r = receiver.await;
             div().padding(20).children(format!("Future: {:?}", r))
         }),
-        // a Boxed Future can be used directly as a view
+        // Boxed Future 可以直接作为 View
         async move {
             let color = receiver2.recv().await;
             div().padding(20).children(format!("Color: {:?}", color))
@@ -565,13 +563,13 @@ fn sample_future() -> impl IntoView<BevyRenderer> {
 }
 ```
 
-`Stream` Example:
+`Stream` 用例：
 
 [counter_by_channel](examples/counter_by_channel.rs)
 
 ### 控制流：x_if、x_iter、x_iter_keyed、x_iter_source
 
-`x_if` is used to control whether to build the view. The first parameter passed to `x_if` is similar to the view member, it can be `bool`, `Reactive`, `ReadSingal`, etc.
+`x_if` 用于控制是否构建对应视图，`x_if`传入的第一个参数 与 视图成员类似，可以是 `bool`、`Reactive`、`ReadSingal` 等
 
 ```rust
 fn sample_x_if() -> impl IntoView<BevyRenderer> {
@@ -593,11 +591,11 @@ fn sample_x_if() -> impl IntoView<BevyRenderer> {
 }
 ```
 
-> The second use of `x_if` with `view_buillder` is because currently, views with children are not `Clone` (due to certain reasons that might be improved later). However, `x_if` requires views to implement `Clone`. Thereforce, in this case, `view_builder` is used, and a callback function is passed to make it cloneable.
+> 第二个 x_if 使用 view_builder 是因为目前 带有孩子的视图都不是 Clone 的 （由于一些原因，后面可能回改善），但是 x_if 要求视图实现 Clone 的，所以此处使用 view_builder 并传入一个回调函数，使得它 Clone
 
-`x_iter` is used to build list views, It takes an `IntoIterator`, and the `Item` needs to implement `IntoView`. It uses the item's index as the key.
+`x_iter` 用于构建列表视图，它接收`IntoIterator`，并且`Item` 需要实现 `IntoView`，它将项的索引作为 key
 
-`x_iter_keyed` requires manually specifying the key and expects `Item` to be of type `Keyed<K, IV>`. It has two members, the first being the key (which should implement `Hash`), and the second being the view.
+`x_iter_keyed` 则需要手动指定 key，需要 `Item` 为 `Keyed<K,IV>` 类型，它由两个成员，第一个为 key (要求实现 `Hash`)，第二个为视图
 
 ```rust 
 fn sample_x_iter() -> impl IntoView<BevyRenderer> {
@@ -622,7 +620,7 @@ fn sample_x_iter_keyed() -> impl IntoView<BevyRenderer> {
 }
 ```
 
-If you need to update the list, you can use `rx` to wrap it.
+如果你需要更新列表，你可以使用 `rx` 包裹它
 
 ```rust
 fn sample_x_iter_keyed_rx() -> impl IntoView<BevyRenderer> {
@@ -652,9 +650,7 @@ fn sample_x_iter_keyed_rx() -> impl IntoView<BevyRenderer> {
 }
 ```
 
-For frequently changing list views, you can also use `x_iter_source` with `use_list`. It is more efficient at updating lists than `x_iter_keyed` and performs well in terms of performance.
-
-Example:
+对于会频繁进行更改的列表视图，你还可以使用 `x_iter_source`与`use_list`，它比 `x_iter_keyed` 更加擅长更新列表，并且性能很好
 
 ```rust
 fn ui() -> impl IntoView<BevyRenderer> {
@@ -738,17 +734,17 @@ fn ui() -> impl IntoView<BevyRenderer> {
 }
 ```
 
-### Cascading Style Sheets
+### 层叠样式
 
-In the previous examples, attrs style where directly written in the views, and such styles cannot cascade. Although it's possible to override them (with some problems), it  doesn't support interactive styles like hover and press(active).
+之前用例中的属性样式都是直接写在视图上的，这样的样式是无法层叠的。虽然可以覆盖（但是也存在一些问题）并且不支持 悬浮与按下(激活) 等交互样式。
 
-Cascading styles can indeed stack, and they have priorities, including directly set attributes. Their priorities are as follows:
+而层叠样式是可以层叠的，它们有优先级，包括直接设置属性，它们的优先级如下：
 
-Directly set attrs > Interactive styles > Inline styles > Shared styles > Styles positioned later
+直接设置属性 > 交互样式 > 内联样式 > 共享样式 > 位置靠后的样式
 
-To add styles using the `style` method, similar to `View` and `ViewMember`, it accepts a tuple where you can include multiple style sheets.
+使用 `style` 方法添加样式，与 `View`、`ViewMember` 类似，它接受一个元组，里面可以填写多个样式表
 
-Normal styles are constructed using `x()`, and interactive styles are construct using `x_hover()`,``
+普通样式使用 `x()` 来构造，交互样式使用 `x_hover()`、`x_active()` 等来构造
 
 ```rust
 fn sample_style_sheet() -> impl IntoView<BevyRenderer> {
@@ -763,9 +759,11 @@ fn sample_style_sheet() -> impl IntoView<BevyRenderer> {
 }
 ```
 
-Currently, styles within the style sheet are static and do not allow the use of `rx`, `Future`, `Stream`, `Option`, etc, However, you can call `style` method multiple times to add styles.
+目前样式表里面的样式都是静态的，不允许使用`rx`、`Future`、`Stream`、`Option` 等，但是你可以多次调用 `style` 方法来添加样式，
 
-There are also convenient methods like `style_rx`, `style_builder`, `style_option`, `style_stream`, etc (it's perferable to use these methods first, using `style_future`)
+`style` 与其他成员一样可以接受 `Reactive`、`Future`、`Option`、`Stream` 等类型
+
+也有 `style_rx`、`style_builder`、`style_option`、`style_stream` 等便捷方法 ( 最好优先使用这些方法，使用`style_future` 内部可以避免 `boxed`，性能更好 )
 
 ```rust
 fn sample_dynamic_style_sheet() -> impl IntoView<BevyRenderer> {
@@ -783,11 +781,11 @@ fn sample_dynamic_style_sheet() -> impl IntoView<BevyRenderer> {
 }
 ```
 
-### Shared typed cascading styles
+### 共享的类型化层叠样式
 
-Define a shared style identifier struct by using the `TypedStyle` derive macro in the structure. Then, in the view, use the `def` method to define a shared typed cascading style.
+通过在结构上使用 derive 宏 `TypedStyle` 去定义一个共享样式标识，然后在视图里调用 `def` 方法来定义一个共享的类型化层叠样式
 
-To use the shared style, simply call `style` method and pass in the type.
+要使用共享样式，直接调用 `style` 方法并传入此类型即可
 
 ```rust
 fn sample_shared_typed_style_sheet() -> impl IntoView<BevyRenderer> {
@@ -813,56 +811,56 @@ fn sample_shared_typed_style_sheet() -> impl IntoView<BevyRenderer> {
     )
 }
 ```
-> Currently, there are no means to modify styles in the shared style sheet, but there will be added means for modification in the future.
 
-### Schema ( Componentization )
+> 目前共享样式表的样式不能修改手段，后续将增加修改的手段
 
-Firstly, you can directly reuse views through functions. However, there are some problems:
+### Schema ( 组件化 )
 
-- Rust lacks optional parameters.
-- The function may be called multiple times (especially if it is within an `rx`, where it is called each time the signal changes).
-- It's just an ordinary function, lacking context, making it challenging to perform some encapsulation.
-- There are some other problems as well, not to go into further detail.
+首先，你可以直接通过函数来重用视图。但是有以下问题：
 
-So, we need a better way to reuse views, and that's where `Schema` comes in. This is a tentative name, and if you have a better one, fell free to suggest.
+- Rust 无可选参数
+- 函数可能调用多次（如果处于 rx 中，那么每次信号变化都会调用一次）
+- 只是一个普通的函数，没有上下文，不好进行一些封装
+- 还有一些其他问题，就不多赘述
 
+所以，我们需要一种更好的方式来重用视图，这就是 `Schema`，这是暂定名称，如果你有更好的名称，欢迎提出。
 
-> It's preferable for the name to be a single word and not use "Component" because it's already used by ECS. Avoiding "Widget" is because I plan to use it for custom-drawn controls in future.
+> 这个名称最好是单个单词，不使用 Component 是因为它已经被 ECS 暂用了。不用 Widget 是因为后续我准备将它用于自绘的控件。
 
-> In the future, we will also explore the possibility of using `Schema` as perfab for game scenes.
+> 后续将探索是否可以把 Schema 作为 游戏场景的 Prefab 预制件来使用
 
-`Schema` essentially addresses all the problems mentioned above:
+`Schema` 基本解决了 上述提出的全部问题:
 
-- `Schema` ensures that the function runs only once, meaning the views inside it will be builded only once.
-- Default properties are optional, and it supports required properties.
-- It supports slots, events, schema context, and more
+- `Schema` 保证了函数只会运行一次，也就是说里面的视图只会构建一次。
+- 默认属性都是可选的，也支持必填属性
+- 支持 槽、事件、上下文等等
 
-Conventions for defining a `Schema`:
+定义 `Schema` 的约定:
 
-- Use the attribute macro `schema`.
-- Function names should start with `schema_`
-- The return type must be either `impl IntoView<Renderer>` or `impl IntoElementView<Renderer>` (the difference between `IntoElementView` and `IntoView` will be explained later)`)
-- Valid parameter types define attributes, events, slots, etc. for the `Schema` throught the function parameters.
+- 使用属性宏 `schema`
+- 函数名以 `schema_` 开头
+- 返回值类型只能是 `impl IntoView<渲染器>` 或 `impl IntoElementView<渲染器>`（后面将介绍 `IntoElementView`与 `IntoView`的区别）
+- 有效的参数类型，通过函数的参数来定义 `Schema` 的属性、事件、槽 等
 
-There are the following types of Props:
+有以下种类的属性：
 
-- `ReadSignal`: Signal
-- `ReceiverProp`: Simple reactive prop, Currently not recommended for use because it is weaker and less user-friendly compared to signals.
-- `Static`: Static prop that does not update
+- `ReadSignal`：信号
+- `ReceiverProp`：简单的反应式属性，目前不推荐使用，主要是因为它相对与信号来说，功能弱且没有信号好用。
+- `Static`：静态属性，不会更新
 
-By default, props are optional, If you want them to be required, you can use `Required` to wrap the type (more on this later)
+默认情况下，属性都是可选的，如果你想要必须传入，可以使用 `Required` 将类型包裹起来 ( 后面会详细介绍 )
 
-Event type: `Sender`, representing an event (actually a re-export of `async-channel`'s `Sender` type).
+事件类型：`Sender`，这表示一个事件 ( 实际上它是 `async-channel` 的 `Sender` 类型的重新导出 )
 
-Slot types: `Slot`, a slot; `CloneableSlot`, a cloneable slot. Slots implement `IntoView` and can be directly placed in the view.
+槽类型：`Slot`, 一个槽，`CloneableSlot`, 一个可以克隆的槽，槽实现了 `IntoView`，所以可以直接放入视图中
 
-`SchemaCtx`: Context type. Currently, it can be used to:
+`SchemaCtx`：上下文类型, 目前可以使用它:
 
-- Obtain the `World`
-- define shared styles or default shared styles outside the view.
-- Use `use_controlled_state` to get al controlled state.
+- 来获取 `World`
+- 在视图外定义共享样式或者默认共享样式
+- `use_controlled_state` 来获取一个受控的状态
 
-Below is an example code for custom `Checkbox`:
+下面是 自定义 `Checkbox` 的代码示例：
 
 ```rust
 #[derive(TypedStyle)]
@@ -898,15 +896,15 @@ pub fn schema_checkbox(
 }
 ```
 
->If you are using you custom type in prop,such as `ReadSignal<CustomType>`, you need to add the `PropValueWrapper` derive macro to `CustomType`. This restriction may be removed in the future.
+> 如果你在属性中使用了你的自定义类型，比如 `ReadSignal<CustomType>`，那么你需要添加 `PropValueWrapper` derive 宏到 `CustomType`，后续可能会去掉这个限制
 
-In the xample above, `use_controlled_state` is used, which, by taking a signal and an event as inputs, returns a new signal.
+在上面示例中使用了 `use_controlled_state`，它通过传入信号与事件，返回一个新的信号。
 
-When the input signal or the retured signal changes. it sends an event with the latest value as as parameter.
+当传入的信号 或者 返回的信号发生改变时，就会发送事件，将最新的值作为参数。
 
-What does the `schema` attribute macro do? It doesn't modify the original function. Instead, it based on the function information, it generates a new function. The original function with with the `schema_` prefix removed is its name. Additionally,  it adds an implementation of a trait for the return type of this function (for details, you can check the code generated by the macro).
+`schema` 属性宏做了什么？它没有修改原函数，它根据函数信息，生成了一个新的函数，原函数去除`schema_`前缀就是它的名字，并且为这个函数的返回值类型添加了一个 `Trait` 实现 ( 详细请可以查看宏生成的代码 )
 
-Code Example: 
+看下面它的使用示例：
 
 ```rust
 fn sample_checkbox() -> impl IntoView<BevyRenderer> {
@@ -924,27 +922,28 @@ fn sample_checkbox() -> impl IntoView<BevyRenderer> {
 }
 ```
 
-The `checkbox` function is generated by `schema_checkbox`.
+`checkbox` 函数就是通过`schema_checkbox` 生成的函数。
 
-You can pass attributes or events like `padding`,`style`,`on_pointer_up`, etc. to the root element of `schema_checkbox`. These attributes or events will be forwarded to the root element.
+可以向 `schema_checkbox` 的根元素传入 `padding`、`style`、`on_pointer_up` 等等属性或事件，这些属性或事件会传递给根元素。 
 
-In addition to these, there are attributes like `value`, `readonly`, `onchange`, etc. You can use them to set the corresponding props or events of `schema_checkbox`
+除了它们，还有 `value`、`readonly`、`onchange` 等属性，通过它们去设置 `schema_checkbox` `Schema` 的同名属性或者事件
 
-Apart from accepting static values, you can also wrap values with reactive types like `Option`, `Reactive`, `ReadSignal`, etc.
+属性除了接受静态值。你也可以使用 `Option` 与 `Reactive`、`ReadSignal`等反应式类型 对值进行包装
 
-> Unlike `ViewMember`, schema props currently cannot nest `Option` within reactive types like `Reactive`, `Memo`, etc.
+> 与 `ViewMember` 不同, Schema 属性 目前无法在 `Reactive`、`Memo` 等反应式类型里面嵌套 `Option`
 
-### Differernce between IntoView and IntoElementView
 
-In `IntoView`, the root element can have zero to many children, while in `IntoElementView`, it can have only one root element.
+### IntoView 与 IntoElementView 的区别
 
-If the return type of a `Schema` is `IntoView`, external code cannot append members or envets to its root element because the root element may have multiple or zero children.
+`IntoView` 中根元素可以有 0 到 多个，而`IntoElementView` 只能有 1个根元素
 
-### Schema Slot
+如果 `Schema` 返回类型是 `IntoView` 则外部无法向它的根元素追加成员或事件，因为它的根元素可能有多个，也可能没有
 
-After defining a slot in `Schema`, you can use the `slot_<slot_name>` method to specify the content of the slot. It takes the type `IntoView`. If the slot is of type `CloneableSlot`, then the `IntoView` type it takes needs to implement `Clone`. Many views do not implement `Clone`, and in such cases, you can use `view_builder` to wrap it.
+### Schema 槽
 
-Code Example:
+在 `Schema` 中定义槽后，就可以使用 `slot_<槽名称>` 方法去指定槽的内容，它接收 `IntoView` 类型，如果槽是 `CloneableSlot` 类型，那么它接收的 `IntoView` 类型需要实现 `Clone` （许多视图都没有实现 `Clone`，就像前面说的，遇到这种情况，你可以使用 `viwe_builder` 来包裹它）
+
+代码示例：
 
 ```rust
 #[schema]
@@ -967,16 +966,15 @@ fn sample_schema_sample() -> impl IntoView<BevyRenderer> {
 }
 ```
 
-
 ### Schema Required
 
-By default, props in `Schema` are optional. Therefore, the types of prop values, like `T` in `ReadSignal<T>`, must implement `Default`.
+默认情况下，`Schema` 的属性都是可选的，所以属性值的类型如 `ReadSignal<T>` 中的 `T` 必须实现 `Default`
 
-You can use `Required` to wrap prop such as `Static`,`ReadSignal`,`ReceiverProp`,`Slot`,`CloneableSlot`, etc. to indicate that they are required. In this case, the prop value `T` does not need to implement `Defeault`.
+你可以对 `Static`、`ReadSignal`、`ReceiverProp`、`Slot`、`CloneableSlot` 等属性使用 `Required` 来包裹它，以表示它是必填，属性值类型 `T` 就不必实现 `Default` 了
 
-After marking an prop as required, the function generated by `Schema` will no longer be parameterless. Instead, you will need to pass the required parameters in order.
+指定为必填后，`Schema` 生成的函数将不再是无参的，而是需要你按照必填参数的顺序依次传入
 
-Code Example:
+代码示例：
 
 ```rust
 #[schema]
@@ -994,15 +992,17 @@ fn sample_schema_required_sample() -> impl IntoView<BevyRenderer> {
 
 ### dynamic
 
-Sometimes you need to return different types, but `impl` doesn't allow returning different types.
+有时需要返回不同的类型，而 `impl` 不允许返回不同的类型
 
-For two different types, you can use `Either<LeftView, RightView>` to wrap them to solve the problem.
+对于两种不同的类型，你可以使用 `Either<LeftView, RightView>` 来包裹它们去解决问题，
 
-For multiple different types, you can also use `Either<LeftView, Either<RightView, Either<...>>>` to solve this problem, but this approach can be cumbersome.
+对于多种不同的类型，你也可以使用 `Either<LeftView, Either<RightView, Either<...>>>` 这种 `Either` 嵌套来解决此问题，但是这样写起来太繁琐了
 
-> Note: The type of `View` wraps `ViewMember`, meaning different `ViewMember` members will result in diferent `View` types
+这时，你可以使用 `into_dynamic()` 将 `IntoView` 转换为动态视图来解决此问题
 
-Code Example:
+> 注意: `View` 的类型包裹了 `ViewMember，也就是说` `ViewMember` 成员不同，也会导致 `View` 类型不同
+
+代码示例：
 
 ```rust
 #[derive(Clone, Debug)]
@@ -1047,7 +1047,7 @@ fn sample_dynamic() -> impl IntoView<BevyRenderer> {
 
 ### Bevy `system_once`
 
-`system_once` will run the proveded `System` once when it is builded (if it's within an `rx`, then it will run each time the signal changes).
+`system_once` 会在构建它时会运行传入的`System`一次 ( 如果在 `rx` 中，那么每次信号变化都会运行一次 )
 
 ```rust
 fn sample_system_once() -> impl IntoView<BevyRenderer> {
@@ -1087,9 +1087,9 @@ fn sample_system_once() -> impl IntoView<BevyRenderer> {
 
 ### Bevy `system`
 
-By using `system`, you can treat a Bevy `System` as a view. You can use `configure` to configure the `System`
+通过使用 `system`，你可以将 Bevy `System` 作为视图。可以使用 `configure` 配置 `System`
 
-However, this method is currently unsafe because there is currently no means of removing a `System` In Bevy, So you have to make sure that this view is always there
+但是此方法当前是 `unsafe` 的，因为当前在 Bevy 里没有删除 `System` 的手段，所以你得保证这个视图一直存在
 
 ```rust
 fn sample_system() -> impl IntoView<BevyRenderer> {
@@ -1109,9 +1109,9 @@ fn sample_system() -> impl IntoView<BevyRenderer> {
 
 ### Bevy `x_res`
 
-`x_res` retrieves a resource of type `T` and  rebuilds when the resource changes.
+`x_res` 获取 `T` 类型的资源，并在资源变化时重新构建
 
-In the following code example, the view will be rebuild every time the `FrameCount` resource changes:
+如下代码示例，每当 `FrameCount` 资源变化时，都会重新构建视图：
 
 ```rust
 fn sample_x_res() -> impl IntoView<BevyRenderer> {
@@ -1127,11 +1127,11 @@ fn sample_x_res() -> impl IntoView<BevyRenderer> {
 
 ### view_builder
 
-`view_builder`, the view builder,accepts a callback function that takes two parameters: the first is `ViewCtx`, and the second is `BuildFlags`.
+`view_builder` 视图构建器 接受一个回调函数，此回调函数接受两个参数，第一个参数是 `ViewCtx`，第二个参数是 `BuildFlags`.
 
-You can use `ViewCtx` within the callback to construct your view.
+`view_builder` 可以在回调中使用`ViewCtx`去构建你的视图
 
-As mentioned earlier, `view_builder` also allow views that cannot be `Clone` to be placed inside it, The type returned by `view_builder` implements `Clone`.
+前面也说过，`view_builder`还可以让不能 `Clone` 的 `View` 放入 `view_builder` 中，`view_builder` 返回的类型实现了`Clone`
 
 ```rust
 fn sample_view_builder() -> impl IntoView<BevyRenderer> {
@@ -1145,13 +1145,13 @@ fn sample_view_builder() -> impl IntoView<BevyRenderer> {
 
 ### `provide_context`
 
-You can provide context using `provide_context`, which supplies the context type to its child views.
+可以通过 `provide_context` 来提供上下文，它将上下文类型提供给它的子视图
 
-Child views can obtain the context through the `context`-related methods of the first parameter, `ViewCtx`, in `view_builder`.
+子视图可以通过 `view_builder` 的第一个参数 `ViewCtx` 的 `context`相关方法 来获取上下文
 
-In `Schema`, you can directly obtain the context through the `Context` parameter.
+在 `Schema` 中，你可以直接通过 `Context`参数来获取上下文
 
-Code Example：
+示例：
 
 ```rust
 #[derive(TypedStyle)]
@@ -1204,15 +1204,15 @@ fn sample_context() -> impl IntoView<BevyRenderer> {
 }
 ```
 
-### Generic Schema
+### 泛型 Schema
 
-`schema` support function to use generic parameter
+`schema` 支持函数去使用泛型参数
 
-Code Example：
+示例：
 
 ```rust
 #[schema]
-pub fn schema_select<T>(
+fn schema_select<T>(
     mut ctx: SchemaCtx,
     content: CloneableSlot,
     value: ReadSignal<T>,

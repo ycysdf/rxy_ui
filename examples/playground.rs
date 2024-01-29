@@ -5,7 +5,7 @@ use bevy_ecs::{entity::Entities, world};
 use bevy_sprite::MaterialMesh2dBundle;
 use bevy_utils::synccell::SyncCell;
 use futures_lite::{FutureExt, StreamExt};
-use rxy_bevy::{prelude::*, system_once};
+use rxy_bevy::{prelude::*, system, system_once};
 use rxy_bevy_style::prelude::*;
 use xy_reactive::prelude::*;
 
@@ -24,7 +24,7 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
-    commands.spawn_rxy_ui(sample_x_res);
+    commands.spawn_rxy_ui(sample_system);
 }
 
 fn signal_sample() -> impl IntoView<BevyRenderer> {
@@ -505,4 +505,18 @@ fn sample_context() -> impl IntoView<BevyRenderer> {
             )),
         ),
     )
+}
+
+fn sample_system() -> impl IntoView<BevyRenderer> {
+    div().flex_col().gap(10).children(unsafe {
+        system(Update, |query: Query<Entity, With<Style>>| {
+            x_iter_keyed(query.iter().map(|entity| {
+                Keyed(
+                    entity,
+                    span(format!("Style Entity: {:?}", entity)).margin(10),
+                )
+            }))
+        })
+        .configure(|config| config.run_if(|| true))
+    })
 }
