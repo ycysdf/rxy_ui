@@ -58,7 +58,7 @@ pub fn set_erasure_view_fns<R: Renderer, V: View<R>>(
 ) {
     R::set_view_state(
         world,
-        &state_node_id,
+        state_node_id,
         ErasureViewFns::<R> {
             remove_fn: Some(|key, world, _state_node_id| {
                 let key = *key.downcast::<V::Key>().unwrap();

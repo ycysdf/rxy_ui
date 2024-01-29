@@ -54,8 +54,18 @@ impl<V, CV, R> ElementViewChildren<V, CV, R>
         }
     }
 
+    #[inline(always)]
     #[cfg(feature = "view_erasure")]
     pub fn children<CV2>(self, children: CV2) -> ElementViewChildren<V, BoxedErasureView<R>, R>
+        where
+            CV2: IntoView<R>,
+    {
+        self.erasure_children(children)
+    }
+
+    
+    #[inline(always)]
+    pub fn erasure_children<CV2>(self, children: CV2) -> ElementViewChildren<V, BoxedErasureView<R>, R>
         where
             CV2: IntoView<R>,
     {
