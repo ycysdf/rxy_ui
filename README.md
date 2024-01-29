@@ -569,7 +569,7 @@ fn sample_future() -> impl IntoView<BevyRenderer> {
 
 [counter_by_channel](examples/counter_by_channel.rs)
 
-### 控制流：x_if、x_iter、x_iter_keyed、x_iter_source
+### Control flow：x_if、x_iter、x_iter_keyed、x_iter_source
 
 `x_if` is used to control whether to build the view. The first parameter passed to `x_if` is similar to the view member, it can be `bool`, `Reactive`, `ReadSingal`, etc.
 
