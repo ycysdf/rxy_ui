@@ -65,7 +65,9 @@ where
     K: MutableViewKey<R>,
 {
     fn remove(self, world: &mut RendererWorld<R>, state_node_id: &RendererNodeId<R>) {
-        self.map(|n| n.remove(world, state_node_id));
+        if let Some(n) = self {
+            n.remove(world, state_node_id)
+        }
     }
 
     fn insert_before(
@@ -75,8 +77,9 @@ where
         before_node_id: Option<&RendererNodeId<R>>,
         state_node_id: &RendererNodeId<R>,
     ) {
-        self.as_ref()
-            .map(|n| n.insert_before(world, parent, before_node_id, state_node_id));
+        if let Some(n) = self.as_ref() {
+            n.insert_before(world, parent, before_node_id, state_node_id)
+        }
     }
 
     fn set_visibility(
@@ -85,8 +88,9 @@ where
         hidden: bool,
         state_node_id: &RendererNodeId<R>,
     ) {
-        self.as_ref()
-            .map(|n| n.set_visibility(world, hidden, state_node_id));
+        if let Some(n) = self.as_ref() {
+            n.set_visibility(world, hidden, state_node_id)
+        }
     }
 
     fn first_node_id(
@@ -128,7 +132,9 @@ where
     }
 
     fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
-        self.map(|n| n.build(ctx, will_rebuild));
+        if let Some(n) = self {
+            n.build(ctx, will_rebuild)
+        }
     }
 
     fn rebuild(self, ctx: ViewMemberCtx<R>) {
@@ -149,7 +155,9 @@ where
     K: ViewKey<R>,
 {
     fn remove(self, world: &mut RendererWorld<R>) {
-        self.map(|n| n.remove(world));
+        if let Some(n) = self {
+            n.remove(world)
+        }
     }
 
     fn insert_before(
@@ -158,12 +166,15 @@ where
         parent: Option<&RendererNodeId<R>>,
         before_node_id: Option<&RendererNodeId<R>>,
     ) {
-        self.as_ref()
-            .map(|n| n.insert_before(world, parent, before_node_id));
+        if let Some(n) = self.as_ref() {
+            n.insert_before(world, parent, before_node_id)
+        }
     }
 
     fn set_visibility(&self, world: &mut RendererWorld<R>, hidden: bool) {
-        self.as_ref().map(|n| n.set_visibility(world, hidden));
+        if let Some(n) = self.as_ref() {
+            n.set_visibility(world, hidden)
+        }
     }
 
     fn state_node_id(&self) -> Option<RendererNodeId<R>> {

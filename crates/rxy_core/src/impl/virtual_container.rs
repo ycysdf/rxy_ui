@@ -245,7 +245,7 @@ where
     }
 
     fn rebuild(self, ViewCtx { world, parent }: ViewCtx<R>, key: Self::Key) {
-        let Some(view_key) = key.get_view_key(&mut *world).cloned() else {
+        let Some(view_key) = key.get_view_key(world).cloned() else {
             panic!("view_key is None")
         };
         let result = self.0.rebuild(
