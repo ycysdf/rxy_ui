@@ -1,6 +1,10 @@
+use core::any::Any;
+use core::sync::atomic::*;
+
 use crate::{IntoSchemaProp, Renderer, SchemaPropValue};
 use alloc::borrow::Cow;
 use alloc::string::String;
+use bevy_utils::all_tuples;
 
 pub struct IntoSchemaPropValueWrapper<T>(pub T);
 
@@ -58,12 +62,26 @@ impl_schema_prop_value_wrapper_into! {
     i64,
     f32,
     f64,
-    (),
     bool,
     usize,
     isize,
+    char,
     String,
     &'static str,
+    Box<dyn Any>,
+    Box<dyn Any+Send>,
+    Box<dyn Any+Send+Sync>,
+    AtomicI8,
+    AtomicU8,
+    AtomicI16,
+    AtomicI32,
+    AtomicI64,
+    AtomicU16,
+    AtomicU32,
+    AtomicU64,
+    AtomicBool,
+    AtomicIsize,
+    AtomicUsize,
 }
 
 impl<T: Clone> IntoSchemaPropValue<IntoSchemaPropValueWrapper<Self>> for Cow<'static, T> {
@@ -71,3 +89,35 @@ impl<T: Clone> IntoSchemaPropValue<IntoSchemaPropValueWrapper<Self>> for Cow<'st
         IntoSchemaPropValueWrapper(self)
     }
 }
+
+impl<T> IntoSchemaPropValue<IntoSchemaPropValueWrapper<Self>> for Vec<T> {
+    fn into(self) -> IntoSchemaPropValueWrapper<Self> {
+        IntoSchemaPropValueWrapper(self)
+    }
+}
+
+impl<T> IntoSchemaPropValue<IntoSchemaPropValueWrapper<Self>> for AtomicPtr<T> {
+    fn into(self) -> IntoSchemaPropValueWrapper<Self> {
+        IntoSchemaPropValueWrapper(self)
+    }
+}
+
+impl<T, const SIZE: usize> IntoSchemaPropValue<IntoSchemaPropValueWrapper<Self>> for [T; SIZE] {
+    fn into(self) -> IntoSchemaPropValueWrapper<Self> {
+        IntoSchemaPropValueWrapper(self)
+    }
+}
+
+#[macro_export]
+macro_rules! impl_schema_prop_value_wrapper_into_for_tuple {
+    ($($ty:ident),*) => {
+        impl<$($ty),*> IntoSchemaPropValue<IntoSchemaPropValueWrapper<Self>> for ($($ty,)*)
+        {
+            fn into(self) -> IntoSchemaPropValueWrapper<Self> {
+                IntoSchemaPropValueWrapper(self)
+            }
+        }
+    };
+}
+
+all_tuples!(impl_schema_prop_value_wrapper_into_for_tuple, 0, 6, T);
