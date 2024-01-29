@@ -9,7 +9,6 @@
 - 编译时视图、无过程宏：通过元组 Type Builder 的方式去构建视图、成员、样式
 - 性能：视图仅运行一次，仅在反应式数据发生变化的可控范围里进行更新
 - 细粒度更新、支持信号 （fork 自 [tachy_reaccy](https://github.com/gbj/tachys/tree/main/tachy_reaccy)）
-- 使用 `Taffy` 进行 Flexbox 布局
 - 组件化：静态属性、信号属性、事件、槽
 - 控制流
 - 层叠样式
@@ -337,7 +336,7 @@ fn my_view() -> impl IntoView<BevyRenderer> {
 
 可以通过`width`、`height`、`flex`、`border`、`outline` 等等去设置视图的属性
 
-> 目前支持的全部属性请看：[attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy_element/src/element_attrs/attrs.rs)，基本 NodeBundle 里面成员都有对应的属性
+> 目前支持的全部属性请看：[attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy_element/src/element_attrs/attrs.rs),[composite_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy/src/view_member/composite_attrs.rs),[tailwind_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy_style/src/tailwind_attrs.rs) .基本 NodeBundle 里面成员都有对应的属性
 
 所有实现了 `ViewMember` 的类型都可以作为视图的成员，可通过 `member` 方法来手动添加成员
 
@@ -368,11 +367,11 @@ fn signal_example()-> impl IntoView<BevyRenderer> {
 
 ### 信号
 
-> 当前信号的[实现](https://github.com/ycysdf/xy_reactive) fork 自 [tachy_reaccy](https://github.com/gbj/tachys/tree/main/tachy_reaccy)，它是 leptos 的下一代信号库，信号的用法基本与它类似
+> 当前信号的[实现](https://github.com/ycysdf/xy_reactive) fork 自 [tachy_reaccy](https://github.com/gbj/tachys/tree/main/tachy_reaccy)，它是 leptos 的下一代信号库，信号的用法基本与 leptos_reactive 类似
 
 Rxy UI 支持使用信号来重新构建视图与其成员。
 
-一个重要的函数时`rx`，它要求传入一个闭包，在此闭包中可以使用信号的 `get` 方法来获取信号的值，`rx` 返回一个 `Reactive`类型
+一个重要的函数是`rx`，它要求传入一个闭包，在此闭包中可以使用信号的 `get` 方法来获取信号的值，`rx` 返回一个 `Reactive`类型
 
 当信号的值发生变化时，将重新更新此`View`或`ViewMember`
 
