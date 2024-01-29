@@ -36,6 +36,7 @@ where
     fn deferred_world(&self, f: impl FnOnce(&mut RendererWorld<R>) + Send + 'static);
 }
 
+// todo: refactor, extract methods to World
 pub trait Renderer:
     MaybeReflect + MaybeTypePath + Clone + Debug + Send + Sync + Sized + 'static
 {
