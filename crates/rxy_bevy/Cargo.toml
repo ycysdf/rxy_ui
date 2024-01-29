@@ -39,8 +39,6 @@ futures-lite.workspace = true
 
 # cosmic-text.workspace = true
 
-async-stream.workspace = true
-bevy-inspector-egui.workspace = true
 oneshot.workspace = true
 
 xy_reactive = {workspace = true, optional = true}

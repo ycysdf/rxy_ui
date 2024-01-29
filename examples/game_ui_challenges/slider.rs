@@ -6,7 +6,6 @@ use bevy::{
     app::AppExit,
     prelude::{Color, Res},
 };
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_mod_picking::prelude::On;
 use std::fmt::Debug;
 

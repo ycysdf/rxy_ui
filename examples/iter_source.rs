@@ -1,7 +1,6 @@
 use core::any::TypeId;
 
 use bevy::prelude::*;
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use rxy_bevy::prelude::*;
 use rxy_bevy_style::{
     rxy_style_macro::TypedStyle, typed_shared_style_sheets, ElementStyleExt, RxyStyleSheetPlugin,
@@ -19,7 +18,6 @@ fn main() {
         DefaultPlugins,
         RxyPlugin::default(),
         RxyStyleSheetPlugin::default(),
-        WorldInspectorPlugin::new(),
     ))
     .add_systems(Startup, setup);
 

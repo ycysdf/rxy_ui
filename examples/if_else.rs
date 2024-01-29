@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use rxy_bevy::prelude::*;
 use rxy_bevy_style::{ElementStyleExt, RxyStyleSheetPlugin, TailwindAttrs};
 use rxy_core::prelude::*;
@@ -12,7 +11,6 @@ fn main() {
         DefaultPlugins,
         RxyPlugin::default(),
         RxyStyleSheetPlugin::default(),
-        WorldInspectorPlugin::new(),
     ))
     .add_systems(Startup, setup);
 

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_core::FrameCount;
 use bevy_ecs::{entity::Entities, world};
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+// use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_sprite::MaterialMesh2dBundle;
 use bevy_utils::synccell::SyncCell;
 use futures_lite::{FutureExt, StreamExt};
@@ -15,7 +15,7 @@ fn main() {
         DefaultPlugins,
         RxyPlugin::default(),
         RxyStyleSheetPlugin::default(),
-        WorldInspectorPlugin::new(),
+        // WorldInspectorPlugin::new(),
     ))
     .add_systems(Startup, setup);
 

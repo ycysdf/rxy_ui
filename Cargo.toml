@@ -11,10 +11,8 @@ rxy_core.workspace = true
 
 ahash.workspace = true
 async-channel.workspace = true
-async-stream.workspace = true
-bevy-inspector-egui.workspace = true
+# bevy-inspector-egui.workspace = true
 bevy_mod_picking.workspace = true
-flume.workspace = true
 futures-lite.workspace = true
 pin-project-lite.workspace = true
 rxy_bevy_element.workspace = true
@@ -47,8 +45,7 @@ bevy = {version = "0.12.1", features = [
   "bevy_asset", #    "bevy_audio",  #    "bevy_gilrs",
   "bevy_scene",
   "bevy_winit",
-  "bevy_core_pipeline",
-  "bevy_pbr", #    "bevy_gltf",
+  "bevy_core_pipeline", # "bevy_pbr",   #  "bevy_gltf",
   "bevy_render",
   "bevy_sprite",
   "bevy_text",
@@ -66,7 +63,7 @@ rxy_core = {path = "crates/rxy_core", features = ["xy_reactive"]}
 rxy_macro = {path = "crates/rxy_macro"}
 rxy_style = {path = "crates/rxy_style"}
 rxy_style_macro = {path = "crates/rxy_style_macro"}
-xy_reactive = {version = "0.1", features = ["bevy"], path = "../xy_reactive"}
+xy_reactive = {version = "0.1", features = ["bevy"], path = "crates/xy_reactive"}
 
 async-channel = {version = "2.1"}
 glam = "0.24"
@@ -78,12 +75,10 @@ pin-project = {version = "1"}
 serde = {version = "1", features = ["derive"]}
 
 ahash = {version = "0.8", default-features = false}
-async-stream = "0.3"
-bevy-inspector-egui = "0.21"
+# bevy-inspector-egui = "0.21"
 bevy_mod_picking = {version = "0.17", default-features = false, features = ["backend_bevy_ui"]}
 derive_more = "0.99"
 drain_filter_polyfill = "0.1"
-flume = "0.11"
 futures-lite = "1.13"
 pin-project-lite = {version = "0.2"}
 thiserror = "1.0"

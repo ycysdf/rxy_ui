@@ -1,5 +1,5 @@
 use crate::{
-    ConstIndex, Either, PropState, Renderer, RendererNodeId, RendererWorld, TypeIdHashMapState,
+    ConstIndex, PropState, Renderer, RendererNodeId, RendererWorld, TypeIdHashMapState,
 };
 use alloc::boxed::Box;
 use bevy_utils::synccell::SyncCell;
