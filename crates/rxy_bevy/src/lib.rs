@@ -36,10 +36,10 @@ pub type CloneableSlot = CloneableSchemaSlot<BevyRenderer>;
 
 pub mod prelude {
     pub use super::{
-        div, element::event::*, pl_schema_view, span, x_res, BevyElement, BevyRenderer,
-        BevyWrapper, CloneableSlot, CmdReceiver, CmdSender, CommonAttrsViewBuilder, CompositeAttrs,
-        ElementType, FnSchemaView, MemberOwnerBundleExt, ReceiverProp, ResChangeWorldExt,
-        RxyPlugin, RxyUiCommandExt, SchemaCtx, SchemaIntoViewFn, Slot,
+        div, element::event::*, pl_schema_view, span, system_once, x_res, BevyElement,
+        BevyRenderer, BevyWrapper, CloneableSlot, CmdReceiver, CmdSender, CommonAttrsViewBuilder,
+        CompositeAttrs, ElementType, FnSchemaView, MemberOwnerBundleExt, ReceiverProp,
+        ResChangeWorldExt, RxyPlugin, RxyUiCommandExt, SchemaCtx, SchemaIntoViewFn, Slot,
     };
     pub use bevy_ui::prelude::Val;
     pub use rxy_bevy_macro::schema;
