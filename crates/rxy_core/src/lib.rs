@@ -44,14 +44,16 @@ pub mod prelude {
         BoxedCloneableDynamicView, BoxedDynamicView, BoxedErasureView, Context,
         DeferredWorldScoped, DynamicView, Either, EitherExt, ElementView, ErasureView,
         IntoDynamicView, IntoElementView, IntoView, IntoViewErasureExt, Keyed, MemberOwner,
-        Renderer, RendererElementType, RendererViewExt, Required, SoloView, Static, View,
-        ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
+        Renderer, RendererElementType, RendererViewExt, Required, SoloView, Static, View, ViewCtx,
+        ViewKey, ViewMember, ViewMemberCtx,
     };
     #[cfg(feature = "xy_reactive")]
-    pub use crate::{rx, use_list, x_iter_source, MemberOwnerRxExt};
-    
+    pub use crate::{rx, use_list, x_iter_source, MemberOwnerRxExt, SignalExt};
+
     #[cfg(feature = "async-channel")]
     pub use crate::Sender;
+
+    pub use rxy_macro::PropValueWrapper;
 }
 
 mod element_view;
