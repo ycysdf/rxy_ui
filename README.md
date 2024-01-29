@@ -810,6 +810,8 @@ pub fn schema_checkbox(
 }
 ```
 
+> 如果你是使用了你的自定义类型，比如 `ReadSignal<CustomType>`，那么你需要添加 `PropValueWrapper` derive 宏到 `CustomType`，后续可能会去掉这个限制
+
 在上面示例中使用了 `use_controlled_state`，它通过传入信号与事件，返回一个新的信号。
 
 当传入的信号 或者 返回的信号发生改变时，就会发送事件，将最新的值作为参数。
