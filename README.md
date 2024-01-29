@@ -24,6 +24,7 @@
 
 ## 计划
 
+- Error Boundary、Suspense
 - Text Edit
 - 更多的 UI 组件 与 示例
 - 更多 Debug 功能、更多的测试用例、Element inspector
