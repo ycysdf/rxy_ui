@@ -3,7 +3,7 @@ use crate::{
 };
 use alloc::boxed::Box;
 use bevy_utils::synccell::SyncCell;
-use std::any::TypeId;
+use core::any::TypeId;
 
 pub struct SchemaPropCtx<'a, R: Renderer> {
     pub world: &'a mut RendererWorld<R>,

@@ -1,24 +1,24 @@
 use crate::{
-    into_view, BoxedCloneableErasureView, BoxedErasureView, BoxedPropValue, ConstIndex, DataNodeId, IntoCloneableView, IntoSchemaProp, IntoView,
-    IntoViewCloneableErasureExt, IntoViewErasureExt, PropHashMap, Renderer, RendererNodeId,
-    RendererViewExt, RendererWorld, Schema, InnerSchemaCtx, SchemaProp, SchemaProps,
-    View, ViewCtx, ViewKey,
+    into_view, BoxedCloneableErasureView, BoxedErasureView, BoxedPropValue, ConstIndex, DataNodeId,
+    InnerSchemaCtx, IntoCloneableView, IntoSchemaProp, IntoView, IntoViewCloneableErasureExt,
+    IntoViewErasureExt, PropHashMap, Renderer, RendererNodeId, RendererViewExt, RendererWorld,
+    Schema, SchemaProp, SchemaProps, View, ViewCtx, ViewKey,
 };
 use bevy_utils::synccell::SyncCell;
 use bevy_utils::HashMap;
 use core::any::TypeId;
 use core::marker::PhantomData;
 use rxy_macro::IntoView;
-use std::hash::Hash;
-use xy_reactive::effect::ErasureEffect;
+use core::hash::Hash;
+use alloc::boxed::Box;
 
 #[derive(IntoView)]
 pub struct SchemaView<R, U, P = (), M = ()>
-    where
-        R: Renderer,
-        U: Schema<R>,
-        P: SchemaProps<R>,
-        M: Send + 'static,
+where
+    R: Renderer,
+    U: Schema<R>,
+    P: SchemaProps<R>,
+    M: Send + 'static,
 {
     u: U,
     props: Option<P>,
@@ -30,10 +30,10 @@ pub struct SchemaView<R, U, P = (), M = ()>
 }
 
 impl<R, U, M> Default for SchemaView<R, U, (), M>
-    where
-        R: Renderer,
-        U: Schema<R> + Default,
-        M: Send + 'static,
+where
+    R: Renderer,
+    U: Schema<R> + Default,
+    M: Send + 'static,
 {
     fn default() -> Self {
         Self {
@@ -49,10 +49,10 @@ impl<R, U, M> Default for SchemaView<R, U, (), M>
 }
 
 impl<R, U, M> SchemaView<R, U, (), M>
-    where
-        R: Renderer,
-        U: Schema<R>,
-        M: Send + 'static,
+where
+    R: Renderer,
+    U: Schema<R>,
+    M: Send + 'static,
 {
     #[inline]
     pub fn new(u: U) -> Self {
@@ -69,16 +69,16 @@ impl<R, U, M> SchemaView<R, U, (), M>
 }
 
 impl<R, U, P, M> SchemaView<R, U, P, M>
-    where
-        R: Renderer,
-        U: Schema<R>,
-        P: SchemaProps<R>,
-        M: Send + 'static,
+where
+    R: Renderer,
+    U: Schema<R>,
+    P: SchemaProps<R>,
+    M: Send + 'static,
 {
     #[inline(always)]
     pub fn map<MU>(self, f: impl FnOnce(U) -> MU) -> SchemaView<R, MU, P, M>
-        where
-            MU: Schema<R>,
+    where
+        MU: Schema<R>,
     {
         SchemaView {
             u: f(self.u),
@@ -116,10 +116,10 @@ impl<R, U, P, M> SchemaView<R, U, P, M>
         self,
         value: ISP,
     ) -> SchemaView<R, U, P::Props<ConstIndex<I, ISP::Prop>>, M>
-        where
-            P::Props<ConstIndex<I, ISP::Prop>>: SchemaProps<R>,
-            ISP: IntoSchemaProp<R, IT>,
-            IT: Send + 'static,
+    where
+        P::Props<ConstIndex<I, ISP::Prop>>: SchemaProps<R>,
+        ISP: IntoSchemaProp<R, IT>,
+        IT: Send + 'static,
     {
         SchemaView {
             u: self.u,
@@ -136,9 +136,9 @@ impl<R, U, P, M> SchemaView<R, U, P, M>
 
     #[inline(always)]
     pub fn set_static_indexed_prop<const I: usize, ISP, IT>(mut self, value: ISP) -> Self
-        where
-            ISP: IntoSchemaProp<R, IT>,
-            IT: Send + 'static,
+    where
+        ISP: IntoSchemaProp<R, IT>,
+        IT: Send + 'static,
     {
         let type_id = TypeId::of::<ConstIndex<I>>();
         let mut prop = value.into_schema_prop::<I>();
@@ -151,7 +151,8 @@ impl<R, U, P, M> SchemaView<R, U, P, M>
 
 pub struct SchemaViewState<R> {
     prop_state: SyncCell<Option<PropHashMap<R>>>,
-    _other_state: Vec<ErasureEffect>,
+    #[cfg(feature = "xy_reactive")]
+    _other_state: Vec<xy_reactive::effect::ErasureEffect>,
 }
 
 pub fn scheme_state_scoped<R, U>(
@@ -159,14 +160,11 @@ pub fn scheme_state_scoped<R, U>(
     node_id: &RendererNodeId<R>,
     f: impl FnOnce(&mut RendererWorld<R>, &mut PropHashMap<R>) -> U,
 ) -> Option<U>
-    where
-        R: Renderer,
+where
+    R: Renderer,
 {
-    let Some(mut taken_map) = R::get_view_state_mut::<SchemaViewState<R>>(&mut *world, node_id)
-        .and_then(|n| n.prop_state.get().take())
-        else {
-            return None;
-        };
+    let mut taken_map = R::get_view_state_mut::<SchemaViewState<R>>(&mut *world, node_id)
+        .and_then(|n| n.prop_state.get().take())?;
     let u = f(&mut *world, &mut taken_map);
 
     let option = R::get_view_state_mut::<SchemaViewState<R>>(world, node_id)
@@ -181,18 +179,18 @@ pub fn scheme_state_scoped<R, U>(
 #[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
 #[derive(Clone, Debug)]
 pub struct ViewKeyOrDataNodeId<R, K>
-    where
-        R: Renderer,
-        K: ViewKey<R>,
+where
+    R: Renderer,
+    K: ViewKey<R>,
 {
     pub data_node_id: Option<DataNodeId<R>>,
     pub key: K,
 }
 
 impl<R, K> Hash for ViewKeyOrDataNodeId<R, K>
-    where
-        R: Renderer,
-        K: ViewKey<R>,
+where
+    R: Renderer,
+    K: ViewKey<R>,
 {
     fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.data_node_id.hash(state);
@@ -201,9 +199,9 @@ impl<R, K> Hash for ViewKeyOrDataNodeId<R, K>
 }
 
 impl<R, K> ViewKey<R> for ViewKeyOrDataNodeId<R, K>
-    where
-        R: Renderer,
-        K: ViewKey<R>,
+where
+    R: Renderer,
+    K: ViewKey<R>,
 {
     fn remove(self, world: &mut RendererWorld<R>) {
         if let Some(data_node_id) = self.data_node_id {
@@ -252,32 +250,30 @@ pub fn schema_view_build<R, U, P, M>(
     will_rebuild: bool,
     // view_build_f: impl FnOnce(U::View, ViewCtx<R>, Option<<U::View as View<R>>::Key>) -> <U::View as View<R>>::Key,
 ) -> ViewKeyOrDataNodeId<R, <<U as Schema<R>>::View as View<R>>::Key>
-    where
-        R: Renderer,
-        U: Schema<R>,
-        P: SchemaProps<R>,
-        M: Send + 'static,
+where
+    R: Renderer,
+    U: Schema<R>,
+    P: SchemaProps<R>,
+    M: Send + 'static,
 {
     let mut props = schema_view.props.take().unwrap();
     let mut init_values = props.get_init_values();
-    init_values.extend(schema_view.static_values.into_iter());
+    init_values.extend(schema_view.static_values);
 
-    let (view, mut prop_state, other_state) = {
-        let mut prop_state = PropHashMap::<R>::default();
-        let mut other_state = vec![];
-        let ctx = InnerSchemaCtx {
-            world: &mut *ctx.world,
-            parent: ctx.parent.clone(),
-            slots: &mut schema_view.slots,
-            cloneable_slots: &mut schema_view.cloneable_slots,
-            init_values,
-            prop_state: &mut prop_state,
-            effect_state: &mut other_state,
-            _marker: Default::default(),
-        };
-        let view = schema_view.u.view(ctx);
-        (view, prop_state, other_state)
-    };
+    let mut prop_state = PropHashMap::<R>::default();
+    #[cfg(feature = "xy_reactive")]
+    let mut _effect_state = vec![];
+    let view = schema_view.u.view(InnerSchemaCtx {
+        world: &mut *ctx.world,
+        parent: ctx.parent.clone(),
+        slots: &mut schema_view.slots,
+        cloneable_slots: &mut schema_view.cloneable_slots,
+        init_values,
+        prop_state: &mut prop_state,
+        #[cfg(feature = "xy_reactive")]
+        effect_state: &mut _effect_state,
+        _marker: Default::default(),
+    });
     let (data_node_id, reserve_key) = reserve_key.map(|k| (k.data_node_id, k.key)).unzip();
     let key = view.build(
         ViewCtx {
@@ -311,7 +307,8 @@ pub fn schema_view_build<R, U, P, M>(
         &state_node_id,
         SchemaViewState {
             prop_state: SyncCell::new(Some(prop_state)),
-            _other_state: other_state,
+            #[cfg(feature = "xy_reactive")]
+            _other_state: _effect_state,
         },
     );
 
@@ -319,11 +316,11 @@ pub fn schema_view_build<R, U, P, M>(
 }
 
 impl<R, U, P, M> View<R> for SchemaView<R, U, P, M>
-    where
-        R: Renderer,
-        U: Schema<R>,
-        P: SchemaProps<R>,
-        M: Send + 'static,
+where
+    R: Renderer,
+    U: Schema<R>,
+    P: SchemaProps<R>,
+    M: Send + 'static,
 {
     type Key = ViewKeyOrDataNodeId<R, <U::View as View<R>>::Key>;
 

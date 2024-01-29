@@ -2,6 +2,7 @@ use crate::{
     BoxedPropValue, PropHashMap, Renderer, RendererNodeId, RendererWorld, SchemaProp, SchemaPropCtx,
 };
 use bevy_utils::{all_tuples, HashMap};
+use alloc::boxed::Box;
 
 pub trait SchemaProps<R>: Sized + Send + 'static
 where
@@ -57,6 +58,7 @@ macro_rules! impl_schema_props_for_tuples {
                 let prop_type_id = $ty::prop_type_id().unwrap();
                 let value = $ty.get_init_value();
                 if let Some(value) = value{
+                    // todo: refactor
                     _init_values.insert(prop_type_id,Box::new(value));
                 }
                 )*

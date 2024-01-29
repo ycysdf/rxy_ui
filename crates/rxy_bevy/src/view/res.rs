@@ -2,13 +2,12 @@ use core::marker::PhantomData;
 
 use bevy_ecs::prelude::Entity;
 use bevy_ecs::system::Resource;
-use rxy_bevy_macro::BevyIntoView;
 use rxy_core::{
     prelude::{ViewMember, ViewMemberCtx},
     DeferredWorldScoped, Renderer, View, ViewCtx, ViewKey,
 };
 
-use crate::{BevyRenderer, ResChangeReceiver, ResChangeWorldExt};
+use crate::{BevyRenderer, ResChangeWorldExt};
 use rxy_core::IntoView;
 
 pub struct XRes<T, F, V> {

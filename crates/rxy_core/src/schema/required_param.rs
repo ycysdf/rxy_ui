@@ -1,5 +1,5 @@
-use std::any::TypeId;
-use std::ops::{Deref, DerefMut};
+use core::any::TypeId;
+use core::ops::{Deref, DerefMut};
 
 use crate::{CloneableSchemaSlot, ConstIndex, MaybeReflect, RebuildFnReceiver, Renderer, InnerSchemaCtx, SchemaParam, SchemaSlot, Static};
 

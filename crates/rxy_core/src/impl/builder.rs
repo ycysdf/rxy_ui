@@ -1,6 +1,6 @@
 use alloc::boxed::Box;
 use core::marker::PhantomData;
-use std::any::TypeId;
+use core::any::TypeId;
 
 use crate::{
     ElementView, IntoElementView, IntoView, MemberOwner, MutableView, Renderer, RendererNodeId,

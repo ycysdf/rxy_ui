@@ -1,7 +1,8 @@
 use crate::{CloneableDynamicView, DynamicMutableViewKey, DynamicView, IntoView, MutableView, MutableViewKey, Renderer, RendererNodeId, RendererViewExt, RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx};
 use core::any::Any;
 use core::hash::{Hash, Hasher};
-use std::ops::Deref;
+use core::ops::Deref;
+use alloc::boxed::Box;
 
 #[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
 pub struct ErasureViewFns<R>

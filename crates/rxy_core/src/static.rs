@@ -1,4 +1,4 @@
-use std::ops::{Deref, DerefMut};
+use core::ops::{Deref, DerefMut};
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Static<T>(pub T);

@@ -17,7 +17,7 @@ pub use view::*;
 mod context;
 mod ctx;
 mod element;
-#[cfg(feature = "async-channel")]
+#[cfg(all(feature = "async-channel", feature = "std"))]
 mod event;
 mod r#fn;
 mod param;

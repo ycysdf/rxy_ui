@@ -3,7 +3,7 @@ use crate::{
     ViewMember,
 };
 use rxy_macro::IntoView;
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 pub struct ProvideContext<R, T, V> {
     provide_context: T,

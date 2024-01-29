@@ -119,9 +119,9 @@ impl<T> ApplyVecOperation<T> for Vec<T> {
                 self.move_item(from, to);
                 ApplyVecOperationResult::Move { from, to }
             }
-            VecOperation::Patch { index } => {
+            VecOperation::Patch { index: _ } => {
                 unimplemented!("Patch not implemented for HookedVec");
-                ApplyVecOperationResult::Patch { index }
+                // ApplyVecOperationResult::Patch { index }
             }
         }
     }
@@ -193,9 +193,9 @@ where
                 self.move_item(from, to);
                 ApplyVecOperationResult::Move { from, to }
             }
-            VecOperation::Patch { index } => {
+            VecOperation::Patch { index: _ } => {
                 unimplemented!("Patch not implemented for HookedVec");
-                ApplyVecOperationResult::Patch { index }
+                // ApplyVecOperationResult::Patch { index }
             }
         }
     }

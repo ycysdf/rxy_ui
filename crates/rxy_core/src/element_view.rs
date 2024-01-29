@@ -66,7 +66,7 @@ where
 {
     pub element_view: EV,
     pub view_members: VM,
-    _marker: std::marker::PhantomData<R>,
+    _marker: core::marker::PhantomData<R>,
 }
 
 pub fn add_members<R, EV, VM>(

@@ -39,14 +39,19 @@ mod view_state;
 
 pub mod prelude {
     pub use crate::{
-        add_members, build_configure, into_view, member_builder, provide_context, rx,
-        style_builder, use_list, view_builder, x_future, x_if, x_if_else, x_iter, x_iter_keyed,
-        x_iter_source, x_stream, BoxedCloneableDynamicView, BoxedDynamicView, BoxedErasureView,
-        Context, DeferredWorldScoped, DynamicView, Either, EitherExt, ElementView, ErasureView,
+        add_members, build_configure, into_view, member_builder, provide_context, style_builder,
+        view_builder, x_future, x_if, x_if_else, x_iter, x_iter_keyed, x_stream,
+        BoxedCloneableDynamicView, BoxedDynamicView, BoxedErasureView, Context,
+        DeferredWorldScoped, DynamicView, Either, EitherExt, ElementView, ErasureView,
         IntoDynamicView, IntoElementView, IntoView, IntoViewErasureExt, Keyed, MemberOwner,
-        MemberOwnerRxExt, Renderer, RendererElementType, RendererViewExt, Required, Sender,
-        SoloView, Static, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
+        Renderer, RendererElementType, RendererViewExt, Required, SoloView, Static, View,
+        ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
     };
+    #[cfg(feature = "xy_reactive")]
+    pub use crate::{rx, use_list, x_iter_source, MemberOwnerRxExt};
+    
+    #[cfg(feature = "async-channel")]
+    pub use crate::Sender;
 }
 
 mod element_view;

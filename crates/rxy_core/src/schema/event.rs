@@ -1,8 +1,8 @@
 use crate::{BoxedPropValue, ConstIndex, IntoSchemaPropValue, IntoSchemaPropValueWrapper, PropState, Renderer, InnerSchemaCtx, SchemaParam};
 pub use async_channel::Sender;
 use async_channel::{unbounded, Receiver};
-use std::any::{Any, TypeId};
-use std::marker::PhantomData;
+use core::any::{Any, TypeId};
+use core::marker::PhantomData;
 use std::sync::{Arc, Mutex};
 
 pub struct EventHandler<Args>

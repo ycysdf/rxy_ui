@@ -8,7 +8,7 @@ version = "0.1.0"
 [dependencies]
 rxy_bevy_element.workspace = true
 rxy_bevy_macro.workspace = true
-rxy_core = {workspace = true, features = ["async-channel"]}
+rxy_core = {workspace = true, features = ["async-channel", "xy_reactive"]}
 rxy_macro.workspace = true
 
 glam.workspace = true
@@ -40,9 +40,8 @@ futures-lite.workspace = true
 # cosmic-text.workspace = true
 
 oneshot.workspace = true
-
 xy_reactive = {workspace = true, optional = true}
 
 [features]
-default = ["view_erasure"]
+default = ["view_erasure", "xy_reactive"]
 view_erasure = ["rxy_core/view_erasure"]

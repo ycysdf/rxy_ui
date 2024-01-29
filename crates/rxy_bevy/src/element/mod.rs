@@ -4,8 +4,7 @@ pub use attrs::*;
 use rxy_bevy_element::{all_attrs, elements, ElementType};
 use rxy_bevy_macro::BevyIntoView;
 use rxy_core::{
-    view_children, BoxedErasureView, Element, ElementView, ElementViewChildren, IntoView,
-    IntoViewErasureExt, MemberOwner, RendererElementType, RendererNodeId, RendererWorld, SoloView,
+    view_children, Element, ElementView, ElementViewChildren, IntoView, MemberOwner, RendererElementType, RendererNodeId, RendererWorld, SoloView,
     View, ViewCtx, ViewMember,
 };
 
@@ -75,10 +74,11 @@ where
     pub fn children<CV>(
         self,
         children: CV,
-    ) -> BevyElementChildren<E, VM, BoxedErasureView<BevyRenderer>>
+    ) -> BevyElementChildren<E, VM, rxy_core::BoxedErasureView<BevyRenderer>>
     where
         CV: IntoView<BevyRenderer>,
     {
+        use rxy_core::IntoViewErasureExt;
         view_children(self, unsafe { children.into_erasure_view() })
     }
 }

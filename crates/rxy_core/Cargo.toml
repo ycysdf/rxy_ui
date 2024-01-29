@@ -28,6 +28,6 @@ oneshot.workspace = true
 # serde.workspace = true
 
 [features]
-default = ["std", "view_erasure"]
+default = ["std", "view_erasure", "async-channel"]
 std = []
 view_erasure = []

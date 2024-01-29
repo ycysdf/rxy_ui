@@ -2,7 +2,7 @@ use crate::{
     ConstIndex, Renderer, Required, InnerSchemaCtx, SchemaParam, SchemaParamDefault, SignalPropState,
 };
 use alloc::boxed::Box;
-use std::any::TypeId;
+use core::any::TypeId;
 use xy_reactive::prelude::ReadSignal;
 
 // impl<R, T> SchemaPropParam<R> for ReadSignal<T>

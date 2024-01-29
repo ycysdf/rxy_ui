@@ -6,8 +6,7 @@ use alloc::boxed::Box;
 use bevy_utils::HashMap;
 use core::any::{Any, TypeId};
 use core::marker::PhantomData;
-use std::cell::UnsafeCell;
-use xy_reactive::effect::ErasureEffect;
+use core::cell::UnsafeCell;
 
 pub type BoxedPropValue = Box<dyn Any + Send>;
 
@@ -23,7 +22,8 @@ where
     pub(crate) slots: &'a mut HashMap<TypeId, BoxedErasureView<R>>,
     pub(crate) cloneable_slots: &'a mut HashMap<TypeId, BoxedCloneableErasureView<R>>,
     pub(crate) prop_state: &'a mut PropHashMap<R>,
-    pub(crate) effect_state: &'a mut Vec<ErasureEffect>,
+    #[cfg(feature = "xy_reactive")]
+    pub(crate) effect_state: &'a mut Vec<xy_reactive::effect::ErasureEffect>,
     pub(crate) init_values: HashMap<TypeId, BoxedPropValue>,
     pub(crate) _marker: PhantomData<U>,
 }
@@ -33,10 +33,12 @@ where
     R: Renderer,
 {
     pub fn prop_state(&mut self) -> &mut PropHashMap<R> {
-        &mut self.prop_state
+        self.prop_state
     }
-    pub fn effect_state(&mut self) -> &mut Vec<ErasureEffect> {
-        &mut self.effect_state
+
+    #[cfg(feature = "xy_reactive")]
+    pub fn effect_state(&mut self) -> &mut Vec<xy_reactive::effect::ErasureEffect> {
+        self.effect_state
     }
 
     pub fn cast<T>(self) -> InnerSchemaCtx<'a, R, T> {
@@ -48,6 +50,7 @@ where
             prop_state: self.prop_state,
             _marker: Default::default(),
             cloneable_slots: self.cloneable_slots,
+            #[cfg(feature = "xy_reactive")]
             effect_state: self.effect_state,
         }
     }
@@ -90,7 +93,7 @@ where
         U: 'static,
     {
         let ctx = unsafe { &mut **self.inner.get() };
-        f(&mut ctx.world)
+        f(ctx.world)
     }
 
     pub fn world_ref_scoped<U>(&self, f: impl FnOnce(&RendererWorld<R>) -> U) -> U
@@ -98,7 +101,7 @@ where
         U: 'static,
     {
         let ctx = unsafe { &**self.inner.get() };
-        f(&ctx.world)
+        f(ctx.world)
     }
 }
 

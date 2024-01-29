@@ -13,9 +13,9 @@ use futures_lite::{FutureExt, StreamExt};
 use hooked_collection::{
     ApplyVecOperation, ApplyVecOperationResult, HookedVec, VecOperation, VecOperationRecord,
 };
-use std::future::Future;
-use std::marker::PhantomData;
-use std::pin::pin;
+use core::future::Future;
+use core::marker::PhantomData;
+use core::pin::pin;
 
 pub enum UseListOperation<T> {
     WatchCount(Sender<usize>),

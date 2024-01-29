@@ -3,8 +3,8 @@ use crate::renderer::DeferredWorldScoped;
 use crate::{BuildState, IntoView, Renderer, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx};
 use bevy_utils::futures::now_or_never;
 use futures_lite::StreamExt;
-use std::any::TypeId;
-use std::future::{Future, IntoFuture};
+use core::any::TypeId;
+use core::future::{Future, IntoFuture};
 
 pub struct XFuture<T>(pub T);
 #[inline(always)]
