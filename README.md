@@ -378,13 +378,13 @@ Rxy UI 支持使用信号来重新构建视图与其成员。
 
 一个重要的函数是`rx`，它要求传入一个闭包，在此闭包中可以使用信号的 `get` 方法来获取信号的值，`rx` 返回一个 `Reactive`类型
 
-当信号的值发生变化时，将重新更新此`View`或`ViewMember`
+当信号的值发生变化时，将重新构建 `View`或`ViewMember`
 
-此闭包返回的值如果实现了 `IntoView`，那么此`Reactive`类型就实现了 `View`，既可以作为一个视图
+如果闭包返回值实现了 `IntoView`，那么此`Reactive`类型就实现了 `View`, `rx`函数就可以直接在视图中使用
 
-此闭包返回的值如果实现了 `IntoViewAttrMember`，那么此`Reactive`类型就实现了 `ViewMember`，既可以作为一个视图的成员
+如果闭包返回值实现了 `IntoViewAttrMember`，那么此`Reactive`类型就实现了 `ViewMember`，`rx`函数就可以直接在视图成员中使用
 
-此外信号类型本身`RwSignal<T>`或`ReadSignal<T>`，如果 `T` 实现了 `IntoView` 或 `IntoViewAttrMember`，那么它也实现了 `View` 或 `ViewMember`
+此外如果信号类型`RwSignal<T>`或`ReadSignal<T>` `T` 实现了 `IntoView` 或 `IntoViewAttrMember`，那么它也实现了 `View` 或 `ViewMember`
 
 > `IntoViewAttrMember` 表示可以转换到 `ViewMember` 的类型，例如：width 属性值要求是 [Val](https://docs.rs/bevy/latest/bevy/ui/enum.Val.html) 类型，但是你可以传入一个 `i32`，`IntoViewAttrMember`内部会帮你转换为 `Val::Px(100)`
 
@@ -476,7 +476,7 @@ fn sample_option_view_member() -> impl IntoView<BevyRenderer> {
 }
 ```
 
-`Either` 用例：选择是否应用 视图 或 视图成员
+`Either` 用例：选择构建的 视图 或 视图成员
 
 > 虽然 rx 配合 Either 可以实现控制视图的切换，但是 `x_if_else` 是更好的选择，之后会介绍
 
