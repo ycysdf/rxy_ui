@@ -46,6 +46,8 @@ MIT License ([LICENSE-MIT](https://github.com/ycysdf/rxy_ui/blob/main/LICENSE-MI
 
 计数器
 
+<img src="./counter.gif" />
+
 ```rust
 use bevy::prelude::*;
 use rxy_bevy::prelude::*;
@@ -125,6 +127,8 @@ pub fn schema_checkbox(
 ```
 
 游戏菜单与设置
+
+<img src="./game_menu.gif" />
 
 ```rust
 use bevy::prelude::*;
