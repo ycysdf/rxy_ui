@@ -7,7 +7,7 @@
 ## 特征：
 
 - 编译时视图、无过程宏：通过元组 Type Builder 的方式去构建视图、成员、样式
-- 性能：视图仅运行一次，仅在反应式数据发生变化的可控范围里进行更新
+- 性能：视图默认仅构建一次，仅在反应式数据发生变化的可控范围里进行重新构建，采用了编译时视图，数据可以全部在栈上
 - 细粒度更新、支持信号 （fork 自 [tachy_reaccy](https://github.com/gbj/tachys/tree/main/tachy_reaccy)）
 - 组件化：静态属性、信号属性、事件、槽
 - 控制流
@@ -339,6 +339,10 @@ fn my_view() -> impl IntoView<BevyRenderer> {
 
 通过链式调用向 `View` 类型添加成员，`children` 方法用于设置视图的子视图
 
+你也可以通过 `erasure_children`方法去用于设置视图的子视图，它与`children`方法唯一的不同是，它会将子视图进行类型擦除，这样可以避免类型过于复杂
+
+> 目前默认开启了 view_erasure feature, 强制将所有子视图进行了擦除，放入了堆中，因为如果不进行擦除，类型将过于复杂，导致编译器罢工，类型评估溢出. 你也可以关闭此 feature, 并使用 `erasure_children` 手动擦除一些子视图，避免让类型过于复杂，导致编译失败.
+
 可以通过`width`、`height`、`flex`、`border`、`outline` 等等去设置视图的属性
 
 > 目前支持的全部属性请看：[attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy_element/src/element_attrs/attrs.rs),[composite_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy/src/view_member/composite_attrs.rs),[tailwind_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy_style/src/tailwind_attrs.rs) .基本 NodeBundle 里面成员都有对应的属性
@@ -356,6 +360,8 @@ fn my_view() -> impl IntoView<BevyRenderer> {
     )
 }
 ```
+
+`View` 只是描述了视图所需的数据，并不是真正的视图，得利于类型化的编译时视图，并且这些数据全部在栈上的。性能非常好。
 
 ### 事件
 
