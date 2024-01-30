@@ -1,6 +1,5 @@
 use bevy::prelude::*;
-use rxy_bevy::prelude::*;
-use rxy_bevy_style::prelude::*;
+use rxy_ui::prelude::*;
 
 use core::sync::atomic::{AtomicUsize, Ordering};
 use futures_lite::StreamExt;

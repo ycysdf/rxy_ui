@@ -35,16 +35,15 @@ where
     fn build(
         self: Box<Self>,
         ctx: ViewCtx<R>,
-        will_rebuild: bool,
-        state_node_id: RendererNodeId<R>,
-    ) -> DynamicMutableViewKey;
+        state_node_id: Option<RendererNodeId<R>>,
+    ) -> DynamicMutableViewKey<R>;
 
     fn rebuild(
         self: Box<Self>,
         ctx: ViewCtx<R>,
-        key: DynamicMutableViewKey,
+        key: DynamicMutableViewKey<R>,
         state_node_id: RendererNodeId<R>,
-    ) -> Option<DynamicMutableViewKey>;
+    ) -> Option<DynamicMutableViewKey<R>>;
 }
 
 impl<R> Clone for Box<dyn CloneableDynamicView<R>>
@@ -114,66 +113,59 @@ impl<R> MutableView<R> for Box<dyn DynamicView<R>>
 where
     R: Renderer,
 {
-    type Key = DynamicMutableViewKey;
-    fn build(
-        self,
-        ctx: ViewCtx<R>,
-        will_rebuild: bool,
-        state_node_id: RendererNodeId<R>,
-    ) -> Self::Key {
-        DynamicView::build(self, ctx, will_rebuild, state_node_id)
+    type Key = DynamicMutableViewKey<R>;
+
+    fn no_placeholder_when_no_rebuild() -> bool {
+        true
+    }
+
+    fn build(self, ctx: ViewCtx<R>, placeholder_node_id: Option<RendererNodeId<R>>) -> Self::Key {
+        DynamicView::build(self, ctx, placeholder_node_id)
     }
 
     fn rebuild(
         self,
         ctx: ViewCtx<R>,
-        prev_key: Self::Key,
-        state_node_id: RendererNodeId<R>,
+        key: Self::Key,
+        placeholder_node_id: RendererNodeId<R>,
     ) -> Option<Self::Key> {
         let view_type_id = self.as_any().type_id();
-        if view_type_id != prev_key.view_type_id() {
-            <DynamicMutableViewKey as MutableViewKey<R>>::remove(
-                prev_key,
-                &mut *ctx.world,
-                &state_node_id,
-            );
-            Some(DynamicView::build(self, ctx, true, state_node_id))
+        if view_type_id != key.view_type_id() {
+            <DynamicMutableViewKey<R> as MutableViewKey<R>>::remove(key, &mut *ctx.world);
+            Some(DynamicView::build(self, ctx, Some(placeholder_node_id)))
         } else {
-            DynamicView::rebuild(self, ctx, prev_key, state_node_id);
+            DynamicView::rebuild(self, ctx, key, placeholder_node_id);
             None
         }
     }
 }
+
 impl<R> MutableView<R> for Box<dyn CloneableDynamicView<R>>
 where
     R: Renderer,
 {
-    type Key = DynamicMutableViewKey;
-    fn build(
-        self,
-        ctx: ViewCtx<R>,
-        will_rebuild: bool,
-        state_node_id: RendererNodeId<R>,
-    ) -> Self::Key {
-        DynamicView::build(self, ctx, will_rebuild, state_node_id)
+    type Key = DynamicMutableViewKey<R>;
+
+    fn no_placeholder_when_no_rebuild() -> bool {
+        true
+    }
+
+    fn build(self, ctx: ViewCtx<R>, placeholder_node_id: Option<RendererNodeId<R>>) -> Self::Key {
+        DynamicView::build(self, ctx, placeholder_node_id)
     }
 
     fn rebuild(
         self,
         ctx: ViewCtx<R>,
-        prev_key: Self::Key,
-        state_node_id: RendererNodeId<R>,
+        key: Self::Key,
+        placeholder_node_id: RendererNodeId<R>,
     ) -> Option<Self::Key> {
         let view_type_id = self.as_any().type_id();
-        if view_type_id != prev_key.view_type_id() {
-            <DynamicMutableViewKey as MutableViewKey<R>>::remove(
-                prev_key,
-                &mut *ctx.world,
-                &state_node_id,
-            );
-            Some(DynamicView::build(self, ctx, true, state_node_id))
+        if view_type_id != key.view_type_id() {
+            <DynamicMutableViewKey<R> as MutableViewKey<R>>::remove(key, &mut *ctx.world);
+            Some(DynamicView::build(self, ctx, Some(placeholder_node_id)))
         } else {
-            DynamicView::rebuild(self, ctx, prev_key, state_node_id);
+            DynamicView::rebuild(self, ctx, key, placeholder_node_id);
             None
         }
     }
@@ -191,22 +183,29 @@ where
     fn build(
         self: Box<Self>,
         ctx: ViewCtx<R>,
-        will_rebuild: bool,
-        state_node_id: RendererNodeId<R>,
-    ) -> DynamicMutableViewKey {
-        set_erasure_view_fns::<R, V>(&mut *ctx.world, &state_node_id);
+        state_node_id: Option<RendererNodeId<R>>,
+    ) -> DynamicMutableViewKey<R> {
+        let key = (*self).build(
+            ViewCtx {
+                world: &mut *ctx.world,
+                parent: ctx.parent,
+            },
+            None,
+            state_node_id.is_some(),
+        );
+        if let Some(state_node_id) = key.state_node_id() {
+            set_erasure_view_fns::<R, V>(ctx.world, &state_node_id);
+        }
 
-        let key = (*self).build(ctx, None, will_rebuild);
-
-        DynamicMutableViewKey::new::<R, V>(key)
+        DynamicMutableViewKey::new::<V>(key)
     }
 
     fn rebuild(
         self: Box<Self>,
         ctx: ViewCtx<R>,
-        key: DynamicMutableViewKey,
+        key: DynamicMutableViewKey<R>,
         _state_node_id: RendererNodeId<R>,
-    ) -> Option<DynamicMutableViewKey> {
+    ) -> Option<DynamicMutableViewKey<R>> {
         let key = key.key_ref().downcast_ref::<V::Key>().unwrap().clone();
         (*self).rebuild(ctx, key);
 
@@ -233,11 +232,15 @@ where
     }
 }
 
-pub type DynamicViewKey<R> = VirtualContainerNodeId<R, DynamicMutableViewKey>;
+pub type DynamicViewKey<R> = VirtualContainerNodeId<R, DynamicMutableViewKey<R>>;
 
 #[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
 #[derive(Debug)]
-pub struct DynamicMutableViewKey {
+pub struct DynamicMutableViewKey<R>
+where
+    R: Renderer,
+{
+    state_node_id: Option<RendererNodeId<R>>,
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     key: Option<Box<dyn Any + Send + Sync>>,
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
@@ -248,32 +251,43 @@ pub struct DynamicMutableViewKey {
     hash_fn: Option<fn(key: &dyn Any) -> Option<u64>>,
 }
 
-impl Clone for DynamicMutableViewKey {
+impl<R> Clone for DynamicMutableViewKey<R>
+where
+    R: Renderer,
+{
     fn clone(&self) -> Self {
         Self {
             key: Some(self.clone_fn.unwrap()(self.key_ref())),
             view_type_id: self.view_type_id,
             clone_fn: self.clone_fn,
             hash_fn: self.hash_fn,
+            state_node_id: self.state_node_id.clone(),
         }
     }
 }
 
-impl Hash for DynamicMutableViewKey {
+impl<R> Hash for DynamicMutableViewKey<R>
+where
+    R: Renderer,
+{
     fn hash<H: Hasher>(&self, state: &mut H) {
         state.write_u64(self.hash_fn.unwrap()(self.key_ref()).unwrap());
         self.view_type_id.hash(state)
     }
 }
 
-impl DynamicMutableViewKey {
-    pub fn new<R, V>(key: V::Key) -> Self
+impl<R> DynamicMutableViewKey<R>
+where
+    R: Renderer,
+{
+    pub fn new<V>(key: V::Key) -> Self
     where
-        R: Renderer,
         V: View<R>,
     {
+        let state_node_id = key.state_node_id();
         let reflect_key: Box<dyn Any + Send + Sync> = Box::new(key) as _;
         Self {
+            state_node_id,
             key: Some(reflect_key),
             view_type_id: Some(TypeId::of::<V>()),
             clone_fn: Some(|key| {
@@ -297,11 +311,14 @@ impl DynamicMutableViewKey {
     }
 }
 
-impl<R> MutableViewKey<R> for DynamicMutableViewKey
+impl<R> MutableViewKey<R> for DynamicMutableViewKey<R>
 where
     R: Renderer,
 {
-    fn remove(self, world: &mut RendererWorld<R>, state_node_id: &RendererNodeId<R>) {
+    fn remove(self, world: &mut RendererWorld<R>) {
+        let Some(state_node_id) = self.state_node_id.as_ref() else {
+            return;
+        };
         let erasure_fns = get_erasure_view_fns::<R>(world, state_node_id);
         erasure_fns.remove_fn.unwrap()(self.key.unwrap(), world, state_node_id)
     }
@@ -311,8 +328,10 @@ where
         world: &mut RendererWorld<R>,
         parent: Option<&RendererNodeId<R>>,
         before_node_id: Option<&RendererNodeId<R>>,
-        state_node_id: &RendererNodeId<R>,
     ) {
+        let Some(state_node_id) = self.state_node_id.as_ref() else {
+            return;
+        };
         let erasure_fns = get_erasure_view_fns::<R>(world, state_node_id);
         erasure_fns.insert_before_fn.unwrap()(
             self.key_ref(),
@@ -323,23 +342,22 @@ where
         )
     }
 
-    fn set_visibility(
-        &self,
-        world: &mut RendererWorld<R>,
-        hidden: bool,
-        state_node_id: &RendererNodeId<R>,
-    ) {
+    fn set_visibility(&self, world: &mut RendererWorld<R>, hidden: bool) {
+        let Some(state_node_id) = self.state_node_id.as_ref() else {
+            return;
+        };
         let erasure_fns = get_erasure_view_fns::<R>(world, state_node_id);
         erasure_fns.set_visibility_fn.unwrap()(self.key_ref(), world, hidden, state_node_id)
     }
 
-    fn first_node_id(
-        &self,
-        world: &RendererWorld<R>,
-        state_node_id: &RendererNodeId<R>,
-    ) -> Option<RendererNodeId<R>> {
+    fn first_node_id(&self, world: &RendererWorld<R>) -> Option<RendererNodeId<R>> {
+        let state_node_id = self.state_node_id.as_ref()?;
         let erasure_fns = get_erasure_view_fns::<R>(world, state_node_id);
         erasure_fns.first_node_id.unwrap()(self.key_ref(), world)
+    }
+
+    fn state_node_id(&self) -> Option<RendererNodeId<R>> {
+        self.state_node_id.clone()
     }
 }
 
@@ -353,6 +371,7 @@ where
         virtual_container(self, "[DynamicView Placeholder]")
     }
 }
+
 impl<R> IntoView<R> for Box<dyn CloneableDynamicView<R>>
 where
     R: Renderer,

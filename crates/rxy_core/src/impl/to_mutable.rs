@@ -11,7 +11,7 @@ pub fn to_mutable<T>(t: T) -> ToMutableWrapper<T> {
 pub struct ToMutableWrapper<T>(pub T);
 
 impl<VK: ViewKey<R>, R: Renderer> MutableViewKey<R> for ToMutableWrapper<VK> {
-    fn remove(self, world: &mut RendererWorld<R>, _state_node_id: &RendererNodeId<R>) {
+    fn remove(self, world: &mut RendererWorld<R>) {
         self.0.remove(world)
     }
 
@@ -20,26 +20,20 @@ impl<VK: ViewKey<R>, R: Renderer> MutableViewKey<R> for ToMutableWrapper<VK> {
         world: &mut RendererWorld<R>,
         parent: Option<&RendererNodeId<R>>,
         before_node_id: Option<&RendererNodeId<R>>,
-        _state_node_id: &RendererNodeId<R>,
     ) {
         self.0.insert_before(world, parent, before_node_id)
     }
 
-    fn set_visibility(
-        &self,
-        world: &mut RendererWorld<R>,
-        hidden: bool,
-        _state_node_id: &RendererNodeId<R>,
-    ) {
+    fn set_visibility(&self, world: &mut RendererWorld<R>, hidden: bool) {
         self.0.set_visibility(world, hidden)
     }
 
-    fn first_node_id(
-        &self,
-        world: &RendererWorld<R>,
-        _state_node_id: &RendererNodeId<R>,
-    ) -> Option<RendererNodeId<R>> {
+    fn first_node_id(&self, world: &RendererWorld<R>) -> Option<RendererNodeId<R>> {
         self.0.first_node_id(world)
+    }
+
+    fn state_node_id(&self) -> Option<RendererNodeId<R>> {
+        self.0.state_node_id()
     }
 }
 
@@ -50,20 +44,19 @@ where
 {
     type Key = ToMutableWrapper<V::Key>;
 
-    fn build(
-        self,
-        ctx: ViewCtx<R>,
-        will_rebuild: bool,
-        _state_node_id: RendererNodeId<R>,
-    ) -> Self::Key {
-        ToMutableWrapper(self.0.build(ctx, None, will_rebuild))
+    fn no_placeholder_when_no_rebuild() -> bool {
+        true
+    }
+
+    fn build(self, ctx: ViewCtx<R>, placeholder_node_id: Option<RendererNodeId<R>>) -> Self::Key {
+        ToMutableWrapper(self.0.build(ctx, None, placeholder_node_id.is_some()))
     }
 
     fn rebuild(
         self,
         ctx: ViewCtx<R>,
         key: Self::Key,
-        _state_node_id: RendererNodeId<R>,
+        _placeholder_node_id: RendererNodeId<R>,
     ) -> Option<Self::Key> {
         self.0.rebuild(ctx, key.0);
         None

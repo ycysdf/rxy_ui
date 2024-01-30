@@ -19,7 +19,8 @@
 - 高复用、可组合
 - 高性能、零成本抽象
 - 最小的样板
-- 支持多个渲染器 ( 目前只支持 [Bevy](https://github.com/bevyengine/bevy) )，使其能够应用在多种场景中，比如：游戏、桌面软件、裸机/嵌入式平台 、本机 UI等
+- 支持多个渲染器 ( 目前只支持 [Bevy](https://github.com/bevyengine/bevy) )，使其能够应用在多种场景中，比如：游戏、桌面软件、裸机/嵌入式平台
+  、本机 UI等
 - 支持主流操作系统、Web 平台
 
 ## 计划
@@ -42,17 +43,27 @@ MIT License ([LICENSE-MIT](https://github.com/ycysdf/rxy_ui/blob/main/LICENSE-MI
 
 欢迎共享代码！
 
+## 使用
+
+当前还没有发布 crate 到 crates.io
+
+但是你可以指定 git 仓库依赖
+
+```toml
+[dependencies]
+rxy_ui = {git = "https://github.com/ycysdf/rxy_ui", features = ["bevy"]}
+bevy = {version = "0.12"}
+```
+
 ## 示例
 
 计数器
 
-<img src="./assets/counter.gif" />
+![counter](./assets/counter.gif)
 
 ```rust
 use bevy::prelude::*;
-use rxy_bevy::prelude::*;
-use rxy_bevy_style::prelude::*;
-use xy_reactive::prelude::*;
+use rxy_ui::prelude::*;
 
 fn main() {
     let mut app = App::new();
@@ -128,13 +139,11 @@ pub fn schema_checkbox(
 
 游戏菜单与设置
 
-<img src="./assets/game_menu.gif" />
+![game_menu](./assets/game_menu.gif)
 
 ```rust
 use bevy::prelude::*;
-use rxy_bevy::prelude::*;
-use rxy_bevy_style::prelude::*;
-use xy_reactive::prelude::*;
+use rxy_ui::prelude::*;
 
 use bevy::app::AppExit;
 
@@ -310,10 +319,11 @@ fn schema_in_game() -> impl IntoView<BevyRenderer> {
 
 - 计数器：[examples/counter](examples/counter.rs)
 - [Bevy UI 框架的 10 个挑战](https://github.com/bevyengine/bevy/discussions/11100)
-   - 1. 游戏菜单与自定义 UI 组件：[examples/game_ui_challenges/game_menu](examples/game_ui_challenges/game_menu.rs)
-   - `todo!()`
+  -
+        1. 游戏菜单与自定义 UI 组件：[examples/game_ui_challenges/game_menu](examples/game_ui_challenges/game_menu.rs)
+    - `todo!()`
 - [7GUIs](https://eugenkiss.github.io/7guis/)
-   - `todo!()`
+    - `todo!()`
 - TodoList: `todo!()`
 
 ## 教程
@@ -341,11 +351,14 @@ fn my_view() -> impl IntoView<BevyRenderer> {
 
 你也可以通过 `erasure_children`方法去用于设置视图的子视图，它与`children`方法唯一的不同是，它会将子视图进行类型擦除，这样可以避免类型过于复杂
 
-> 目前默认开启了 view_erasure feature, 强制将所有子视图进行了擦除，放入了堆中，因为如果不进行擦除，类型将过于复杂，导致编译器罢工，类型评估溢出. 你也可以关闭此 feature, 并使用 `erasure_children` 手动擦除一些子视图，避免让类型过于复杂，导致编译失败.
+> 目前默认开启了 view_erasure feature, 强制将所有子视图进行了擦除，放入了堆中，因为如果不进行擦除，类型将过于复杂，导致编译器罢工，类型评估溢出.
+> 你也可以关闭此 feature, 并使用 `erasure_children` 手动擦除一些子视图，避免让类型过于复杂，导致编译失败.
 
 可以通过`width`、`height`、`flex`、`border`、`outline` 等等去设置视图的属性
 
-> 目前支持的全部属性请看：[attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy_element/src/element_attrs/attrs.rs),[composite_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy/src/view_member/composite_attrs.rs),[tailwind_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy_style/src/tailwind_attrs.rs) .基本 NodeBundle 里面成员都有对应的属性
+>
+目前支持的全部属性请看：[attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy_element/src/element_attrs/attrs.rs),[composite_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy/src/view_member/composite_attrs.rs),[tailwind_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy_style/src/tailwind_attrs.rs)
+.基本 NodeBundle 里面成员都有对应的属性
 
 所有实现了 `ViewMember` 的类型都可以作为视图的成员，可通过 `member` 方法来手动添加成员
 
@@ -361,11 +374,14 @@ fn my_view() -> impl IntoView<BevyRenderer> {
 }
 ```
 
-`View` 只是描述了视图所需的数据，并不是真正的视图，得利于类型化的编译时视图，并且这些数据全部在栈上的。性能非常好。
+`View` 描述了视图所需的数据，一个普通的`View`只有属性值，其他的`View`则额外包含一些额外信息，仅此而已，它并不是真正的视图节点。
+
+得利于类型化的编译时视图，这些数据属性值可全部放在栈上，所以它的开销很低。
 
 ### 事件
 
-可以通过 `on_pointer_click`、等方法来添加事件，传入的回调函数是个 Bevy `System`，也就是说可以使用 `Res`、`Commands`、`EventWriter` 等作为它的参数。
+可以通过 `on_pointer_click`、等方法来添加事件，传入的回调函数是个 Bevy `System`
+，也就是说可以使用 `Res`、`Commands`、`EventWriter` 等作为它的参数。
 
 ```rust
 fn signal_example()-> impl IntoView<BevyRenderer> {
@@ -378,7 +394,9 @@ fn signal_example()-> impl IntoView<BevyRenderer> {
 
 ### 信号
 
-> 当前信号的[实现](https://github.com/ycysdf/xy_reactive) fork 自 [tachy_reaccy](https://github.com/gbj/tachys/tree/main/tachy_reaccy)，它是 leptos 的下一代信号库，信号的用法基本与 leptos_reactive 类似
+> 当前信号的[实现](https://github.com/ycysdf/xy_reactive) fork
+> 自 [tachy_reaccy](https://github.com/gbj/tachys/tree/main/tachy_reaccy)，它是 leptos 的下一代信号库，信号的用法基本与
+> leptos_reactive 类似
 
 Rxy UI 支持使用信号来重新构建视图与其成员。
 
@@ -390,9 +408,13 @@ Rxy UI 支持使用信号来重新构建视图与其成员。
 
 如果闭包返回值实现了 `IntoViewAttrMember`，那么此`Reactive`类型就实现了 `ViewMember`，`rx`函数就可以直接在视图成员中使用
 
-此外如果信号类型`RwSignal<T>`或`ReadSignal<T>` `T` 实现了 `IntoView` 或 `IntoViewAttrMember`，那么它也实现了 `View` 或 `ViewMember`
+此外如果信号类型`RwSignal<T>`或`ReadSignal<T>` `T` 实现了 `IntoView` 或 `IntoViewAttrMember`，那么它也实现了 `View`
+或 `ViewMember`
 
-> `IntoViewAttrMember` 表示可以转换到 `ViewMember` 的类型，例如：width 属性值要求是 [Val](https://docs.rs/bevy/latest/bevy/ui/enum.Val.html) 类型，但是你可以传入一个 `i32`，`IntoViewAttrMember`内部会帮你转换为 `Val::Px(100)`
+> `IntoViewAttrMember` 表示可以转换到 `ViewMember` 的类型，例如：width
+> 属性值要求是 [Val](https://docs.rs/bevy/latest/bevy/ui/enum.Val.html)
+> 类型，但是你可以传入一个 `i32`，`IntoViewAttrMember`
+> 内部会帮你转换为 `Val::Px(100)`
 
 ```rust
 fn signal_example() -> impl IntoView<BevyRenderer> {
@@ -591,7 +613,8 @@ fn sample_x_if() -> impl IntoView<BevyRenderer> {
 }
 ```
 
-> 第二个 x_if 使用 view_builder 是因为目前 带有孩子的视图都不是 Clone 的 （由于一些原因，后面可能回改善），但是 x_if 要求视图实现 Clone 的，所以此处使用 view_builder 并传入一个回调函数，使得它 Clone
+> 第二个 x_if 使用 view_builder 是因为目前 带有孩子的视图都不是 Clone 的 （由于一些原因，后面可能回改善），但是 x_if 要求视图实现
+> Clone 的，所以此处使用 view_builder 并传入一个回调函数，使得它 Clone
 
 `x_iter` 用于构建列表视图，它接收`IntoIterator`，并且`Item` 需要实现 `IntoView`，它将项的索引作为 key
 
@@ -736,7 +759,8 @@ fn ui() -> impl IntoView<BevyRenderer> {
 
 ### 层叠样式
 
-之前用例中的属性样式都是直接写在视图上的，这样的样式是无法层叠的。虽然可以覆盖（但是也存在一些问题）并且不支持 悬浮与按下(激活) 等交互样式。
+之前用例中的属性样式都是直接写在视图上的，这样的样式是无法层叠的。虽然可以覆盖（但是也存在一些问题）并且不支持 悬浮与按下(
+激活) 等交互样式。
 
 而层叠样式是可以层叠的，它们有优先级，包括直接设置属性，它们的优先级如下：
 
@@ -763,7 +787,8 @@ fn sample_style_sheet() -> impl IntoView<BevyRenderer> {
 
 `style` 与其他成员一样可以接受 `Reactive`、`Future`、`Option`、`Stream` 等类型
 
-也有 `style_rx`、`style_builder`、`style_option`、`style_stream` 等便捷方法 ( 最好优先使用这些方法，使用`style_future` 内部可以避免 `boxed`，性能更好 )
+也有 `style_rx`、`style_builder`、`style_option`、`style_stream` 等便捷方法 ( 最好优先使用这些方法，使用`style_future`
+内部可以避免 `boxed`，性能更好 )
 
 ```rust
 fn sample_dynamic_style_sheet() -> impl IntoView<BevyRenderer> {
@@ -839,7 +864,8 @@ fn sample_shared_typed_style_sheet() -> impl IntoView<BevyRenderer> {
 
 - 使用属性宏 `schema`
 - 函数名以 `schema_` 开头
-- 返回值类型只能是 `impl IntoView<渲染器>` 或 `impl IntoElementView<渲染器>`（后面将介绍 `IntoElementView`与 `IntoView`的区别）
+- 返回值类型只能是 `impl IntoView<渲染器>` 或 `impl IntoElementView<渲染器>`（后面将介绍 `IntoElementView`与 `IntoView`
+  的区别）
 - 有效的参数类型，通过函数的参数来定义 `Schema` 的属性、事件、槽 等
 
 有以下种类的属性：
@@ -896,13 +922,15 @@ pub fn schema_checkbox(
 }
 ```
 
-> 如果你在属性中使用了你的自定义类型，比如 `ReadSignal<CustomType>`，那么你需要添加 `PropValueWrapper` derive 宏到 `CustomType`，后续可能会去掉这个限制
+> 如果你在属性中使用了你的自定义类型，比如 `ReadSignal<CustomType>`，那么你需要添加 `PropValueWrapper` derive
+> 宏到 `CustomType`，后续可能会去掉这个限制
 
 在上面示例中使用了 `use_controlled_state`，它通过传入信号与事件，返回一个新的信号。
 
 当传入的信号 或者 返回的信号发生改变时，就会发送事件，将最新的值作为参数。
 
-`schema` 属性宏做了什么？它没有修改原函数，它根据函数信息，生成了一个新的函数，原函数去除`schema_`前缀就是它的名字，并且为这个函数的返回值类型添加了一个 `Trait` 实现 ( 详细请可以查看宏生成的代码 )
+`schema` 属性宏做了什么？它没有修改原函数，它根据函数信息，生成了一个新的函数，原函数去除`schema_`
+前缀就是它的名字，并且为这个函数的返回值类型添加了一个 `Trait` 实现 ( 详细请可以查看宏生成的代码 )
 
 看下面它的使用示例：
 
@@ -924,14 +952,13 @@ fn sample_checkbox() -> impl IntoView<BevyRenderer> {
 
 `checkbox` 函数就是通过`schema_checkbox` 生成的函数。
 
-可以向 `schema_checkbox` 的根元素传入 `padding`、`style`、`on_pointer_up` 等等属性或事件，这些属性或事件会传递给根元素。 
+可以向 `schema_checkbox` 的根元素传入 `padding`、`style`、`on_pointer_up` 等等属性或事件，这些属性或事件会传递给根元素。
 
 除了它们，还有 `value`、`readonly`、`onchange` 等属性，通过它们去设置 `schema_checkbox` `Schema` 的同名属性或者事件
 
 属性除了接受静态值。你也可以使用 `Option` 与 `Reactive`、`ReadSignal`等反应式类型 对值进行包装
 
 > 与 `ViewMember` 不同, Schema 属性 目前无法在 `Reactive`、`Memo` 等反应式类型里面嵌套 `Option`
-
 
 ### IntoView 与 IntoElementView 的区别
 
@@ -941,7 +968,9 @@ fn sample_checkbox() -> impl IntoView<BevyRenderer> {
 
 ### Schema 槽
 
-在 `Schema` 中定义槽后，就可以使用 `slot_<槽名称>` 方法去指定槽的内容，它接收 `IntoView` 类型，如果槽是 `CloneableSlot` 类型，那么它接收的 `IntoView` 类型需要实现 `Clone` （许多视图都没有实现 `Clone`，就像前面说的，遇到这种情况，你可以使用 `viwe_builder` 来包裹它）
+在 `Schema` 中定义槽后，就可以使用 `slot_<槽名称>` 方法去指定槽的内容，它接收 `IntoView` 类型，如果槽是 `CloneableSlot`
+类型，那么它接收的 `IntoView` 类型需要实现 `Clone` （许多视图都没有实现 `Clone`
+，就像前面说的，遇到这种情况，你可以使用 `viwe_builder` 来包裹它）
 
 代码示例：
 
@@ -970,7 +999,8 @@ fn sample_schema_sample() -> impl IntoView<BevyRenderer> {
 
 默认情况下，`Schema` 的属性都是可选的，所以属性值的类型如 `ReadSignal<T>` 中的 `T` 必须实现 `Default`
 
-你可以对 `Static`、`ReadSignal`、`ReceiverProp`、`Slot`、`CloneableSlot` 等属性使用 `Required` 来包裹它，以表示它是必填，属性值类型 `T` 就不必实现 `Default` 了
+你可以对 `Static`、`ReadSignal`、`ReceiverProp`、`Slot`、`CloneableSlot` 等属性使用 `Required`
+来包裹它，以表示它是必填，属性值类型 `T` 就不必实现 `Default` 了
 
 指定为必填后，`Schema` 生成的函数将不再是无参的，而是需要你按照必填参数的顺序依次传入
 
@@ -1235,3 +1265,9 @@ fn sample_schema_select() -> impl IntoView<BevyRenderer> {
     // ...
 }
 ```
+
+[//]: # (### 静态与动态上下文)
+
+[//]: # (### View、IntoView)
+
+[//]: # (### MutableView)

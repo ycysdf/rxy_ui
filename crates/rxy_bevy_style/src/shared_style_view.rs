@@ -6,7 +6,7 @@ use bevy_ecs::world::World;
 use bevy_hierarchy::BuildWorldChildren;
 use core::any::Any;
 use rxy_bevy::SchemaCtx;
-use rxy_bevy::rxy_bevy_macro::BevyIntoView;
+use rxy_bevy_macro::BevyIntoView;
 use rxy_bevy::{BevyRenderer, RendererState};
 use rxy_core::{RendererNodeId, View, ViewCtx};
 use rxy_style::StyleSheetCtx;

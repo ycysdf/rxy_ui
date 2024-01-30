@@ -13,6 +13,7 @@ use crate::{BevyRenderer, BevyWrapper, ViewAttr};
 mod attrs;
 pub mod event;
 
+// todo: merge span
 pub fn span(
     str: impl Into<String>,
 ) -> BevyElement<elements::text, (ViewAttr<all_attrs::content>,)> {

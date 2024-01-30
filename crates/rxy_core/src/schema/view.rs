@@ -1,16 +1,16 @@
 use crate::{
     into_view, BoxedCloneableErasureView, BoxedErasureView, BoxedPropValue, ConstIndex, DataNodeId,
     InnerSchemaCtx, IntoCloneableView, IntoSchemaProp, IntoView, IntoViewCloneableErasureExt,
-    IntoViewErasureExt, PropHashMap, Renderer, RendererNodeId, RendererViewExt, RendererWorld,
+    IntoViewErasureExt, PropHashMap, Renderer, RendererNodeId, RendererWorld,
     Schema, SchemaProp, SchemaProps, View, ViewCtx, ViewKey,
 };
-use alloc::boxed::Box;
 use bevy_utils::synccell::SyncCell;
 use bevy_utils::HashMap;
 use core::any::TypeId;
-use core::hash::Hash;
 use core::marker::PhantomData;
 use rxy_macro::IntoView;
+use core::hash::Hash;
+use alloc::boxed::Box;
 
 #[derive(IntoView)]
 pub struct SchemaView<R, U, P = (), M = ()>
@@ -175,7 +175,7 @@ where
     Some(u)
 }
 
-// 使得 SchemaView 即使是 空视图也有 state_node_id
+// Makes SchemaView state_node_id even if it's empty view
 #[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
 #[derive(Clone, Debug)]
 pub struct ViewKeyOrDataNodeId<R, K>
@@ -283,10 +283,6 @@ where
         reserve_key,
         false,
     );
-    // let key = view_build_f(view, ViewCtx {
-    //     world: &mut *ctx.world,
-    //     parent: ctx.parent,
-    // }, reserve_key);
     let (data_node_id, state_node_id) = {
         let data_state_node_id = |data_node_id: Option<Option<DataNodeId<R>>>, world| {
             let state_node_id = data_node_id

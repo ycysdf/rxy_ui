@@ -1,7 +1,5 @@
 use bevy::prelude::*;
-use rxy_bevy::prelude::*;
-use rxy_bevy_style::prelude::*;
-// use xy_reactive::prelude::*;
+use rxy_ui::prelude::*;
 
 fn main() {
     let mut app = App::new();

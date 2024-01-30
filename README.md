@@ -47,11 +47,23 @@ MIT License ([LICENSE-MIT](https://github.com/ycysdf/rxy_ui/blob/main/LICENSE-MI
 
 Code sharing is welcome!
 
+## Usage
+
+crate is not currently published to crates.io
+
+But you can specify git repository dependencies
+
+```toml
+[dependencies]
+rxy_ui = {git = "https://github.com/ycysdf/rxy_ui", features = ["bevy"]}
+bevy = {version = "0.12"}
+```
+
 ## Examples
 
 Counter
 
-<img src="./assets/counter.gif" />
+![counter](./assets/counter.gif)
 
 ```rust
 use bevy::prelude::*;
@@ -133,7 +145,7 @@ pub fn schema_checkbox(
 
 Game Menu and Setting
 
-<img src="./assets/game_menu.gif" />
+![game_menu](./assets/game_menu.gif)
 
 ```rust
 use bevy::prelude::*;
@@ -365,6 +377,10 @@ fn my_view() -> impl IntoView<BevyRenderer> {
     )
 }
 ```
+
+`View` describes the data required for a view, where a regular `View` only has attribute values, while other `View` types additionally include some extra information, that's all. It is not a genuine view node.
+
+Thanks to the typed compile-time views, all these data attribute values can be stored entirely on the stack, resulting in low overhead.
 
 ### Event
 

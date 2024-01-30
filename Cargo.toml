@@ -4,89 +4,73 @@ name = "rxy_ui"
 version = "0.1.0"
 
 [dependencies]
-bevy.workspace = true
-
-rxy_bevy.workspace = true
 rxy_core.workspace = true
+rxy_macro.workspace = true
+rxy_bevy_macro = { workspace = true, optional = true }
+rxy_style_macro = { workspace = true, optional = true }
+hooked_collection = { workspace = true, optional = true }
 
-ahash.workspace = true
-async-channel.workspace = true
-# bevy-inspector-egui.workspace = true
-bevy_mod_picking.workspace = true
-futures-lite.workspace = true
-pin-project-lite.workspace = true
-rxy_bevy_element.workspace = true
-rxy_bevy_style.workspace = true
-rxy_style.workspace = true
-xy_reactive.workspace = true
+xy_reactive = { workspace = true, optional = true }
 
-bevy_app.workspace = true
-bevy_asset.workspace = true
-bevy_core.workspace = true
-bevy_derive.workspace = true
-bevy_ecs.workspace = true
-bevy_hierarchy.workspace = true
-bevy_reflect.workspace = true
-bevy_render.workspace = true
-bevy_sprite.workspace = true
-bevy_tasks.workspace = true
-bevy_text.workspace = true
-bevy_transform.workspace = true
-bevy_ui.workspace = true
-bevy_utils.workspace = true
-oneshot.workspace = true
+rxy_bevy = { workspace = true, optional = true }
+rxy_bevy_element = { workspace = true, optional = true }
+rxy_style = { workspace = true, optional = true }
+rxy_bevy_style = { workspace = true, optional = true }
+bevy_mod_picking = { workspace = true, optional = true }
+
+[features]
+default = ["std", "view_erasure", "x_iter_source", "signal"]
+default_without_view_erasure = ["std", "x_iter_source", "signal"]
+
+std = ["rxy_core/async-channel"]
+hooked_collection = ["dep:hooked_collection"]
+x_iter_source = ["hooked_collection", "rxy_core/x_iter_source"]
+view_erasure = ["rxy_core/view_erasure"]
+tailwind_aliases = ["rxy_bevy_style/tailwind_aliases"]
+# todo: Makes style_sheet independent of bevy
+style_sheet = ["rxy_style", "rxy_style_macro", "rxy_bevy_style"]
+signal = ["xy_reactive", "rxy_core/xy_reactive", "rxy_bevy?/xy_reactive"]
+bevy = [
+    "std", "rxy_bevy", "rxy_bevy_element", "bevy_mod_picking", "rxy_bevy_macro", "style_sheet", "tailwind_aliases",
+]
 
 [workspace]
 members = ["crates/*"]
 
 [workspace.dependencies]
-bevy = {version = "0.12.1", features = [
-  "animation",
-  "bevy_asset", #    "bevy_audio",  #    "bevy_gilrs",
-  "bevy_scene",
-  "bevy_winit",
-  "bevy_core_pipeline", # "bevy_pbr",   #  "bevy_gltf",
-  "bevy_render",
-  "bevy_sprite",
-  "bevy_text",
-  "bevy_ui",
-  "multi-threaded", #    "png",  #    "hdr",  #    "vorbis",  #    "x11",  #    "bevy_gizmos",  #    "android_shared_stdcxx",  #    "tonemapping_luts",
-  "default_font", #    "webgl2",
-]}
+hooked_collection = { path = "crates/hooked_collection" }
+rxy_bevy = { path = "crates/rxy_bevy", features = ["xy_reactive"] }
+rxy_bevy_element = { path = "crates/rxy_bevy_element" }
+rxy_bevy_macro = { path = "crates/rxy_bevy_macro" }
+rxy_bevy_style = { path = "crates/rxy_bevy_style" }
+rxy_core = { path = "crates/rxy_core", features = ["xy_reactive"] }
+rxy_macro = { path = "crates/rxy_macro" }
+rxy_style = { path = "crates/rxy_style" }
+rxy_style_macro = { path = "crates/rxy_style_macro" }
+xy_reactive = { path = "crates/xy_reactive", features = ["bevy"] }
 
-hooked_collection = {path = "crates/hooked_collection"}
-rxy_bevy = {path = "crates/rxy_bevy", features = ["xy_reactive"]}
-rxy_bevy_element = {path = "crates/rxy_bevy_element"}
-rxy_bevy_macro = {path = "crates/rxy_bevy_macro"}
-rxy_bevy_style = {path = "crates/rxy_bevy_style"}
-rxy_core = {path = "crates/rxy_core", features = ["xy_reactive"]}
-rxy_macro = {path = "crates/rxy_macro"}
-rxy_style = {path = "crates/rxy_style"}
-rxy_style_macro = {path = "crates/rxy_style_macro"}
-xy_reactive = {version = "0.1", features = ["bevy"], path = "crates/xy_reactive"}
-
-async-channel = {version = "2.1"}
+async-channel = { version = "2.1" }
 glam = "0.24"
 hashbrown = "0.14"
 indexmap = "2.1"
-once_cell = {version = "1.19", default-features = false}
+once_cell = { version = "1.19", default-features = false }
 oneshot = "0.1"
-pin-project = {version = "1"}
-serde = {version = "1", features = ["derive"]}
+pin-project = { version = "1" }
+serde = { version = "1", features = ["derive"] }
 
-ahash = {version = "0.8", default-features = false}
+ahash = { version = "0.8", default-features = false }
 # bevy-inspector-egui = "0.21"
-bevy_mod_picking = {version = "0.17", default-features = false, features = ["backend_bevy_ui"]}
+bevy_mod_picking = { version = "0.17", default-features = false, features = ["backend_bevy_ui"] }
 derive_more = "0.99"
 drain_filter_polyfill = "0.1"
 futures-lite = "1.13"
-pin-project-lite = {version = "0.2"}
+pin-project-lite = { version = "0.2" }
 thiserror = "1.0"
 
 smallvec = "1.13"
 
 bevy_app = "0.12"
-bevy_asset = {version = "0.12", optional = false}
+bevy_asset = { version = "0.12", optional = false }
 bevy_core = "0.12"
 bevy_derive = "0.12"
 bevy_ecs = "0.12"
@@ -95,9 +79,9 @@ bevy_reflect = "0.12"
 bevy_render = "0.12"
 bevy_sprite = "0.12"
 bevy_tasks = "0.12"
-bevy_text = {version = "0.12", optional = false}
-bevy_transform = {version = "0.12", optional = false}
-bevy_ui = {version = "0.12", features = ["bevy_text"]}
+bevy_text = { version = "0.12", optional = false }
+bevy_transform = { version = "0.12", optional = false }
+bevy_ui = { version = "0.12", features = ["bevy_text"] }
 bevy_utils = "0.12"
 
 count-macro = "0.2.2"
@@ -106,7 +90,29 @@ paste = "1"
 convert_case = "^0.6.0"
 proc-macro2 = "1.0.66"
 quote = "^1.0.26"
-syn = {version = "2", features = ["full"]}
+syn = { version = "2", features = ["full"] }
+
+
+[dev-dependencies]
+bevy = { version = "0.12.1", features = [
+    "animation",
+    "bevy_asset", #    "bevy_audio",  #    "bevy_gilrs",
+    "bevy_scene",
+    "bevy_winit",
+    "bevy_core_pipeline", # "bevy_pbr",   #  "bevy_gltf",
+    "bevy_render",
+    "bevy_sprite",
+    "bevy_text",
+    "bevy_ui",
+    "multi-threaded", #    "png",  #    "hdr",  #    "vorbis",  #    "x11",  #    "bevy_gizmos",  #    "android_shared_stdcxx",  #    "tonemapping_luts",
+    "default_font", #    "webgl2",
+] }
+rxy_ui = { path = ".", features = ["bevy"] }
+oneshot.workspace = true
+ahash.workspace = true
+async-channel.workspace = true
+futures-lite.workspace = true
+pin-project-lite.workspace = true
 
 # cosmic-text = {version = "0.10"}
 [[example]]

@@ -35,7 +35,7 @@ pub trait ViewKey<R: Renderer>:
 
     fn set_visibility(&self, world: &mut RendererWorld<R>, hidden: bool);
 
-    // only empty tuple return none
+    // You need to make sure that it doesn't change
     fn state_node_id(&self) -> Option<RendererNodeId<R>>;
 
     fn reserve_key(world: &mut RendererWorld<R>, will_rebuild: bool) -> Self;

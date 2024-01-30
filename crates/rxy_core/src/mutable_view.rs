@@ -5,79 +5,67 @@ use crate::{
     MaybeFromReflect, MaybeReflect, MaybeTypePath, Renderer, RendererNodeId, RendererWorld, ViewCtx,
 };
 
+// impl MutableView for tuple ?
+
 pub trait MutableView<R: Renderer>: Send + 'static {
     type Key: MutableViewKey<R>;
 
-    fn build(
-        self,
-        ctx: ViewCtx<R>,
-        will_rebuild: bool,
-        state_node_id: RendererNodeId<R>,
-    ) -> Self::Key;
+    fn no_placeholder_when_no_rebuild() -> bool;
+
+    /// .
+    /// if state_node_id is none then will_rebuild is false
+    fn build(self, ctx: ViewCtx<R>, placeholder_node_id: Option<RendererNodeId<R>>) -> Self::Key;
 
     fn rebuild(
         self,
         ctx: ViewCtx<R>,
         key: Self::Key,
-        state_node_id: RendererNodeId<R>,
+        placeholder_node_id: RendererNodeId<R>,
     ) -> Option<Self::Key>;
 }
 
 pub trait MutableViewKey<R: Renderer>:
     MaybeReflect + MaybeFromReflect + MaybeTypePath + Send + Sync + Clone + Hash + Debug + 'static
 {
-    fn remove(self, world: &mut RendererWorld<R>, state_node_id: &RendererNodeId<R>);
+    fn remove(self, world: &mut RendererWorld<R>);
 
     fn insert_before(
         &self,
         world: &mut RendererWorld<R>,
         parent: Option<&RendererNodeId<R>>,
         before_node_id: Option<&RendererNodeId<R>>,
-        state_node_id: &RendererNodeId<R>,
     );
 
-    fn set_visibility(
-        &self,
-        world: &mut RendererWorld<R>,
-        hidden: bool,
-        state_node_id: &RendererNodeId<R>,
-    );
+    fn set_visibility(&self, world: &mut RendererWorld<R>, hidden: bool);
 
-    fn first_node_id(
-        &self,
-        world: &RendererWorld<R>,
-        state_node_id: &RendererNodeId<R>,
-    ) -> Option<RendererNodeId<R>>;
+    fn first_node_id(&self, world: &RendererWorld<R>) -> Option<RendererNodeId<R>>;
+
+    // Unlike ViewKey, you can change it
+    fn state_node_id(&self) -> Option<RendererNodeId<R>>;
 }
 
+#[allow(unused_variables)]
 impl<R> MutableViewKey<R> for ()
 where
     R: Renderer,
 {
-    fn remove(self, _world: &mut RendererWorld<R>, _state_node_id: &RendererNodeId<R>) {}
+    fn remove(self, world: &mut RendererWorld<R>) {}
 
     fn insert_before(
         &self,
-        _world: &mut RendererWorld<R>,
-        _parent: Option<&RendererNodeId<R>>,
-        _before_node_id: Option<&RendererNodeId<R>>,
-        _state_node_id: &RendererNodeId<R>,
+        world: &mut RendererWorld<R>,
+        parent: Option<&RendererNodeId<R>>,
+        before_node_id: Option<&RendererNodeId<R>>,
     ) {
     }
 
-    fn set_visibility(
-        &self,
-        _world: &mut RendererWorld<R>,
-        _hidden: bool,
-        _state_node_id: &RendererNodeId<R>,
-    ) {
+    fn set_visibility(&self, world: &mut RendererWorld<R>, hidden: bool) {}
+
+    fn first_node_id(&self, world: &RendererWorld<R>) -> Option<RendererNodeId<R>> {
+        None
     }
 
-    fn first_node_id(
-        &self,
-        _world: &RendererWorld<R>,
-        _state_node_id: &RendererNodeId<R>,
-    ) -> Option<RendererNodeId<R>> {
+    fn state_node_id(&self) -> Option<RendererNodeId<R>> {
         None
     }
 }
@@ -89,10 +77,9 @@ pub fn mutable_view_rebuild<R: Renderer, V: MutableView<R>>(
     ctx: ViewCtx<R>,
     state_node_id: R::NodeId,
 ) {
-    let key =
-        R::get_state_ref::<MutableKeySelfStatedWrapper<V::Key>>(ctx.world, &state_node_id)
-            .map(|n| &n.0)
-            .cloned();
+    let key = R::get_state_ref::<MutableKeySelfStatedWrapper<V::Key>>(ctx.world, &state_node_id)
+        .map(|n| &n.0)
+        .cloned();
     let new_key = if let Some(key) = key {
         view.rebuild(
             ViewCtx {
@@ -108,8 +95,7 @@ pub fn mutable_view_rebuild<R: Renderer, V: MutableView<R>>(
                 world: &mut *ctx.world,
                 parent: ctx.parent.clone(),
             },
-            true,
-            state_node_id.clone(),
+            Some(state_node_id.clone()),
         );
         Some(key)
     };

@@ -7,7 +7,7 @@ version = "0.1.0"
 
 [dependencies]
 rxy_macro.workspace = true
-xy_reactive = {workspace = true, optional = true}
+xy_reactive = { workspace = true, optional = true }
 
 bevy_reflect.workspace = true
 bevy_utils.workspace = true
@@ -18,10 +18,10 @@ pin-project.workspace = true
 smallvec.workspace = true
 
 ahash.workspace = true
-async-channel = {workspace = true, optional = true}
+async-channel = { workspace = true, optional = true }
+hooked_collection = { workspace = true, optional = true }
 drain_filter_polyfill.workspace = true
 futures-lite.workspace = true
-hooked_collection.workspace = true
 indexmap.workspace = true
 once_cell.workspace = true
 oneshot.workspace = true
@@ -31,3 +31,4 @@ oneshot.workspace = true
 default = ["std", "view_erasure", "async-channel"]
 std = []
 view_erasure = []
+x_iter_source = ["hooked_collection", "async-channel"]

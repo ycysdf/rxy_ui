@@ -64,7 +64,7 @@ where
         self,
         ctx: ViewCtx<BevyRenderer>,
         reserve_key: Option<Self::Key>,
-        will_rebuild: bool,
+        _will_rebuild: bool,
     ) -> Self::Key {
         let view = (self.f)(ctx.world.resource::<T>()).into_view();
         let key = view.build(
@@ -73,7 +73,7 @@ where
                 parent: ctx.parent,
             },
             reserve_key,
-            will_rebuild,
+            true,
         );
         let Some(state_node_id) = key.state_node_id() else {
             return key;

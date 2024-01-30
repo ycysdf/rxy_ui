@@ -1,13 +1,16 @@
+#![allow(unused_variables)]
+
+use bevy::core::FrameCount;
+use bevy::ecs::{entity::Entities, world};
 use bevy::prelude::*;
-use bevy_core::FrameCount;
-use bevy_ecs::{entity::Entities, world};
+use rxy_ui::{
+    bevy::{system, system_once},
+    prelude::*,
+};
 // use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use bevy_sprite::MaterialMesh2dBundle;
-use bevy_utils::synccell::SyncCell;
+use bevy::sprite::MaterialMesh2dBundle;
+use bevy::utils::synccell::SyncCell;
 use futures_lite::{FutureExt, StreamExt};
-use rxy_bevy::{prelude::*, system, system_once};
-use rxy_bevy_style::prelude::*;
-use xy_reactive::prelude::*;
 
 fn main() {
     let mut app = App::new();
@@ -28,7 +31,7 @@ fn setup(mut commands: Commands) {
 }
 
 #[schema]
-fn schema_tt(mut ctx: SchemaCtx, value: ReadSignal<bool>) -> impl IntoView<BevyRenderer> {
+fn schema_tt(_ctx: SchemaCtx, value: ReadSignal<bool>) -> impl IntoView<BevyRenderer> {
     (checkbox(), rx(move || value.get().to_string()))
 }
 

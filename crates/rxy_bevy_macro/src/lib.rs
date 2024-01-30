@@ -199,7 +199,7 @@ pub fn schema(_input: TokenStream, item: TokenStream) -> TokenStream {
                 }
             };
             let static_token = quote! {
-                fn #name<ISP: rxy_core::IntoSchemaProp<R, #inner_ty>>(
+                fn #name<ISP: rxy_ui::IntoSchemaProp<R, #inner_ty>>(
                     self,
                     value: ISP,
                 ) -> Self
@@ -209,7 +209,7 @@ pub fn schema(_input: TokenStream, item: TokenStream) -> TokenStream {
                 quote! {
                     fn #name(
                         self,
-                        value: impl rxy_core::IntoView<R>,
+                        value: impl rxy_ui::IntoView<R>,
                     ) -> Self
                 }
             };
@@ -218,28 +218,28 @@ pub fn schema(_input: TokenStream, item: TokenStream) -> TokenStream {
                 quote! {
                     fn #name(
                         self,
-                        value: impl rxy_core::IntoCloneableView<R>,
+                        value: impl rxy_ui::IntoCloneableView<R>,
                     ) -> Self
                 }
             };
             let prop_fn_sig = if is_element {
                 match param_type {
                     ParamType::Prop => quote! {
-                        fn #name<ISP: rxy_core::IntoSchemaProp<R, #inner_ty>>(
+                        fn #name<ISP: rxy_ui::IntoSchemaProp<R, #inner_ty>>(
                             self,
                             value: ISP,
-                        ) -> rxy_core::ElementSchemaView<R, U, VM, P::Props<rxy_core::ConstIndex<#index,ISP::Prop>>,#schema_id>
+                        ) -> rxy_ui::ElementSchemaView<R, U, VM, P::Props<rxy_ui::ConstIndex<#index,ISP::Prop>>,#schema_id>
                         where
-                            P::Props<rxy_core::ConstIndex<#index,ISP::Prop>>: rxy_core::SchemaProps<R>
+                            P::Props<rxy_ui::ConstIndex<#index,ISP::Prop>>: rxy_ui::SchemaProps<R>
                     },
                     ParamType::Static => static_token,
                     ParamType::Event => quote! {
-                        fn #name<ISP: rxy_core::IntoSchemaProp<R, rxy_core::EventHandler<#inner_ty>>>(
+                        fn #name<ISP: rxy_ui::IntoSchemaProp<R, rxy_ui::EventHandler<#inner_ty>>>(
                             self,
                             value: ISP,
-                        ) -> rxy_core::ElementSchemaView<R, U, VM, P::Props<rxy_core::ConstIndex<#index,ISP::Prop>>,#schema_id>
+                        ) -> rxy_ui::ElementSchemaView<R, U, VM, P::Props<rxy_ui::ConstIndex<#index,ISP::Prop>>,#schema_id>
                         where
-                            P::Props<rxy_core::ConstIndex<#index,ISP::Prop>>: rxy_core::SchemaProps<R>
+                            P::Props<rxy_ui::ConstIndex<#index,ISP::Prop>>: rxy_ui::SchemaProps<R>
                     },
                     ParamType::Slot => slot_token,
                     ParamType::CloneableSlot => cloneable_slot_token,
@@ -247,21 +247,21 @@ pub fn schema(_input: TokenStream, item: TokenStream) -> TokenStream {
             } else {
                 match param_type {
                     ParamType::Prop => quote! {
-                        fn #name<ISP: rxy_core::IntoSchemaProp<R, #inner_ty>>(
+                        fn #name<ISP: rxy_ui::IntoSchemaProp<R, #inner_ty>>(
                             self,
                             value: ISP,
-                        ) -> rxy_core::SchemaView<R, U, P::Props<rxy_core::ConstIndex<#index,ISP::Prop>>,#schema_id>
+                        ) -> rxy_ui::SchemaView<R, U, P::Props<rxy_ui::ConstIndex<#index,ISP::Prop>>,#schema_id>
                         where
-                            P::Props<rxy_core::ConstIndex<#index,ISP::Prop>>: rxy_core::SchemaProps<R>
+                            P::Props<rxy_ui::ConstIndex<#index,ISP::Prop>>: rxy_ui::SchemaProps<R>
                     },
                     ParamType::Static => static_token,
                     ParamType::Event => quote! {
-                        fn #name<ISP: rxy_core::IntoSchemaProp<R, rxy_core::EventHandler<#inner_ty>>>(
+                        fn #name<ISP: rxy_ui::IntoSchemaProp<R, rxy_ui::EventHandler<#inner_ty>>>(
                             self,
                             value: ISP,
-                        ) -> rxy_core::SchemaView<R, U, P::Props<rxy_core::ConstIndex<#index,ISP::Prop>>,#schema_id>
+                        ) -> rxy_ui::SchemaView<R, U, P::Props<rxy_ui::ConstIndex<#index,ISP::Prop>>,#schema_id>
                         where
-                            P::Props<rxy_core::ConstIndex<#index,ISP::Prop>>: rxy_core::SchemaProps<R>
+                            P::Props<rxy_ui::ConstIndex<#index,ISP::Prop>>: rxy_ui::SchemaProps<R>
                     },
                     ParamType::Slot => slot_token,
                     ParamType::CloneableSlot => cloneable_slot_token,
@@ -278,7 +278,7 @@ pub fn schema(_input: TokenStream, item: TokenStream) -> TokenStream {
                 ParamType::Event => quote! {
                     #prop_fn_sig
                     {
-                        self.set_indexed_prop::<#index, ISP, rxy_core::EventHandler<#inner_ty>>(value)
+                        self.set_indexed_prop::<#index, ISP, rxy_ui::EventHandler<#inner_ty>>(value)
                     }
                 },
                 ParamType::Static => quote! {
@@ -313,7 +313,7 @@ pub fn schema(_input: TokenStream, item: TokenStream) -> TokenStream {
         .map(|(i, (pat, ty, _is_slot))| {
             let isp = format_ident!("T{}", i);
             quote! {
-               #isp: rxy_core::IntoSchemaProp<#renderer, #ty>
+               #isp: rxy_ui::IntoSchemaProp<#renderer, #ty>
             }
         });
 
@@ -322,13 +322,13 @@ pub fn schema(_input: TokenStream, item: TokenStream) -> TokenStream {
         .enumerate()
         .map(|(i, (pat, ty, prop_type))| match prop_type {
             RequiredPropType::Prop => quote! {
-                #pat: impl rxy_core::IntoSchemaProp<#renderer, #ty>
+                #pat: impl rxy_ui::IntoSchemaProp<#renderer, #ty>
             },
             RequiredPropType::Slot => quote! {
-                #pat: impl rxy_core::IntoView<#renderer>
+                #pat: impl rxy_ui::IntoView<#renderer>
             },
             RequiredPropType::CloneableSlot => quote! {
-                #pat: impl rxy_core::IntoCloneableView<#renderer>
+                #pat: impl rxy_ui::IntoCloneableView<#renderer>
             },
         });
     let required_fn_params_set =
@@ -349,26 +349,26 @@ pub fn schema(_input: TokenStream, item: TokenStream) -> TokenStream {
     let schema_fn_def = if is_element {
         quote! {
             #[inline(always)]
-            pub fn #fn_name<#schema_generic_params_with_bound>(#(#required_fn_params,)*) -> rxy_core::ElementSchemaView<
+            pub fn #fn_name<#schema_generic_params_with_bound>(#(#required_fn_params,)*) -> rxy_ui::ElementSchemaView<
                 #renderer,
-                rxy_core::ElementSchemaBoundWrapper<impl rxy_core::SchemaWithElementViewBound<#renderer>>,
+                rxy_ui::ElementSchemaBoundWrapper<impl rxy_ui::SchemaWithElementViewBound<#renderer>>,
                 (),
-                impl rxy_core::SchemaProps<BevyRenderer>,
+                impl rxy_ui::SchemaProps<BevyRenderer>,
                 #schema_id,
             > #where_clause {
-                rxy_core::element_schema_view(#schema_ident #ty_generics_turbofish, <#schema_id as core::default::Default>::default()).map(rxy_core::ElementSchemaBoundWrapper)
+                rxy_ui::element_schema_view(#schema_ident #ty_generics_turbofish, <#schema_id as core::default::Default>::default()).map(rxy_ui::ElementSchemaBoundWrapper)
                     #(#required_fn_params_set)*
             }
         }
     } else {
         quote! {
-            pub fn #fn_name<#schema_generic_params_with_bound>(#(#required_fn_params,)*) -> rxy_core::SchemaView<
+            pub fn #fn_name<#schema_generic_params_with_bound>(#(#required_fn_params,)*) -> rxy_ui::SchemaView<
                 #renderer,
-                impl rxy_core::Schema<#renderer>,
-                impl rxy_core::SchemaProps<BevyRenderer>,
+                impl rxy_ui::Schema<#renderer>,
+                impl rxy_ui::SchemaProps<BevyRenderer>,
                 #schema_id,
             > #where_clause {
-                rxy_core::schema_view(#schema_ident #ty_generics_turbofish, <#schema_id as core::default::Default>::default())
+                rxy_ui::schema_view(#schema_ident #ty_generics_turbofish, <#schema_id as core::default::Default>::default())
                     #(#required_fn_params_set)*
             }
         }
@@ -378,23 +378,23 @@ pub fn schema(_input: TokenStream, item: TokenStream) -> TokenStream {
         quote! {
             pub trait #trait_name<R, U, VM, P,#schema_generic_params_with_bound>
             where
-                R: rxy_core::Renderer,
-                VM: rxy_core::ViewMember<R>,
-                U: rxy_core::Schema<R>,
-                U::View: rxy_core::ElementView<R>,
-                P: rxy_core::SchemaProps<R>,
+                R: rxy_ui::Renderer,
+                VM: rxy_ui::ViewMember<R>,
+                U: rxy_ui::Schema<R>,
+                U::View: rxy_ui::ElementView<R>,
+                P: rxy_ui::SchemaProps<R>,
                 #where_clause_predicates
             {
                 #(#prop_fn_sig;)*
             }
 
-            impl<R, U, VM, P,#schema_generic_params> #trait_name<R, U, VM, P,#schema_generic_params> for rxy_core::ElementSchemaView<R, U, VM, P,#schema_id>
+            impl<R, U, VM, P,#schema_generic_params> #trait_name<R, U, VM, P,#schema_generic_params> for rxy_ui::ElementSchemaView<R, U, VM, P,#schema_id>
             where
-                R: rxy_core::Renderer,
-                VM: rxy_core::ViewMember<R>,
-                U: rxy_core::Schema<R>,
-                U::View: rxy_core::ElementView<R>,
-                P: rxy_core::SchemaProps<R>,
+                R: rxy_ui::Renderer,
+                VM: rxy_ui::ViewMember<R>,
+                U: rxy_ui::Schema<R>,
+                U::View: rxy_ui::ElementView<R>,
+                P: rxy_ui::SchemaProps<R>,
                 #schema_generic_params_must_with_bound
                 #where_clause_predicates
             {
@@ -405,19 +405,19 @@ pub fn schema(_input: TokenStream, item: TokenStream) -> TokenStream {
         quote! {
             pub trait #trait_name<R, U, P,#schema_generic_params_with_bound>
             where
-                R: rxy_core::Renderer,
-                U: rxy_core::Schema<R>,
-                P: rxy_core::SchemaProps<R>,
+                R: rxy_ui::Renderer,
+                U: rxy_ui::Schema<R>,
+                P: rxy_ui::SchemaProps<R>,
                 #where_clause_predicates
             {
                 #(#prop_fn_sig;)*
             }
 
-            impl<R, U, P,#schema_generic_params> #trait_name<R, U, P,#schema_generic_params> for rxy_core::SchemaView<R, U, P,#schema_id>
+            impl<R, U, P,#schema_generic_params> #trait_name<R, U, P,#schema_generic_params> for rxy_ui::SchemaView<R, U, P,#schema_id>
             where
-                R: rxy_core::Renderer,
-                U: rxy_core::Schema<R>,
-                P: rxy_core::SchemaProps<R>,
+                R: rxy_ui::Renderer,
+                U: rxy_ui::Schema<R>,
+                P: rxy_ui::SchemaProps<R>,
                 #schema_generic_params_with_bound
                 #where_clause_predicates
             {

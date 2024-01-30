@@ -1,6 +1,6 @@
 use alloc::boxed::Box;
-use core::marker::PhantomData;
 use core::any::TypeId;
+use core::marker::PhantomData;
 
 use crate::{
     ElementView, IntoElementView, IntoView, MemberOwner, MutableView, Renderer, RendererNodeId,
@@ -22,7 +22,7 @@ where
 pub fn member_builder<R, T, F>(f: F) -> Builder<R, F>
 where
     R: Renderer,
-    F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> T+ Send + 'static,
+    F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> T + Send + 'static,
     T: ViewMember<R>,
 {
     Builder(f, Default::default())
@@ -31,7 +31,7 @@ where
 pub fn style_builder<R, VM, F>(f: F) -> Builder<R, F>
 where
     R: Renderer,
-    F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> VM+ Send + 'static,
+    F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> VM + Send + 'static,
     VM: ViewMember<R>,
 {
     Builder(f, Default::default())
@@ -51,30 +51,29 @@ where
 {
     type Key = MV::Key;
 
-    fn build(
-        self,
-        ctx: ViewCtx<R>,
-        will_rebuild: bool,
-        state_node_id: RendererNodeId<R>,
-    ) -> Self::Key {
+    fn no_placeholder_when_no_rebuild() -> bool {
+        MV::no_placeholder_when_no_rebuild()
+    }
+
+    fn build(self, ctx: ViewCtx<R>, placeholder_node_id: Option<RendererNodeId<R>>) -> Self::Key {
         self.0(
             ViewCtx {
                 world: &mut *ctx.world,
                 parent: ctx.parent.clone(),
             },
             BuildFlags {
-                will_rebuild,
+                will_rebuild: placeholder_node_id.is_some(),
                 is_rebuild: true,
             },
         )
-        .build(ctx, will_rebuild, state_node_id)
+        .build(ctx, placeholder_node_id)
     }
 
     fn rebuild(
         self,
         ctx: ViewCtx<R>,
         key: Self::Key,
-        state_node_id: RendererNodeId<R>,
+        placeholder_node_id: RendererNodeId<R>,
     ) -> Option<Self::Key> {
         self.0(
             ViewCtx {
@@ -86,7 +85,7 @@ where
                 is_rebuild: false,
             },
         )
-        .rebuild(ctx, key, state_node_id)
+        .rebuild(ctx, key, placeholder_node_id)
     }
 }
 
@@ -266,24 +265,22 @@ where
     }
 }
 
-impl<R, V> MutableView<R> for BoxedBuilder<R, V>
+impl<R, MV> MutableView<R> for BoxedBuilder<R, MV>
 where
-    V: MutableView<R>,
+    MV: MutableView<R>,
     R: Renderer,
 {
-    type Key = V::Key;
+    type Key = MV::Key;
 
-    fn build(
-        self,
-        ctx: ViewCtx<R>,
-        will_rebuild: bool,
-        state_node_id: RendererNodeId<R>,
-    ) -> Self::Key {
+    fn no_placeholder_when_no_rebuild() -> bool {
+        MV::no_placeholder_when_no_rebuild()
+    }
+
+    fn build(self, ctx: ViewCtx<R>, placeholder_node_id: Option<RendererNodeId<R>>) -> Self::Key {
         MutableView::build(
             Builder(self.0, Default::default()),
             ctx,
-            will_rebuild,
-            state_node_id,
+            placeholder_node_id,
         )
     }
 
@@ -291,9 +288,14 @@ where
         self,
         ctx: ViewCtx<R>,
         key: Self::Key,
-        state_node_id: RendererNodeId<R>,
+        placeholder_node_id: RendererNodeId<R>,
     ) -> Option<Self::Key> {
-        MutableView::rebuild(Builder(self.0, Default::default()), ctx, key, state_node_id)
+        MutableView::rebuild(
+            Builder(self.0, Default::default()),
+            ctx,
+            key,
+            placeholder_node_id,
+        )
     }
 }
 

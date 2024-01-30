@@ -3,7 +3,6 @@
 extern crate alloc;
 
 pub use paste::paste;
-
 // pub use clone_to::*;
 pub use count_macro;
 pub use either::*;
@@ -19,7 +18,6 @@ pub use reactive::*;
 pub use rebuild::*;
 pub use reflect::*;
 pub use renderer::*;
-pub use rxy_macro;
 pub use schema::*;
 pub use slot::*;
 pub use view::*;
@@ -43,17 +41,19 @@ pub mod prelude {
         view_builder, x_future, x_if, x_if_else, x_iter, x_iter_keyed, x_stream,
         BoxedCloneableDynamicView, BoxedDynamicView, BoxedErasureView, Context,
         DeferredWorldScoped, DynamicView, Either, EitherExt, ElementView, ErasureView,
-        IntoDynamicView, IntoElementView, IntoView, IntoViewErasureExt, Keyed, ListOperator,
+        IntoDynamicView, IntoElementView, IntoView, IntoViewErasureExt, Keyed,
         MemberOwner, Renderer, RendererElementType, RendererViewExt, Required, SoloView, Static,
         View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
     };
+    #[cfg(feature = "hooked_collection")]
+    pub use crate::{ListOperator};
+    #[cfg(feature = "x_iter_source")]
+    pub use crate::{use_list, x_iter_source};
     #[cfg(feature = "xy_reactive")]
-    pub use crate::{rx, use_list, x_iter_source, MemberOwnerRxExt, SignalExt};
+    pub use crate::{rx, MemberOwnerRxExt, SignalExt};
 
     #[cfg(feature = "async-channel")]
     pub use crate::Sender;
-
-    pub use rxy_macro::PropValueWrapper;
 }
 
 mod element_view;

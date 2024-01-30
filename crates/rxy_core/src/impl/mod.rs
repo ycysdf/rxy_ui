@@ -16,7 +16,7 @@ pub use to_mutable::*;
 pub use erasure::*;
 pub use virtual_container::*;
 // pub use reflect::*;
-#[cfg(feature = "async-channel")]
+#[cfg(feature = "x_iter_source")]
 pub use x_iter_source::*;
 pub use context::*;
 pub use future::*;
@@ -38,7 +38,7 @@ mod virtual_container;
 mod dynamic;
 mod erasure;
 mod reflect;
-#[cfg(feature = "async-channel")]
+#[cfg(feature = "x_iter_source")]
 mod x_iter_source;
 mod context;
 mod result;

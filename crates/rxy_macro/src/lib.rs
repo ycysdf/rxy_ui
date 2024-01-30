@@ -15,9 +15,9 @@ fn impl_into_prop_value_wrapper(input: TokenStream) -> TokenStream {
     let (impl_generics, type_generics, where_clause) = &ast.generics.split_for_impl();
 
     TokenStream::from(quote! {
-        impl #impl_generics rxy_core::IntoSchemaPropValue<rxy_core::IntoSchemaPropValueWrapper<Self>> for #struct_name #type_generics #where_clause{
-            fn into(self) -> rxy_core::IntoSchemaPropValueWrapper<Self> {
-                rxy_core::IntoSchemaPropValueWrapper(self)
+        impl #impl_generics rxy_ui::IntoSchemaPropValue<rxy_ui::IntoSchemaPropValueWrapper<Self>> for #struct_name #type_generics #where_clause{
+            fn into(self) -> rxy_ui::IntoSchemaPropValueWrapper<Self> {
+                rxy_ui::IntoSchemaPropValueWrapper(self)
             }
         }
     })

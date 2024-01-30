@@ -9,6 +9,7 @@ use bevy_utils::synccell::SyncCell;
 use bevy_utils::tracing::error;
 use core::fmt::Debug;
 use core::future::Future;
+use core::hash::{Hash, Hasher};
 use core::marker::PhantomData;
 use core::pin::pin;
 use futures_lite::stream::Map;
@@ -51,15 +52,11 @@ impl<T> ListOperator for UseList<T> {
     type Item = T;
 
     fn push(&self, item: T) {
-        let _ = self
-            .op_sender
-            .send_blocking(UseListOperation::Ops(VecOperation::Push { item }));
+        let _ = self.op_sender.send_blocking(UseListOperation::Ops(VecOperation::Push { item }));
     }
 
     fn callback(&self, f: impl FnOnce(&mut HookedVec<T, VecOperationRecord<T>>) + Send + 'static) {
-        let _ = self
-            .op_sender
-            .send_blocking(UseListOperation::Callback(Box::new(f)));
+        let _ = self.op_sender.send_blocking(UseListOperation::Callback(Box::new(f)));
     }
 
     fn patch(&self, index: usize, f: impl FnOnce(&mut T) + Send + 'static)
@@ -72,9 +69,7 @@ impl<T> ListOperator for UseList<T> {
     }
 
     fn pop(&self) {
-        let _ = self
-            .op_sender
-            .send_blocking(UseListOperation::Ops(VecOperation::Pop));
+        let _ = self.op_sender.send_blocking(UseListOperation::Ops(VecOperation::Pop));
     }
 
     fn insert(&self, index: usize, item: T) {
@@ -84,9 +79,7 @@ impl<T> ListOperator for UseList<T> {
     }
 
     fn remove(&self, index: usize) {
-        let _ = self
-            .op_sender
-            .send_blocking(UseListOperation::Ops(VecOperation::Remove { index }));
+        let _ = self.op_sender.send_blocking(UseListOperation::Ops(VecOperation::Remove { index }));
     }
 
     fn update(&self, index: usize, item: T) {
@@ -96,15 +89,12 @@ impl<T> ListOperator for UseList<T> {
     }
 
     fn clear(&self) {
-        let _ = self
-            .op_sender
-            .send_blocking(UseListOperation::Ops(VecOperation::Clear));
+        let _ = self.op_sender.send_blocking(UseListOperation::Ops(VecOperation::Clear));
     }
 
     fn move_item(&self, from: usize, to: usize) {
-        let _ = self
-            .op_sender
-            .send_blocking(UseListOperation::Ops(VecOperation::Move { from, to }));
+        let _ =
+            self.op_sender.send_blocking(UseListOperation::Ops(VecOperation::Move { from, to }));
     }
 
     fn watch_count(&self) -> Receiver<usize> {
@@ -218,7 +208,7 @@ impl<T: Clone + Send + 'static> UseListSource<T> {
     // }
     pub fn try_apply_ops(&mut self) {
         while let Ok(op) = self.op_receiver.try_recv() {
-            // todo: 
+            // todo:
             #[allow(clippy::single_match)]
             match op {
                 UseListOperation::Ops(op) => {
@@ -286,12 +276,27 @@ where
 }
 
 #[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
-#[derive(Clone, Hash, Debug)]
-pub struct ForSourceViewKey<K>(PhantomData<K>);
+#[derive(Clone, Debug)]
+pub struct ForSourceViewKey<R, K>(DataOrPlaceholderNodeId<R>, PhantomData<K>)
+where
+    R: Renderer;
 
-impl<K> Default for ForSourceViewKey<K> {
-    fn default() -> Self {
-        Self(PhantomData)
+impl<R, K> ForSourceViewKey<R, K>
+where
+    R: Renderer,
+{
+    pub fn new(state_node_id: DataOrPlaceholderNodeId<R>) -> Self {
+        Self(state_node_id, Default::default())
+    }
+}
+
+impl<R, K> Hash for ForSourceViewKey<R, K>
+where
+    R: Renderer,
+    K: ViewKey<R>,
+{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.0.hash(state)
     }
 }
 
@@ -305,27 +310,26 @@ where
     K: ViewKey<R>,
 {
     let mut view_keys = core::mem::take(
-        &mut R::get_state_mut::<ForSourceState<R, K>>(world, state_node_id)
-            .unwrap()
-            .view_keys,
+        &mut R::get_state_mut::<ForSourceState<R, K>>(world, state_node_id).unwrap().view_keys,
     );
     let r = f(&mut view_keys, world);
-    R::get_state_mut::<ForSourceState<R, K>>(world, state_node_id)
-        .unwrap()
-        .view_keys = view_keys;
+    R::get_state_mut::<ForSourceState<R, K>>(world, state_node_id).unwrap().view_keys = view_keys;
     r
 }
 
-impl<R, K> MutableViewKey<R> for ForSourceViewKey<K>
+impl<R, K> MutableViewKey<R> for ForSourceViewKey<R, K>
 where
     R: Renderer,
     K: ViewKey<R>,
 {
-    fn remove(self, world: &mut RendererWorld<R>, state_node_id: &RendererNodeId<R>) {
-        let state = R::take_state::<ForSourceState<R, K>>(world, state_node_id).unwrap();
+    fn remove(self, world: &mut RendererWorld<R>) {
+        let state = R::take_state::<ForSourceState<R, K>>(world, self.0.state_node_id()).unwrap();
         drop(state.task);
         for key in state.view_keys {
             key.remove(world);
+        }
+        if let DataOrPlaceholderNodeId::Data(state_node_id) = self.0 {
+            R::remove_node(world, &state_node_id);
         }
     }
 
@@ -334,47 +338,83 @@ where
         world: &mut RendererWorld<R>,
         parent: Option<&RendererNodeId<R>>,
         before_node_id: Option<&RendererNodeId<R>>,
-        state_node_id: &RendererNodeId<R>,
     ) {
-        get_for_source_view_keys_scoped(world, state_node_id, |view_keys: &mut Vec<K>, world| {
-            for key in view_keys.iter() {
-                key.insert_before(world, parent, before_node_id);
-            }
-        });
+        get_for_source_view_keys_scoped(
+            world,
+            self.0.state_node_id(),
+            |view_keys: &mut Vec<K>, world| {
+                for key in view_keys.iter() {
+                    key.insert_before(world, parent, before_node_id);
+                }
+            },
+        );
     }
 
-    fn set_visibility(
-        &self,
-        world: &mut RendererWorld<R>,
-        hidden: bool,
-        state_node_id: &RendererNodeId<R>,
-    ) {
-        get_for_source_view_keys_scoped(world, state_node_id, |view_keys: &mut Vec<K>, world| {
-            for key in view_keys.iter() {
-                key.set_visibility(world, hidden);
-            }
-        });
+    fn set_visibility(&self, world: &mut RendererWorld<R>, hidden: bool) {
+        get_for_source_view_keys_scoped(
+            world,
+            self.0.state_node_id(),
+            |view_keys: &mut Vec<K>, world| {
+                for key in view_keys.iter() {
+                    key.set_visibility(world, hidden);
+                }
+            },
+        );
     }
 
-    fn first_node_id(
-        &self,
-        world: &RendererWorld<R>,
-        state_node_id: &RendererNodeId<R>,
-    ) -> Option<RendererNodeId<R>> {
-        R::get_state_ref::<ForSourceState<R, K>>(world, state_node_id)
+    fn first_node_id(&self, world: &RendererWorld<R>) -> Option<RendererNodeId<R>> {
+        R::get_state_ref::<ForSourceState<R, K>>(world, self.0.state_node_id())
             .unwrap()
             .view_keys
             .first()
             .and_then(|n| n.first_node_id(world))
+    }
+
+    fn state_node_id(&self) -> Option<RendererNodeId<R>> {
+        Some(self.0.state_node_id().clone())
+    }
+}
+
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
+pub enum DataOrPlaceholderNodeId<R>
+where
+    R: Renderer,
+{
+    Data(RendererNodeId<R>),
+    Placeholder(RendererNodeId<R>),
+}
+
+impl<R> Hash for DataOrPlaceholderNodeId<R>
+where
+    R: Renderer,
+{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            DataOrPlaceholderNodeId::Data(node_id) => node_id.hash(state),
+            DataOrPlaceholderNodeId::Placeholder(node_id) => node_id.hash(state),
+        }
+    }
+}
+
+impl<R> DataOrPlaceholderNodeId<R>
+where
+    R: Renderer,
+{
+    pub fn state_node_id(&self) -> &RendererNodeId<R> {
+        match self {
+            DataOrPlaceholderNodeId::Data(node_id) => node_id,
+            DataOrPlaceholderNodeId::Placeholder(node_id) => node_id,
+        }
     }
 }
 
 pub fn build_for_source<R, T, F, IV>(
     mut for_source: ForSource<T, F>,
     ctx: ViewCtx<R>,
-    _will_rebuild: bool,
-    state_node_id: RendererNodeId<R>,
-) where
+    state_node_id: Option<RendererNodeId<R>>,
+) -> DataOrPlaceholderNodeId<R>
+where
     R: Renderer,
     T: Clone + Send + Debug + 'static,
     IV: IntoView<R>,
@@ -400,7 +440,13 @@ pub fn build_for_source<R, T, F, IV>(
             )
         })
         .collect::<Vec<_>>();
+
     let deferred_world_scoped = R::deferred_world_scoped(&mut *ctx.world);
+    let state_node_id = if let Some(state_node_id) = state_node_id {
+        DataOrPlaceholderNodeId::Placeholder(state_node_id)
+    } else {
+        DataOrPlaceholderNodeId::Data(R::spawn_data_node(ctx.world))
+    };
 
     let task = R::spawn({
         use crate::renderer::DeferredWorldScoped;
@@ -463,7 +509,7 @@ pub fn build_for_source<R, T, F, IV>(
                     move |world| {
                         get_for_source_view_keys_scoped(
                             world,
-                            &state_node_id,
+                            state_node_id.state_node_id(),
                             |view_keys: &mut Vec<<IV::View as View<R>>::Key>, world| {
                                 let mut vec = taked_vec_or_receciver
                                     .take()
@@ -517,12 +563,13 @@ pub fn build_for_source<R, T, F, IV>(
     });
     R::set_state(
         &mut *ctx.world,
-        &state_node_id,
+        state_node_id.state_node_id(),
         ForSourceState::<R, _> {
             view_keys,
             task: SyncCell::new(task),
         },
     );
+    state_node_id
 }
 
 fn apply_op_to_view_keys<R, T, F, IV>(
@@ -530,7 +577,7 @@ fn apply_op_to_view_keys<R, T, F, IV>(
     parent: RendererNodeId<R>,
     view_f: F,
     op: VecOperation<Cow<T>>,
-    state_node_id: &RendererNodeId<R>,
+    state_node_id: &DataOrPlaceholderNodeId<R>,
     view_keys: &mut Vec<<IV::View as View<R>>::Key>,
     vec: &[T],
 ) where
@@ -550,7 +597,12 @@ fn apply_op_to_view_keys<R, T, F, IV>(
                 None,
                 true,
             );
-            view_key.insert_before(world, Some(&parent), Some(state_node_id));
+            match state_node_id {
+                DataOrPlaceholderNodeId::Data(_state_node_id) => unreachable!(),
+                DataOrPlaceholderNodeId::Placeholder(placeholder_node_id) => {
+                    view_key.insert_before(world, Some(&parent), Some(placeholder_node_id));
+                }
+            }
 
             view_keys.push(view_key);
         }
@@ -569,10 +621,15 @@ fn apply_op_to_view_keys<R, T, F, IV>(
                 None,
                 true,
             );
-            let first_node_id = view_keys[index]
-                .first_node_id(world)
-                .unwrap_or(state_node_id.clone());
-            view_key.insert_before(world, Some(&parent), Some(&first_node_id));
+
+            match state_node_id {
+                DataOrPlaceholderNodeId::Data(_state_node_id) => unreachable!(),
+                DataOrPlaceholderNodeId::Placeholder(state_node_id) => {
+                    let first_node_id =
+                        view_keys[index].first_node_id(world).unwrap_or(state_node_id.clone());
+                    view_key.insert_before(world, Some(&parent), Some(&first_node_id));
+                }
+            }
             view_keys.insert(index, view_key);
         }
         VecOperation::Update { index, item } => {
@@ -624,100 +681,41 @@ where
     IV: IntoView<R>,
     F: Fn(Cow<T>) -> IV + Clone + Send + 'static,
 {
-    type Key = ForSourceViewKey<<IV::View as View<R>>::Key>;
+    type Key = ForSourceViewKey<R, <IV::View as View<R>>::Key>;
 
-    fn build(
-        self,
-        ctx: ViewCtx<R>,
-        _will_rebuild: bool,
-        state_node_id: RendererNodeId<R>,
-    ) -> Self::Key {
-        build_for_source(self, ctx, _will_rebuild, state_node_id);
-        ForSourceViewKey::default()
+    fn no_placeholder_when_no_rebuild() -> bool {
+        false
+    }
+
+    fn build(self, ctx: ViewCtx<R>, placeholder_node_id: Option<RendererNodeId<R>>) -> Self::Key {
+        // because no_placeholder_when_no_rebuild is false. placeholder_node_id must be some
+        assert!(placeholder_node_id.is_some());
+        let state_node_id = build_for_source(self, ctx, placeholder_node_id);
+        ForSourceViewKey::new(state_node_id)
     }
 
     fn rebuild(
         self,
         ctx: ViewCtx<R>,
         _key: Self::Key,
-        state_node_id: RendererNodeId<R>,
+        placeholder_node_id: RendererNodeId<R>,
     ) -> Option<Self::Key> {
-        let state = R::take_state::<ForSourceState<R, <IV::View as View<R>>::Key>>(
-            &mut *ctx.world,
-            &state_node_id,
-        )
-        .unwrap();
-        drop(state.task);
-        for view_key in state.view_keys {
+        assert!(matches!(_key.0, DataOrPlaceholderNodeId::Placeholder(_)));
+        let view_keys = if let Some(state) = R::take_state::<
+            ForSourceState<R, <IV::View as View<R>>::Key>,
+        >(&mut *ctx.world, &placeholder_node_id)
+        {
+            drop(state.task);
+            state.view_keys
+        } else {
+            vec![]
+        };
+        // todo: Can be optimized
+        for view_key in view_keys {
             view_key.remove(&mut *ctx.world);
         }
 
-        build_for_source(self, ctx, true, state_node_id);
-        None
+        let state_node_id = build_for_source(self, ctx, Some(placeholder_node_id));
+        Some(ForSourceViewKey::new(state_node_id))
     }
 }
-
-/*pub enum ViewKeyOpMsg<R>
-where
-    R: Renderer,
-{
-    Remove,
-    InsertBefore(Option<RendererNodeId<R>>, Option<RendererNodeId<R>>),
-    SetVisibility { hidden: bool },
-}
-impl<R> MutableViewKey<R> for ForSourceViewKey
-where
-    R: Renderer,
-{
-    fn remove(self, world: &mut RendererWorld<R>, state_node_id: &RendererNodeId<R>) {
-        let state = R::take_state::<ForSourceState<R>>(world, state_node_id).unwrap();
-        drop(state.task);
-        state
-            .view_key_op_sender
-            .send_blocking(ViewKeyOpMsg::Remove)
-            .unwrap();
-    }
-
-    fn insert_before(
-        &self,
-        world: &mut RendererWorld<R>,
-        parent: Option<&RendererNodeId<R>>,
-        before_node_id: Option<&RendererNodeId<R>>,
-        state_node_id: &RendererNodeId<R>,
-    ) {
-        R::get_state_ref::<ForSourceState<R>>(world, state_node_id)
-            .unwrap()
-            .view_key_op_sender
-            .send_blocking(ViewKeyOpMsg::InsertBefore(
-                parent.cloned(),
-                before_node_id.cloned(),
-            ))
-            .unwrap();
-    }
-
-    fn set_visibility(
-        &self,
-        world: &mut RendererWorld<R>,
-        hidden: bool,
-        state_node_id: &RendererNodeId<R>,
-    ) {
-        R::get_state_ref::<ForSourceState<R>>(world, state_node_id)
-            .unwrap()
-            .view_key_op_sender
-            .send_blocking(ViewKeyOpMsg::SetVisibility { hidden })
-            .unwrap();
-    }
-
-    fn first_node_id(
-        &self,
-        world: &RendererWorld<R>,
-        state_node_id: &RendererNodeId<R>,
-    ) -> Option<RendererNodeId<R>> {
-        R::get_state_ref::<ForSourceState<R>>(world, state_node_id)
-            .unwrap()
-            .first_node_id
-            .clone()
-    }
-}
-
-*/

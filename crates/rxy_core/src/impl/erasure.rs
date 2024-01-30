@@ -37,7 +37,7 @@ where
 
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub reserve_key:
-        Option<fn(world: &mut RendererWorld<R>, will_rebuild: bool) -> DynamicMutableViewKey>,
+        Option<fn(world: &mut RendererWorld<R>, will_rebuild: bool) -> DynamicMutableViewKey<R>>,
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub first_node_id:
         Option<fn(key: &dyn Any, world: &RendererWorld<R>) -> Option<RendererNodeId<R>>>,
@@ -50,7 +50,7 @@ pub fn get_erasure_view_fns<'a, R>(
 where
     R: Renderer,
 {
-    let Some(erasure_fns) = R::get_view_state_ref::<ErasureViewFns<R>>(world, state_node_id) else {
+    let Some(erasure_fns) = R::get_state_ref::<ErasureViewFns<R>>(world, state_node_id) else {
         panic!("no found view type data!")
     };
     erasure_fns
@@ -60,7 +60,7 @@ pub fn set_erasure_view_fns<R: Renderer, V: View<R>>(
     world: &mut RendererWorld<R>,
     state_node_id: &<R as Renderer>::NodeId,
 ) {
-    R::set_view_state(
+    R::set_state(
         world,
         state_node_id,
         ErasureViewFns::<R> {
@@ -82,7 +82,7 @@ pub fn set_erasure_view_fns<R: Renderer, V: View<R>>(
             }),
             reserve_key: Some(|world, will_rebuild| {
                 let key = V::Key::reserve_key(world, will_rebuild);
-                DynamicMutableViewKey::new::<R, V>(key)
+                DynamicMutableViewKey::new::<V>(key)
             }),
             first_node_id: Some(|key, world| {
                 let key = key.downcast_ref::<V::Key>().unwrap();
@@ -246,7 +246,7 @@ where
         world: &RendererWorld<R>,
     ) -> Option<(RendererNodeId<R>, Box<(dyn Any + Send + Sync)>)> {
         self.state_node_id.as_ref().and_then(|node_id| {
-            R::get_view_state_ref::<ErasureViewKeyViewState>(world, node_id)
+            R::get_state_ref::<ErasureViewKeyViewState>(world, node_id)
                 .map(|n| {
                     let view_key = &**n.view_key.as_ref().unwrap();
                     n.clone_fn.unwrap()(view_key)
@@ -373,7 +373,7 @@ where
             };
             set_erasure_view_fns::<R, V>(&mut *ctx.world, &state_node_id);
             if will_rebuild {
-                R::set_view_state(ctx.world, &state_node_id, ErasureViewKeyViewState::new(key));
+                R::set_state(ctx.world, &state_node_id, ErasureViewKeyViewState::new(key));
             }
             Some(state_node_id)
         } else {

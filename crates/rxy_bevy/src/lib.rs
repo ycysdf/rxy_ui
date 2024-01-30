@@ -9,7 +9,6 @@ pub use res_change_observe::*;
 pub use rxy_bevy_element::all_attrs;
 pub use rxy_bevy_element::elements;
 pub use rxy_bevy_element::ElementType;
-pub use rxy_bevy_macro;
 use rxy_core::{CloneableSchemaSlot, RebuildFnReceiver, RenderSchemaCtx, SchemaSlot};
 pub use view::*;
 pub use view_member::*;
@@ -42,6 +41,4 @@ pub mod prelude {
         ResChangeWorldExt, RxyPlugin, RxyUiCommandExt, SchemaCtx, SchemaIntoViewFn, Slot,
     };
     pub use bevy_ui::prelude::Val;
-    pub use rxy_bevy_macro::schema;
-    pub use rxy_core::prelude::*;
 }

@@ -10,6 +10,7 @@ rxy_bevy.workspace = true
 rxy_bevy_element.workspace = true
 rxy_core.workspace = true
 rxy_style.workspace = true
+rxy_bevy_macro.workspace = true
 rxy_style_macro.workspace = true
 
 ahash.workspace = true
@@ -30,5 +31,5 @@ bevy_ui.workspace = true
 bevy_utils.workspace = true
 
 [features]
-default = ["tailwind"]
-tailwind = []
+default = ["tailwind_aliases"]
+tailwind_aliases = []

@@ -16,17 +16,17 @@ pub fn typed_style(input: TokenStream) -> TokenStream {
             }
         }
 
-        impl rxy_bevy_style::TypedStyleLabel for #ident {}
+        impl rxy_ui::style::TypedStyleLabel for #ident {}
 
-        impl rxy_bevy_style::StyleSheets<#render> for #ident {
+        impl rxy_ui::style::StyleSheets<#render> for #ident {
             fn style_sheets(
                 self,
-                ctx: rxy_style::StyleSheetCtx<#render>,
+                ctx: rxy_ui::style::StyleSheetCtx<#render>,
             ) -> (
-                impl Iterator<Item = rxy_bevy_style::AppliedStyleSheet> + Send + 'static,
-                rxy_bevy_style::StyleSheetsInfo,
+                impl Iterator<Item = rxy_ui::style::AppliedStyleSheet> + Send + 'static,
+                rxy_ui::style::StyleSheetsInfo,
             ) {
-                rxy_bevy_style::typed_shared_style_sheets(core::any::TypeId::of::<Self>(), ctx)
+                rxy_ui::style::typed_shared_style_sheets(core::any::TypeId::of::<Self>(), ctx)
             }
         }
     })

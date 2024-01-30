@@ -15,24 +15,14 @@ where
 {
     type Key = Either<LV::Key, RV::Key>;
 
-    fn build(
-        self,
-        ViewCtx { world, parent }: ViewCtx<R>,
-        will_rebuild: bool,
-        state_node_id: RendererNodeId<R>,
-    ) -> Self::Key {
-        let ctx = ViewCtx {
-            world: &mut *world,
-            parent,
-        };
+    fn no_placeholder_when_no_rebuild() -> bool {
+        LV::no_placeholder_when_no_rebuild() && RV::no_placeholder_when_no_rebuild()
+    }
 
+    fn build(self, ctx: ViewCtx<R>, placeholder_node_id: Option<RendererNodeId<R>>) -> Self::Key {
         match self {
-            Either::Left(r) => r
-                .build(ctx, will_rebuild, state_node_id.clone())
-                .either_left(),
-            Either::Right(r) => r
-                .build(ctx, will_rebuild, state_node_id.clone())
-                .either_right(),
+            Either::Left(r) => r.build(ctx, placeholder_node_id).either_left(),
+            Either::Right(r) => r.build(ctx, placeholder_node_id).either_right(),
         }
     }
 
@@ -40,7 +30,7 @@ where
         self,
         ctx: ViewCtx<R>,
         key: Self::Key,
-        state_node_id: RendererNodeId<R>,
+        placeholder_node_id: RendererNodeId<R>,
     ) -> Option<Self::Key> {
         fn change<R: Renderer, K: MutableViewKey<R>, V: MutableView<R>>(
             key: K,
@@ -48,37 +38,31 @@ where
             ctx: ViewCtx<R>,
             state_node_id: RendererNodeId<R>,
         ) -> V::Key {
-            key.remove(&mut *ctx.world, &state_node_id);
+            key.remove(&mut *ctx.world);
             let new_key = view.build(
                 ViewCtx {
                     world: &mut *ctx.world,
                     parent: ctx.parent.clone(),
                 },
-                true,
-                state_node_id.clone(),
+                Some(state_node_id.clone()),
             );
-            new_key.insert_before(
-                &mut *ctx.world,
-                Some(&ctx.parent),
-                Some(&state_node_id),
-                &state_node_id,
-            );
+            new_key.insert_before(&mut *ctx.world, Some(&ctx.parent), Some(&state_node_id));
             // let is_hidden = R::get_is_hidden(&mut *ctx.world, &state_node_id);
             // new_key.set_visibility(&mut *ctx.world, is_hidden, &state_node_id);
             new_key
         }
         match (key, self) {
             (Either::Left(key), Either::Left(view)) => {
-                view.rebuild(ctx, key, state_node_id).map(Either::Left)
+                view.rebuild(ctx, key, placeholder_node_id).map(Either::Left)
             }
             (Either::Right(key), Either::Right(view)) => {
-                view.rebuild(ctx, key, state_node_id).map(Either::Right)
+                view.rebuild(ctx, key, placeholder_node_id).map(Either::Right)
             }
             (Either::Left(key), Either::Right(view)) => {
-                Some(change(key, view, ctx, state_node_id).either_right())
+                Some(change(key, view, ctx, placeholder_node_id).either_right())
             }
             (Either::Right(key), Either::Left(view)) => {
-                Some(change(key, view, ctx, state_node_id).either_left())
+                Some(change(key, view, ctx, placeholder_node_id).either_left())
             }
         }
     }
@@ -89,10 +73,10 @@ where
     RK: MutableViewKey<R>,
     R: Renderer,
 {
-    fn remove(self, world: &mut RendererWorld<R>, state_node_id: &RendererNodeId<R>) {
+    fn remove(self, world: &mut RendererWorld<R>) {
         match self {
-            Either::Left(l) => l.remove(world, state_node_id),
-            Either::Right(r) => r.remove(world, state_node_id),
+            Either::Left(l) => l.remove(world),
+            Either::Right(r) => r.remove(world),
         }
     }
 
@@ -101,43 +85,39 @@ where
         world: &mut RendererWorld<R>,
         parent: Option<&RendererNodeId<R>>,
         before_node_id: Option<&RendererNodeId<R>>,
-        state_node_id: &RendererNodeId<R>,
     ) {
         match self {
             Either::Left(l) => {
-                l.insert_before(world, parent, before_node_id, state_node_id);
+                l.insert_before(world, parent, before_node_id);
             }
             Either::Right(r) => {
-                r.insert_before(world, parent, before_node_id, state_node_id);
+                r.insert_before(world, parent, before_node_id);
             }
         }
     }
 
-    fn set_visibility(
-        &self,
-        world: &mut RendererWorld<R>,
-        hidden: bool,
-        state_node_id: &RendererNodeId<R>,
-    ) {
+    fn set_visibility(&self, world: &mut RendererWorld<R>, hidden: bool) {
         match self {
             Either::Left(l) => {
-                l.set_visibility(world, hidden, state_node_id);
+                l.set_visibility(world, hidden);
             }
             Either::Right(r) => {
-                r.set_visibility(world, hidden, state_node_id);
+                r.set_visibility(world, hidden);
             }
         }
-        R::set_visibility(world, hidden, state_node_id);
     }
 
-    fn first_node_id(
-        &self,
-        world: &RendererWorld<R>,
-        state_node_id: &RendererNodeId<R>,
-    ) -> Option<RendererNodeId<R>> {
+    fn first_node_id(&self, world: &RendererWorld<R>) -> Option<RendererNodeId<R>> {
         match self {
-            Either::Left(l) => l.first_node_id(world, state_node_id),
-            Either::Right(r) => r.first_node_id(world, state_node_id),
+            Either::Left(l) => l.first_node_id(world),
+            Either::Right(r) => r.first_node_id(world),
+        }
+    }
+
+    fn state_node_id(&self) -> Option<RendererNodeId<R>> {
+        match self {
+            Either::Left(l) => l.state_node_id(),
+            Either::Right(r) => r.state_node_id(),
         }
     }
 }

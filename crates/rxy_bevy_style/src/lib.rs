@@ -16,11 +16,11 @@ mod shared_style_view;
 mod style_sheet_definition;
 mod style_sheet_items;
 mod style_sheets;
-#[cfg(feature = "tailwind")]
+#[cfg(feature = "tailwind_aliases")]
 mod tailwind_attrs;
 mod view_member;
 
-#[cfg(feature = "tailwind")]
+#[cfg(feature = "tailwind_aliases")]
 pub use crate::tailwind_attrs::TailwindAttrs;
 
 pub use crate::attr_iter::EntityStyleAttrInfoIterArgs;
@@ -53,5 +53,4 @@ pub mod prelude {
         res, rxy_style_macro::TypedStyle, ElementStyleExt, RxyStyleSheetPlugin, SchemaCtxExt,
         StyleError, StyleSheets, TailwindAttrs, TypedStyleLabel,
     };
-    pub use rxy_style::prelude::*;
 }
