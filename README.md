@@ -15,9 +15,9 @@ Inspired by projects such as [xilem](https://github.com/linebender/xilem),[tachy
 - Compile-time view, No procedural  macro, Use tuple Type Builder to build views, members, and styles
 - Performance: Views are constructed only once by default, and reconstruction occurs only within the controllable range of changes in reactive data. Compiled-time views are utilized, and can be placed on the stack.
 - Fine-grained reactivity, support signals（fork from [tachy_reaccy](https://github.com/gbj/tachys/tree/main/tachy_reaccy)）
-- Componentization: static prop, signal prop, events, slots
-- Control flow
-- Cascading style
+- Componentization: It's easy to componentize views. support static prop, signal prop, events, slots
+- Control flow: Support for 'x_if', 'x_iter', 'x_iter_keyed', 'x_iter_source', etc
+- Cascading style: Strongly-typed, shareable, prioritized, supports hover and active interactive styles.
 
 ## Goal
 
