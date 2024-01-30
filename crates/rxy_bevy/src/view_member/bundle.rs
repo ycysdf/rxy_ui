@@ -4,9 +4,13 @@ use rxy_core::{MemberOwner, ViewMember, ViewMemberCtx};
 
 use crate::BevyRenderer;
 
-pub struct BundleMember<T: Bundle>(pub T);
+pub struct XBundle<T: Bundle>(pub T);
 
-impl<T> ViewMember<BevyRenderer> for BundleMember<T>
+pub fn x_bundle<T: Bundle>(bundle: T) -> XBundle<T> {
+    XBundle(bundle)
+}
+
+impl<T> ViewMember<BevyRenderer> for XBundle<T>
 where
     T: Bundle,
 {
@@ -31,11 +35,11 @@ where
 
 pub trait MemberOwnerBundleExt: MemberOwner<BevyRenderer> {
     #[inline(always)]
-    fn bundle<T: Bundle>(self, bundle: T) -> Self::AddMember<BundleMember<T>>
+    fn bundle<T: Bundle>(self, bundle: T) -> Self::AddMember<XBundle<T>>
     where
         Self: Sized,
     {
-        self.member(BundleMember(bundle))
+        self.member(XBundle(bundle))
     }
 }
 

@@ -11,6 +11,7 @@ use rxy_ui::{
 use bevy::sprite::MaterialMesh2dBundle;
 use bevy::utils::synccell::SyncCell;
 use futures_lite::{FutureExt, StreamExt};
+use rxy_bevy::x_bundle;
 
 fn main() {
     let mut app = App::new();
@@ -27,7 +28,7 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
-    commands.spawn_rxy_ui(sample_bug);
+    commands.spawn_rxy_ui(sample_bundle);
 }
 
 #[schema]
@@ -461,4 +462,19 @@ fn sample_system() -> impl IntoView<BevyRenderer> {
         })
         .configure(|config| config.run_if(|| true))
     })
+}
+
+fn sample_bundle() -> impl IntoView<BevyRenderer> {
+    let signal = use_rw_signal(false);
+
+    #[derive(Component)]
+    struct CustomComponent;
+    #[derive(Component)]
+    struct CustomComponent2(bool);
+    #[derive(Component)]
+    struct CustomComponent3;
+    div()
+        .bundle(CustomComponent3) // 等同于：.member(x_bundle(CustomComponent))
+        .rx_member(move || signal.get().then_some(x_bundle(CustomComponent)))
+        .rx_member(move || x_bundle(CustomComponent2(signal.get())))
 }

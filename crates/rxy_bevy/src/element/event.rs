@@ -18,16 +18,16 @@ macro_rules! impl_element_events {
             fn on<EE: EntityEvent, Marker>(
                 self,
                 callback: impl bevy_ecs::prelude::IntoSystem<(), (), Marker>,
-            ) -> Self::AddMember<$crate::BundleMember<On<EE>>> {
+            ) -> Self::AddMember<$crate::XBundle<On<EE>>> {
                 use bevy_mod_picking::prelude::*;
-                self.member($crate::BundleMember(On::<EE>::run(callback)))
+                self.member($crate::XBundle(On::<EE>::run(callback)))
             }
             $(
                 paste::paste!{
                     fn [<on_ $name:snake>]<Marker>(
                         self,
                         callback: impl bevy_ecs::prelude::IntoSystem<(), (), Marker>,
-                    ) -> Self::AddMember<$crate::BundleMember<On<$name>>> {
+                    ) -> Self::AddMember<$crate::XBundle<On<$name>>> {
                         self.on::<$name, Marker>(callback)
                     }
                 }

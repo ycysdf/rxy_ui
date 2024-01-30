@@ -1137,6 +1137,34 @@ fn sample_x_res() -> impl IntoView<BevyRenderer> {
 }
 ```
 
+### Bevy `Bundle`
+
+By wrapping Bevy's `Bundle` with the `x_bundle` method, you obtain `XBundle<T>`, which implements the `ViewMember` trait. This allows you to include the `Bundle` as a view member within a view.
+
+Additionally, a chainable method `.bundle(YourBundle)` is provided, which is equivalent to `.member(x_bundle(YourBundle))`.
+
+Of course, you can also wrap `XBundle` using `rx`.
+
+Code Example:
+
+```rust
+fn sample_bundle() -> impl IntoView<BevyRenderer> {
+    let signal = use_rw_signal(false);
+
+    #[derive(Component)]
+    struct CustomComponent;
+    #[derive(Component)]
+    struct CustomComponent2(bool);
+    #[derive(Component)]
+    struct CustomComponent3;
+    
+    div()
+        .bundle(CustomComponent3) // equivalent to：`.member(x_bundle(CustomComponent))`
+        .rx_member(move || signal.get().then_some(x_bundle(CustomComponent))) // `rx_member()` equivalent to `member(rx())`
+        .rx_member(move || x_bundle(CustomComponent2(signal.get())))
+}
+```
+
 ### view_builder
 
 `view_builder`, the view builder,accepts a callback function that takes two parameters: the first is `ViewCtx`, and the second is `BuildFlags`.

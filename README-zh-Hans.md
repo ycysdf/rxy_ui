@@ -1155,6 +1155,34 @@ fn sample_x_res() -> impl IntoView<BevyRenderer> {
 }
 ```
 
+### Bevy `Bundle`
+
+通过 `x_bundle` 方法包裹 Bevy `Bundle` 将得到 `XBundle<T>`，它实现了 `ViewMember`，所以你可以把 `Bundle` 作为视图成员放入视图中
+
+还提供了 `.bundle(YourBundle)` 链式调用方法，它等同于 `.member(x_bundle(YourBundle))`
+
+当然你也可以使用 `rx` 将 `XBundle` 包裹起来
+
+代码示例：
+
+```rust
+fn sample_bundle() -> impl IntoView<BevyRenderer> {
+    let signal = use_rw_signal(false);
+
+    #[derive(Component)]
+    struct CustomComponent;
+    #[derive(Component)]
+    struct CustomComponent2(bool);
+    #[derive(Component)]
+    struct CustomComponent3;
+    
+    div()
+        .bundle(CustomComponent3) // 等同于：`.member(x_bundle(CustomComponent))`
+        .rx_member(move || signal.get().then_some(x_bundle(CustomComponent))) // `rx_member()` 等同于 `member(rx())`
+        .rx_member(move || x_bundle(CustomComponent2(signal.get())))
+}
+```
+
 ### view_builder
 
 `view_builder` 视图构建器 接受一个回调函数，此回调函数接受两个参数，第一个参数是 `ViewCtx`，第二个参数是 `BuildFlags`.
