@@ -1,7 +1,4 @@
-use crate::{
-    to_mutable, virtual_container, IntoView, MutableView, MutableViewKey, Renderer, RendererNodeId,
-    RendererWorld, ToMutableWrapper, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, VirtualContainer,
-};
+use crate::{to_mutable, virtual_container, IntoView, MutableView, MutableViewKey, Renderer, RendererNodeId, RendererWorld, ToMutableWrapper, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, VirtualContainer, ViewMemberIndex};
 
 impl<R, V> MutableView<R> for Option<V>
 where
@@ -112,7 +109,7 @@ where
     R: Renderer,
     VM: ViewMember<R>,
 {
-    fn count() -> u8 {
+    fn count() -> ViewMemberIndex {
         VM::count()
     }
 

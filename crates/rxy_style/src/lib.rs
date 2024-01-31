@@ -1,7 +1,9 @@
 use ahash::HashMap;
+use bitflags::bitflags;
 use core::any::TypeId;
 use core::iter::Chain;
 use core::ops::Deref;
+use derive_more::IntoIterator;
 #[allow(unused_imports)]
 #[allow(dead_code)]
 use derive_more::{Deref, DerefMut, From};
@@ -14,7 +16,7 @@ use std::hash::Hash;
 use thiserror::Error;
 
 pub mod prelude {
-    pub use super::{x, x_active, x_hover};
+    pub use super::{x, x_active, x_focus, x_hover};
 }
 
 pub type StyleAttrId = u8;
@@ -58,7 +60,7 @@ impl From<NodeStyleItemId> for NodeStyleSheetId {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub struct NodeInterStyleItemId {
-    pub sheet_interaction: StyleInteraction,
+    pub style_interaction: StyleInteraction,
     pub style_item_id: NodeAttrStyleItemId,
 }
 
@@ -116,6 +118,10 @@ pub fn x_hover() -> StyleSheetOwner<()> {
 
 pub fn x_active() -> StyleSheetOwner<()> {
     StyleSheetOwner(Some(StyleInteraction::Active), ())
+}
+
+pub fn x_focus() -> StyleSheetOwner<()> {
+    StyleSheetOwner(Some(StyleInteraction::Focus), ())
 }
 
 impl<R, T> MemberOwner<R> for StyleSheetOwner<T>
@@ -204,47 +210,8 @@ pub struct NodeStyleAttrInfo(pub Either<NodeStyleItemId, BinaryHeap<NodeStyleIte
 
 impl NodeStyleAttrInfo {
     #[inline(always)]
-    pub fn eval_current_item_id(&self) -> NodeStyleItemId {
+    pub fn top_item_id(&self) -> NodeStyleItemId {
         *self.as_ref().map_right(|n| n.peek().unwrap()).into_inner()
-    }
-}
-
-#[derive(Deref, DerefMut, From, Clone, Debug)]
-pub struct NodeInterStyleAttrInfo(pub Either<NodeInterStyleItemId, Vec<NodeInterStyleItemId>>);
-
-impl NodeInterStyleAttrInfo {
-    #[inline(always)]
-    pub fn eval_current_item_id(
-        &self,
-        interaction: StyleInteraction,
-        strict: bool,
-    ) -> Option<NodeInterStyleItemId> {
-        self.as_ref()
-            .map_left(|n| {
-                let is_ok = if strict {
-                    n.sheet_interaction == interaction
-                } else {
-                    n.sheet_interaction <= interaction
-                };
-                if is_ok {
-                    Some(n)
-                } else {
-                    None
-                }
-            })
-            .map_right(|n| {
-                n.iter()
-                    .filter(|n| {
-                        if strict {
-                            n.sheet_interaction == interaction
-                        } else {
-                            n.sheet_interaction <= interaction
-                        }
-                    })
-                    .max_by_key(|n| &n.item_id)
-            })
-            .into_inner()
-            .cloned()
     }
 }
 
@@ -261,6 +228,8 @@ pub enum StyleError<R>
 where
     R: Renderer,
 {
+    #[error("no found inter attr infos: {item_id:?}")]
+    NoFoundInterAttrInfos { item_id: NodeInterStyleItemId },
     #[error("no found style item: {attr_id:?}")]
     NoFoundAttrId { attr_id: StyleAttrId },
     #[error("no found style item: {item_id:?}")]
@@ -299,21 +268,158 @@ where
     NoFoundNode { node_id: RendererNodeId<R> },
 }
 
-#[derive(Default, Debug)]
-pub struct NodeInterStyleState {
-    pub attr_infos: HashMap<StyleAttrId, NodeInterStyleAttrInfo>,
+#[derive(Default, Deref, DerefMut, Debug, IntoIterator, From)]
+pub struct NodeStyleAttrInfos(pub HashMap<StyleAttrId, NodeStyleAttrInfo>);
+
+#[derive(Default, Deref, DerefMut, Debug, IntoIterator, From)]
+pub struct NodeInterStyleAttrInfos(pub HashMap<StyleInteraction, NodeStyleAttrInfos>);
+
+impl NodeInterStyleAttrInfos {
+    pub fn remove_attr_info(
+        &mut self,
+        attr_id: &StyleAttrId,
+    ) -> Option<(StyleInteraction, NodeStyleAttrInfo)> {
+        self.iter_mut().find_map(|(interaction, n)| n.remove(attr_id).map(|n| (*interaction, n)))
+    }
+    pub fn get_attr_info(
+        &self,
+        interaction: StyleInteraction,
+        attr_id: StyleAttrId,
+    ) -> Option<&NodeStyleAttrInfo> {
+        self.get(&interaction).and_then(|n| n.get(&attr_id))
+    }
+    pub fn match_attr(
+        &self,
+        attr_id: StyleAttrId,
+        interaction: StyleInteraction,
+        strict: bool,
+    ) -> Option<&NodeStyleAttrInfo> {
+        match interaction {
+            StyleInteraction::Active => self
+                .get(&StyleInteraction::Active)
+                .and_then(|n| n.get(&attr_id))
+                .condition(strict, |n| {
+                    n.or_else(|| self.get(&StyleInteraction::Hover).and_then(|n| n.get(&attr_id)))
+                }),
+            interaction => self.get(&interaction).and_then(|n| n.get(&attr_id)),
+        }
+    }
+
+    /// There are repeated AttrId
+    pub fn iter_match_attr(
+        &self,
+        interaction: Option<StyleInteraction>,
+        strict: bool,
+    ) -> impl Iterator<Item = (StyleAttrId, &NodeStyleAttrInfo, StyleInteraction)> + '_ {
+        let Some(interaction) = interaction else {
+            return core::iter::empty().either_left();
+        };
+        if strict {
+            self.get(&interaction)
+                .into_iter()
+                .map(|n| &n.0)
+                .flatten()
+                .map(move |(attr_id, attr_info)| (*attr_id, attr_info, interaction))
+                .either_left()
+        } else {
+            StyleInteraction::priority_iter()
+                .filter(move |n| interaction.is_match(*n, false))
+                .flat_map(|interaction| {
+                    self.get(&interaction)
+                        .into_iter()
+                        .map(|n| &n.0)
+                        .flatten()
+                        .map(move |(attr_id, attr_info)| (*attr_id, attr_info, interaction))
+                })
+                .either_right()
+        }
+        .either_right()
+    }
+
+    /// There are repeated AttrId
+    #[inline(always)]
+    pub fn iter_match_attr_ids(
+        &self,
+        interaction: Option<StyleInteraction>,
+        strict: bool,
+    ) -> impl Iterator<Item = (StyleAttrId, StyleInteraction)> + '_ {
+        self.iter_match_attr(interaction, strict)
+            .map(|(attr_id, _, interaction)| (attr_id, interaction))
+    }
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, PartialOrd, Ord)]
-pub enum StyleInteraction {
-    Hover,
-    Active,
+bitflags! {
+    #[repr(transparent)]
+    #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, PartialOrd, Ord)]
+    pub struct StyleInteraction: u8 {
+        const Focus  = 0b00000001;
+        const Hover  = 0b00000010;
+        const Active = 0b00000110;
+    }
 }
 
+impl StyleInteraction {
+    pub fn is_match(self, interaction: StyleInteraction, strict: bool) -> bool {
+        if strict {
+            self == interaction
+        } else {
+            self.contains(interaction)
+        }
+    }
+
+    pub fn priority_iter() -> impl Iterator<Item = Self> {
+        [Self::Active, Self::Hover, Self::Focus].into_iter()
+    }
+
+    pub fn match_iter(self, strict: bool) -> impl Iterator<Item = Self> {
+        if strict {
+            Some(self).into_iter().either_left()
+        } else {
+            Self::priority_iter().filter(move |n| self.contains(*n)).either_right()
+        }
+    }
+}
+
+// todo: extract to lib
 pub trait PipeOp: Sized {
     #[inline(always)]
     fn pipe<S, U>(self, state: S, f: fn(Self, S) -> U) -> U {
         f(self, state)
+    }
+    #[inline(always)]
+    fn condition(self, condition: bool, f: impl FnOnce(Self) -> Self) -> Self {
+        if condition {
+            f(self)
+        } else {
+            self
+        }
+    }
+    #[inline(always)]
+    fn condition_map<U>(self, condition: bool, f: impl FnOnce(Self) -> U) -> Either<Self, U> {
+        if condition {
+            f(self).either_right()
+        } else {
+            self.either_left()
+        }
+    }
+    #[inline(always)]
+    fn option_map<T, U>(self, option: Option<T>, f: impl FnOnce(Self, T) -> U) -> Either<Self, U> {
+        match option {
+            Some(n) => f(self, n).either_right(),
+            None => self.either_left(),
+        }
+    }
+    #[inline(always)]
+    fn option_map_else<T, U, U2>(
+        self,
+        option: Option<T>,
+        f: impl FnOnce(Self, T) -> U,
+        else_f: impl FnOnce(Self) -> U2,
+    ) -> Either<U, U2> {
+        match option {
+            Some(n) => f(self, n).either_left(),
+            None => else_f(self).either_right(),
+        }
     }
 }
 
@@ -321,24 +427,11 @@ impl<T> PipeOp for T where T: Sized {}
 
 pub trait IterExt: Iterator + Sized {
     #[inline(always)]
-    fn chain_option<I>(self, option: Option<I>) -> Either<Chain<Self, I>, Self>
+    fn chain_option<I>(self, option: Option<I>) -> Either<Self, Chain<Self, I>>
     where
         I: Iterator<Item = Self::Item>,
     {
-        match option {
-            Some(n) => self.chain(n).either_left(),
-            None => self.either_right(),
-        }
-    }
-    #[inline(always)]
-    fn option_op<T, I>(self, option: Option<T>, f: impl Fn(Self, T) -> I) -> Either<I, Self>
-    where
-        I: Iterator<Item = Self::Item>,
-    {
-        match option {
-            Some(n) => f(self, n).either_left(),
-            None => self.either_right(),
-        }
+        self.option_map(option, |n, i| n.chain(i))
     }
 }
 

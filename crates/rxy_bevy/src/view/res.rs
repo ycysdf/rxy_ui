@@ -2,10 +2,7 @@ use core::marker::PhantomData;
 
 use bevy_ecs::prelude::Entity;
 use bevy_ecs::system::Resource;
-use rxy_core::{
-    prelude::{ViewMember, ViewMemberCtx},
-    DeferredWorldScoped, Renderer, View, ViewCtx, ViewKey,
-};
+use rxy_core::{prelude::{ViewMember, ViewMemberCtx}, DeferredWorldScoped, Renderer, View, ViewCtx, ViewKey, ViewMemberIndex};
 
 use crate::{BevyRenderer, ResChangeWorldExt};
 use rxy_core::IntoView;
@@ -170,7 +167,7 @@ where
     F: Fn(&T) -> VM + Clone + Send + Sync + 'static,
     VM: ViewMember<BevyRenderer>,
 {
-    fn count() -> u8 {
+    fn count() -> ViewMemberIndex {
         VM::count()
     }
 

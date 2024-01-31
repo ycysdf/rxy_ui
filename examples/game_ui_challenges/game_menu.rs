@@ -66,6 +66,7 @@ fn schema_main_menu() -> impl IntoView<BevyRenderer> {
                 .center()
                 .bg_color(Color::DARK_GRAY),
             x_hover().bg_color(Color::GRAY),
+            x_focus().bg_color(Color::BLUE),
         )),
         div().style(x().size_screen().center()).children(
             div().style(x().flex_col().gap(8).padding(20)).children((

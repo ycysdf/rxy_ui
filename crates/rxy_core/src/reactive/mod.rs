@@ -14,10 +14,7 @@ use xy_reactive::effect::ErasureEffect;
 use xy_reactive::prelude::create_render_effect;
 use xy_reactive::render_effect::RenderEffect;
 
-use crate::{
-    BuildState, DeferredWorldScoped, IntoView, MemberOwner, Renderer, RendererNodeId,
-    RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewReBuilder,
-};
+use crate::{BuildState, DeferredWorldScoped, IntoView, MemberOwner, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewReBuilder};
 
 struct FnOnceCell<'a, I, T> {
     func: Option<Box<dyn FnOnce(I) -> T + 'a>>,
@@ -77,7 +74,7 @@ where
     F: Fn() -> VM + Send + 'static,
     VM: ViewMember<R> + Send,
 {
-    fn count() -> u8 {
+    fn count() -> ViewMemberIndex {
         VM::count()
     }
 

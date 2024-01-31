@@ -18,8 +18,10 @@ pub struct ViewCtx<'a, R: Renderer> {
     pub parent: RendererNodeId<R>,
 }
 
+pub type ViewMemberIndex = u32;
+
 pub struct ViewMemberCtx<'a, R: Renderer> {
-    pub index: u8,
+    pub index: ViewMemberIndex,
     pub type_id: TypeId,
     pub world: &'a mut RendererWorld<R>,
     pub node_id: RendererNodeId<R>,
@@ -187,5 +189,5 @@ pub trait ViewReBuilder<R: Renderer>: Send {
 }
 
 pub trait MemberReBuilder<R: Renderer>: Send {
-    fn rebuild<VM: ViewMember<R>>(&self, member: VM, index: u8);
+    fn rebuild<VM: ViewMember<R>>(&self, member: VM, index: ViewMemberIndex);
 }

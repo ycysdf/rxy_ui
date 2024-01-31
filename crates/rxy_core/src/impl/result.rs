@@ -1,4 +1,4 @@
-use crate::{Either, IntoView, Renderer, View, ViewMember, ViewMemberCtx};
+use crate::{Either, IntoView, Renderer, View, ViewMember, ViewMemberCtx, ViewMemberIndex};
 
 impl<R, T, E> IntoView<R> for Result<T, E>
 where
@@ -19,7 +19,7 @@ where
     T: ViewMember<R>,
     E: ViewMember<R>,
 {
-    fn count() -> u8 {
+    fn count() -> ViewMemberIndex {
         T::count() + E::count()
     }
 

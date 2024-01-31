@@ -3,13 +3,13 @@ use core::any::TypeId;
 use bevy_utils::synccell::SyncCell;
 use bevy_utils::{all_tuples, HashMap};
 
-use crate::{Renderer, ViewMemberCtx};
+use crate::{Renderer, ViewMemberCtx, ViewMemberIndex};
 
 pub trait ViewMember<R>: Send + 'static
 where
     R: Renderer,
 {
-    fn count() -> u8;
+    fn count() -> ViewMemberIndex;
     fn unbuild(ctx: ViewMemberCtx<R>);
     fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool);
     fn rebuild(self, ctx: ViewMemberCtx<R>);
@@ -20,7 +20,7 @@ where
     R: Renderer,
 {
 
-    fn count() -> u8 {
+    fn count() -> ViewMemberIndex {
         0
     }
 
@@ -37,7 +37,7 @@ where
     T: ViewMember<R>,
 {
 
-    fn count() -> u8 {
+    fn count() -> ViewMemberIndex {
         T::count()
     }
 
@@ -66,7 +66,7 @@ macro_rules! impl_view_member_for_tuples {
 			$first: $crate::ViewMember<R>,
 			$($ty: $crate::ViewMember<R>),*
         {
-            fn count() -> u8 {
+            fn count() -> crate::ViewMemberIndex {
                 $first::count() $(+ $ty::count())*
             }
 
@@ -143,7 +143,7 @@ macro_rules! impl_view_member_for_tuples {
 all_tuples!(impl_view_member_for_tuples, 1, 12, M);
 
 pub struct TypeIdHashMapState<S: Send + 'static>(pub SyncCell<HashMap<TypeId, S>>);
-pub struct MemberHashMapState<S: Send + 'static>(pub SyncCell<HashMap<u8, S>>);
+pub struct MemberHashMapState<S: Send + 'static>(pub SyncCell<HashMap<ViewMemberIndex, S>>);
 
 impl<'a, R: Renderer> ViewMemberCtx<'a, R> {
     pub fn view_member_state_mut<S: Send + 'static>(&mut self) -> Option<&mut S> {

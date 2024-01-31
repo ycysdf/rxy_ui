@@ -2,10 +2,7 @@ use alloc::boxed::Box;
 use core::any::TypeId;
 use core::marker::PhantomData;
 
-use crate::{
-    ElementView, IntoElementView, IntoView, MemberOwner, MutableView, Renderer, RendererNodeId,
-    SoloView, View, ViewCtx, ViewMember, ViewMemberCtx,
-};
+use crate::{ElementView, IntoElementView, IntoView, MemberOwner, MutableView, Renderer, RendererNodeId, SoloView, View, ViewCtx, ViewMember, ViewMemberCtx, ViewMemberIndex};
 
 #[derive(Clone)]
 pub struct Builder<R, F>(pub F, PhantomData<R>);
@@ -95,7 +92,7 @@ where
     R: Renderer,
     U: ViewMember<R>,
 {
-    fn count() -> u8 {
+    fn count() -> ViewMemberIndex {
         1
     }
 

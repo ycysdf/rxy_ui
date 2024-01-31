@@ -19,6 +19,8 @@ mod style_sheets;
 #[cfg(feature = "tailwind_aliases")]
 mod tailwind_attrs;
 mod view_member;
+mod interaction_style;
+mod focus_style;
 
 #[cfg(feature = "tailwind_aliases")]
 pub use crate::tailwind_attrs::TailwindAttrs;
@@ -28,15 +30,15 @@ pub(crate) use crate::attr_iter::StateOwner;
 pub use crate::element_view_ext::ElementStyleExt;
 pub use crate::into_view_member::IntoViewMemberWithOrigin;
 pub use crate::plugin::{
-    interaction_to_style_kind, AppliedStyleSheet, Previous, RxyStyleSheetPlugin, StyleItemValue,
+    AppliedStyleSheet, Previous, RxyStyleSheetPlugin, StyleItemValue,
     StyleSheetsInfo,
 };
+pub use crate::interaction_style::interaction_to_style_interaction;
 pub use crate::style_sheet_items::StyleSheetItems;
 pub use crate::style_sheets::{res, typed_shared_style_sheets, StyleSheets};
-pub use attr_style_owner::{AttrStyleOwner, NodeStyleStateRefVariant};
-pub use attr_syncer::{EntityAttrSyncer, SyncerWrapper};
+pub use attr_style_owner::AttrStyleOwner;
+pub use attr_syncer::EntityAttrSyncer;
 pub use entity_world_ref::*;
-pub use node_style_state::NodeStyleState;
 use rxy_bevy::BevyRenderer;
 pub use shared_style_sheets::SharedStyleState;
 pub use shared_style_view::*;

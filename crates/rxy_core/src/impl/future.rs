@@ -1,6 +1,6 @@
 use crate::build_info::{build_info_is_contained, build_times_increment};
 use crate::renderer::DeferredWorldScoped;
-use crate::{BuildState, IntoView, Renderer, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx};
+use crate::{BuildState, IntoView, Renderer, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex};
 use bevy_utils::futures::now_or_never;
 use futures_lite::StreamExt;
 use core::any::TypeId;
@@ -157,7 +157,7 @@ where
     T: Future + Send + 'static,
     T::Output: ViewMember<R> + Send + 'static,
 {
-    fn count() -> u8 {
+    fn count() -> ViewMemberIndex {
         T::Output::count()
     }
 

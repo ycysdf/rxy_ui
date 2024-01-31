@@ -1,24 +1,25 @@
-use crate::{EntityWorldRef, NodeStyleState, StyleSheetDefinition};
+use crate::{EntityWorldRef, StyleSheetDefinition};
 use crate::{Result, StyleError};
 use rxy_core::prelude::{Either, EitherExt};
 use rxy_style::{
-    NodeAttrStyleItemId, NodeInterStyleItemId, NodeInterStyleState, NodeStyleItemId,
-    NodeStyleSheetId, StyleAttrId, StyleItemIndex,
+    NodeAttrStyleItemId, NodeInterStyleAttrInfos, NodeInterStyleItemId, NodeStyleAttrInfos,
+    NodeStyleItemId, NodeStyleSheetId, StyleAttrId, StyleItemIndex,
 };
+use std::collections::BinaryHeap;
 
-/*pub enum NodeStyleStateMutVariant<'a> {
-    Normal(&'a mut NodeStyleState),
-    Interaction(&'a mut NodeInterStyleState),
-}*/
-
-pub enum NodeStyleStateRefVariant<'a> {
-    Normal(&'a mut NodeStyleState),
+/*pub enum NodeStyleAttrInfosMutVariant<'a> {
+    Normal(&'a mut NodeStyleAttrInfos),
     Interaction(&'a mut NodeInterStyleState),
 }
+pub enum NodeStyleAttrInfosRefVariant<'a> {
+    Normal(&'a mut NodeStyleAttrInfos),
+    Interaction(&'a mut NodeInterStyleAttrInfos),
+}
+
+*/
 
 pub trait AttrStyleOwner {
     type ItemId;
-
     fn from_definition_to_item_id(
         style_sheet_definition: &StyleSheetDefinition,
         item_id: NodeAttrStyleItemId,
@@ -42,7 +43,7 @@ pub trait AttrStyleOwner {
     }
 
     // return: require_reset
-    fn remove_attr_style_item(&mut self, attr_style_item_id: NodeAttrStyleItemId) -> Result<bool>;
+    fn remove_attr_style_item(&mut self, attr_style_item_id: Self::ItemId) -> Result<bool>;
 
     fn check_style_sheet_type(&self, style_sheet_definition: &StyleSheetDefinition) -> Result;
 
@@ -62,115 +63,54 @@ pub trait AttrStyleOwner {
             .enumerate()
             .map(|n| (n.0 as StyleItemIndex, n.1.attr_id))
         {
-            let attr_style_item_id = NodeAttrStyleItemId {
-                attr_id,
-                item_id: NodeStyleItemId {
-                    item_index,
-                    sheet_id: style_sheet_id,
+            let attr_style_item_id = Self::from_definition_to_item_id(
+                style_sheet_definition,
+                NodeAttrStyleItemId {
+                    attr_id,
+                    item_id: NodeStyleItemId {
+                        item_index,
+                        sheet_id: style_sheet_id,
+                    },
                 },
-            };
+            )?;
             if self.remove_attr_style_item(attr_style_item_id)? {
                 require_reset_f(attr_id);
             }
         }
         Ok(())
     }
-
-
 }
 
-/*impl<'a> AttrStyleOwner for NodeStyleStateMutVariant<'a> {
-    fn add_attr_style_item(
-        &mut self,
-        attr_style_item_id: NodeAttrStyleItemId,
-        entity_world_ref: EntityWorldRef,
-    ) -> Result {
-        match self {
-            NodeStyleStateMutVariant::Normal(n) => {
-                n.add_attr_style_item(attr_style_item_id, entity_world_ref)
-            }
-            NodeStyleStateMutVariant::Interaction(n) => {
-                n.add_attr_style_item(attr_style_item_id, entity_world_ref)
-            }
-        }
-    }
-
-    fn remove_attr_style_item(&mut self, attr_style_item_id: NodeAttrStyleItemId) -> Result<bool> {
-        match self {
-            NodeStyleStateMutVariant::Normal(n) => n.remove_attr_style_item(attr_style_item_id),
-            NodeStyleStateMutVariant::Interaction(n) => {
-                n.remove_attr_style_item(attr_style_item_id)
-            }
-        }
-    }
-
-    fn check_style_sheet_type(&self, style_sheet_definition: &StyleSheetDefinition) -> Result {
-        match self {
-            NodeStyleStateMutVariant::Normal(_) => {
-                if style_sheet_definition.interaction.is_some() {
-                    return Err(StyleError::StyleSheetTypeIncorrect);
-                }
-            }
-            NodeStyleStateMutVariant::Interaction(_) => {
-                if style_sheet_definition.interaction.is_none() {
-                    return Err(StyleError::StyleSheetTypeIncorrect);
-                }
-            }
-        }
-        Ok(())
-    }
-}*/
-
-impl AttrStyleOwner for NodeInterStyleState {
+impl AttrStyleOwner for NodeInterStyleAttrInfos {
     type ItemId = NodeInterStyleItemId;
-    fn remove_attr_style_item(&mut self, attr_style_item_id: NodeAttrStyleItemId) -> Result<bool> {
-        match self.attr_infos.remove(&attr_style_item_id.attr_id) {
-            None => Err(StyleError::NoFoundAttrId {
-                attr_id: attr_style_item_id.attr_id,
-            }),
-            Some(value) => match value.0 {
-                Either::Left(n) => {
-                    assert_eq!(n.item_id, attr_style_item_id.item_id);
-                    Ok(true)
-                }
-                Either::Right(mut vec) => {
-                    let (result, vec) = {
-                        let Some(index) = vec
-                            .iter()
-                            .position(|n| n.item_id == attr_style_item_id.item_id)
-                        else {
-                            return Err(StyleError::NoFoundStyleItemId {
-                                item_id: attr_style_item_id.item_id,
-                            });
-                        };
-                        vec.swap_remove(index);
-                        (Ok(true), vec)
-                    };
-                    if !vec.is_empty() {
-                        self.attr_infos
-                            .insert(attr_style_item_id.attr_id, vec.either_right().into());
-                    }
-                    result
-                }
-            },
-        }
+    fn from_definition_to_item_id(
+        style_sheet_definition: &StyleSheetDefinition,
+        item_id: NodeAttrStyleItemId,
+    ) -> Result<Self::ItemId> {
+        let sheet_interaction =
+            style_sheet_definition.interaction.ok_or(StyleError::StyleSheetTypeIncorrect)?;
+        Ok(NodeInterStyleItemId {
+            style_interaction: sheet_interaction,
+            style_item_id: item_id,
+        })
     }
 
     fn add_attr_style_item(
         &mut self,
-        attr_style_item_id: NodeInterStyleItemId,
+        attr_style_item_id: Self::ItemId,
         _entity_world_ref: EntityWorldRef,
     ) -> Result {
-        let value = match self.attr_infos.remove(&attr_style_item_id.attr_id) {
-            None => attr_style_item_id.either_left().into(),
-            Some(items) => {
-                let mut vec = items.0.map_left(|item| vec![item]).into_inner();
-                vec.push(attr_style_item_id);
-                vec.either_right().into()
-            }
-        };
-        self.attr_infos.insert(attr_style_item_id.attr_id, value);
-        Ok(())
+        self.entry(attr_style_item_id.style_interaction)
+            .or_default()
+            .add_attr_style_item(attr_style_item_id.into(), _entity_world_ref)
+    }
+
+    fn remove_attr_style_item(&mut self, attr_style_item_id: Self::ItemId) -> Result<bool> {
+        self.get_mut(&attr_style_item_id.style_interaction)
+            .ok_or(StyleError::NoFoundInterAttrInfos {
+                item_id: attr_style_item_id,
+            })?
+            .remove_attr_style_item(attr_style_item_id.into())
     }
 
     fn check_style_sheet_type(&self, style_sheet_definition: &StyleSheetDefinition) -> Result {
@@ -179,17 +119,83 @@ impl AttrStyleOwner for NodeInterStyleState {
         }
         Ok(())
     }
+}
+
+impl AttrStyleOwner for NodeStyleAttrInfos {
+    type ItemId = NodeAttrStyleItemId;
 
     fn from_definition_to_item_id(
-        style_sheet_definition: &StyleSheetDefinition,
+        _style_sheet_definition: &StyleSheetDefinition,
         item_id: NodeAttrStyleItemId,
     ) -> Result<Self::ItemId> {
-        let sheet_interaction = style_sheet_definition
-            .interaction
-            .ok_or(StyleError::StyleSheetTypeIncorrect)?;
-        Ok(NodeInterStyleItemId {
-            sheet_interaction,
-            style_item_id: item_id,
-        })
+        Ok(item_id)
+    }
+
+    fn add_attr_style_item(
+        &mut self,
+        attr_style_item_id: NodeAttrStyleItemId,
+        _entity_world_ref: EntityWorldRef,
+    ) -> Result<()> {
+        let value = match self.remove(&attr_style_item_id.attr_id) {
+            None => attr_style_item_id.item_id.either_left().into(),
+            Some(attr_info) => {
+                let mut heap = attr_info
+                    .0
+                    .map_left(|item| {
+                        let mut heap = BinaryHeap::new();
+                        heap.push(item);
+                        heap
+                    })
+                    .into_inner();
+                heap.push(attr_style_item_id.item_id);
+                heap.either_right().into()
+            }
+        };
+
+        self.insert(attr_style_item_id.attr_id, value);
+        Ok(())
+    }
+
+    fn remove_attr_style_item(&mut self, attr_style_item_id: NodeAttrStyleItemId) -> Result<bool> {
+        match self.remove(&attr_style_item_id.attr_id) {
+            None => Err(StyleError::NoFoundAttrId {
+                attr_id: attr_style_item_id.attr_id,
+            }),
+            Some(value) => match value.0 {
+                Either::Left(n) => {
+                    assert_eq!(n, attr_style_item_id.item_id);
+                    Ok(true)
+                }
+                Either::Right(mut heap) => {
+                    let (result, heap) = if heap.peek() == Some(&attr_style_item_id.item_id) {
+                        heap.pop();
+                        (Ok(true), heap)
+                    } else {
+                        let prev_len = heap.len();
+                        let heap = heap
+                            .into_iter()
+                            .filter(|n| n == &attr_style_item_id.item_id)
+                            .collect::<BinaryHeap<NodeStyleItemId>>();
+                        if heap.len() == prev_len {
+                            return Err(StyleError::NoFoundStyleItemId {
+                                item_id: attr_style_item_id.item_id,
+                            });
+                        }
+                        (Ok(false), heap)
+                    };
+                    if !heap.is_empty() {
+                        self.insert(attr_style_item_id.attr_id, heap.either_right().into());
+                    }
+                    result
+                }
+            },
+        }
+    }
+
+    fn check_style_sheet_type(&self, style_sheet_definition: &StyleSheetDefinition) -> Result<()> {
+        if style_sheet_definition.interaction.is_some() {
+            return Err(StyleError::StyleSheetTypeIncorrect);
+        }
+        Ok(())
     }
 }

@@ -8,3 +8,4 @@ thiserror.workspace = true
 rxy_core.workspace = true
 ahash.workspace = true
 derive_more.workspace = true
+bitflags.workspace = true

@@ -29,6 +29,7 @@ bevy_text.workspace = true
 bevy_transform.workspace = true
 bevy_ui.workspace = true
 bevy_utils.workspace = true
+bevy_a11y.workspace = true
 
 [features]
 default = ["tailwind_aliases"]

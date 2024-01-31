@@ -5,27 +5,24 @@ use crate::style_sheets::StyleSheets;
 use crate::EntityStyleAttrInfoIterArgs;
 use crate::StyleError;
 use crate::{
-    AppliedStyleSheet, AttrStyleOwner, EntityWorldMutExt, NodeStyleState, Previous,
+    AppliedStyleSheet, AttrStyleOwner, EntityWorldMutExt, Previous,
     StyleEntityMutExt, StyleSheetDefinition,
 };
 use bevy_ecs::prelude::{EntityWorldMut, World};
 use bevy_ui::Interaction;
 use rxy_bevy::{BevyRenderer, RendererState};
 use rxy_bevy_element::{
-    view_element_type, ElementEntityExtraData, ElementEntityWorldMutExt, ElementStyleEntityExt,
+    view_element_type, ElementEntityExtraData, ElementEntityWorldMutExt,
 };
-use rxy_core::{ViewMember, ViewMemberCtx};
-use rxy_style::{
-    NodeInterStyleState, NodeStyleSheetId, StyleAttrId, StyleSheetCtx, StyleSheetIndex,
-    StyleSheetLocation,
-};
+use rxy_core::{ViewMember, ViewMemberCtx, ViewMemberIndex};
+use rxy_style::{NodeInterStyleAttrInfos, NodeStyleAttrInfos, NodeStyleSheetId, StyleAttrId, StyleSheetCtx, StyleSheetIndex, StyleSheetLocation};
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct ApplyStyleSheetsMemberState {
-    pub inline_sheet_index: u8,
-    pub inline_sheet_count: u8,
-    pub shared_sheet_index: u8,
-    pub shared_sheet_count: u8,
+    pub inline_sheet_index: StyleSheetIndex,
+    pub inline_sheet_count: StyleSheetIndex,
+    pub shared_sheet_index: StyleSheetIndex,
+    pub shared_sheet_count: StyleSheetIndex,
 }
 
 impl ApplyStyleSheetsMemberState {
@@ -54,7 +51,7 @@ impl<T> ViewMember<BevyRenderer> for ApplyStyleSheets<T>
 where
     T: StyleSheets<BevyRenderer>,
 {
-    fn count() -> u8 {
+    fn count() -> ViewMemberIndex {
         1
     }
 
@@ -79,7 +76,7 @@ where
                 entity_world_mut: &mut EntityWorldMut,
                 style_sheet_definition: &StyleSheetDefinition,
                 style_sheet_id: NodeStyleSheetId,
-                style_state: &mut NodeStyleState,
+                style_state: &mut NodeStyleAttrInfos,
                 require_reset_f: impl FnMut(StyleAttrId),
             ) -> Result<(), StyleError> {
                 if style_sheet_definition.interaction.is_some() {
@@ -187,7 +184,7 @@ where
                 limit_attr_ids: Some(reset_keys.as_slice()),
                 ..Default::default()
             }
-            .iter_and_sync_set(&mut entity_world_mut)?;
+            .iter_and_sync_set(entity_world_mut)?;
             ctx.set_indexed_view_member_state(member_state);
             Ok::<(), StyleError>(())
         };
@@ -197,14 +194,14 @@ where
     fn build(self, mut ctx: ViewMemberCtx<BevyRenderer>, _will_rebuild: bool) {
         let r = || {
             let mut entity_world_mut = ctx.world.entity_mut(ctx.node_id.clone());
-            if !entity_world_mut.contains::<RendererState<NodeStyleState>>() {
-                entity_world_mut.insert(RendererState(NodeStyleState::default()));
+            if !entity_world_mut.contains::<RendererState<NodeStyleAttrInfos>>() {
+                entity_world_mut.insert(RendererState(NodeStyleAttrInfos::default()));
             }
             if !entity_world_mut.contains::<Interaction>() {
                 entity_world_mut.insert(Interaction::None);
             }
             if !entity_world_mut.contains::<Previous<Interaction>>() {
-                entity_world_mut.insert(Previous(Interaction::None));
+                entity_world_mut.insert(Previous(*entity_world_mut.get::<Interaction>().unwrap()));
             }
             let style_sheets_state = BevyRenderer::get_or_insert_default_state_by_entity_mut::<
                 NodeStyleSheetsState,
@@ -333,23 +330,18 @@ where
                     },
                 )??;
 
-                let limit_attr_bits = entity_world_mut
-                    .as_entity_mut()
-                    .get_element_extra_data_mut()
-                    .map(|n| n.attr_is_set);
 
                 if recalculate_interaction_style_value
-                    && !entity_world_mut.contains::<RendererState<NodeInterStyleState>>()
+                    && !entity_world_mut.contains::<RendererState<NodeInterStyleAttrInfos>>()
                 {
-                    entity_world_mut.insert(RendererState(NodeInterStyleState::default()));
+                    entity_world_mut.insert(RendererState(NodeInterStyleAttrInfos::default()));
                 }
                 EntityStyleAttrInfoIterArgs {
                     iter_inter_style_sheet: recalculate_interaction_style_value,
                     iter_normal_style_sheet: true,
-                    limit_attr_bits,
                     ..Default::default()
                 }
-                .iter_and_sync_set(&mut entity_world_mut)?;
+                .iter_and_sync_set(entity_world_mut)?;
             }
             Ok::<(), StyleError>(())
         };
@@ -385,14 +377,6 @@ where
             let mut entity_mut = entity_world_mut.as_entity_mut();
             let mut iter_args = EntityStyleAttrInfoIterArgs::normal();
             let mut attr_ids = vec![];
-            iter_args.limit_attr_bits = Some(
-                entity_mut
-                    .get_element_extra_data_mut()
-                    .ok_or(StyleError::NoFoundElementEntityExtraData {
-                        node_id: ctx.node_id.clone(),
-                    })?
-                    .attr_is_set,
-            );
             let style_sheets_state = entity_mut.get_style_sheets_state()?;
             for style_sheet in style_sheets {
                 match style_sheet {
@@ -432,7 +416,7 @@ where
             }
             iter_args.limit_attr_ids = Some(attr_ids.as_slice());
 
-            iter_args.iter_and_sync_set(&mut entity_world_mut)?;
+            iter_args.iter_and_sync_set(entity_world_mut)?;
             Ok::<(), StyleError>(())
         };
         r().unwrap();

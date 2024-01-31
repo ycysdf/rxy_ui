@@ -8,12 +8,12 @@ use bevy_ecs::{
 };
 use bevy_hierarchy::DespawnRecursiveExt;
 use rxy_bevy::{BevyRenderer, RendererState};
-use rxy_style::{NodeInterStyleState, StyleSheetId, StyleSheetLocation};
+use rxy_style::{NodeInterStyleAttrInfos, NodeStyleAttrInfos, StyleSheetId, StyleSheetLocation};
 
 use crate::attr_iter::StateOwnerWithNodeId;
 use crate::node_style_state::NodeStyleSheetsState;
 use crate::plugin::TypedEntities;
-use crate::{NodeStyleState, Result, SharedStyleState, StyleError, StyleSheetDefinition};
+use crate::{Result, SharedStyleState, StyleError, StyleSheetDefinition};
 
 #[derive(Copy, Clone)]
 pub struct EntityWorldRef<'a> {
@@ -60,14 +60,14 @@ impl<'a> From<&'a mut EntityWorldMut<'_>> for EntityWorldRef<'a> {
 pub trait StyleEntityRefExt<'a> {
     fn get_style_sheets_state(&self) -> Result<&'a NodeStyleSheetsState>;
     fn get_shared_style_state(&self) -> Result<&'a SharedStyleState>;
-    fn get_style_state(&self) -> Result<&'a NodeStyleState>;
-    fn get_inter_style_state(&self) -> Result<&'a NodeInterStyleState>;
+    fn get_style_state(&self) -> Result<&'a NodeStyleAttrInfos>;
+    fn get_inter_style_state(&self) -> Result<&'a NodeInterStyleAttrInfos>;
 }
 pub trait StyleEntityMutExt {
     fn get_style_sheets_state(&mut self) -> Result<&mut NodeStyleSheetsState>;
     fn get_shared_style_state(&mut self) -> Result<&mut SharedStyleState>;
-    fn get_style_state(&mut self) -> Result<&mut NodeStyleState>;
-    fn get_inter_style_state(&mut self) -> Result<&mut NodeInterStyleState>;
+    fn get_style_state(&mut self) -> Result<&mut NodeStyleAttrInfos>;
+    fn get_inter_style_state(&mut self) -> Result<&mut NodeInterStyleAttrInfos>;
 }
 
 impl<'a> StyleEntityRefExt<'a> for EntityRef<'a> {
@@ -82,14 +82,14 @@ impl<'a> StyleEntityRefExt<'a> for EntityRef<'a> {
             .ok_or(StyleError::NoFoundSharedStyleSheet { node_id: self.id() })
     }
 
-    fn get_style_state(&self) -> Result<&'a NodeStyleState> {
-        self.get_ref::<RendererState<NodeStyleState>>()
+    fn get_style_state(&self) -> Result<&'a NodeStyleAttrInfos> {
+        self.get_ref::<RendererState<NodeStyleAttrInfos>>()
             .map(|n| &n.into_inner().0)
             .ok_or(StyleError::NoFoundStyleState { node_id: self.id() })
     }
 
-    fn get_inter_style_state(&self) -> Result<&'a NodeInterStyleState> {
-        self.get_ref::<RendererState<NodeInterStyleState>>()
+    fn get_inter_style_state(&self) -> Result<&'a NodeInterStyleAttrInfos> {
+        self.get_ref::<RendererState<NodeInterStyleAttrInfos>>()
             .map(|n| &n.into_inner().0)
             .ok_or(StyleError::NoFoundInterStyleState { node_id: self.id() })
     }
@@ -106,14 +106,14 @@ impl<'a> StyleEntityRefExt<'a> for EntityWorldRef<'a> {
             .ok_or(StyleError::NoFoundSharedStyleSheet { node_id: self.id() })
     }
 
-    fn get_style_state(&self) -> Result<&'a NodeStyleState> {
-        self.get_ref::<RendererState<NodeStyleState>>()
+    fn get_style_state(&self) -> Result<&'a NodeStyleAttrInfos> {
+        self.get_ref::<RendererState<NodeStyleAttrInfos>>()
             .map(|n| &n.0)
             .ok_or(StyleError::NoFoundStyleState { node_id: self.id() })
     }
 
-    fn get_inter_style_state(&self) -> Result<&'a NodeInterStyleState> {
-        self.get_ref::<RendererState<NodeInterStyleState>>()
+    fn get_inter_style_state(&self) -> Result<&'a NodeInterStyleAttrInfos> {
+        self.get_ref::<RendererState<NodeInterStyleAttrInfos>>()
             .map(|n| &n.0)
             .ok_or(StyleError::NoFoundInterStyleState { node_id: self.id() })
     }
@@ -134,16 +134,16 @@ macro_rules! impl_style_ext_for_entity_mut {
                     .map(|n| &mut n.into_inner().0)
                     .ok_or(StyleError::NoFoundSharedStyleSheet { node_id })
             }
-            fn get_style_state(&mut self) -> Result<&mut NodeStyleState> {
+            fn get_style_state(&mut self) -> Result<&mut NodeStyleAttrInfos> {
                 let node_id = self.id();
-                self.get_mut::<RendererState<NodeStyleState>>()
+                self.get_mut::<RendererState<NodeStyleAttrInfos>>()
                     .map(|n| &mut n.into_inner().0)
                     .ok_or(StyleError::NoFoundStyleState { node_id })
             }
 
-            fn get_inter_style_state(&mut self) -> Result<&mut NodeInterStyleState> {
+            fn get_inter_style_state(&mut self) -> Result<&mut NodeInterStyleAttrInfos> {
                 let node_id = self.id();
-                self.get_mut::<RendererState<NodeInterStyleState>>()
+                self.get_mut::<RendererState<NodeInterStyleAttrInfos>>()
                     .map(|n| &mut n.into_inner().0)
                     .ok_or(StyleError::NoFoundInterStyleState { node_id })
             }
@@ -164,15 +164,15 @@ pub trait EntityWorldMutExt<'a> {
     ) -> Result<U>;
     fn scoped_style_state<U>(
         &mut self,
-        f: impl FnOnce(&mut EntityWorldMut<'a>, &mut NodeStyleState) -> U,
+        f: impl FnOnce(&mut EntityWorldMut<'a>, &mut NodeStyleAttrInfos) -> U,
     ) -> Result<U>;
     fn scoped_inter_style_state<U>(
         &mut self,
-        f: impl FnOnce(&mut EntityWorldMut<'a>, &mut NodeInterStyleState) -> U,
+        f: impl FnOnce(&mut EntityWorldMut<'a>, &mut NodeInterStyleAttrInfos) -> U,
     ) -> Result<U>;
     fn scoped_inter_style_state_or_default<U>(
         &mut self,
-        f: impl FnOnce(&mut EntityWorldMut<'a>, &mut NodeInterStyleState) -> U,
+        f: impl FnOnce(&mut EntityWorldMut<'a>, &mut NodeInterStyleAttrInfos) -> U,
     ) -> Result<U>;
 }
 
@@ -198,31 +198,31 @@ impl<'a> EntityWorldMutExt<'a> for EntityWorldMut<'a> {
 
     fn scoped_style_state<U>(
         &mut self,
-        f: impl FnOnce(&mut EntityWorldMut<'a>, &mut NodeStyleState) -> U,
+        f: impl FnOnce(&mut EntityWorldMut<'a>, &mut NodeStyleAttrInfos) -> U,
     ) -> Result<U> {
         let mut state = core::mem::take(self.get_style_state()?);
         let r = f(self, &mut state);
-        self.insert::<RendererState<NodeStyleState>>(RendererState(state));
+        self.insert::<RendererState<NodeStyleAttrInfos>>(RendererState(state));
         Ok(r)
     }
     fn scoped_inter_style_state<U>(
         &mut self,
-        f: impl FnOnce(&mut EntityWorldMut<'a>, &mut NodeInterStyleState) -> U,
+        f: impl FnOnce(&mut EntityWorldMut<'a>, &mut NodeInterStyleAttrInfos) -> U,
     ) -> Result<U> {
         let mut state = core::mem::take(self.get_inter_style_state()?);
         let r = f(self, &mut state);
-        self.insert::<RendererState<NodeInterStyleState>>(RendererState(state));
+        self.insert::<RendererState<NodeInterStyleAttrInfos>>(RendererState(state));
         Ok(r)
     }
     fn scoped_inter_style_state_or_default<U>(
         &mut self,
-        f: impl FnOnce(&mut EntityWorldMut<'a>, &mut NodeInterStyleState) -> U,
+        f: impl FnOnce(&mut EntityWorldMut<'a>, &mut NodeInterStyleAttrInfos) -> U,
     ) -> Result<U> {
         let mut state = core::mem::take(BevyRenderer::get_or_insert_default_state_by_entity_mut::<
-            NodeInterStyleState,
+            NodeInterStyleAttrInfos,
         >(self));
         let r = f(self, &mut state);
-        self.insert::<RendererState<NodeInterStyleState>>(RendererState(state));
+        self.insert::<RendererState<NodeInterStyleAttrInfos>>(RendererState(state));
         Ok(r)
     }
 }

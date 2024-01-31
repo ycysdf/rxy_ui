@@ -1,6 +1,6 @@
 use bevy_ecs::bundle::Bundle;
 
-use rxy_core::{MemberOwner, ViewMember, ViewMemberCtx};
+use rxy_core::{MemberOwner, ViewMember, ViewMemberCtx, ViewMemberIndex};
 
 use crate::BevyRenderer;
 
@@ -14,7 +14,7 @@ impl<T> ViewMember<BevyRenderer> for XBundle<T>
 where
     T: Bundle,
 {
-    fn count() -> u8 {
+    fn count() -> ViewMemberIndex {
         1
     }
 

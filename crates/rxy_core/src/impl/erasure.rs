@@ -506,7 +506,7 @@ impl<R: Renderer, T> ErasureViewMember<R> for T
 }
 
 impl<R: Renderer> ViewMember<R> for Box<dyn ErasureViewMember<R>> {
-    fn count() -> u8 {
+    fn count() -> ViewMemberIndex {
         todo!()
     }
 

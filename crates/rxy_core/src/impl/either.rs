@@ -2,10 +2,7 @@ use core::any::TypeId;
 
 use crate::either::{Either, EitherExt};
 use crate::mutable_view::{MutableView, MutableViewKey};
-use crate::{
-    to_mutable, virtual_container, IntoView, Renderer, RendererNodeId, RendererWorld,
-    ToMutableWrapper, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, VirtualContainer,
-};
+use crate::{to_mutable, virtual_container, IntoView, Renderer, RendererNodeId, RendererWorld, ToMutableWrapper, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, VirtualContainer, ViewMemberIndex};
 
 impl<R, LV, RV> MutableView<R> for Either<LV, RV>
 where
@@ -147,7 +144,7 @@ where
     LVM: ViewMember<R>,
     RVM: ViewMember<R>,
 {
-    fn count() -> u8 {
+    fn count() -> ViewMemberIndex {
         LVM::count() + LVM::count()
     }
 

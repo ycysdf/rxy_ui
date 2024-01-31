@@ -1,26 +1,20 @@
+use crate::focus_style::update_focus_style;
+use crate::interaction_style::update_interaction_styles;
+use crate::{Result, StyleSheetDefinition, StyleWorldExt};
+use bevy_a11y::Focus;
 use bevy_app::{App, Plugin, Update};
 use bevy_ecs::component::Component;
 use bevy_ecs::entity::Entity;
-use bevy_ecs::prelude::{Changed, Commands, EntityWorldMut, Query, Resource, World};
-use bevy_ecs::query::With;
+use bevy_ecs::prelude::{DetectChanges, EntityWorldMut, IntoSystemConfigs, Res, Resource, World};
 use bevy_ecs::world::FromWorld;
-use bevy_ui::Interaction;
-use bevy_utils::{EntityHashMap, HashMap};
+use bevy_utils::HashMap;
 use core::any::TypeId;
 use core::fmt::Debug;
 use derive_more::{Deref, DerefMut};
-use rxy_bevy::{BevyRenderer, RendererState};
-use rxy_bevy_element::{
-    view_element_type, AttrIndex, AttrValue, ElementEntityExtraData, SmallBox, S1,
-};
-use rxy_style::{
-    NodeInterStyleState, StyleAttrId, StyleInteraction, StyleSheetId, StyleSheetLocation,
-};
+use rxy_bevy::BevyRenderer;
+use rxy_bevy_element::{AttrValue, SmallBox, S1};
+use rxy_style::{StyleAttrId, StyleSheetId, StyleSheetLocation};
 use std::ops::AddAssign;
-
-use crate::attr_iter::{EntityStyleWorldQuery, StateOwnerWithNodeId};
-use crate::node_style_state::NodeStyleSheetsState;
-use crate::{NodeStyleState, Result, StyleSheetDefinition, StyleWorldExt};
 
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct TypedEntities(HashMap<TypeId, Entity>);
@@ -30,11 +24,7 @@ pub struct RxySharedStyleContainer(pub Entity);
 
 impl FromWorld for RxySharedStyleContainer {
     fn from_world(world: &mut World) -> Self {
-        Self(
-            world
-                .spawn((bevy_core::Name::new("[Rxy Shared Style Container]"),))
-                .id(),
-        )
+        Self(world.spawn((bevy_core::Name::new("[Rxy Shared Style Container]"),)).id())
     }
 }
 
@@ -45,164 +35,19 @@ impl Plugin for RxyStyleSheetPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<RxySharedStyleContainer>()
             .init_resource::<TypedEntities>()
-            .add_systems(Update, update_interaction_styles);
+            .init_resource::<Previous<Focus>>()
+            .add_systems(
+                Update,
+                (
+                    update_interaction_styles.after(update_focus_style),
+                    update_focus_style.run_if(|res: Res<Focus>| res.is_changed()),
+                ),
+            );
     }
 }
 
-#[derive(Component)]
+#[derive(Default, Component, Resource, Clone, Debug, Deref, DerefMut)]
 pub struct Previous<T>(pub T);
-
-pub fn interaction_to_style_kind(interaction: Interaction) -> Option<StyleInteraction> {
-    match interaction {
-        Interaction::Hovered => Some(StyleInteraction::Hover),
-        Interaction::Pressed => Some(StyleInteraction::Active),
-        _ => None,
-    }
-}
-
-pub fn update_interaction_styles(
-    mut commands: Commands,
-    style_query: Query<&RendererState<NodeStyleSheetsState>>,
-    mut entities: Query<
-        (
-            Entity,
-            &ElementEntityExtraData,
-            &RendererState<NodeInterStyleState>,
-            &RendererState<NodeStyleState>,
-            &Interaction,
-            &mut Previous<Interaction>,
-        ),
-        (
-            Changed<Interaction>,
-            With<RendererState<NodeStyleSheetsState>>,
-        ),
-    >,
-) {
-    if entities.is_empty() {
-        return;
-    }
-
-    let mut attr_changed_values: EntityHashMap<Entity, Vec<(AttrIndex, Option<StyleAttrValue>)>> =
-        Default::default();
-    let mut style_query = Some(style_query);
-    for (
-        entity,
-        entity_extra_data,
-        RendererState(entity_inter_style_state),
-        RendererState(entity_style_state),
-        interaction,
-        mut previous_interaction,
-    ) in entities.iter_mut()
-    {
-        if entity_inter_style_state.attr_infos.is_empty() {
-            continue;
-        }
-        let prev_interaction = previous_interaction.0.clone();
-        let interaction = interaction.clone();
-        *previous_interaction = Previous(interaction);
-        let filtered_attr_infos = entity_inter_style_state
-            .attr_infos
-            .iter()
-            .filter(|(styled_unit_key, _)| !entity_extra_data.is_set_attr(**styled_unit_key as _));
-
-        let entity_style_world_query = EntityStyleWorldQuery {
-            query: style_query.take().unwrap(),
-            current_entity: entity,
-        };
-
-        let interaction_style_kind = interaction_to_style_kind(interaction);
-        for (attr_index, attr_info) in filtered_attr_infos {
-            let item_value = match (prev_interaction, interaction) {
-                (_, Interaction::None) => {
-                    if let Some(attr_info) = entity_style_state.attr_infos.get(attr_index) {
-                        let item_id = attr_info.eval_current_item_id();
-                        Some(
-                            entity_style_world_query
-                                .get_current_style_item_value(item_id)
-                                .unwrap(),
-                        )
-                    } else {
-                        None
-                    }
-                }
-                (Interaction::None, _interaction) => {
-                    let Some(item_id) =
-                        attr_info.eval_current_item_id(interaction_style_kind.unwrap(), false)
-                    else {
-                        continue;
-                    };
-
-                    Some(
-                        entity_style_world_query
-                            .get_current_style_item_value(item_id)
-                            .unwrap(),
-                    )
-                }
-                (Interaction::Hovered, Interaction::Pressed) => {
-                    let Some(item_id) =
-                        attr_info.eval_current_item_id(interaction_style_kind.unwrap(), true)
-                    else {
-                        continue;
-                    };
-
-                    Some(
-                        entity_style_world_query
-                            .get_current_style_item_value(item_id)
-                            .unwrap(),
-                    )
-                }
-                (Interaction::Pressed, Interaction::Hovered) => {
-                    if let Some(item_id) =
-                        attr_info.eval_current_item_id(interaction_style_kind.unwrap(), false)
-                    {
-                        Some(
-                            entity_style_world_query
-                                .get_current_style_item_value(item_id)
-                                .unwrap(),
-                        )
-                    } else if let Some(attr_info) = entity_style_state.attr_infos.get(attr_index) {
-                        let item_id = attr_info.eval_current_item_id();
-                        Some(
-                            entity_style_world_query
-                                .get_current_style_item_value(item_id)
-                                .unwrap(),
-                        )
-                    } else {
-                        None
-                    }
-                }
-                _ => {
-                    continue;
-                }
-            };
-
-            attr_changed_values
-                .entry(entity)
-                .or_default()
-                .push((*attr_index, item_value.map(|n| n.value.clone())));
-        }
-        style_query = Some(entity_style_world_query.query);
-    }
-
-    commands.add(move |world: &mut World| {
-        for (entity, changed) in attr_changed_values.into_iter() {
-            let Some(mut entity_world_mut) = world.get_entity_mut(entity) else {
-                continue;
-            };
-            let attr_is_set = entity_world_mut
-                .get_mut::<ElementEntityExtraData>()
-                .unwrap()
-                .attr_is_set;
-            for (attr_index, value) in changed.into_iter().filter(|(attr_index, _)| {
-                !ElementEntityExtraData::static_is_set_attr(attr_is_set, *attr_index)
-            }) {
-                view_element_type()
-                    .attr_by_index(attr_index as _)
-                    .init_or_set(&mut entity_world_mut, value);
-            }
-        }
-    });
-}
 
 pub type StyleAttrValue = SmallBox<dyn AttrValue, S1>;
 

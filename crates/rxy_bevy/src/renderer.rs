@@ -17,11 +17,7 @@ use bevy_tasks::Task;
 use bevy_ui::node_bundles::NodeBundle;
 use bevy_ui::{Display, Style};
 
-use rxy_core::{
-    mutable_view_rebuild, BuildState, ContainerType, DeferredWorldScoped,
-    MemberReBuilder, MutableView, Renderer, RendererElementType, RendererNodeId, RendererWorld,
-    View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewReBuilder,
-};
+use rxy_core::{mutable_view_rebuild, BuildState, ContainerType, DeferredWorldScoped, MemberReBuilder, MutableView, Renderer, RendererElementType, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewReBuilder, ViewMemberIndex};
 
 use crate::{CmdSender, RxyContainerEntity};
 
@@ -430,7 +426,7 @@ pub struct CmdMemberReBuilder {
 }
 
 impl MemberReBuilder<BevyRenderer> for CmdMemberReBuilder {
-    fn rebuild<VM>(&self, member: VM, index: u8)
+    fn rebuild<VM>(&self, member: VM, index: ViewMemberIndex)
     where
         VM: ViewMember<BevyRenderer>,
     {

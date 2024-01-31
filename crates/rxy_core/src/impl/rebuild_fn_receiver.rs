@@ -3,10 +3,7 @@ use core::any::TypeId;
 
 use bevy_utils::all_tuples;
 
-use crate::{
-    target_rebuild_fn_channel, IntoView, Renderer, RendererNodeId, View, ViewCtx, ViewKey,
-    ViewMember, ViewMemberCtx,
-};
+use crate::{target_rebuild_fn_channel, IntoView, Renderer, RendererNodeId, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex};
 
 pub type RebuildFn<R, T> = Box<dyn FnMut(T, &mut <R as Renderer>::World) + Send + 'static>;
 pub type RebuildFnSender<R, T> = Box<dyn FnOnce(RebuildFn<R, T>) + Send + 'static>;
@@ -185,7 +182,7 @@ where
     pub fn send_view_member_rebuild_fn(
         f: RebuildFnSender<R, T>,
         node_id: RendererNodeId<R>,
-        index: u8,
+        index: ViewMemberIndex,
         is_build: bool,
     ) where
         T: ViewMember<R>,
@@ -255,7 +252,7 @@ where
     R: Renderer,
     VM: ViewMember<R>,
 {
-    fn count() -> u8 {
+    fn count() -> ViewMemberIndex {
         VM::count()
     }
 

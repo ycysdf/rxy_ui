@@ -1,6 +1,6 @@
 use crate::{BevyRenderer, IntoViewAttrMember};
 use rxy_bevy_element::{ElementUnitAttr, WorldViewAttrExt};
-use rxy_core::{rx, ViewMember, ViewMemberCtx};
+use rxy_core::{rx, ViewMember, ViewMemberCtx, ViewMemberIndex};
 use std::marker::PhantomData;
 
 pub struct IntoAttrMemberWrapper<T, M>(T, PhantomData<M>);
@@ -79,7 +79,7 @@ where
     F: Fn() -> IA + Send + 'static,
     IA: IntoViewAttrMember<EA> + Send + 'static,
 {
-    fn count() -> u8 {
+    fn count() -> ViewMemberIndex {
         IA::Attr::count()
     }
 
@@ -146,7 +146,7 @@ macro_rules! impl_into_view_attr_member_for_signal {
                 EA: ElementUnitAttr,
                 IA: IntoViewAttrMember<EA> + Clone + Send + Sync + 'static,
             {
-                fn count() -> u8 {
+                fn count() -> rxy_core::ViewMemberIndex {
                     IA::Attr::count()
                 }
 

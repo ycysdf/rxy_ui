@@ -10,7 +10,7 @@ use crate::{AttrStyleOwner, EntityWorldRef, Result, StyleItemValue};
 //         &self,
 //         style_sheet_index: StyleSheetIndex,
 //     ) -> Result<&StyleSheetDefinition> {
-//         self.get::<RendererState<NodeStyleState>>()
+//         self.get::<RendererState<NodeStyleAttrInfos>>()
 //             .map(|n| &n.0)
 //             .ok_or(StyleError::NoFoundEntityStyleState)
 //             .and_then(|n| n.get_inline_style_sheet(style_sheet_index))
@@ -21,7 +21,7 @@ use crate::{AttrStyleOwner, EntityWorldRef, Result, StyleItemValue};
 //         style_sheet_index: StyleSheetIndex,
 //         shared_style_sheets: &'a SharedStyleSheets,
 //     ) -> Result<&'a StyleSheetDefinition> {
-//         self.get::<RendererState<NodeStyleState>>()
+//         self.get::<RendererState<NodeStyleAttrInfos>>()
 //             .map(|n| &n.0)
 //             .ok_or(StyleError::NoFoundEntityStyleState)
 //             .and_then(|n| n.get_shared_style_sheet(style_sheet_index, shared_style_sheets))

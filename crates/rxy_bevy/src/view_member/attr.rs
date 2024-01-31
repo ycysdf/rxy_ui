@@ -1,5 +1,5 @@
 use rxy_bevy_element::{ElementUnitAttr, WorldViewAttrExt};
-use rxy_core::{ViewMember, ViewMemberCtx};
+use rxy_core::{ViewMember, ViewMemberCtx, ViewMemberIndex};
 
 use crate::BevyRenderer;
 
@@ -12,7 +12,7 @@ impl<EA> ViewMember<BevyRenderer> for ViewAttr<EA>
 where
     EA: ElementUnitAttr,
 {
-    fn count() -> u8 {
+    fn count() -> ViewMemberIndex {
         1
     }
 

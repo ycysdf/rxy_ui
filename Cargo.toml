@@ -83,10 +83,13 @@ bevy_text = { version = "0.12", optional = false }
 bevy_transform = { version = "0.12", optional = false }
 bevy_ui = { version = "0.12", features = ["bevy_text"] }
 bevy_utils = "0.12"
+bevy_a11y = "0.12"
+bevy_input = "0.12"
 
 count-macro = "0.2.2"
 paste = "1"
 
+bitflags = "2.4"
 convert_case = "^0.6.0"
 proc-macro2 = "1.0.66"
 quote = "^1.0.26"

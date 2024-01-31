@@ -3,11 +3,7 @@ use core::any::TypeId;
 use bevy_utils::futures::now_or_never;
 use futures_lite::{Stream, StreamExt};
 
-use crate::{
-    build_info::{build_info_is_contained, build_times_increment},
-    into_view, mutable_view_rebuild, BuildState, IntoView, MemberReBuilder, MutableView, Renderer,
-    RendererNodeId, ToIntoView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewReBuilder,
-};
+use crate::{build_info::{build_info_is_contained, build_times_increment}, into_view, mutable_view_rebuild, BuildState, IntoView, MemberReBuilder, MutableView, Renderer, RendererNodeId, ToIntoView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewReBuilder, ViewMemberIndex};
 
 pub struct LazyViewMemberState {
     pub already_build: bool,
@@ -56,7 +52,7 @@ where
     R: Renderer,
     VM: ViewMember<R>,
 {
-    fn count() -> u8 {
+    fn count() -> ViewMemberIndex {
         VM::count()
     }
 
@@ -246,7 +242,7 @@ where
     S: Stream + Unpin + Send + 'static,
     S::Item: ViewMember<R>,
 {
-    fn count() -> u8 {
+    fn count() -> ViewMemberIndex {
         S::Item::count()
     }
 
