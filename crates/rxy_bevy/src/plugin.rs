@@ -55,6 +55,7 @@ impl Plugin for RxyPlugin {
                 ))
                 .id()
         }));
+
         app.add_plugins((DefaultPickingPlugins, CommandChannelPlugin))
             .insert_resource(root_entity)
             .register_type::<TextFlags>()

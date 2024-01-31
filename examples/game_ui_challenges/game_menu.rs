@@ -60,29 +60,23 @@ fn schema_main_menu() -> impl IntoView<BevyRenderer> {
 
     (
         MenuBtnStyle::def((
-            x().width(160)
-                .py(8)
-                .flex()
-                .center()
-                .bg_color(Color::DARK_GRAY),
+            x().width(160).py(8).flex().center().bg_color(Color::DARK_GRAY),
             x_hover().bg_color(Color::GRAY),
-            x_focus().bg_color(Color::BLUE),
+            // x_focus().bg_color(Color::BLUE),
         )),
         div().style(x().size_screen().center()).children(
             div().style(x().flex_col().gap(8).padding(20)).children((
-                div()
-                    .style(MenuBtnStyle)
-                    .children("New Game")
-                    .on_pointer_click(|mut next_state: ResMut<NextState<GameState>>| {
+                button().style(MenuBtnStyle).children("New Game").on_pointer_click(
+                    |mut next_state: ResMut<NextState<GameState>>| {
                         next_state.set(GameState::InGame);
-                    }),
-                div()
-                    .style(MenuBtnStyle)
-                    .children("Setting")
-                    .on_pointer_click(|mut next_state: ResMut<NextState<GameState>>| {
+                    },
+                ),
+                button().style(MenuBtnStyle).children("Setting").on_pointer_click(
+                    |mut next_state: ResMut<NextState<GameState>>| {
                         next_state.set(GameState::Setting);
-                    }),
-                div().style(MenuBtnStyle).children("Exit").on_pointer_click(
+                    },
+                ),
+                button().style(MenuBtnStyle).children("Exit").on_pointer_click(
                     |mut app_exit: EventWriter<AppExit>| {
                         app_exit.send(AppExit);
                     },
@@ -102,13 +96,7 @@ fn schema_setting() -> impl IntoView<BevyRenderer> {
     ) -> impl IntoView<BevyRenderer> {
         div()
             .style((
-                x().flex()
-                    .min_h(45)
-                    .justify_between()
-                    .items_center()
-                    .gap(20)
-                    .py(8)
-                    .px(16),
+                x().flex().min_h(45).justify_between().items_center().gap(20).py(8).px(16),
                 x_hover().bg_color(Color::rgba(0.25, 0.25, 0.25, 0.4)),
             ))
             .children((label, content))
@@ -123,9 +111,8 @@ fn schema_setting() -> impl IntoView<BevyRenderer> {
             span("Game Setting").font_size(24.).mb(20),
             setting_item(
                 label("Select"),
-                select::<&'static str>()
-                    .value(options[0])
-                    .slot_content(view_builder(move |_, _| {
+                select::<&'static str>().value(options[0]).slot_content(view_builder(
+                    move |_, _| {
                         x_iter(options.map(|n| {
                             selection_item(n, |item| {
                                 div()
@@ -137,7 +124,8 @@ fn schema_setting() -> impl IntoView<BevyRenderer> {
                                     .children((item.value,))
                             })
                         }))
-                    })),
+                    },
+                )),
             ),
             setting_item(
                 label("CheckBox"),
@@ -170,7 +158,5 @@ fn schema_setting() -> impl IntoView<BevyRenderer> {
 
 #[schema]
 fn schema_in_game() -> impl IntoView<BevyRenderer> {
-    div()
-        .style(x().size_screen().center().flex_col().gap(8))
-        .children("InGame")
+    div().style(x().size_screen().center().flex_col().gap(8)).children("InGame")
 }
