@@ -23,6 +23,7 @@ mod res_change_observe;
 mod view;
 mod view_member;
 pub mod wrapper;
+pub mod navigation;
 
 pub use wrapper::{pl_schema_view, FnSchemaView, SchemaIntoViewFn};
 
@@ -37,8 +38,9 @@ pub mod prelude {
     pub use super::{
         div, element::event::*, pl_schema_view, span, system_once, x_res, BevyElement,
         BevyRenderer, BevyWrapper, CloneableSlot, CmdReceiver, CmdSender, CommonAttrsViewBuilder,
-        CompositeAttrs, ElementType, FnSchemaView, MemberOwnerBundleExt, ReceiverProp,
-        ResChangeWorldExt, RxyPlugin, RxyUiCommandExt, SchemaCtx, SchemaIntoViewFn, Slot,
+        CompositeAttrs, ElementType, FnSchemaView, MemberOwnerBundleExt, MemberOwnerFocusExt,
+        ReceiverProp, ResChangeWorldExt, RxyPlugin, RxyUiCommandExt, SchemaCtx, SchemaIntoViewFn,
+        Slot,
     };
     pub use bevy_ui::prelude::Val;
 }
