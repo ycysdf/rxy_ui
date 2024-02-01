@@ -357,6 +357,15 @@ pub enum BubblePointerEvent {
     Drop(Option<PointerButton>),
 }
 
+impl BubblePointerEvent {
+    pub fn stop_propagation(self) -> ElementEventId {
+        ElementEventId::Bubble {
+            event: self,
+            stop_propagation: true,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum FocusInputTriggerWay {
     JustPressed,
@@ -497,6 +506,12 @@ impl ElementEventIdIterator for ElementEventId {
     }
 }
 
+impl ElementEventIdIterator for BubblePointerEvent {
+    fn iter_event_ids(&self) -> impl Iterator<Item = ElementEventId> + Send {
+        core::iter::once(ElementEventId::Bubble { event: *self, stop_propagation: false })
+    }
+}
+
 #[derive(Clone)]
 pub struct IntoIteratorWrapper<T>(T);
 
@@ -550,53 +565,47 @@ pub fn x_pressed(events: impl FocusInputEventIterator) -> impl ElementEventIdIte
     x_trigger_way(FocusInputTriggerWay::Pressed, events)
 }
 
-pub fn x_buble_event(event: BubblePointerEvent) -> ElementEventId {
-    ElementEventId::Bubble {
-        event,
-        stop_propagation: false,
-    }
-}
-pub fn x_pointer_over() -> ElementEventId {
-    x_buble_event(BubblePointerEvent::Over)
+pub fn x_pointer_over() -> BubblePointerEvent {
+    BubblePointerEvent::Over
 }
 
-pub fn x_pointer_out() -> ElementEventId {
-    x_buble_event(BubblePointerEvent::Out)
+pub fn x_pointer_out() -> BubblePointerEvent {
+    BubblePointerEvent::Out
 }
-pub fn x_pointer_down() -> ElementEventId {
-    x_buble_event(BubblePointerEvent::Down(None))
+pub fn x_pointer_down() -> BubblePointerEvent {
+    BubblePointerEvent::Down(None)
 }
-pub fn x_pointer_up() -> ElementEventId {
-    x_buble_event(BubblePointerEvent::Up(None))
-}
-
-pub fn x_pointer_click() -> ElementEventId {
-    x_buble_event(BubblePointerEvent::Click(None))
+pub fn x_pointer_up() -> BubblePointerEvent {
+    BubblePointerEvent::Up(None)
 }
 
-pub fn x_pointer_move() -> ElementEventId {
-    x_buble_event(BubblePointerEvent::Move)
+pub fn x_pointer_click() -> BubblePointerEvent {
+    BubblePointerEvent::Click(None)
 }
-pub fn x_pointer_drag_start() -> ElementEventId {
-    x_buble_event(BubblePointerEvent::DragStart(None))
+
+pub fn x_pointer_move() -> BubblePointerEvent {
+    BubblePointerEvent::Move
 }
-pub fn x_pointer_drag() -> ElementEventId {
-    x_buble_event(BubblePointerEvent::Drag(None))
+pub fn x_pointer_drag_start() -> BubblePointerEvent {
+    BubblePointerEvent::DragStart(None)
 }
-pub fn x_pointer_drag_end() -> ElementEventId {
-    x_buble_event(BubblePointerEvent::DragEnd(None))
+pub fn x_pointer_drag() -> BubblePointerEvent {
+    BubblePointerEvent::Drag(None)
 }
-pub fn x_pointer_drag_enter() -> ElementEventId {
-    x_buble_event(BubblePointerEvent::DragEnter(None))
+pub fn x_pointer_drag_end() -> BubblePointerEvent {
+    BubblePointerEvent::DragEnd(None)
 }
-pub fn x_pointer_drag_over() -> ElementEventId {
-    x_buble_event(BubblePointerEvent::DragOver(None))
+pub fn x_pointer_drag_enter() -> BubblePointerEvent {
+    BubblePointerEvent::DragEnter(None)
 }
-pub fn x_pointer_drag_leave() -> ElementEventId {
-    x_buble_event(BubblePointerEvent::DragLeave(None))
+pub fn x_pointer_drag_over() -> BubblePointerEvent {
+    BubblePointerEvent::DragOver(None)
 }
-pub fn x_pointer_drop() -> ElementEventId {
-    x_buble_event(BubblePointerEvent::Drop(None))
+pub fn x_pointer_drag_leave() -> BubblePointerEvent {
+    BubblePointerEvent::DragLeave(None)
+}
+pub fn x_pointer_drop() -> BubblePointerEvent {
+    BubblePointerEvent::Drop(None)
 }
 
 pub struct FocusInputEventMember<T, S, M> {
