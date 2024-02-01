@@ -46,7 +46,7 @@ where
             .bg_color(Color::GRAY)
             .w_full()
     });
-    div()
+    button()
         .name("select")
         .style(SelectStyle)
         .rx_member(move || {

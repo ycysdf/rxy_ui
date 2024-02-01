@@ -5,7 +5,7 @@ use crate::{Previous, StyleItemValue};
 use bevy_a11y::Focus;
 use bevy_ecs::entity::Entity;
 use bevy_ecs::prelude::{Changed, Commands, Query, With, World};
-use bevy_ecs::system::{Command, Res};
+use bevy_ecs::system::{Command, ResMut};
 use bevy_ui::Interaction;
 use bevy_utils::EntityHashMap;
 use derive_more::{Deref, DerefMut};
@@ -13,7 +13,7 @@ use rxy_bevy::RendererState;
 use rxy_bevy_element::{view_element_type, AttrIndex, AttrSetBits, ElementEntityExtraData};
 use rxy_style::{NodeInterStyleAttrInfos, NodeStyleAttrInfos, StyleInteraction};
 
-#[derive(Default, DerefMut, Deref)]
+#[derive(Default, DerefMut, Deref, Debug)]
 pub struct SetAttrValuesCommand(EntityHashMap<Entity, Vec<(AttrIndex, Option<StyleAttrValue>)>>);
 
 impl SetAttrValuesCommand {
@@ -38,9 +38,7 @@ impl Command for SetAttrValuesCommand {
             };
             let attr_is_set =
                 entity_world_mut.get_mut::<ElementEntityExtraData>().unwrap().attr_is_set;
-            for (attr_index, value) in changed.into_iter().filter(|(attr_index, _)| {
-                !ElementEntityExtraData::static_is_set_attr(attr_is_set, *attr_index)
-            }) {
+            for (attr_index, value) in changed.into_iter().filter_attr_already_set(attr_is_set) {
                 view_element_type()
                     .attr_by_index(attr_index as _)
                     .init_or_set(&mut entity_world_mut, value);
@@ -95,7 +93,7 @@ pub fn update_interaction_styles(
             With<RendererState<NodeStyleSheetsState>>,
         ),
     >,
-    focus: Res<Focus>,
+    mut focus: ResMut<Focus>,
 ) {
     if inter_styled_query.is_empty() {
         return;
@@ -144,6 +142,10 @@ pub fn update_interaction_styles(
                     )
                     .filter_attr_already_set(entity_extra_data.attr_is_set | attr_bits)
                 {
+                    // todo: extract to type
+                    if (attr_bits >> attr_index) & 1 == 1 {
+                        continue;
+                    }
                     attr_bits |= 1 << attr_index;
                     let value = if is_focused {
                         entity_inter_style_state
@@ -163,6 +165,11 @@ pub fn update_interaction_styles(
             (Interaction::None, _)
             | (Interaction::Hovered, Interaction::Pressed)
             | (Interaction::Pressed, Interaction::Hovered) => {
+                // todo: code decoupling
+                if interaction == Interaction::Pressed && focus.0 != Some(entity) {
+                    *focus = Focus(Some(entity));
+                }
+
                 for (attr_index, matched_interaction) in entity_inter_style_state
                     .iter_match_attr_ids(
                         style_interaction,
@@ -171,6 +178,9 @@ pub fn update_interaction_styles(
                     )
                     .filter_attr_already_set(entity_extra_data.attr_is_set | attr_bits)
                 {
+                    if (attr_bits >> attr_index) & 1 == 1 {
+                        continue;
+                    }
                     attr_bits |= 1 << attr_index;
                     let value = entity_inter_style_state
                         .get_attr_info(matched_interaction, attr_index)

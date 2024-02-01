@@ -87,7 +87,7 @@ pub fn schema_slider(
                     .children(rx(move || format!("{:.1}", value.get())))
             }),
         ),
-        div()
+        button()
             .name("slider-thumb")
             .style(SliderThumbStyle)
             .left(width)

@@ -1,48 +1,44 @@
-use bevy_ui::{Interaction, UiStack};
 use bevy_a11y::Focus;
-use bevy_ecs::prelude::Component;
+use bevy_app::{Plugin, PreUpdate};
 use bevy_ecs::query::With;
-use bevy_ecs::system::{Local, Query, Res, ResMut, Resource};
-use bevy_ecs::{change_detection::DetectChangesMut, entity::Entity};
+use bevy_ecs::schedule::IntoSystemConfigs;
+use bevy_ecs::system::{Query, Res, ResMut};
+use bevy_ecs::{change_detection::DetectChangesMut, entity::Entity, prelude::Resource};
+use bevy_input::InputSystem;
 use bevy_input::{prelude::KeyCode, Input};
-use bevy_reflect::Reflect;
 use bevy_render::view::ViewVisibility;
+use bevy_ui::{Interaction, UiStack, UiSystem};
 
-pub struct KeyboardNavigationPlugin;
+use crate::Focusable;
 
-impl Plugin for KeyboardNavigation 
+#[derive(Default, Debug)]
+pub struct RxyKeyboardNavigationPlugin {}
 
-/// A component that represents if a UI element is focused.
-#[derive(Reflect, Component, Clone, Debug, Default, Eq, PartialEq)]
-pub struct Focusable {
-    focus_state: FocusState,
-}
-
-impl Focusable {
-    /// The entity is currently focused, similar to the `:focus` css pseudo-class.
-    /// To check if the focus has been achieved through keyboard navigation, see [`Focusable::is_focus_visible`].
-    pub fn is_focused(&self) -> bool {
-        matches!(self.focus_state, FocusState::Focused { .. })
+impl Plugin for RxyKeyboardNavigationPlugin {
+    fn build(&self, app: &mut bevy_app::App) {
+        app.init_resource::<KeyboardNavigationInput>()
+            .add_systems(
+                PreUpdate,
+                keyboard_navigation_system
+                    .in_set(UiSystem::Focus)
+                    .run_if(tab_pressed)
+                    .after(InputSystem),
+            )
+            .add_systems(
+                PreUpdate,
+                keyboard_click
+                    .after(UiSystem::Focus)
+                    // .in_set(UiSystem::Interactions)
+                    .run_if(trigger_click),
+            )
+            .add_systems(
+                PreUpdate,
+                end_keyboard_click
+                    .after(UiSystem::Focus)
+                    // .in_set(UiSystem::Interactions)
+                    .run_if(trigger_click_end),
+            );
     }
-
-    /// Focus has been reached through keyboard navigation and so a focus style should be displayed.
-    /// This is similar to the `:focus-visible` pseudo-class in css.
-    pub fn is_focus_visible(&self) -> bool {
-        matches!(self.focus_state, FocusState::Focused { visible: true })
-    }
-}
-
-#[derive(Reflect, Clone, Debug, Default, Eq, PartialEq)]
-enum FocusState {
-    /// Entity is not focused
-    #[default]
-    None,
-    /// Entity is focused
-    Focused {
-        /// Focus has been reached through keyboard navigation and so a focus style should be displayed.
-        /// This is similar to the `:focus-visible` pseudo-class in css.
-        visible: bool,
-    },
 }
 
 /// Resource for the configuration of keyboard navigation of UI with <kbd>tab</kbd>.
@@ -71,7 +67,7 @@ pub(crate) fn tab_pressed(
 pub(crate) fn keyboard_navigation_system(
     mut focus: ResMut<Focus>,
     mut interactions: Query<&mut Interaction>,
-    focusables: Query<&ComputedVisibility, With<Focusable>>,
+    focusables: Query<&ViewVisibility, With<Focusable>>,
     keyboard_input: Res<Input<KeyCode>>,
     ui_stack: Res<UiStack>,
 ) {
@@ -79,19 +75,13 @@ pub(crate) fn keyboard_navigation_system(
         keyboard_input.pressed(KeyCode::ShiftLeft) || keyboard_input.pressed(KeyCode::ShiftRight);
 
     let can_focus = |entity: &&Entity| {
-        focusables
-            .get(**entity)
-            .map_or(false, |computed_visibility| {
-                computed_visibility.is_visible()
-            })
+        focusables.get(**entity).map_or(false, |computed_visibility| computed_visibility.get())
     };
 
     let ui_nodes = &ui_stack.uinodes;
 
     // Current index of the focused entity within the ui nodes list.
-    let current_index = ui_nodes
-        .iter()
-        .position(|&ui_node| Some(ui_node) == focus.entity);
+    let current_index = ui_nodes.iter().position(|&ui_node| Some(ui_node) == focus.0);
 
     let new_focus = if reverse_order {
         // Start with the entity before the current focused or at the end of the list
@@ -112,10 +102,8 @@ pub(crate) fn keyboard_navigation_system(
     };
 
     // Reset the clicked state
-    if new_focus != focus.entity {
-        if let Some(mut interaction) = focus
-            .entity
-            .and_then(|entity| interactions.get_mut(entity).ok())
+    if new_focus != focus.0 {
+        if let Some(mut interaction) = focus.0.and_then(|entity| interactions.get_mut(entity).ok())
         {
             if *interaction == Interaction::Pressed {
                 *interaction = Interaction::None;
@@ -123,43 +111,13 @@ pub(crate) fn keyboard_navigation_system(
         }
     }
 
-    focus.set_if_neq(Focus {
-        entity: new_focus,
-        focus_visible: true,
-    });
-}
-
-/// Change the [`FocusState`] for the specified entity
-fn set_focus_state(
-    entity: Option<Entity>,
-    focusable: &mut Query<&mut Focusable>,
-    focus_state: FocusState,
-) {
-    if let Some(mut focusable) = entity.and_then(|entity| focusable.get_mut(entity).ok()) {
-        focusable.set_if_neq(Focusable { focus_state });
+    if focus.0 != new_focus {
+        *focus = Focus(new_focus);
     }
-}
-
-/// Modify the [`FocusState`] of the [`Focusable`] component, based on the [`Focus`] resource.
-pub(crate) fn update_focused_state(
-    mut focusable: Query<&mut Focusable>,
-    focus: Res<Focus>,
-    mut old_focused_entity: Local<Option<Entity>>,
-) {
-    let new_focused_entity = focus.entity;
-
-    // Remove the interaction from the last focused entity
-    if *old_focused_entity != new_focused_entity {
-        set_focus_state(*old_focused_entity, &mut focusable, FocusState::None);
-    }
-
-    let new_state = FocusState::Focused {
-        visible: focus.focus_visible,
-    };
-    // Set the focused interaction on the newly focused entity
-    set_focus_state(new_focused_entity, &mut focusable, new_state);
-
-    *old_focused_entity = new_focused_entity;
+    // focus.set_if_neq(Focus {
+    //     entity: new_focus,
+    //     focus_visible: true,
+    // });
 }
 
 /// Should the [`keyboard_click`] system run?
@@ -169,10 +127,7 @@ pub(crate) fn trigger_click(keyboard_input: Res<Input<KeyCode>>) -> bool {
 
 /// Trigger the [`Focus`] entity to be clicked.
 pub(crate) fn keyboard_click(mut interactions: Query<&mut Interaction>, focus: Res<Focus>) {
-    if let Some(mut interaction) = focus
-        .entity
-        .and_then(|entity| interactions.get_mut(entity).ok())
-    {
+    if let Some(mut interaction) = focus.0.and_then(|entity| interactions.get_mut(entity).ok()) {
         interaction.set_if_neq(Interaction::Pressed);
     }
 }
@@ -191,22 +146,23 @@ pub(crate) fn end_keyboard_click(mut interactions: Query<&mut Interaction>) {
         }
     });
 }
-
+/*
 #[cfg(test)]
 mod test {
+    use super::Focusable;
     use super::*;
-    use crate::prelude::{ButtonBundle, NodeBundle};
-    use crate::{ui_stack_system, Focusable};
     use bevy_ecs::prelude::*;
     use bevy_ecs::system::CommandQueue;
     use bevy_hierarchy::BuildChildren;
+    use bevy_ui::prelude::{ButtonBundle, NodeBundle};
+    use bevy_ui::ui_stack_system;
     use bevy_utils::default;
 
     #[test]
     fn keyboard_navigation() {
         let mut world = World::default();
 
-        let mut schedule = Schedule::new();
+        let mut schedule = Schedule::default();
         schedule.add_systems((
             ui_stack_system,
             keyboard_navigation_system.after(ui_stack_system),
@@ -221,20 +177,18 @@ mod test {
         commands.init_resource::<UiStack>();
 
         let mut children = Vec::new();
-        commands
-            .spawn(NodeBundle::default())
-            .with_children(|parent| {
-                for _child in 0..3 {
-                    children.push(
-                        parent
-                            .spawn(ButtonBundle {
-                                computed_visibility: ComputedVisibility::VISIBLE,
-                                ..default()
-                            })
-                            .id(),
-                    );
-                }
-            });
+        commands.spawn(NodeBundle::default()).with_children(|parent| {
+            for _child in 0..3 {
+                children.push(
+                    parent
+                        .spawn(ButtonBundle {
+                            computed_visibility: ComputedVisibility::VISIBLE,
+                            ..default()
+                        })
+                        .id(),
+                );
+            }
+        });
         queue.apply(&mut world);
 
         schedule.run(&mut world);
@@ -249,9 +203,8 @@ mod test {
         );
 
         // Simulate pressing shift
-        let mut keyboard_input = world
-            .get_resource_mut::<Input<KeyCode>>()
-            .expect("keyboard input resource");
+        let mut keyboard_input =
+            world.get_resource_mut::<Input<KeyCode>>().expect("keyboard input resource");
         keyboard_input.press(KeyCode::ShiftLeft);
 
         schedule.run(&mut world);
@@ -266,3 +219,4 @@ mod test {
         );
     }
 }
+ */

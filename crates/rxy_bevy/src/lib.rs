@@ -3,6 +3,7 @@
 pub use cmd::*;
 pub use command::*;
 pub use element::*;
+pub use focusable::*;
 pub use plugin::*;
 pub use renderer::*;
 pub use res_change_observe::*;
@@ -15,6 +16,8 @@ pub use view_member::*;
 mod cmd;
 mod command;
 mod element;
+mod focusable;
+pub mod navigation;
 mod plugin;
 #[cfg(feature = "xy_reactive")]
 mod reactive;
@@ -23,7 +26,6 @@ mod res_change_observe;
 mod view;
 mod view_member;
 pub mod wrapper;
-pub mod navigation;
 
 pub use wrapper::{pl_schema_view, FnSchemaView, SchemaIntoViewFn};
 
@@ -35,12 +37,12 @@ pub type Slot = SchemaSlot<BevyRenderer>;
 pub type CloneableSlot = CloneableSchemaSlot<BevyRenderer>;
 
 pub mod prelude {
+    pub use super::{button, div, span};
     pub use super::{
-        div, element::event::*, pl_schema_view, span, system_once, x_res, BevyElement,
-        BevyRenderer, BevyWrapper, CloneableSlot, CmdReceiver, CmdSender, CommonAttrsViewBuilder,
-        CompositeAttrs, ElementType, FnSchemaView, MemberOwnerBundleExt, MemberOwnerFocusExt,
-        ReceiverProp, ResChangeWorldExt, RxyPlugin, RxyUiCommandExt, SchemaCtx, SchemaIntoViewFn,
-        Slot,
+        element::event::*, pl_schema_view, system_once, x_res, BevyElement, BevyRenderer,
+        BevyWrapper, CloneableSlot, CmdReceiver, CmdSender, CommonAttrsViewBuilder, CompositeAttrs,
+        ElementType, FnSchemaView, Focusable, MemberOwnerBundleExt, ReceiverProp,
+        ResChangeWorldExt, RxyPlugin, RxyUiCommandExt, SchemaCtx, SchemaIntoViewFn, Slot,
     };
     pub use bevy_ui::prelude::Val;
 }

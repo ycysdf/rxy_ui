@@ -249,7 +249,7 @@ impl<'a> EntityStyleAttrInfoIterArgs<'a> {
 
         let mut attr_bits: AttrSetBits = 0;
         for (attr_index, top_item_id) in item_ids {
-            if attr_bits << attr_index & 1 ==1 {
+            if (attr_bits >> attr_index) & 1 == 1 {
                 continue;
             }
             attr_bits |= 1 << attr_index;

@@ -18,10 +18,7 @@ pub trait ElementAttr: Send + Sync + 'static {
     const NAME: &'static str;
 
     fn init(entity_world_mut: &mut EntityWorldMut, value: impl Into<Self::Value>) {
-        let type_registry = entity_world_mut
-            .world()
-            .resource::<AppTypeRegistry>()
-            .clone();
+        let type_registry = entity_world_mut.world().resource::<AppTypeRegistry>().clone();
         let mut context = SetAttrValueContext {
             entity_mut: &mut entity_world_mut.as_entity_mut(),
             type_registry: &type_registry,
@@ -58,18 +55,13 @@ pub trait ElementUnitAttrUntyped: Send + Sync {
         value: Option<SmallBox<dyn AttrValue, S1>>,
     ) {
         let value = value.unwrap_or_else(|| self.default_value());
-        let mut extra_data = entity_world_mut
-            .get_mut::<ElementEntityExtraData>()
-            .unwrap();
+        let mut extra_data = entity_world_mut.get_mut::<ElementEntityExtraData>().unwrap();
         let is_init = extra_data.is_init_attr(self.index());
         if !is_init {
             extra_data.init_attr(self.index(), true);
         }
         if is_init {
-            let type_registry = entity_world_mut
-                .world()
-                .resource::<AppTypeRegistry>()
-                .clone();
+            let type_registry = entity_world_mut.world().resource::<AppTypeRegistry>().clone();
             let mut context = SetAttrValueContext {
                 entity_mut: &mut entity_world_mut.as_entity_mut(),
                 type_registry: &type_registry,

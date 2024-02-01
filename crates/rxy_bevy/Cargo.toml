@@ -18,6 +18,7 @@ count-macro.workspace = true
 paste.workspace = true
 
 async-channel.workspace = true
+smallvec.workspace = true
 
 bevy_app.workspace = true
 bevy_asset.workspace = true

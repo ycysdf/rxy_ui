@@ -1,14 +1,15 @@
 use bevy_hierarchy::BuildWorldChildren;
 
 pub use attrs::*;
+use bevy_ui::{widget::Button, FocusPolicy, Interaction};
 use rxy_bevy_element::{all_attrs, elements, ElementType};
 use rxy_bevy_macro::BevyIntoView;
 use rxy_core::{
-    view_children, Element, ElementView, ElementViewChildren, IntoView, MemberOwner, RendererElementType, RendererNodeId, RendererWorld, SoloView,
-    View, ViewCtx, ViewMember,
+    view_children, Element, ElementView, ElementViewChildren, IntoView, MemberOwner,
+    RendererElementType, RendererNodeId, RendererWorld, SoloView, View, ViewCtx, ViewMember,
 };
 
-use crate::{BevyRenderer, BevyWrapper, ViewAttr};
+use crate::{x_bundle, BevyRenderer, BevyWrapper, Focusable, ViewAttr, XBundle};
 
 mod attrs;
 pub mod event;
@@ -22,6 +23,16 @@ pub fn span(
 
 pub fn div() -> BevyElement<elements::view, ()> {
     BevyElement::default()
+}
+
+pub fn button(
+) -> BevyElement<elements::view, (XBundle<(FocusPolicy, Interaction, Button, Focusable)>,)> {
+    BevyElement::default().members(x_bundle((
+        FocusPolicy::default(),
+        Interaction::default(),
+        Button,
+        Focusable::default(),
+    )))
 }
 
 // pub fn input() -> BevyElement<elements::input, ()> {
