@@ -731,6 +731,50 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         self.on(x_just_released(events), system)
     }
 
+    fn on_pointer_over<S, Marker>(
+        self,
+        system: S,
+    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIdIterator, S, Marker>>
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
+    {
+        self.on(x_pointer_over(), system)
+    }
+
+    fn on_pointer_out<S, Marker>(
+        self,
+        system: S,
+    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIdIterator, S, Marker>>
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
+    {
+        self.on(x_pointer_out(), system)
+    }
+
+    fn on_pointer_down<S, Marker>(
+        self,
+        system: S,
+    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIdIterator, S, Marker>>
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
+    {
+        self.on(x_pointer_down(), system)
+    }
+
+    fn on_pointer_up<S, Marker>(
+        self,
+        system: S,
+    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIdIterator, S, Marker>>
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
+    {
+        self.on(x_pointer_up(), system)
+    }
+
     fn on_pointer_click<S, Marker>(
         self,
         system: S,
@@ -741,7 +785,7 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
     {
         self.on(x_pointer_click(), system)
     }
-
+    
     fn on_pointer_move<S, Marker>(
         self,
         system: S,
