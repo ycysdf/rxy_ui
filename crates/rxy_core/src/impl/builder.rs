@@ -107,7 +107,6 @@ where
         self.0(
             ViewMemberCtx {
                 index: ctx.index,
-                type_id: ctx.type_id,
                 world: &mut *ctx.world,
                 node_id: ctx.node_id.clone(),
             },
@@ -119,7 +118,6 @@ where
         .build(
             ViewMemberCtx {
                 index: ctx.index,
-                type_id: TypeId::of::<VM>(),
                 world: &mut *ctx.world,
                 node_id: ctx.node_id,
             },
@@ -131,7 +129,6 @@ where
         self.0(
             ViewMemberCtx {
                 index: ctx.index,
-                type_id: ctx.type_id,
                 world: &mut *ctx.world,
                 node_id: ctx.node_id.clone(),
             },
@@ -142,7 +139,6 @@ where
         )
         .rebuild(ViewMemberCtx {
             index: ctx.index,
-            type_id: TypeId::of::<VM>(),
             world: &mut *ctx.world,
             node_id: ctx.node_id,
         })

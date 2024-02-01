@@ -87,8 +87,6 @@ where
     }
 
     fn build(self, mut ctx: ViewMemberCtx<R>, _will_rebuild: bool) {
-        // todo: when vm_type_id is same
-        let type_id = core::any::TypeId::of::<VM>();
         let index = ctx.index;
         let node_id = ctx.node_id.clone();
         let deferred_world_scoped = R::deferred_world_scoped(ctx.world);
@@ -98,7 +96,6 @@ where
                 vm.build(
                     ViewMemberCtx {
                         index,
-                        type_id,
                         world: &mut *ctx.world,
                         node_id: ctx.node_id.clone(),
                     },
@@ -113,7 +110,6 @@ where
                     }
                     let ctx = ViewMemberCtx {
                         index,
-                        type_id,
                         world,
                         node_id,
                     };
@@ -122,14 +118,13 @@ where
             },
         );
 
-        ctx.set_view_member_state(ReactiveDisposerState(_effect.erase()))
+        ctx.set_indexed_view_member_state(ReactiveDisposerState(_effect.erase()))
     }
 
     fn rebuild(self, mut ctx: ViewMemberCtx<R>) {
-        drop(ctx.take_view_member_state::<ReactiveDisposerState>());
+        drop(ctx.take_indexed_view_member_state::<ReactiveDisposerState>());
 
         let deferred_world_scoped = R::deferred_world_scoped(ctx.world);
-        let type_id = core::any::TypeId::of::<VM>();
         let index = ctx.index;
         let node_id = ctx.node_id.clone();
         let _effect = create_render_effect(move |_| {
@@ -141,7 +136,6 @@ where
                 }
                 let ctx: ViewMemberCtx<'_, R> = ViewMemberCtx {
                     index,
-                    type_id,
                     world,
                     node_id,
                 };
@@ -149,7 +143,7 @@ where
             });
         });
 
-        ctx.set_view_member_state(ReactiveDisposerState(_effect.erase()))
+        ctx.set_indexed_view_member_state(ReactiveDisposerState(_effect.erase()))
     }
 }
 

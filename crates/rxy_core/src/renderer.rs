@@ -1,5 +1,4 @@
 use alloc::borrow::Cow;
-use core::any::TypeId;
 use core::fmt::Debug;
 use core::future::Future;
 
@@ -22,8 +21,6 @@ pub type ViewMemberIndex = u32;
 
 pub struct ViewMemberCtx<'a, R: Renderer> {
     pub index: ViewMemberIndex,
-    // todo: remove type_id
-    pub type_id: TypeId,
     pub world: &'a mut RendererWorld<R>,
     pub node_id: RendererNodeId<R>,
 }

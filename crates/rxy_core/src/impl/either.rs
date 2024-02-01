@@ -156,7 +156,6 @@ where
         LVM::unbuild(
             ViewMemberCtx {
                 index: ctx.index,
-                type_id: TypeId::of::<LVM>(),
                 world: &mut *ctx.world,
                 node_id: ctx.node_id.clone(),
             },
@@ -165,7 +164,6 @@ where
         RVM::unbuild(
             ViewMemberCtx {
                 index: ctx.index + LVM::count(),
-                type_id: TypeId::of::<RVM>(),
                 world: ctx.world,
                 node_id: ctx.node_id,
             },
@@ -186,7 +184,6 @@ where
                 RVM::unbuild(
                     ViewMemberCtx {
                         index: ctx.index + LVM::count(),
-                        type_id: TypeId::of::<RVM>(),
                         world: &mut *ctx.world,
                         node_id: ctx.node_id.clone(),
                     },
@@ -198,7 +195,6 @@ where
                 LVM::unbuild(
                     ViewMemberCtx {
                         index: ctx.index,
-                        type_id: TypeId::of::<LVM>(),
                         world: &mut *ctx.world,
                         node_id: ctx.node_id.clone(),
                     },

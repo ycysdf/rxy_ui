@@ -27,7 +27,6 @@ where
         T::unbuild(
             ViewMemberCtx {
                 index: ctx.index,
-                type_id: core::any::TypeId::of::<T>(),
                 world: &mut *ctx.world,
                 node_id: ctx.node_id.clone(),
             },
@@ -36,7 +35,6 @@ where
         E::unbuild(
             ViewMemberCtx {
                 index: ctx.index + T::count(),
-                type_id: core::any::TypeId::of::<E>(),
                 world: ctx.world,
                 node_id: ctx.node_id,
             },

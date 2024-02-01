@@ -110,7 +110,6 @@ where
         self.view_members.build(
             ViewMemberCtx {
                 index: <EV::VM as ViewMember<R>>::count(),
-                type_id: core::any::TypeId::of::<VM>(),
                 world: ctx.world,
                 node_id: EV::element_node_id(&key).clone(),
             },
@@ -122,7 +121,6 @@ where
     fn rebuild(self, ctx: ViewCtx<R>, key: Self::Key) {
         self.view_members.rebuild(ViewMemberCtx {
             index: <EV::VM as ViewMember<R>>::count(),
-            type_id: core::any::TypeId::of::<VM>(),
             world: &mut *ctx.world,
             node_id: EV::element_node_id(&key).clone(),
         });

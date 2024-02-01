@@ -1,9 +1,10 @@
-use crate::{
-    ConstIndex, PropState, Renderer, RendererNodeId, RendererWorld, TypeIdHashMapState,
-};
+use crate::{ConstIndex, PropState, Renderer, RendererNodeId, RendererWorld};
 use alloc::boxed::Box;
 use bevy_utils::synccell::SyncCell;
 use core::any::TypeId;
+use bevy_utils::HashMap;
+
+pub struct TypeIdHashMapState<S: Send + 'static>(pub SyncCell<HashMap<TypeId, S>>);
 
 pub struct SchemaPropCtx<'a, R: Renderer> {
     pub world: &'a mut RendererWorld<R>,

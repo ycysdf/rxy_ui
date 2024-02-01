@@ -159,7 +159,6 @@ impl<R, U, VM, P, M> View<R> for ElementSchemaView<R, U, VM, P, M>
         self.members.build(
             ViewMemberCtx {
                 index: <U::View as MemberOwner<R>>::VM::count(),
-                type_id: core::any::TypeId::of::<VM>(),
                 world: ctx.world,
                 node_id: U::View::element_node_id(&key.key).clone(),
             },

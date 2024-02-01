@@ -438,7 +438,6 @@ impl MemberReBuilder<BevyRenderer> for CmdMemberReBuilder {
             }
             let ctx = ViewMemberCtx {
                 index,
-                type_id: std::any::TypeId::of::<VM>(),
                 world,
                 node_id: entity,
             };

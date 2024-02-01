@@ -26,7 +26,6 @@ where
         };
         let ctx = ViewMemberCtx {
             index: ctx.index,
-            type_id: TypeId::of::<VM>(),
             world: &mut *ctx.world,
             node_id: ctx.node_id.clone(),
         };
@@ -38,7 +37,7 @@ where
         }
     }
     if !is_already_build {
-        ctx.set_view_member_state(LazyViewMemberState {
+        ctx.set_indexed_view_member_state(LazyViewMemberState {
             already_build: false,
         });
     }
@@ -71,7 +70,7 @@ where
 
     fn rebuild(self, mut ctx: ViewMemberCtx<R>) {
         let already_build = {
-            ctx.view_member_state_mut::<LazyViewMemberState>()
+            ctx.indexed_view_member_state_mut::<LazyViewMemberState>()
                 .map(|n| n.already_build)
                 .unwrap_or_else(|| true)
         };
@@ -261,7 +260,7 @@ where
 
     fn rebuild(self, mut ctx: ViewMemberCtx<R>) {
         let already_build = {
-            ctx.view_member_state_mut::<LazyViewMemberState>()
+            ctx.indexed_view_member_state_mut::<LazyViewMemberState>()
                 .map(|n| n.already_build)
                 .unwrap_or_else(|| true)
         };

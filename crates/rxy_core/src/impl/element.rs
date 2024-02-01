@@ -133,7 +133,6 @@ where
         VM::unbuild(
             ViewMemberCtx {
                 index: 0,
-                type_id: TypeId::of::<VM>(),
                 world,
                 node_id: self.0.clone(),
             },
@@ -193,7 +192,6 @@ where
         self.members.build(
             ViewMemberCtx {
                 index: 0,
-                type_id: TypeId::of::<VM>(),
                 world: &mut *ctx.world,
                 node_id: spawned_node_id.clone(),
             },
@@ -205,7 +203,6 @@ where
     fn rebuild(self, ctx: ViewCtx<R>, state_key: Self::Key) {
         self.members.rebuild(ViewMemberCtx {
             index: 0,
-            type_id: TypeId::of::<VM>(),
             world: ctx.world,
             node_id: state_key.0,
         });

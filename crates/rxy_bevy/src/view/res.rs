@@ -139,7 +139,6 @@ where
     let task = BevyRenderer::spawn({
         let ctx = ViewMemberCtx::<BevyRenderer> {
             index: ctx.index,
-            type_id: ctx.type_id,
             world: &mut *ctx.world,
             node_id: ctx.node_id,
         };
@@ -153,7 +152,6 @@ where
                     let vm = f(resource);
                     vm.rebuild(ViewMemberCtx {
                         index: ctx.index,
-                        type_id: ctx.type_id,
                         world,
                         node_id: ctx.node_id,
                     });
@@ -183,7 +181,6 @@ where
         vm.build(
             ViewMemberCtx {
                 index: ctx.index,
-                type_id: ctx.type_id,
                 world: &mut *ctx.world,
                 node_id: ctx.node_id,
             },
@@ -196,7 +193,6 @@ where
         let vm = (self.f)(ctx.world.resource::<T>());
         vm.rebuild(ViewMemberCtx {
             index: ctx.index,
-            type_id: ctx.type_id,
             world: &mut *ctx.world,
             node_id: ctx.node_id,
         });

@@ -130,7 +130,6 @@ where
         world_scoped.deferred_world(move |world| {
             let mut ctx = ViewMemberCtx::<R> {
                 index: ctx.index,
-                type_id: TypeId::of::<T::Output>(),
                 world,
                 node_id: ctx.node_id,
             };
@@ -141,7 +140,6 @@ where
             view_member.build(
                 ViewMemberCtx {
                     index: ctx.index,
-                    type_id: ctx.type_id,
                     world: &mut *ctx.world,
                     node_id: ctx.node_id.clone(),
                 },
@@ -181,7 +179,6 @@ where
                 world_scoped.deferred_world(move |world| {
                     view_member.rebuild(ViewMemberCtx {
                         index: ctx.index,
-                        type_id: ctx.type_id,
                         world,
                         node_id: ctx.node_id,
                     });

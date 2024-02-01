@@ -651,7 +651,6 @@ where
         Self::unbuild(
             ViewMemberCtx {
                 index: ctx.index,
-                type_id: ctx.type_id,
                 world: &mut *ctx.world,
                 node_id: ctx.node_id,
             },

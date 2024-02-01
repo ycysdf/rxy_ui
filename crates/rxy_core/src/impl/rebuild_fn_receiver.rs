@@ -196,7 +196,6 @@ where
                 if is_build {
                     vm.rebuild(ViewMemberCtx {
                         index,
-                        type_id: TypeId::of::<T>(),
                         world,
                         node_id: node_id.clone(),
                     });
@@ -204,7 +203,6 @@ where
                     vm.build(
                         ViewMemberCtx {
                             index,
-                            type_id: TypeId::of::<T>(),
                             world,
                             node_id: node_id.clone(),
                         },

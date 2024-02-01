@@ -1,5 +1,3 @@
-use core::any::TypeId;
-
 use bevy_utils::synccell::SyncCell;
 use bevy_utils::{all_tuples, HashMap};
 
@@ -72,7 +70,6 @@ macro_rules! impl_view_member_for_tuples {
                 let mut index = ctx.index;
                 $first::unbuild(ViewMemberCtx{
                     index,
-                    type_id: core::any::TypeId::of::<$first>(),
                     world: &mut *ctx.world,
                     node_id: ctx.node_id.clone(),
                 }, view_removed);
@@ -80,7 +77,6 @@ macro_rules! impl_view_member_for_tuples {
                 $(
                 $ty::unbuild(ViewMemberCtx{
                     index,
-                    type_id: core::any::TypeId::of::<$ty>(),
                     world: &mut *ctx.world,
                     node_id: ctx.node_id.clone(),
                 }, view_removed);
@@ -93,7 +89,6 @@ macro_rules! impl_view_member_for_tuples {
 					let ([<$first:lower>], $([<$ty:lower>],)*) = self;
                     [<$first:lower>].build(ViewMemberCtx{
                         index,
-                        type_id: core::any::TypeId::of::<$first>(),
                         world: &mut *ctx.world,
                         node_id: ctx.node_id.clone(),
                     },will_rebuild);
@@ -102,7 +97,6 @@ macro_rules! impl_view_member_for_tuples {
 
                     [<$ty:lower>].build(ViewMemberCtx{
                         index,
-                        type_id: core::any::TypeId::of::<$ty>(),
                         world: &mut *ctx.world,
                         node_id: ctx.node_id.clone(),
                     },will_rebuild);
@@ -118,7 +112,6 @@ macro_rules! impl_view_member_for_tuples {
 					let ([<$first:lower>], $([<$ty:lower>],)*) = self;
                     [<$first:lower>].rebuild(ViewMemberCtx{
                         index,
-                        type_id: core::any::TypeId::of::<$first>(),
                         world: &mut *ctx.world,
                         node_id: ctx.node_id.clone(),
                     });
@@ -126,7 +119,6 @@ macro_rules! impl_view_member_for_tuples {
                     $(
                     [<$ty:lower>].rebuild(ViewMemberCtx{
                         index,
-                        type_id: core::any::TypeId::of::<$ty>(),
                         world: &mut *ctx.world,
                         node_id: ctx.node_id.clone(),
                     });
@@ -140,34 +132,9 @@ macro_rules! impl_view_member_for_tuples {
 
 all_tuples!(impl_view_member_for_tuples, 1, 12, M);
 
-pub struct TypeIdHashMapState<S: Send + 'static>(pub SyncCell<HashMap<TypeId, S>>);
 pub struct MemberHashMapState<S: Send + 'static>(pub SyncCell<HashMap<ViewMemberIndex, S>>);
 
 impl<'a, R: Renderer> ViewMemberCtx<'a, R> {
-    pub fn view_member_state_mut<S: Send + 'static>(&mut self) -> Option<&mut S> {
-        R::get_state_mut::<TypeIdHashMapState<S>>(self.world, &self.node_id)
-            .and_then(|s| s.0.get().get_mut(&self.type_id))
-    }
-    pub fn take_view_member_state<S: Send + 'static>(&mut self) -> Option<S> {
-        R::get_state_mut::<TypeIdHashMapState<S>>(self.world, &self.node_id)
-            .and_then(|s| s.0.get().remove(&self.type_id))
-    }
-    pub fn set_view_member_state<S: Send + 'static>(&mut self, state: S) {
-        if let Some(map) =
-            R::get_state_mut::<TypeIdHashMapState<S>>(&mut *self.world, &self.node_id)
-        {
-            map.0.get().insert(self.type_id, state);
-        } else {
-            let mut map = HashMap::default();
-            map.insert(self.type_id, state);
-            R::set_state(
-                &mut *self.world,
-                &self.node_id,
-                TypeIdHashMapState(SyncCell::new(map)),
-            );
-        }
-    }
-
     pub fn indexed_view_member_state_mut<S: Send + 'static>(&mut self) -> Option<&mut S> {
         R::get_state_mut::<MemberHashMapState<S>>(self.world, &self.node_id)
             .and_then(|s| s.0.get().get_mut(&self.index))
