@@ -14,7 +14,11 @@ use xy_reactive::effect::ErasureEffect;
 use xy_reactive::prelude::create_render_effect;
 use xy_reactive::render_effect::RenderEffect;
 
-use crate::{BuildState, DeferredWorldScoped, IntoView, MemberOwner, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewReBuilder};
+use crate::{
+    BuildState, DeferredWorldScoped, IntoView, MemberOwner, Renderer, RendererNodeId,
+    RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
+    ViewReBuilder,
+};
 
 struct FnOnceCell<'a, I, T> {
     func: Option<Box<dyn FnOnce(I) -> T + 'a>>,
@@ -78,9 +82,8 @@ where
         VM::count()
     }
 
-    fn unbuild(mut ctx: ViewMemberCtx<R>) {
-        let _ = ctx.take_view_member_state::<ReactiveDisposerState>();
-        VM::unbuild(ctx);
+    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
+        VM::unbuild(ctx, view_removed);
     }
 
     fn build(self, mut ctx: ViewMemberCtx<R>, _will_rebuild: bool) {
@@ -239,9 +242,8 @@ where
             parent: ctx.parent.clone(),
         });
         let f = self.0;
-        let (reserve_key, reserve_disposer) = reserve_key
-            .map(|n| (n.key, n.disposer_state_node_id))
-            .unzip();
+        let (reserve_key, reserve_disposer) =
+            reserve_key.map(|n| (n.key, n.disposer_state_node_id)).unzip();
         let _effect = create_effect_with_init(
             f,
             |f: IV| {
@@ -261,9 +263,7 @@ where
         );
         let view_key = _effect.with_value_mut(|n| n.clone()).unwrap();
         let disposer_state_node_id = reserve_disposer.unwrap_or_else(|| {
-            view_key
-                .state_node_id()
-                .unwrap_or_else(|| R::spawn_data_node(ctx.world))
+            view_key.state_node_id().unwrap_or_else(|| R::spawn_data_node(ctx.world))
         });
         R::set_state::<ReactiveDisposerState>(
             ctx.world,

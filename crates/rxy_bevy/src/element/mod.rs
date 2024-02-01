@@ -5,8 +5,9 @@ use bevy_ui::{widget::Button, FocusPolicy, Interaction};
 use rxy_bevy_element::{all_attrs, elements, ElementType};
 use rxy_bevy_macro::BevyIntoView;
 use rxy_core::{
-    view_children, Element, ElementView, ElementViewChildren, IntoView, MemberOwner,
-    RendererElementType, RendererNodeId, RendererWorld, SoloView, View, ViewCtx, ViewMember,
+    view_children, Element, ElementView, ElementViewChildren, ElementViewKey, IntoView,
+    MemberOwner, RendererElementType, RendererNodeId, RendererWorld, SoloView, View, ViewCtx,
+    ViewMember,
 };
 
 use crate::{x_bundle, BevyRenderer, BevyWrapper, Focusable, ViewAttr, XBundle};
@@ -105,29 +106,13 @@ where
         BevyElement::<E, ()>(Element::<BevyRenderer, BevyWrapper<E>, ()>::default())
     }
 }
-/*
-impl<E, VM: ViewMember<BevyRenderer>>
-    Into<Element<BevyRenderer, BevyWrapper<E>, Box<dyn DynamicViewMember<BevyRenderer>>>>
-    for BevyElement<E, VM>
-where
-    E: ElementType,
-{
-    fn into(
-        self,
-    ) -> Element<BevyRenderer, BevyWrapper<E>, Box<dyn DynamicViewMember<BevyRenderer>>> {
-        Element {
-            members: self.0.members.into_dynamic(),
-            _marker: self.0._marker,
-        }
-    }
-}
-*/
+
 impl<E, VM> View<BevyRenderer> for BevyElement<E, VM>
 where
     E: ElementType,
     VM: ViewMember<BevyRenderer>,
 {
-    type Key = RendererNodeId<BevyRenderer>;
+    type Key = ElementViewKey<BevyRenderer, VM>;
 
     #[inline]
     fn build(
@@ -151,7 +136,7 @@ where
     VM: ViewMember<BevyRenderer>,
 {
     fn node_id(key: &Self::Key) -> &RendererNodeId<BevyRenderer> {
-        key
+        &key.0
     }
 }
 
@@ -161,7 +146,7 @@ where
     VM: ViewMember<BevyRenderer>,
 {
     fn element_node_id(key: &Self::Key) -> &RendererNodeId<BevyRenderer> {
-        key
+        &key.0
     }
 }
 

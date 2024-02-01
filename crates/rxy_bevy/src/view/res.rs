@@ -2,7 +2,10 @@ use core::marker::PhantomData;
 
 use bevy_ecs::prelude::Entity;
 use bevy_ecs::system::Resource;
-use rxy_core::{prelude::{ViewMember, ViewMemberCtx}, DeferredWorldScoped, Renderer, View, ViewCtx, ViewKey, ViewMemberIndex};
+use rxy_core::{
+    prelude::{ViewMember, ViewMemberCtx},
+    DeferredWorldScoped, Renderer, View, ViewCtx, ViewKey, ViewMemberIndex,
+};
 
 use crate::{BevyRenderer, ResChangeWorldExt};
 use rxy_core::IntoView;
@@ -171,8 +174,8 @@ where
         VM::count()
     }
 
-    fn unbuild(ctx: ViewMemberCtx<BevyRenderer>) {
-        VM::unbuild(ctx)
+    fn unbuild(ctx: ViewMemberCtx<BevyRenderer>, view_removed: bool) {
+        VM::unbuild(ctx, view_removed)
     }
 
     fn build(self, ctx: ViewMemberCtx<BevyRenderer>, will_rebuild: bool) {

@@ -23,19 +23,25 @@ where
         T::count() + E::count()
     }
 
-    fn unbuild(ctx: ViewMemberCtx<R>) {
-        T::unbuild(ViewMemberCtx {
-            index: ctx.index,
-            type_id: core::any::TypeId::of::<T>(),
-            world: &mut *ctx.world,
-            node_id: ctx.node_id.clone(),
-        });
-        E::unbuild(ViewMemberCtx {
-            index: ctx.index + T::count(),
-            type_id: core::any::TypeId::of::<E>(),
-            world: ctx.world,
-            node_id: ctx.node_id,
-        });
+    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
+        T::unbuild(
+            ViewMemberCtx {
+                index: ctx.index,
+                type_id: core::any::TypeId::of::<T>(),
+                world: &mut *ctx.world,
+                node_id: ctx.node_id.clone(),
+            },
+            view_removed,
+        );
+        E::unbuild(
+            ViewMemberCtx {
+                index: ctx.index + T::count(),
+                type_id: core::any::TypeId::of::<E>(),
+                world: ctx.world,
+                node_id: ctx.node_id,
+            },
+            view_removed,
+        );
     }
 
     fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {

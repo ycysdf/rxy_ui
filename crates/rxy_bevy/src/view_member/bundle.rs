@@ -18,7 +18,10 @@ where
         1
     }
 
-    fn unbuild(ctx: ViewMemberCtx<BevyRenderer>) {
+    fn unbuild(ctx: ViewMemberCtx<BevyRenderer>, view_removed: bool) {
+        if view_removed {
+            return;
+        }
         let entity = ctx.node_id;
         ctx.world.entity_mut(entity).remove::<T>();
     }

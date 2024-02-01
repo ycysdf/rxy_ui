@@ -1,144 +1,371 @@
 use core::{
+    fmt::Debug,
     hash::Hash,
     marker::PhantomData,
     ops::{Deref, DerefMut},
 };
+use std::iter::once;
 
 use bevy_a11y::Focus;
 use bevy_app::PreUpdate;
+use bevy_derive::{Deref, DerefMut};
 use bevy_ecs::{
     prelude::{Commands, Entity, IntoSystem, Res, Resource, World},
     system::SystemId,
 };
 use bevy_input::{
-    gamepad::{Gamepad, GamepadButton},
+    gamepad::GamepadButton,
     keyboard::KeyCode,
     mouse::MouseButton,
     Input, InputSystem,
 };
 use bevy_mod_picking::prelude::*;
-use bevy_utils::{EntityHashMap, HashMap};
+use bevy_reflect::Reflect;
+use bevy_utils::tracing::error;
+use bevy_utils::{all_tuples, EntityHashMap, HashMap};
 use rxy_core::{
-    prelude::{MemberOwner, Renderer, ViewMember, ViewMemberCtx},
-    RendererNodeId,
+    prelude::{MemberOwner, ViewMember, ViewMemberCtx},
+    Renderer, RendererNodeId, RendererWorld,
 };
 
-use crate::{add_system, BevyRenderer, MemberOwnerBundleExt};
+use crate::{add_system, BevyRenderer};
 
-pub trait FocusEventWorldExt {
-    fn add_focus_event<S>(
-        &mut self,
-        node_id: RendererNodeId<BevyRenderer>,
-        input: FocusEventType,
-        input_way: InputWay,
-        system: S,
-    ) where
-        S: IntoSystem<(), (), M>;
-}
-
-#[inline]
-pub fn add_focus_input_events_system<T>(world: &mut World)
-where
+fn add_focus_event<T>(
+    world: &mut RendererWorld<BevyRenderer>,
+    node_id: RendererNodeId<BevyRenderer>,
+    input: T,
+    input_way: FocusInputTriggerWay,
+    system_id: SystemId,
+) where
     T: Copy + Eq + Hash + Send + Sync + 'static,
     FocusInputEvents<T>: Resource,
 {
-    add_system(
-        world,
-        PreUpdate,
-        FocusInputEvents::<T>::system_handle
-            .after(InputSystem)
-            .run_if(|events: Res<FocusInputEvents<T>>| !events.is_empty()),
-    )
+    use bevy_ecs::schedule::IntoSystemConfigs;
+
+    let is_add_system = world.contains_resource::<FocusInputEvents<T>>();
+
+    let mut focus_input_events = world.get_resource_or_insert_with(FocusInputEvents::<T>::default);
+
+    let events = focus_input_events.entry(node_id).or_default();
+    events.entry((input, input_way)).or_default().push(system_id);
+
+    if !is_add_system {
+        add_system(
+            world,
+            PreUpdate,
+            FocusInputEvents::<T>::system_handle
+                .after(InputSystem)
+                .run_if(|events: Res<FocusInputEvents<T>>| !events.is_empty()),
+        );
+    }
+}
+
+fn add_bubble_event<T>(
+    world: &mut RendererWorld<BevyRenderer>,
+    node_id: RendererNodeId<BevyRenderer>,
+    system_id: SystemId,
+    stop_propagation: bool,
+    mut filter: Option<impl FnMut(&T) -> bool + Send + Sync + 'static>,
+) where
+    T: EntityEvent,
+{
+    let mut entity_world_mut = world.entity_mut(node_id);
+    if entity_world_mut.contains::<On<T>>() {
+        let system_ids = BevyRenderer::get_or_insert_default_state_by_entity_mut::<
+            BubbleEventSystemIds,
+        >(&mut entity_world_mut);
+        system_ids.push(system_id);
+    } else {
+        entity_world_mut.world_scope(|world| {
+            BevyRenderer::set_state(
+                world,
+                &node_id,
+                BubbleEventSystemIds(smallvec::SmallVec::from_elem(system_id, 1)),
+            );
+        });
+        entity_world_mut.insert(On::<T>::run(move |world: &mut World| {
+            let mut listerner = world.resource_mut::<ListenerInput<T>>();
+            let data: &T = listerner.deref();
+            if let Some(filter) = &mut filter {
+                if !filter(data) {
+                    return;
+                }
+            }
+            if stop_propagation {
+                listerner.stop_propagation();
+            }
+
+            BevyRenderer::state_scoped(
+                world,
+                &node_id,
+                |world, system_ids: &mut BubbleEventSystemIds| {
+                    for system_id in system_ids.iter() {
+                        let err = world.run_system(*system_id);
+                        if let Err(err) = err {
+                            error!("run system error: {:?}", err);
+                        }
+                    }
+                },
+            );
+        }));
+    }
+}
+
+pub trait FocusEventWorldExt {
+    fn add_focus_event(
+        &mut self,
+        node_id: RendererNodeId<BevyRenderer>,
+        input: FocusInputEvent,
+        input_way: FocusInputTriggerWay,
+        system_id: SystemId,
+    );
+    fn add_bubble_event(
+        &mut self,
+        node_id: RendererNodeId<BevyRenderer>,
+        event: BubblePointerEvent,
+        stop_propagation: bool,
+        system_id: SystemId,
+    );
+    fn add_event(
+        &mut self,
+        node_id: RendererNodeId<BevyRenderer>,
+        event: ElementEventId,
+        system_id: SystemId,
+    );
+    fn remove_event(
+        &mut self,
+        node_id: RendererNodeId<BevyRenderer>,
+        event: ElementEventId,
+        system_id: SystemId,
+    );
 }
 
 impl FocusEventWorldExt for World {
-    fn add_focus_event<M>(
+    fn add_focus_event(
         &mut self,
         node_id: RendererNodeId<BevyRenderer>,
-        input: FocusEventType,
-        input_way: InputWay,
-        system: impl IntoSystem<(), (), M>,
+        focus_event: FocusInputEvent,
+        trigger_way: FocusInputTriggerWay,
+        system_id: SystemId,
     ) {
-        use bevy_ecs::schedule::IntoSystemConfigs;
-
-        let is_add_system = match input {
-            FocusEventType::Keyboard(_) => self.contains_resource::<FocusInputEvents<KeyCode>>(),
-            FocusEventType::Mouse(_) => self.contains_resource::<FocusInputEvents<MouseButton>>(),
-            FocusEventType::Gamepad(_) => {
-                self.contains_resource::<FocusInputEvents<GamepadButton>>()
+        match focus_event {
+            FocusInputEvent::Keyboard(input) => {
+                add_focus_event(self, node_id, input, trigger_way, system_id)
             }
-        };
-        let system_id = self.register_system(system);
+            FocusInputEvent::Mouse(input) => {
+                add_focus_event(self, node_id, input, trigger_way, system_id)
+            }
+            FocusInputEvent::Gamepad(input) => {
+                add_focus_event(self, node_id, input, trigger_way, system_id)
+            }
+        }
+    }
+    fn add_bubble_event(
+        &mut self,
+        node_id: RendererNodeId<BevyRenderer>,
+        event: BubblePointerEvent,
+        stop_propagation: bool,
+        system_id: SystemId,
+    ) {
+        match event {
+            BubblePointerEvent::Over => add_bubble_event::<Pointer<Over>>(
+                self,
+                node_id,
+                system_id,
+                stop_propagation,
+                Some(always_true),
+            ),
+            BubblePointerEvent::Out => add_bubble_event::<Pointer<Over>>(
+                self,
+                node_id,
+                system_id,
+                stop_propagation,
+                Some(always_true),
+            ),
+            BubblePointerEvent::Down(data) => add_bubble_event::<Pointer<Down>>(
+                self,
+                node_id,
+                system_id,
+                stop_propagation,
+                data.map(|data| move |d: &Pointer<Down>| d.button == data),
+            ),
+            BubblePointerEvent::Up(data) => add_bubble_event::<Pointer<Up>>(
+                self,
+                node_id,
+                system_id,
+                stop_propagation,
+                data.map(|data| move |d: &Pointer<Up>| d.button == data),
+            ),
+            BubblePointerEvent::Click(data) => add_bubble_event::<Pointer<Click>>(
+                self,
+                node_id,
+                system_id,
+                stop_propagation,
+                data.map(|data| move |d: &Pointer<Click>| d.button == data),
+            ),
+            BubblePointerEvent::Move => add_bubble_event::<Pointer<Move>>(
+                self,
+                node_id,
+                system_id,
+                stop_propagation,
+                Some(always_true),
+            ),
+            BubblePointerEvent::DragStart(data) => add_bubble_event::<Pointer<DragStart>>(
+                self,
+                node_id,
+                system_id,
+                stop_propagation,
+                data.map(|data| move |d: &Pointer<DragStart>| d.button == data),
+            ),
+            BubblePointerEvent::Drag(data) => add_bubble_event::<Pointer<Drag>>(
+                self,
+                node_id,
+                system_id,
+                stop_propagation,
+                data.map(|data| move |d: &Pointer<Drag>| d.button == data),
+            ),
+            BubblePointerEvent::DragEnd(data) => add_bubble_event::<Pointer<DragEnd>>(
+                self,
+                node_id,
+                system_id,
+                stop_propagation,
+                data.map(|data| move |d: &Pointer<DragEnd>| d.button == data),
+            ),
+            BubblePointerEvent::DragEnter(data) => add_bubble_event::<Pointer<DragEnter>>(
+                self,
+                node_id,
+                system_id,
+                stop_propagation,
+                data.map(|data| move |d: &Pointer<DragEnter>| d.button == data),
+            ),
+            BubblePointerEvent::DragOver(data) => add_bubble_event::<Pointer<DragOver>>(
+                self,
+                node_id,
+                system_id,
+                stop_propagation,
+                data.map(|data| move |d: &Pointer<DragOver>| d.button == data),
+            ),
+            BubblePointerEvent::DragLeave(data) => add_bubble_event::<Pointer<DragLeave>>(
+                self,
+                node_id,
+                system_id,
+                stop_propagation,
+                data.map(|data| move |d: &Pointer<DragLeave>| d.button == data),
+            ),
+            BubblePointerEvent::Drop(data) => add_bubble_event::<Pointer<Drop>>(
+                self,
+                node_id,
+                system_id,
+                stop_propagation,
+                data.map(|data| move |d: &Pointer<Drop>| d.button == data),
+            ),
+        }
+    }
 
-        let mut focus_input_events = self.get_resource_or_insert_with(FocusInputEvents::default);
+    fn add_event(
+        &mut self,
+        node_id: RendererNodeId<BevyRenderer>,
+        event: ElementEventId,
+        system_id: SystemId,
+    ) {
+        match event {
+            ElementEventId::NoBubble {
+                focus_input_event,
+                trigger_way,
+            } => self.add_focus_event(node_id, focus_input_event, trigger_way, system_id),
+            ElementEventId::Bubble {
+                event,
+                stop_propagation,
+            } => self.add_bubble_event(node_id, event, stop_propagation, system_id),
+        }
+    }
 
-        let events = focus_input_events.entry(node_id).or_default();
-        events.entry((input, input_way)).or_default().push(system_id);
-
-        if !is_add_system {
-            match input {
-                FocusEventType::Keyboard(_) => add_focus_input_events_system::<KeyCode>(self),
-                FocusEventType::Mouse(_) => {
-                    self.contains_resource::<FocusInputEvents<MouseButton>>()
+    fn remove_event(
+        &mut self,
+        node_id: RendererNodeId<BevyRenderer>,
+        event: ElementEventId,
+        system_id: SystemId,
+    ) {
+        match event {
+            ElementEventId::NoBubble {
+                focus_input_event,
+                trigger_way,
+            } => match focus_input_event {
+                FocusInputEvent::Keyboard(data) => {
+                    self.resource_mut::<FocusInputEvents<KeyCode>>()
+                        .remove_node_events(&node_id, &(data, trigger_way));
                 }
-                FocusEventType::Gamepad(_) => {
-                    self.contains_resource::<FocusInputEvents<GamepadButton>>()
+                FocusInputEvent::Mouse(data) => {
+                    self.resource_mut::<FocusInputEvents<MouseButton>>()
+                        .remove_node_events(&node_id, &(data, trigger_way));
                 }
+                FocusInputEvent::Gamepad(data) => {
+                    self.resource_mut::<FocusInputEvents<GamepadButton>>()
+                        .remove_node_events(&node_id, &(data, trigger_way));
+                }
+            },
+            ElementEventId::Bubble { .. } => {
+                let system_ids =
+                    BevyRenderer::get_state_mut::<BubbleEventSystemIds>(self, &node_id).unwrap();
+                system_ids.retain(|n| *n == system_id);
             }
         }
     }
 }
 
-pub trait IntoElementEventId {
-    fn into(self) -> impl Iterator<Item = ElementEventId>;
+pub fn always_true<T>(_: &T) -> bool {
+    true
 }
 
+#[derive(Default, Debug, Clone, PartialEq, Eq, Hash, DerefMut, Deref)]
+pub struct BubbleEventSystemIds(smallvec::SmallVec<[SystemId; 2]>);
+
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum ElementEventId {
     NoBubble {
-        input_event: FocusEventType,
-        input_way: InputWay,
+        focus_input_event: FocusInputEvent,
+        trigger_way: FocusInputTriggerWay,
     },
-    Bubble(PointerKey),
+    Bubble {
+        event: BubblePointerEvent,
+        stop_propagation: bool,
+    },
 }
 
-impl ElementEventId {
-    pub fn add(self, ctx: ViewMemberCtx<BevyRenderer>, system_id: SystemId) {}
-}
-
-pub enum FocusEventType {
+#[derive(Debug, Hash, PartialEq, Eq, Clone, Copy, Reflect)]
+#[reflect(Debug, Hash, PartialEq)]
+pub enum FocusInputEvent {
     Keyboard(KeyCode),
     Mouse(MouseButton),
     Gamepad(GamepadButton),
 }
 
-pub enum PointerKey {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
+pub enum BubblePointerEvent {
     Over,
     Out,
-    Down(PointerButton),
-    Up(PointerButton),
-    Click(PointerButton),
+    Down(Option<PointerButton>),
+    Up(Option<PointerButton>),
+    Click(Option<PointerButton>),
     Move,
-    DragStart(PointerButton),
-    Drag(PointerButton),
-    DragEnd(PointerButton),
-    DragEnter(PointerButton),
-    DragOver(PointerButton),
-    DragLeave(PointerButton),
-    Drop(PointerButton),
+    DragStart(Option<PointerButton>),
+    Drag(Option<PointerButton>),
+    DragEnd(Option<PointerButton>),
+    DragEnter(Option<PointerButton>),
+    DragOver(Option<PointerButton>),
+    DragLeave(Option<PointerButton>),
+    Drop(Option<PointerButton>),
 }
 
-// pub trait InputEventSeter {
-//     fn add(self,system_id: SystemId);
-// }
-
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-pub enum InputWay {
+pub enum FocusInputTriggerWay {
     JustPressed,
     JustReleased,
     Pressed,
 }
 
-type EntityFocusInputEvents<T> = HashMap<(T, InputWay), smallvec::SmallVec<[SystemId; 1]>>;
+type EntityFocusInputEvents<T> =
+    HashMap<(T, FocusInputTriggerWay), smallvec::SmallVec<[SystemId; 1]>>;
 type FocusInputEventsInner<T> = EntityHashMap<Entity, EntityFocusInputEvents<T>>;
 
 #[derive(Resource)]
@@ -158,6 +385,17 @@ impl<T> FocusInputEvents<T>
 where
     T: Copy + Eq + Hash + Send + Sync + 'static,
 {
+    pub fn remove_node_all_events(&mut self, node_id: &RendererNodeId<BevyRenderer>) {
+        self.remove(node_id);
+    }
+    pub fn remove_node_events(
+        &mut self,
+        node_id: &RendererNodeId<BevyRenderer>,
+        key: &(T, FocusInputTriggerWay),
+    ) {
+        self.get_mut(node_id).unwrap().remove(key);
+    }
+
     pub fn system_handle(
         registers: Res<FocusInputEvents<T>>,
         event_reader: Res<Input<T>>,
@@ -172,9 +410,9 @@ where
         };
         for ((input, input_way), system_ids) in systems.iter() {
             if match input_way {
-                InputWay::JustPressed => event_reader.just_pressed(*input),
-                InputWay::JustReleased => event_reader.just_released(*input),
-                InputWay::Pressed => event_reader.pressed(*input),
+                FocusInputTriggerWay::JustPressed => event_reader.just_pressed(*input),
+                FocusInputTriggerWay::JustReleased => event_reader.just_released(*input),
+                FocusInputTriggerWay::Pressed => event_reader.pressed(*input),
             } {
                 for system_id in system_ids {
                     commands.run_system(*system_id);
@@ -205,18 +443,171 @@ where
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct FocusInputEventMemberState(SystemId);
+pub struct FocusInputEventMemberState<T>(SystemId, T);
+
+pub trait FocusInputEventIterator: 'static {
+    fn iter_events(self) -> impl Iterator<Item = FocusInputEvent> + Send + Clone + 'static;
+}
+
+macro_rules! impl_focus_input_event_iterator_for_tuples {
+    ($($ty:ident),*) => {
+        #[allow(non_snake_case)]
+        impl<$($ty),*> FocusInputEventIterator for ($($ty,)*)
+            where
+                $($ty: FocusInputEventIterator,)*
+        {
+            fn iter_events(self) -> impl Iterator<Item = FocusInputEvent> + Send + Clone + 'static{
+                let ($($ty,)*) = self;
+                core::iter::empty()
+                    $(
+                        .chain($ty.iter_events())
+                    )*
+            }
+        }
+    }
+}
+
+all_tuples!(impl_focus_input_event_iterator_for_tuples, 0, 4, T);
+
+impl FocusInputEventIterator for KeyCode {
+    fn iter_events(self) -> impl Iterator<Item = FocusInputEvent> + Send + Clone + 'static {
+        once(FocusInputEvent::Keyboard(self))
+    }
+}
+
+impl FocusInputEventIterator for MouseButton {
+    fn iter_events(self) -> impl Iterator<Item = FocusInputEvent> + Send + Clone + 'static {
+        once(FocusInputEvent::Mouse(self))
+    }
+}
+
+impl FocusInputEventIterator for GamepadButton {
+    fn iter_events(self) -> impl Iterator<Item = FocusInputEvent> + Send + Clone + 'static {
+        once(FocusInputEvent::Gamepad(self))
+    }
+}
+
+pub trait ElementEventIdIterator: Clone + Send + 'static {
+    fn iter_event_ids(&self) -> impl Iterator<Item = ElementEventId> + Send;
+}
+
+impl ElementEventIdIterator for ElementEventId {
+    fn iter_event_ids(&self) -> impl Iterator<Item = ElementEventId> + Send {
+        core::iter::once(*self)
+    }
+}
+
+#[derive(Clone)]
+pub struct IntoIteratorWrapper<T>(T);
+
+impl<T> ElementEventIdIterator for IntoIteratorWrapper<T>
+where
+    T: IntoIterator<Item = ElementEventId> + Clone + Send + 'static,
+    T::IntoIter: Send,
+{
+    fn iter_event_ids(&self) -> impl Iterator<Item = ElementEventId> + Send {
+        self.clone().0.into_iter()
+    }
+}
+
+macro_rules! impl_element_evet_id_iterator_for_tuples {
+    ($($ty:ident),*) => {
+        #[allow(non_snake_case)]
+        impl<$($ty),*> ElementEventIdIterator for ($($ty,)*)
+            where
+                $($ty: ElementEventIdIterator,)*
+        {
+            fn iter_event_ids(&self) -> impl Iterator<Item = ElementEventId> + Send {
+                let ($($ty,)*) = self;
+                core::iter::empty()
+                    $(
+                        .chain($ty.iter_event_ids())
+                    )*
+            }
+        }
+    }
+}
+
+all_tuples!(impl_element_evet_id_iterator_for_tuples, 0, 4, T);
+
+pub fn x_trigger_way(
+    trigger_way: FocusInputTriggerWay,
+    events: impl FocusInputEventIterator,
+) -> impl ElementEventIdIterator {
+    IntoIteratorWrapper(events.iter_events().map(move |n| ElementEventId::NoBubble {
+        focus_input_event: n,
+        trigger_way,
+    }))
+}
+
+pub fn x_just_pressed(events: impl FocusInputEventIterator) -> impl ElementEventIdIterator {
+    x_trigger_way(FocusInputTriggerWay::JustPressed, events)
+}
+pub fn x_just_released(events: impl FocusInputEventIterator) -> impl ElementEventIdIterator {
+    x_trigger_way(FocusInputTriggerWay::JustReleased, events)
+}
+pub fn x_pressed(events: impl FocusInputEventIterator) -> impl ElementEventIdIterator {
+    x_trigger_way(FocusInputTriggerWay::Pressed, events)
+}
+
+pub fn x_buble_event(event: BubblePointerEvent) -> ElementEventId {
+    ElementEventId::Bubble {
+        event,
+        stop_propagation: false,
+    }
+}
+pub fn x_pointer_over() -> ElementEventId {
+    x_buble_event(BubblePointerEvent::Over)
+}
+
+pub fn x_pointer_out() -> ElementEventId {
+    x_buble_event(BubblePointerEvent::Out)
+}
+pub fn x_pointer_down() -> ElementEventId {
+    x_buble_event(BubblePointerEvent::Down(None))
+}
+pub fn x_pointer_up() -> ElementEventId {
+    x_buble_event(BubblePointerEvent::Up(None))
+}
+
+pub fn x_pointer_click() -> ElementEventId {
+    x_buble_event(BubblePointerEvent::Click(None))
+}
+
+pub fn x_pointer_move() -> ElementEventId {
+    x_buble_event(BubblePointerEvent::Move)
+}
+pub fn x_pointer_drag_start() -> ElementEventId {
+    x_buble_event(BubblePointerEvent::DragStart(None))
+}
+pub fn x_pointer_drag() -> ElementEventId {
+    x_buble_event(BubblePointerEvent::Drag(None))
+}
+pub fn x_pointer_drag_end() -> ElementEventId {
+    x_buble_event(BubblePointerEvent::DragEnd(None))
+}
+pub fn x_pointer_drag_enter() -> ElementEventId {
+    x_buble_event(BubblePointerEvent::DragEnter(None))
+}
+pub fn x_pointer_drag_over() -> ElementEventId {
+    x_buble_event(BubblePointerEvent::DragOver(None))
+}
+pub fn x_pointer_drag_leave() -> ElementEventId {
+    x_buble_event(BubblePointerEvent::DragLeave(None))
+}
+pub fn x_pointer_drop() -> ElementEventId {
+    x_buble_event(BubblePointerEvent::Drop(None))
+}
 
 pub struct FocusInputEventMember<T, S, M> {
-    input: T,
-    input_way: InputWay,
+    element_event_ids: T,
     system: S,
     _marker: PhantomData<M>,
 }
 
 impl<T, S, M> ViewMember<BevyRenderer> for FocusInputEventMember<T, S, M>
 where
-    T: Copy + Eq + Hash + Send + Sync + 'static,
+    T: ElementEventIdIterator,
     S: IntoSystem<(), (), M> + Send + 'static,
     M: Send + 'static,
 {
@@ -224,42 +615,39 @@ where
         1
     }
 
-    fn unbuild(mut ctx: ViewMemberCtx<BevyRenderer>) {
-        let state = ctx.take_indexed_view_member_state::<FocusInputEventMemberState>().unwrap();
-        let _ = ctx.world.remove_system(state.0);
+    fn unbuild(mut ctx: ViewMemberCtx<BevyRenderer>, _view_removed: bool) {
+        let state = ctx.take_indexed_view_member_state::<FocusInputEventMemberState<T>>().unwrap();
+        for event_id in state.1.iter_event_ids() {
+            ctx.world.remove_event(ctx.node_id, event_id, state.0);
+        }
+        if let Err(err) = ctx.world.remove_system(state.0) {
+            error!("remove_system error: {:?}", err);
+        }
     }
 
     fn build(self, mut ctx: ViewMemberCtx<BevyRenderer>, _will_rebuild: bool) {
-        use bevy_ecs::schedule::IntoSystemConfigs;
-
-        let is_add_system = ctx.world.contains_resource::<FocusInputEvents<T>>();
         let system_id = ctx.world.register_system(self.system);
 
-        let mut focus_input_events =
-            ctx.world.get_resource_or_insert_with(FocusInputEvents::default);
-
-        let events = focus_input_events.entry(ctx.node_id).or_default();
-        events.entry((self.input, self.input_way)).or_default().push(system_id);
-
-        if !is_add_system {
-            add_system(
-                ctx.world,
-                PreUpdate,
-                FocusInputEvents::<T>::system_handle
-                    .after(InputSystem)
-                    .run_if(|events: Res<FocusInputEvents<T>>| !events.is_empty()),
-            );
+        for event_id in self.element_event_ids.iter_event_ids() {
+            ctx.world.add_event(ctx.node_id, event_id, system_id);
         }
-        ctx.set_indexed_view_member_state(FocusInputEventMemberState(system_id));
+
+        ctx.set_indexed_view_member_state(FocusInputEventMemberState(
+            system_id,
+            self.element_event_ids,
+        ));
     }
 
     fn rebuild(self, ctx: ViewMemberCtx<BevyRenderer>) {
-        Self::unbuild(ViewMemberCtx {
-            index: ctx.index,
-            type_id: ctx.type_id,
-            world: &mut *ctx.world,
-            node_id: ctx.node_id,
-        });
+        Self::unbuild(
+            ViewMemberCtx {
+                index: ctx.index,
+                type_id: ctx.type_id,
+                world: &mut *ctx.world,
+                node_id: ctx.node_id,
+            },
+            false,
+        );
         self.build(ctx, true);
     }
 }
@@ -267,28 +655,18 @@ where
 impl<T> ElementKeyboardEvents for T where T: MemberOwner<BevyRenderer> + Sized {}
 
 pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
-    // fn on<EE: EntityEvent, Marker>(
-    //     self,
-    //     system: impl bevy_ecs::prelude::IntoSystem<(), (), Marker>,
-    // ) -> Self::AddMember<XBundle<On<EE>>> {
-    //     use bevy_mod_picking::prelude::*;
-    //     self.bundle(On::<EE>::run(system))
-    // }
-
-    fn on_input_way<T, S, Marker>(
+    fn on<T, S, Marker>(
         self,
-        input: T,
-        input_way: InputWay,
+        element_event_ids: T,
         system: S,
     ) -> Self::AddMember<FocusInputEventMember<T, S, Marker>>
     where
-        T: Copy + Eq + Hash + Send + Sync + 'static,
-        S: bevy_ecs::prelude::IntoSystem<(), (), Marker> + Send + 'static,
+        T: ElementEventIdIterator,
+        S: IntoSystem<(), (), Marker> + Send + 'static,
         Marker: Send + 'static,
     {
         self.member(FocusInputEventMember {
-            input,
-            input_way,
+            element_event_ids,
             system,
             _marker: Default::default(),
         })
@@ -296,23 +674,23 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
 
     fn on_pressed<T, S, Marker>(
         self,
-        input: T,
+        events: impl FocusInputEventIterator,
         system: S,
-    ) -> Self::AddMember<FocusInputEventMember<T, S, Marker>>
+    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIdIterator, S, Marker>>
     where
         T: Copy + Eq + Hash + Send + Sync + 'static,
-        S: bevy_ecs::prelude::IntoSystem<(), (), Marker> + Send + 'static,
+        S: IntoSystem<(), (), Marker> + Send + 'static,
         Marker: Send + 'static,
     {
-        self.on_input_way(input, InputWay::Pressed, system)
+        self.on(x_pressed(events), system)
     }
 
     fn on_return<S, Marker>(
         self,
         system: S,
-    ) -> Self::AddMember<FocusInputEventMember<KeyCode, S, Marker>>
+    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIdIterator, S, Marker>>
     where
-        S: bevy_ecs::prelude::IntoSystem<(), (), Marker> + Send + 'static,
+        S: IntoSystem<(), (), Marker> + Send + 'static,
         Marker: Send + 'static,
     {
         self.on_just_pressed(KeyCode::Return, system)
@@ -321,38 +699,128 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
     fn on_esc<S, Marker>(
         self,
         system: S,
-    ) -> Self::AddMember<FocusInputEventMember<KeyCode, S, Marker>>
+    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIdIterator, S, Marker>>
     where
-        S: bevy_ecs::prelude::IntoSystem<(), (), Marker> + Send + 'static,
+        S: IntoSystem<(), (), Marker> + Send + 'static,
         Marker: Send + 'static,
     {
         self.on_just_pressed(KeyCode::Escape, system)
     }
 
-    fn on_just_pressed<T, S, Marker>(
+    fn on_just_pressed<S, Marker>(
         self,
-        input: T,
+        events: impl FocusInputEventIterator,
         system: S,
-    ) -> Self::AddMember<FocusInputEventMember<T, S, Marker>>
+    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIdIterator, S, Marker>>
     where
-        T: Copy + Eq + Hash + Send + Sync + 'static,
-        S: bevy_ecs::prelude::IntoSystem<(), (), Marker> + Send + 'static,
+        S: IntoSystem<(), (), Marker> + Send + 'static,
         Marker: Send + 'static,
     {
-        self.on_input_way(input, InputWay::JustPressed, system)
+        self.on(x_just_pressed(events), system)
     }
 
-    fn on_just_released<T, S, Marker>(
+    fn on_just_released<S, Marker>(
         self,
-        input: T,
+        events: impl FocusInputEventIterator,
         system: S,
-    ) -> Self::AddMember<FocusInputEventMember<T, S, Marker>>
+    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIdIterator, S, Marker>>
     where
-        T: Copy + Eq + Hash + Send + Sync + 'static,
-        S: bevy_ecs::prelude::IntoSystem<(), (), Marker> + Send + 'static,
+        S: IntoSystem<(), (), Marker> + Send + 'static,
         Marker: Send + 'static,
     {
-        self.on_input_way(input, InputWay::JustReleased, system)
+        self.on(x_just_released(events), system)
+    }
+
+    fn on_pointer_click<S, Marker>(
+        self,
+        system: S,
+    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIdIterator, S, Marker>>
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
+    {
+        self.on(x_pointer_click(), system)
+    }
+
+    fn on_pointer_move<S, Marker>(
+        self,
+        system: S,
+    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIdIterator, S, Marker>>
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
+    {
+        self.on(x_pointer_move(), system)
+    }
+    fn on_pointer_drag_start<S, Marker>(
+        self,
+        system: S,
+    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIdIterator, S, Marker>>
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
+    {
+        self.on(x_pointer_drag_start(), system)
+    }
+    fn on_pointer_drag<S, Marker>(
+        self,
+        system: S,
+    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIdIterator, S, Marker>>
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
+    {
+        self.on(x_pointer_drag(), system)
+    }
+    fn on_pointer_drag_end<S, Marker>(
+        self,
+        system: S,
+    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIdIterator, S, Marker>>
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
+    {
+        self.on(x_pointer_drag_end(), system)
+    }
+    fn on_pointer_drag_enter<S, Marker>(
+        self,
+        system: S,
+    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIdIterator, S, Marker>>
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
+    {
+        self.on(x_pointer_drag_enter(), system)
+    }
+    fn on_pointer_drag_over<S, Marker>(
+        self,
+        system: S,
+    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIdIterator, S, Marker>>
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
+    {
+        self.on(x_pointer_drag_over(), system)
+    }
+    fn on_pointer_drag_leave<S, Marker>(
+        self,
+        system: S,
+    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIdIterator, S, Marker>>
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
+    {
+        self.on(x_pointer_drag_leave(), system)
+    }
+    fn on_pointer_drop<S, Marker>(
+        self,
+        system: S,
+    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIdIterator, S, Marker>>
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
+    {
+        self.on(x_pointer_drop(), system)
     }
 }
 
@@ -363,7 +831,7 @@ macro_rules! impl_element_pointer_events_members {
            paste::paste!{
                pub type [<ListenerInput $name>] = ListenerInput<$name>;
            }
-        )*
+        )*/* 
 
         impl<T> ElementPointerEvents for T
         where
@@ -382,7 +850,7 @@ macro_rules! impl_element_pointer_events_members {
                 }
             )*
         }
-
+ */
     };
 }
 impl_element_pointer_events_members!(

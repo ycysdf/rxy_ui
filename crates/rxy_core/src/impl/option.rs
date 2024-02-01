@@ -1,4 +1,8 @@
-use crate::{to_mutable, virtual_container, IntoView, MutableView, MutableViewKey, Renderer, RendererNodeId, RendererWorld, ToMutableWrapper, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, VirtualContainer, ViewMemberIndex};
+use crate::{
+    to_mutable, virtual_container, IntoView, MutableView, MutableViewKey, Renderer, RendererNodeId,
+    RendererWorld, ToMutableWrapper, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
+    VirtualContainer,
+};
 
 impl<R, V> MutableView<R> for Option<V>
 where
@@ -113,8 +117,8 @@ where
         VM::count()
     }
 
-    fn unbuild(ctx: ViewMemberCtx<R>) {
-        VM::unbuild(ctx);
+    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
+        VM::unbuild(ctx, view_removed);
     }
 
     fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
@@ -126,7 +130,7 @@ where
     fn rebuild(self, ctx: ViewMemberCtx<R>) {
         match self {
             None => {
-                VM::unbuild(ctx);
+                VM::unbuild(ctx, false);
             }
             Some(vm) => {
                 vm.build(ctx, true);

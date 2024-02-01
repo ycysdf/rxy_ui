@@ -16,7 +16,10 @@ where
         1
     }
 
-    fn unbuild(ctx: ViewMemberCtx<BevyRenderer>) {
+    fn unbuild(ctx: ViewMemberCtx<BevyRenderer>, view_removed: bool) {
+        if view_removed {
+            return;
+        }
         ctx.world.unbuild_attr::<EA>(ctx.node_id);
     }
 

@@ -10,7 +10,7 @@ where
     R: Renderer,
 {
     fn count() -> ViewMemberIndex;
-    fn unbuild(ctx: ViewMemberCtx<R>);
+    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool);
     fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool);
     fn rebuild(self, ctx: ViewMemberCtx<R>);
 }
@@ -19,12 +19,11 @@ impl<R> ViewMember<R> for ()
 where
     R: Renderer,
 {
-
     fn count() -> ViewMemberIndex {
         0
     }
 
-    fn unbuild(_ctx: ViewMemberCtx<R>) {}
+    fn unbuild(_ctx: ViewMemberCtx<R>, _view_removed: bool) {}
 
     fn build(self, _ctx: ViewMemberCtx<R>, _will_rebuild: bool) {}
     fn rebuild(self, _ctx: ViewMemberCtx<R>) {}
@@ -36,13 +35,12 @@ where
     R: Renderer,
     T: ViewMember<R>,
 {
-
     fn count() -> ViewMemberIndex {
         T::count()
     }
 
-    fn unbuild(ctx: ViewMemberCtx<R>) {
-        T::unbuild(ctx)
+    fn unbuild(ctx: ViewMemberCtx<R>, view_removed:bool) {
+        T::unbuild(ctx, view_removed)
     }
 
     fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
@@ -70,14 +68,14 @@ macro_rules! impl_view_member_for_tuples {
                 $first::count() $(+ $ty::count())*
             }
 
-            fn unbuild(ctx: ViewMemberCtx<R>) {
+            fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
                 let mut index = ctx.index;
                 $first::unbuild(ViewMemberCtx{
                     index,
                     type_id: core::any::TypeId::of::<$first>(),
                     world: &mut *ctx.world,
                     node_id: ctx.node_id.clone(),
-                });
+                }, view_removed);
                 index += $first::count();
                 $(
                 $ty::unbuild(ViewMemberCtx{
@@ -85,7 +83,7 @@ macro_rules! impl_view_member_for_tuples {
                     type_id: core::any::TypeId::of::<$ty>(),
                     world: &mut *ctx.world,
                     node_id: ctx.node_id.clone(),
-                });
+                }, view_removed);
                 index += $ty::count();
                 )*
             }
@@ -193,5 +191,4 @@ impl<'a, R: Renderer> ViewMemberCtx<'a, R> {
             );
         }
     }
-
 }

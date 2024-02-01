@@ -68,27 +68,36 @@ fn schema_main_menu() -> impl IntoView<BevyRenderer> {
             x_focus().outline_width(2).outline_offset(2).outline_color(COLOR_PRIMARY),
         )),
         div().style(x().size_screen().center()).children(
-            div().style(x().flex_col().gap(8).padding(20)).children((
-                button()
-                    .style(MenuBtnStyle)
-                    .children("New Game")
-                    .on_just_pressed(KeyCode::Return, || {
-                        println!("Enter");
-                    })
-                    .on_pointer_click(|mut next_state: ResMut<NextState<GameState>>| {
-                        next_state.set(GameState::InGame);
-                    }),
-                button().style(MenuBtnStyle).children("Setting").on_pointer_click(
-                    |mut next_state: ResMut<NextState<GameState>>| {
-                        next_state.set(GameState::Setting);
-                    },
-                ),
-                button().style(MenuBtnStyle).children("Exit").on_pointer_click(
-                    |mut app_exit: EventWriter<AppExit>| {
-                        app_exit.send(AppExit);
-                    },
-                ),
-            )),
+            div().style(x().flex_col().gap(8).padding(20)).children({
+                let x_confirm = (
+                    x_just_pressed(KeyCode::Return),
+                    x_just_pressed(GamepadButton::new(
+                        Gamepad::new(1),
+                        GamepadButtonType::West,
+                    )),
+                    x_pointer_click(),
+                );
+                (
+                    button().style(MenuBtnStyle).children("New Game").on(
+                        x_confirm.clone(),
+                        |mut next_state: ResMut<NextState<GameState>>| {
+                            next_state.set(GameState::InGame);
+                        },
+                    ),
+                    button().style(MenuBtnStyle).children("Setting").on(
+                        x_confirm.clone(),
+                        |mut next_state: ResMut<NextState<GameState>>| {
+                            next_state.set(GameState::Setting);
+                        },
+                    ),
+                    button().style(MenuBtnStyle).children("Exit").on(
+                        x_confirm.clone(),
+                        |mut app_exit: EventWriter<AppExit>| {
+                            app_exit.send(AppExit);
+                        },
+                    ),
+                )
+            }),
         ),
     )
 }

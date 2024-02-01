@@ -2,7 +2,10 @@ use alloc::boxed::Box;
 use core::any::TypeId;
 use core::marker::PhantomData;
 
-use crate::{ElementView, IntoElementView, IntoView, MemberOwner, MutableView, Renderer, RendererNodeId, SoloView, View, ViewCtx, ViewMember, ViewMemberCtx, ViewMemberIndex};
+use crate::{
+    ElementView, IntoElementView, IntoView, MemberOwner, MutableView, Renderer, RendererNodeId,
+    SoloView, View, ViewCtx, ViewMember, ViewMemberCtx, ViewMemberIndex,
+};
 
 #[derive(Clone)]
 pub struct Builder<R, F>(pub F, PhantomData<R>);
@@ -86,17 +89,19 @@ where
     }
 }
 
-impl<R, F, U> ViewMember<R> for Builder<R, F>
+impl<R, F, VM> ViewMember<R> for Builder<R, F>
 where
-    F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> U + Send + 'static,
+    F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> VM + Send + 'static,
     R: Renderer,
-    U: ViewMember<R>,
+    VM: ViewMember<R>,
 {
     fn count() -> ViewMemberIndex {
         1
     }
 
-    fn unbuild(_ctx: ViewMemberCtx<R>) {}
+    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
+        VM::unbuild(ctx, view_removed)
+    }
 
     fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
         self.0(
@@ -114,7 +119,7 @@ where
         .build(
             ViewMemberCtx {
                 index: ctx.index,
-                type_id: TypeId::of::<U>(),
+                type_id: TypeId::of::<VM>(),
                 world: &mut *ctx.world,
                 node_id: ctx.node_id,
             },
@@ -137,7 +142,7 @@ where
         )
         .rebuild(ViewMemberCtx {
             index: ctx.index,
-            type_id: TypeId::of::<U>(),
+            type_id: TypeId::of::<VM>(),
             world: &mut *ctx.world,
             node_id: ctx.node_id,
         })

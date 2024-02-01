@@ -2,7 +2,11 @@ use core::any::TypeId;
 
 use crate::either::{Either, EitherExt};
 use crate::mutable_view::{MutableView, MutableViewKey};
-use crate::{to_mutable, virtual_container, IntoView, Renderer, RendererNodeId, RendererWorld, ToMutableWrapper, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, VirtualContainer, ViewMemberIndex};
+use crate::{
+    to_mutable, virtual_container, IntoView, Renderer, RendererNodeId, RendererWorld,
+    ToMutableWrapper, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
+    VirtualContainer,
+};
 
 impl<R, LV, RV> MutableView<R> for Either<LV, RV>
 where
@@ -148,19 +152,25 @@ where
         LVM::count() + LVM::count()
     }
 
-    fn unbuild(ctx: ViewMemberCtx<R>) {
-        LVM::unbuild(ViewMemberCtx {
-            index: ctx.index,
-            type_id: TypeId::of::<LVM>(),
-            world: &mut *ctx.world,
-            node_id: ctx.node_id.clone(),
-        });
-        RVM::unbuild(ViewMemberCtx {
-            index: ctx.index + LVM::count(),
-            type_id: TypeId::of::<RVM>(),
-            world: ctx.world,
-            node_id: ctx.node_id,
-        });
+    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
+        LVM::unbuild(
+            ViewMemberCtx {
+                index: ctx.index,
+                type_id: TypeId::of::<LVM>(),
+                world: &mut *ctx.world,
+                node_id: ctx.node_id.clone(),
+            },
+            view_removed,
+        );
+        RVM::unbuild(
+            ViewMemberCtx {
+                index: ctx.index + LVM::count(),
+                type_id: TypeId::of::<RVM>(),
+                world: ctx.world,
+                node_id: ctx.node_id,
+            },
+            view_removed,
+        );
     }
 
     fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
@@ -173,21 +183,27 @@ where
     fn rebuild(self, ctx: ViewMemberCtx<R>) {
         match self {
             Either::Left(l) => {
-                RVM::unbuild(ViewMemberCtx {
-                    index: ctx.index + LVM::count(),
-                    type_id: TypeId::of::<RVM>(),
-                    world: &mut *ctx.world,
-                    node_id: ctx.node_id.clone(),
-                });
+                RVM::unbuild(
+                    ViewMemberCtx {
+                        index: ctx.index + LVM::count(),
+                        type_id: TypeId::of::<RVM>(),
+                        world: &mut *ctx.world,
+                        node_id: ctx.node_id.clone(),
+                    },
+                    false,
+                );
                 l.rebuild(ctx);
             }
             Either::Right(r) => {
-                LVM::unbuild(ViewMemberCtx {
-                    index: ctx.index,
-                    type_id: TypeId::of::<LVM>(),
-                    world: &mut *ctx.world,
-                    node_id: ctx.node_id.clone(),
-                });
+                LVM::unbuild(
+                    ViewMemberCtx {
+                        index: ctx.index,
+                        type_id: TypeId::of::<LVM>(),
+                        world: &mut *ctx.world,
+                        node_id: ctx.node_id.clone(),
+                    },
+                    false,
+                );
                 r.rebuild(ctx)
             }
         }

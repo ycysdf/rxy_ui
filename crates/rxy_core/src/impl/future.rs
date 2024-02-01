@@ -1,10 +1,13 @@
 use crate::build_info::{build_info_is_contained, build_times_increment};
 use crate::renderer::DeferredWorldScoped;
-use crate::{BuildState, IntoView, Renderer, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex};
+use crate::{
+    BuildState, IntoView, Renderer, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
+    ViewMemberIndex,
+};
 use bevy_utils::futures::now_or_never;
-use futures_lite::StreamExt;
 use core::any::TypeId;
 use core::future::{Future, IntoFuture};
+use futures_lite::StreamExt;
 
 pub struct XFuture<T>(pub T);
 #[inline(always)]
@@ -161,8 +164,8 @@ where
         T::Output::count()
     }
 
-    fn unbuild(ctx: ViewMemberCtx<R>) {
-        T::Output::unbuild(ctx)
+    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
+        T::Output::unbuild(ctx, view_removed)
     }
 
     fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {

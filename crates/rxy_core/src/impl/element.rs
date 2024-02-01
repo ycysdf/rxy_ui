@@ -1,9 +1,10 @@
-use core::any::TypeId;
+use core::fmt::Debug;
 use core::marker::PhantomData;
+use core::{any::TypeId, hash::Hash};
 
 use crate::{
     ElementSoloView, ElementView, IntoView, MemberOwner, Renderer, RendererElementType,
-    RendererNodeId, SoloView, View, ViewCtx, ViewMember, ViewMemberCtx,
+    RendererNodeId, SoloView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
 };
 
 #[derive(Clone)]
@@ -66,7 +67,108 @@ where
     VM: ViewMember<R>,
 {
     fn node_id(key: &Self::Key) -> &RendererNodeId<R> {
-        key
+        &key.0
+    }
+}
+#[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
+pub struct ElementViewKey<R, VM>(
+    pub RendererNodeId<R>,
+    #[cfg_attr(feature = "bevy_reflect", reflect(ignore))] PhantomData<VM>,
+)
+where
+    R: Renderer,
+    VM: ViewMember<R>;
+
+impl<R, VM> Debug for ElementViewKey<R, VM>
+where
+    R: Renderer,
+    VM: ViewMember<R>,
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_tuple("ElementViewKey").field(&self.0).finish()
+    }
+}
+
+unsafe impl<R, VM> Send for ElementViewKey<R, VM>
+where
+    R: Renderer,
+    VM: ViewMember<R>,
+{
+}
+
+unsafe impl<R, VM> Sync for ElementViewKey<R, VM>
+where
+    R: Renderer,
+    VM: ViewMember<R>,
+{
+}
+
+impl<R, VM> Clone for ElementViewKey<R, VM>
+where
+    R: Renderer,
+    VM: ViewMember<R>,
+{
+    fn clone(&self) -> Self {
+        Self(self.0.clone(), Default::default())
+    }
+}
+
+impl<R, VM> Hash for ElementViewKey<R, VM>
+where
+    R: Renderer,
+    VM: ViewMember<R>,
+{
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+        self.0.hash(state);
+    }
+}
+
+impl<R, VM> ViewKey<R> for ElementViewKey<R, VM>
+where
+    R: Renderer,
+    VM: ViewMember<R>,
+{
+    #[inline]
+    fn remove(self, world: &mut crate::RendererWorld<R>) {
+        VM::unbuild(
+            ViewMemberCtx {
+                index: 0,
+                type_id: TypeId::of::<VM>(),
+                world,
+                node_id: self.0.clone(),
+            },
+            true,
+        );
+        self.0.remove(world);
+    }
+
+    #[inline]
+    fn insert_before(
+        &self,
+        world: &mut crate::RendererWorld<R>,
+        parent: Option<&RendererNodeId<R>>,
+        before_node_id: Option<&RendererNodeId<R>>,
+    ) {
+        self.0.insert_before(world, parent, before_node_id);
+    }
+
+    fn set_visibility(&self, world: &mut crate::RendererWorld<R>, hidden: bool) {
+        self.0.set_visibility(world, hidden);
+    }
+
+    fn state_node_id(&self) -> Option<RendererNodeId<R>> {
+        Some(self.0.clone())
+    }
+
+    fn reserve_key(world: &mut crate::RendererWorld<R>, will_rebuild: bool) -> Self {
+        Self(
+            <RendererNodeId<R> as ViewKey<R>>::reserve_key(world, will_rebuild),
+            Default::default(),
+        )
+    }
+
+    fn first_node_id(&self, world: &crate::RendererWorld<R>) -> Option<RendererNodeId<R>> {
+        self.0.first_node_id(world)
     }
 }
 
@@ -76,7 +178,7 @@ where
     R: Renderer,
     VM: ViewMember<R>,
 {
-    type Key = RendererNodeId<R>;
+    type Key = ElementViewKey<R, VM>;
 
     fn build(
         self,
@@ -86,7 +188,7 @@ where
     ) -> Self::Key {
         let spawned_node_id = {
             let parent = ctx.parent.clone();
-            R::spawn_node::<E>(&mut *ctx.world, Some(parent), reserve_key)
+            R::spawn_node::<E>(&mut *ctx.world, Some(parent), reserve_key.map(|n| n.0))
         };
         self.members.build(
             ViewMemberCtx {
@@ -97,7 +199,7 @@ where
             },
             will_rebuild,
         );
-        spawned_node_id
+        ElementViewKey(spawned_node_id, Default::default())
     }
 
     fn rebuild(self, ctx: ViewCtx<R>, state_key: Self::Key) {
@@ -105,7 +207,7 @@ where
             index: 0,
             type_id: TypeId::of::<VM>(),
             world: ctx.world,
-            node_id: state_key,
+            node_id: state_key.0,
         });
     }
 }

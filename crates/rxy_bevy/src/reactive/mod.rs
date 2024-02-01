@@ -24,7 +24,7 @@ where
 
     fn into_other_attr<OEA: ElementUnitAttr<Value = <EA>::Value>>(self) -> Self::OtherAttr<OEA> {
         IntoAttrMemberWrapper(
-            rx(Box::new(move|| self.0 .0().into_other_attr())),
+            rx(Box::new(move || self.0 .0().into_other_attr())),
             Default::default(),
         )
     }
@@ -84,7 +84,10 @@ where
     }
 
     #[inline(always)]
-    fn unbuild(ctx: ViewMemberCtx<BevyRenderer>) {
+    fn unbuild(ctx: ViewMemberCtx<BevyRenderer>, view_removed: bool) {
+        if view_removed {
+            return;
+        }
         ctx.world.unbuild_attr::<EA>(ctx.node_id);
     }
 
@@ -151,7 +154,10 @@ macro_rules! impl_into_view_attr_member_for_signal {
                 }
 
                 #[inline(always)]
-                fn unbuild(ctx: ViewMemberCtx<BevyRenderer>) {
+                fn unbuild(ctx: ViewMemberCtx<BevyRenderer>, view_removed: bool) {
+                    if view_removed {
+                        return;
+                    }
                     ctx.world.unbuild_attr::<EA>(ctx.node_id);
                 }
 

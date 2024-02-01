@@ -3,7 +3,12 @@ use core::any::TypeId;
 use bevy_utils::futures::now_or_never;
 use futures_lite::{Stream, StreamExt};
 
-use crate::{build_info::{build_info_is_contained, build_times_increment}, into_view, mutable_view_rebuild, BuildState, IntoView, MemberReBuilder, MutableView, Renderer, RendererNodeId, ToIntoView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewReBuilder, ViewMemberIndex};
+use crate::{
+    build_info::{build_info_is_contained, build_times_increment},
+    into_view, mutable_view_rebuild, BuildState, IntoView, MemberReBuilder, MutableView, Renderer,
+    RendererNodeId, ToIntoView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
+    ViewReBuilder,
+};
 
 pub struct LazyViewMemberState {
     pub already_build: bool,
@@ -56,8 +61,8 @@ where
         VM::count()
     }
 
-    fn unbuild(ctx: ViewMemberCtx<R>) {
-        VM::unbuild(ctx)
+    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
+        VM::unbuild(ctx, view_removed)
     }
 
     fn build(self, ctx: ViewMemberCtx<R>, _will_rebuild: bool) {
@@ -246,8 +251,8 @@ where
         S::Item::count()
     }
 
-    fn unbuild(ctx: ViewMemberCtx<R>) {
-        S::Item::unbuild(ctx)
+    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
+        S::Item::unbuild(ctx, view_removed)
     }
 
     fn build(self, ctx: ViewMemberCtx<R>, _will_rebuild: bool) {
