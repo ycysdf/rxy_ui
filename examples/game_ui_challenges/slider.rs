@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use rxy_ui::prelude::*;
 
-
 use bevy::{
     app::AppExit,
     prelude::{Color, Res},
@@ -9,7 +8,7 @@ use bevy::{
 use bevy_mod_picking::prelude::On;
 use std::fmt::Debug;
 
-use crate::COLOR_PRIMARY;
+use crate::{FocusStyle, XConfirm, COLOR_PRIMARY};
 #[derive(TypedStyle)]
 pub struct SliderRootStyle;
 #[derive(TypedStyle)]
@@ -71,6 +70,7 @@ pub fn schema_slider(
                     .ml(-thumb_width / 2.0)
                     .absolute(),
                 x_hover().bg_color(Color::GRAY),
+                FocusStyle,
             )
         });
     }

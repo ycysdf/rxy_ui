@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use rxy_ui::prelude::*;
 
-
+use crate::FocusStyle;
+use crate::XConfirm;
 use bevy::prelude::Resource;
 use bevy::render::color::Color;
 use core::fmt::Display;
@@ -37,6 +38,7 @@ where
                 .py(8)
                 .min_w(150),
             x_hover().bg_color(Color::DARK_GRAY),
+            FocusStyle,
         )
     });
     ctx.default_typed_style(SelectSelectionListStyle, || {
@@ -50,7 +52,7 @@ where
         .name("select")
         .style(SelectStyle)
         .rx_member(move || {
-            (!readonly.get()).then_some(().on_pointer_click(move || {
+            (!readonly.get()).then_some(().on(XConfirm, move || {
                 is_open.update(|is_open| *is_open = !*is_open);
             }))
         })
@@ -121,7 +123,7 @@ where
                         value: value.clone(),
                         is_selected: is_selected.get(),
                     }),
-                    ().on_pointer_click({
+                    ().on(XConfirm, {
                         let value_signal = ctx.value_signal;
                         let value = value.clone();
                         move || {
