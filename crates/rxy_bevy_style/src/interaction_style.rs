@@ -192,9 +192,7 @@ pub fn update_interaction_styles(
                     set_attrs_cmd.add(entity, attr_index, value);
                 }
             }
-            _ => {
-                continue;
-            }
+            _ => {}
         }
 
         style_sheets_query = Some(entity_style_world_query.query);
