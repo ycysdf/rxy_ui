@@ -6,10 +6,10 @@ use std::cell::Cell;
 use std::cmp::Ordering;
 use std::future::Future;
 
+use bevy_ecs::component::Component;
 use bevy_ecs::entity::Entity;
 use bevy_ecs::prelude::World;
 use bevy_ecs::world::EntityWorldMut;
-use bevy_ecs::component::Component;
 use bevy_hierarchy::{BuildWorldChildren, Children, DespawnRecursiveExt, Parent};
 use bevy_reflect::Reflect;
 use bevy_render::view::Visibility;
@@ -17,7 +17,11 @@ use bevy_tasks::Task;
 use bevy_ui::node_bundles::NodeBundle;
 use bevy_ui::{Display, Style};
 
-use rxy_core::{mutable_view_rebuild, BuildState, ContainerType, DeferredWorldScoped, MemberReBuilder, MutableView, Renderer, RendererElementType, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewReBuilder, ViewMemberIndex};
+use rxy_core::{
+    mutable_view_rebuild, BuildState, ContainerType, DeferredWorldScoped, MemberReBuilder,
+    MutableView, Renderer, RendererElementType, RendererNodeId, RendererWorld, View, ViewCtx,
+    ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewReBuilder,
+};
 
 use crate::{CmdSender, RxyContainerEntity};
 
@@ -83,21 +87,25 @@ impl Renderer for BevyRenderer {
     type NodeId = Entity;
     type World = World;
 
-    type ViewReBuilder = CmdViewReBuilder;
     type Task<T: Send + 'static> = Task<T>;
+
+    fn get_or_insert_default_state<'a, S: Default + Send + Sync + 'static>(
+        world: &'a mut RendererWorld<Self>,
+        node_id: &RendererNodeId<Self>,
+    ) -> &'a mut S {
+        let mut entity_mut = world.entity_mut(*node_id);
+        if !entity_mut.contains::<RendererState<S>>() {
+            entity_mut.insert(RendererState::<S>(Default::default()));
+        }
+        world
+            .get_mut::<RendererState<S>>(*node_id)
+            .map(|n| &mut n.into_inner().0)
+            .unwrap()
+    }
 
     fn deferred_world_scoped(world: &mut RendererWorld<Self>) -> impl DeferredWorldScoped<Self> {
         BevyDeferredWorldScoped {
             cmd_sender: world.resource::<CmdSender>().clone(),
-        }
-    }
-
-    #[inline]
-    fn get_view_re_builder(ctx: ViewCtx<BevyRenderer>) -> Self::ViewReBuilder {
-        let cmd_sender = ctx.world.resource::<CmdSender>().clone();
-        CmdViewReBuilder {
-            cmd_sender,
-            parent: ctx.parent,
         }
     }
 
@@ -111,17 +119,6 @@ impl Renderer for BevyRenderer {
             world.init_resource::<RxyContainerEntity>();
             world.resource::<RxyContainerEntity>().entity
         }
-    }
-
-    fn spawn_data_node(world: &mut RendererWorld<Self>) -> RendererNodeId<Self> {
-        world.spawn((Name::new("[DATA]"),)).id()
-    }
-
-    fn get_parent(
-        world: &RendererWorld<Self>,
-        node_id: &RendererNodeId<Self>,
-    ) -> Option<RendererNodeId<Self>> {
-        world.get::<Parent>(*node_id).map(|n| n.get())
     }
 
     fn spawn_placeholder(
@@ -150,6 +147,17 @@ impl Renderer for BevyRenderer {
             entity_mut.set_parent(*parent);
         }
         entity_mut.id()
+    }
+
+    fn spawn_data_node(world: &mut RendererWorld<Self>) -> RendererNodeId<Self> {
+        world.spawn((Name::new("[DATA]"),)).id()
+    }
+
+    fn get_parent(
+        world: &RendererWorld<Self>,
+        node_id: &RendererNodeId<Self>,
+    ) -> Option<RendererNodeId<Self>> {
+        world.get::<Parent>(*node_id).map(|n| n.get())
     }
 
     fn ensure_spawn(world: &mut RendererWorld<Self>, reserve_node_id: RendererNodeId<Self>) {
@@ -183,6 +191,13 @@ impl Renderer for BevyRenderer {
             .map(|n| &mut n.into_inner().0)
     }
 
+    fn get_state_ref<'w, S: Send + Sync + 'static>(
+        world: &'w RendererWorld<Self>,
+        node_id: &RendererNodeId<Self>,
+    ) -> Option<&'w S> {
+        world.get::<RendererState<S>>(*node_id).map(|n| &n.0)
+    }
+
     fn take_state<S: Send + Sync + 'static>(
         world: &mut RendererWorld<Self>,
         node_id: &RendererNodeId<Self>,
@@ -191,27 +206,6 @@ impl Renderer for BevyRenderer {
             .entity_mut(*node_id)
             .take::<RendererState<S>>()
             .map(|n| n.0)
-    }
-
-    fn get_or_insert_default_state<'a, S: Default + Send + Sync + 'static>(
-        world: &'a mut RendererWorld<Self>,
-        node_id: &RendererNodeId<Self>,
-    ) -> &'a mut S {
-        let mut entity_mut = world.entity_mut(*node_id);
-        if !entity_mut.contains::<RendererState<S>>() {
-            entity_mut.insert(RendererState::<S>(Default::default()));
-        }
-        world
-            .get_mut::<RendererState<S>>(*node_id)
-            .map(|n| &mut n.into_inner().0)
-            .unwrap()
-    }
-
-    fn get_state_ref<'w, S: Send + Sync + 'static>(
-        world: &'w RendererWorld<Self>,
-        node_id: &RendererNodeId<Self>,
-    ) -> Option<&'w S> {
-        world.get::<RendererState<S>>(*node_id).map(|n| &n.0)
     }
 
     fn set_state<S: Send + Sync + 'static>(
@@ -343,65 +337,5 @@ impl ViewKey<BevyRenderer> for Entity {
         _world: &RendererWorld<BevyRenderer>,
     ) -> Option<RendererNodeId<BevyRenderer>> {
         Some(*self)
-    }
-}
-
-pub struct ViewMemberReBuilder {
-    pub cmd_sender: CmdSender,
-    pub entity: Entity,
-    pub is_already_build: bool,
-}
-
-pub struct CmdViewReBuilder {
-    pub cmd_sender: CmdSender,
-    pub parent: Entity,
-}
-
-impl ViewReBuilder<BevyRenderer> for CmdViewReBuilder {
-    fn rebuild<V>(&self, view: V, build_state: BuildState<V::Key>)
-    where
-        V: View<BevyRenderer>,
-    {
-        let parent = self.parent;
-        self.cmd_sender.add(move |world: &mut World| {
-            if !world.entities().contains(parent) {
-                return;
-            }
-            let ctx = ViewCtx { world, parent };
-            let state_node_id = match build_state {
-                BuildState::AlreadyBuild(key) => {
-                    let state_node_id = key.state_node_id();
-                    view.rebuild(ctx, key);
-                    state_node_id
-                }
-                BuildState::NoBuild(sender) => {
-                    let key = view.build(ctx, None, true);
-                    let state_node_id = key.state_node_id();
-                    sender.send(key).unwrap();
-                    state_node_id
-                }
-                BuildState::NoBuildWithReserveKey(key) => {
-                    let key = view.build(ctx, Some(key), true);
-                    key.state_node_id()
-                }
-            };
-
-            if let Some(state_node_id) = state_node_id {
-                node_build_times_increment::<BevyRenderer>(world, state_node_id);
-            }
-        });
-    }
-
-    fn mutable_rebuild<V: MutableView<BevyRenderer>>(
-        &mut self,
-        view: V,
-        node_id: &<BevyRenderer as Renderer>::NodeId,
-    ) {
-        let parent = self.parent;
-        let node_id = *node_id;
-        self.cmd_sender.add(move |world: &mut World| {
-            let ctx = ViewCtx { world, parent };
-            mutable_view_rebuild(view, ctx, node_id);
-        });
     }
 }

@@ -7,9 +7,9 @@ use futures_lite::{Stream, StreamExt};
 
 use crate::{
     build_info::{node_build_status, node_build_times_increment},
-    into_view, mutable_view_rebuild, BuildState, Either, IntoView, MemberReBuilder, MutableView,
+    into_view, mutable_view_rebuild, BuildState, Either, IntoView, MutableView,
     Renderer, RendererNodeId, TaskState, ToIntoView, View, ViewCtx, ViewKey, ViewMember,
-    ViewMemberCtx, ViewMemberExt, ViewMemberIndex, ViewReBuilder,
+    ViewMemberCtx, ViewMemberExt, ViewMemberIndex,
 };
 
 fn stream_vm_rebuild<R, S, VM>(

@@ -14,10 +14,8 @@ use xy_reactive::effect::ErasureEffect;
 use xy_reactive::prelude::create_render_effect;
 use xy_reactive::render_effect::RenderEffect;
 
-use crate::{
-    BuildState, DeferredWorldScoped, IntoView, MemberOwner, Renderer, RendererNodeId,
-    RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
-    ViewReBuilder,
+use crate::{DeferredWorldScoped, IntoView, MemberOwner, Renderer, RendererNodeId,
+            RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
 };
 
 struct FnOnceCell<'a, I, T> {
@@ -231,20 +229,18 @@ where
         reserve_key: Option<Self::Key>,
         _will_rebuild: bool,
     ) -> Self::Key {
-        let view_re_builder = R::get_view_re_builder(ViewCtx {
-            world: &mut *ctx.world,
-            parent: ctx.parent.clone(),
-        });
-        let f = self.0;
-        let (reserve_key, reserve_disposer) =
-            reserve_key.map(|n| (n.key, n.disposer_state_node_id)).unzip();
+        let (reserve_key, reserve_disposer) = reserve_key
+            .map(|n| (n.key, n.disposer_state_node_id))
+            .unzip();
+        let world_scoped = R::deferred_world_scoped(ctx.world);
+        let parent = ctx.parent.clone();
         let _effect = create_effect_with_init(
-            f,
+            self.0,
             |f: IV| {
                 f.into_view().build(
                     ViewCtx {
                         world: &mut *ctx.world,
-                        parent: ctx.parent.clone(),
+                        parent: ctx.parent,
                     },
                     reserve_key,
                     true,
@@ -252,12 +248,17 @@ where
             },
             move |f: IV, key| {
                 let view = f.into_view();
-                view_re_builder.rebuild(view, BuildState::AlreadyBuild(key))
+                let parent = parent.clone();
+                world_scoped.scoped(move |world| {
+                    view.rebuild(ViewCtx { world, parent }, key);
+                });
             },
         );
         let view_key = _effect.with_value_mut(|n| n.clone()).unwrap();
         let disposer_state_node_id = reserve_disposer.unwrap_or_else(|| {
-            view_key.state_node_id().unwrap_or_else(|| R::spawn_data_node(ctx.world))
+            view_key
+                .state_node_id()
+                .unwrap_or_else(|| R::spawn_data_node(ctx.world))
         });
         R::set_state::<ReactiveDisposerState>(
             ctx.world,
@@ -284,14 +285,11 @@ where
             &disposer_state_node_id,
         ));
 
-        let view_re_builder = R::get_view_re_builder(ViewCtx {
-            world: &mut *ctx.world,
-            parent: ctx.parent.clone(),
-        });
-        let f = self.0;
+        let world_scoped = R::deferred_world_scoped(ctx.world);
+        let parent = ctx.parent.clone();
 
         let _effect = create_effect_with_init(
-            f,
+            self.0,
             |f: IV| {
                 f.into_view().rebuild(
                     ViewCtx {
@@ -304,7 +302,10 @@ where
             },
             move |f: IV, key| {
                 let view = f.into_view();
-                view_re_builder.rebuild(view, BuildState::AlreadyBuild(key))
+                let parent = parent.clone();
+                world_scoped.scoped(move |world| {
+                    view.rebuild(ViewCtx { world, parent }, key);
+                });
             },
         );
         R::set_state::<ReactiveDisposerState>(

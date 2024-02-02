@@ -6,7 +6,7 @@ use core::future::Future;
 use oneshot::Sender;
 
 use crate::{
-    MaybeReflect, MaybeTypePath, MutableView, RendererElementType, View, ViewKey, ViewMember,
+    MaybeReflect, MaybeTypePath, RendererElementType, ViewKey,
 };
 
 pub type RendererNodeId<R> = <R as Renderer>::NodeId;
@@ -56,7 +56,6 @@ pub trait Renderer:
     type NodeId: ViewKey<Self>;
     type World;
 
-    type ViewReBuilder: ViewReBuilder<Self>;
     type Task<T: Send + 'static>: Send + 'static;
     fn get_or_insert_default_state<'a, S: Default + Send + Sync + 'static>(
         world: &'a mut RendererWorld<Self>,
@@ -88,8 +87,6 @@ pub trait Renderer:
         }
     }
     fn deferred_world_scoped(world: &mut RendererWorld<Self>) -> impl DeferredWorldScoped<Self>;
-
-    fn get_view_re_builder(ctx: ViewCtx<Self>) -> Self::ViewReBuilder;
 
     fn get_container_node_id(
         world: &mut RendererWorld<Self>,
@@ -183,13 +180,4 @@ impl<K> BuildState<K> {
             }
         }
     }
-}
-
-pub trait ViewReBuilder<R: Renderer>: Send {
-    fn rebuild<V: View<R>>(&self, view: V, is_build: BuildState<V::Key>);
-    fn mutable_rebuild<V: MutableView<R>>(&mut self, view: V, node_id: &R::NodeId);
-}
-
-pub trait MemberReBuilder<R: Renderer>: Send {
-    fn rebuild<VM: ViewMember<R>>(&self, member: VM, index: ViewMemberIndex);
 }
