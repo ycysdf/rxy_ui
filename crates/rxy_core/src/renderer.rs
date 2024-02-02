@@ -57,7 +57,6 @@ pub trait Renderer:
     type World;
 
     type ViewReBuilder: ViewReBuilder<Self>;
-    type MemberReBuilder: MemberReBuilder<Self>;
     type Task<T: Send + 'static>: Send + 'static;
     fn get_or_insert_default_state<'a, S: Default + Send + Sync + 'static>(
         world: &'a mut RendererWorld<Self>,
@@ -96,11 +95,6 @@ pub trait Renderer:
         world: &mut RendererWorld<Self>,
         container_type: ContainerType,
     ) -> RendererNodeId<Self>;
-
-    fn get_member_re_builder(
-        ctx: ViewMemberCtx<Self>,
-        is_already_build: bool,
-    ) -> Self::MemberReBuilder;
 
     fn spawn_placeholder(
         world: &mut RendererWorld<Self>,

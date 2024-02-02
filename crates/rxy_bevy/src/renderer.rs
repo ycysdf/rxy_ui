@@ -84,7 +84,6 @@ impl Renderer for BevyRenderer {
     type World = World;
 
     type ViewReBuilder = CmdViewReBuilder;
-    type MemberReBuilder = CmdMemberReBuilder;
     type Task<T: Send + 'static> = Task<T>;
 
     fn deferred_world_scoped(world: &mut RendererWorld<Self>) -> impl DeferredWorldScoped<Self> {
@@ -111,19 +110,6 @@ impl Renderer for BevyRenderer {
         } else {
             world.init_resource::<RxyContainerEntity>();
             world.resource::<RxyContainerEntity>().entity
-        }
-    }
-
-    #[inline]
-    fn get_member_re_builder(
-        ctx: ViewMemberCtx<BevyRenderer>,
-        is_already_build: bool,
-    ) -> Self::MemberReBuilder {
-        let cmd_sender = ctx.world.resource::<CmdSender>().clone();
-        CmdMemberReBuilder {
-            cmd_sender,
-            entity: ctx.node_id,
-            is_already_build: Cell::new(is_already_build),
         }
     }
 
@@ -417,37 +403,5 @@ impl ViewReBuilder<BevyRenderer> for CmdViewReBuilder {
             let ctx = ViewCtx { world, parent };
             mutable_view_rebuild(view, ctx, node_id);
         });
-    }
-}
-
-pub struct CmdMemberReBuilder {
-    pub cmd_sender: CmdSender,
-    pub entity: Entity,
-    pub is_already_build: Cell<bool>,
-}
-
-impl MemberReBuilder<BevyRenderer> for CmdMemberReBuilder {
-    fn rebuild<VM>(&self, member: VM, index: ViewMemberIndex)
-    where
-        VM: ViewMember<BevyRenderer>,
-    {
-        let entity = self.entity;
-        let is_already_build = self.is_already_build.get();
-        self.cmd_sender.add(move |world: &mut World| {
-            if !world.entities().contains(entity) {
-                return;
-            }
-            let ctx = ViewMemberCtx {
-                index,
-                world,
-                node_id: entity,
-            };
-            if is_already_build {
-                member.rebuild(ctx);
-            } else {
-                member.build(ctx, true);
-            }
-        });
-        self.is_already_build.set(true);
     }
 }
