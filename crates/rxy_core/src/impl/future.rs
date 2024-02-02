@@ -1,4 +1,4 @@
-use crate::build_info::{build_info_is_contained, build_times_increment};
+use crate::build_info::{node_build_status, node_build_times_increment};
 use crate::renderer::DeferredWorldScoped;
 use crate::{
     BuildState, IntoView, Renderer, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
@@ -44,12 +44,11 @@ where
         let Some(state_node_id) = key.state_node_id() else {
             return;
         };
-        let is_build = build_info_is_contained::<R>(ctx.world, &state_node_id);
-        if is_build {
+        if !node_build_status::<R>(ctx.world, &state_node_id).is_no_build() {
             let world_scoped = R::deferred_world_scoped(ctx.world);
             R::spawn_and_detach(async move {
                 let view = self.0.await;
-                world_scoped.deferred_world(|world| {
+                world_scoped.scoped(|world| {
                     view.into_view().rebuild(
                         ViewCtx {
                             world,
@@ -79,11 +78,11 @@ fn future_view_build<R, T>(
 
     R::spawn_and_detach(async move {
         let view = future.await;
-        world_scoped.deferred_world(move |world| {
+        world_scoped.scoped(move |world| {
             let Some(state_node_id) = reserve_key.state_node_id() else {
                 return;
             };
-            if build_info_is_contained::<R>(world, &state_node_id) {
+            if !node_build_status::<R>(world, &state_node_id).is_no_build() {
                 return;
             }
             // todo: check view is removed
@@ -97,7 +96,7 @@ fn future_view_build<R, T>(
             );
             if will_rebuild {
                 if let Some(state_node_id) = key.state_node_id() {
-                    build_times_increment::<R>(world, state_node_id);
+                    node_build_times_increment::<R>(world, state_node_id);
                 }
             }
         });
@@ -127,14 +126,14 @@ where
 
     R::spawn_and_detach(async move {
         let view_member = future.await;
-        world_scoped.deferred_world(move |world| {
+        world_scoped.scoped(move |world| {
             let mut ctx = ViewMemberCtx::<R> {
                 index: ctx.index,
                 world,
                 node_id: ctx.node_id,
             };
 
-            if ctx.build_info_is_contained() {
+            if !ctx.build_status().is_no_build() {
                 return;
             }
             view_member.build(
@@ -171,12 +170,11 @@ where
     }
 
     fn rebuild(self, mut ctx: ViewMemberCtx<R>) {
-        let is_build = ctx.build_info_is_contained();
-        if is_build {
+        if !ctx.build_status().is_no_build() {
             let world_scoped = R::deferred_world_scoped(ctx.world);
             R::spawn_and_detach(async move {
                 let view_member = self.0.await;
-                world_scoped.deferred_world(move |world| {
+                world_scoped.scoped(move |world| {
                     view_member.rebuild(ViewMemberCtx {
                         index: ctx.index,
                         world,

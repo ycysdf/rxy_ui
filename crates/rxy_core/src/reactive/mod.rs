@@ -104,7 +104,7 @@ where
             },
             move |member: VM, _| {
                 let node_id = node_id.clone();
-                deferred_world_scoped.deferred_world(move |world| {
+                deferred_world_scoped.scoped(move |world| {
                     if !R::exist_node_id(world, &node_id) {
                         return;
                     }
@@ -130,7 +130,7 @@ where
         let _effect = create_render_effect(move |_| {
             let vm = self.0();
             let node_id = node_id.clone();
-            deferred_world_scoped.deferred_world(move |world| {
+            deferred_world_scoped.scoped(move |world| {
                 if !R::exist_node_id(world, &node_id) {
                     return;
                 }

@@ -502,7 +502,7 @@ where
                 let mut taked_vec_or_receciver = vec_or_receiver.take();
                 vec_or_receiver = Some(receiver.either_right());
 
-                deferred_world_scoped.deferred_world({
+                deferred_world_scoped.scoped({
                     let ops = core::mem::take(&mut ops);
                     let view_f = view_f.clone();
                     let state_node_id = state_node_id.clone();

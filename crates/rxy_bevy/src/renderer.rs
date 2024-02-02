@@ -1,6 +1,6 @@
 use bevy_core::Name;
 use bevy_derive::{Deref, DerefMut};
-use rxy_core::build_info::build_times_increment;
+use rxy_core::build_info::node_build_times_increment;
 use std::borrow::Cow;
 use std::cell::Cell;
 use std::cmp::Ordering;
@@ -72,12 +72,13 @@ pub struct BevyDeferredWorldScoped {
     cmd_sender: CmdSender,
 }
 
+pub type TaskState = rxy_core::TaskState<BevyRenderer>;
+
 impl DeferredWorldScoped<BevyRenderer> for BevyDeferredWorldScoped {
-    fn deferred_world(&self, f: impl FnOnce(&mut RendererWorld<BevyRenderer>) + Send + 'static) {
+    fn scoped(&self, f: impl FnOnce(&mut RendererWorld<BevyRenderer>) + Send + 'static) {
         self.cmd_sender.add(move |world: &mut World| f(world))
     }
 }
-
 impl Renderer for BevyRenderer {
     type NodeId = Entity;
     type World = World;
@@ -184,7 +185,7 @@ impl Renderer for BevyRenderer {
     }
 
     fn exist_node_id(world: &mut RendererWorld<Self>, node_id: &RendererNodeId<Self>) -> bool {
-        world.get_entity(*node_id).is_some()
+        world.entities().contains(*node_id)
     }
 
     fn get_state_mut<'w, S: Send + Sync + 'static>(
@@ -400,7 +401,7 @@ impl ViewReBuilder<BevyRenderer> for CmdViewReBuilder {
             };
 
             if let Some(state_node_id) = state_node_id {
-                build_times_increment::<BevyRenderer>(world, state_node_id);
+                node_build_times_increment::<BevyRenderer>(world, state_node_id);
             }
         });
     }

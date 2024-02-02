@@ -2,22 +2,14 @@ use core::marker::PhantomData;
 
 use bevy_ecs::prelude::Entity;
 use bevy_ecs::system::Resource;
-use rxy_core::{
-    prelude::{ViewMember, ViewMemberCtx},
-    DeferredWorldScoped, Renderer, View, ViewCtx, ViewKey, ViewMemberIndex,
-};
+use rxy_core::{prelude::{ViewMember, ViewMemberCtx}, DeferredWorldScoped, Renderer, View, ViewCtx, ViewKey, ViewMemberIndex};
 
-use crate::{BevyRenderer, ResChangeWorldExt};
+use crate::{BevyRenderer, ResChangeWorldExt, TaskState};
 use rxy_core::IntoView;
 
 pub struct XRes<T, F, V> {
     pub f: F,
     _marker: PhantomData<(T, V)>,
-}
-
-pub struct XResViewState {
-    #[allow(dead_code)]
-    task: <BevyRenderer as Renderer>::Task<()>,
 }
 
 fn x_res_view_build<T, F, IV>(
@@ -41,7 +33,7 @@ fn x_res_view_build<T, F, IV>(
             while let Ok(()) = res_change_receiver.recv().await {
                 let f = f.clone();
                 let key = key.clone();
-                deferred_world_scoped.deferred_world(move |world| {
+                deferred_world_scoped.scoped(move |world| {
                     let resource = world.resource::<T>();
                     let view = f(resource).into_view();
                     view.rebuild(ViewCtx { world, parent }, key);
@@ -49,7 +41,7 @@ fn x_res_view_build<T, F, IV>(
             }
         }
     });
-    BevyRenderer::set_state(ctx.world, state_node_id, XResViewState { task });
+    BevyRenderer::set_state(ctx.world, state_node_id, TaskState::new(task));
 }
 
 impl<T, F, IV> View<BevyRenderer> for XRes<T, F, IV>
@@ -95,7 +87,7 @@ where
         let Some(state_node_id) = key.state_node_id() else {
             return;
         };
-        drop(BevyRenderer::take_state::<XResViewState>(
+        drop(BevyRenderer::take_state::<TaskState>(
             ctx.world,
             &state_node_id,
         ));
@@ -147,7 +139,7 @@ where
         async move {
             while let Ok(()) = res_change_receiver.recv().await {
                 let f = f.clone();
-                deferred_world_scoped.deferred_world(move |world| {
+                deferred_world_scoped.scoped(move |world| {
                     let resource = world.resource::<T>();
                     let vm = f(resource);
                     vm.rebuild(ViewMemberCtx {
@@ -159,7 +151,7 @@ where
             }
         }
     });
-    ctx.set_indexed_view_member_state(XResViewState { task });
+    ctx.set_indexed_view_member_state(TaskState::new(task));
 }
 
 impl<T, F, VM> ViewMember<BevyRenderer> for XRes<T, F, VM>
@@ -196,7 +188,7 @@ where
             world: &mut *ctx.world,
             node_id: ctx.node_id,
         });
-        drop(ctx.take_indexed_view_member_state::<XResViewState>());
+        drop(ctx.take_indexed_view_member_state::<TaskState>());
         x_res_view_member_build(self, ctx);
     }
 }

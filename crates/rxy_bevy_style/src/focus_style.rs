@@ -1,5 +1,5 @@
 use crate::attr_iter::{EntityStyleWorldQuery, StateOwnerWithNodeId};
-use crate::interaction_style::{IterExt, SetAttrValuesCommand};
+use crate::interaction_style::{AttrSetBitsIterExt, SetAttrValuesCommand};
 use crate::node_style_state::NodeStyleSheetsState;
 use crate::Previous;
 use bevy_a11y::Focus;

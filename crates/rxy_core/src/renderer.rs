@@ -1,12 +1,12 @@
 use alloc::borrow::Cow;
+use bevy_utils::synccell::SyncCell;
 use core::fmt::Debug;
 use core::future::Future;
 
 use oneshot::Sender;
 
 use crate::{
-    MaybeReflect, MaybeTypePath, MutableView, RendererElementType, View,
-    ViewKey, ViewMember,
+    MaybeReflect, MaybeTypePath, MutableView, RendererElementType, View, ViewKey, ViewMember,
 };
 
 pub type RendererNodeId<R> = <R as Renderer>::NodeId;
@@ -33,7 +33,20 @@ pub trait DeferredWorldScoped<R>: Clone + Send + Sync + Sized + 'static
 where
     R: Renderer,
 {
-    fn deferred_world(&self, f: impl FnOnce(&mut RendererWorld<R>) + Send + 'static);
+    fn scoped(&self, f: impl FnOnce(&mut RendererWorld<R>) + Send + 'static);
+}
+
+pub struct TaskState<R>(#[allow(dead_code)] pub SyncCell<R::Task<()>>)
+where
+    R: Renderer;
+
+impl<R> TaskState<R>
+where
+    R: Renderer,
+{
+    pub fn new(task: R::Task<()>) -> Self {
+        Self(SyncCell::new(task))
+    }
 }
 
 // todo: refactor, extract methods to World
@@ -72,10 +85,7 @@ pub trait Renderer:
                 Self::set_state(world, node_id, n);
                 r
             }
-            None => {
-                
-                f(world, None)
-            }
+            None => f(world, None),
         }
     }
     fn deferred_world_scoped(world: &mut RendererWorld<Self>) -> impl DeferredWorldScoped<Self>;

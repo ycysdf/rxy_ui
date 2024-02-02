@@ -24,7 +24,7 @@ where
     let effect = create_effect(move |_| {
         let value = signal.get();
         let state_node_id = state_node_id.clone();
-        world_scoped.deferred_world(move |world| {
+        world_scoped.scoped(move |world| {
             if !R::exist_node_id(world, &state_node_id) {
                 return;
             }

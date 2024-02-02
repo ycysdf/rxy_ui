@@ -1,6 +1,7 @@
 use bevy_utils::synccell::SyncCell;
 use bevy_utils::{all_tuples, HashMap};
 
+use crate::build_info::BuildStatus;
 use crate::{Renderer, ViewMemberCtx, ViewMemberIndex};
 
 pub trait ViewMember<R>: Send + 'static
@@ -37,7 +38,7 @@ where
         T::count()
     }
 
-    fn unbuild(ctx: ViewMemberCtx<R>, view_removed:bool) {
+    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
         T::unbuild(ctx, view_removed)
     }
 
@@ -156,6 +157,36 @@ impl<'a, R: Renderer> ViewMemberCtx<'a, R> {
                 &self.node_id,
                 MemberHashMapState(SyncCell::new(map)),
             );
+        }
+    }
+}
+
+pub trait ViewMemberExt<R>
+where
+    R: Renderer,
+{
+    fn build_or_rebuild_by(self, ctx: ViewMemberCtx<R>, build_status: BuildStatus);
+    #[inline]
+    fn build_or_rebuild(self, mut ctx: ViewMemberCtx<R>)
+    where
+        Self: Sized,
+    {
+        let build_status = ctx.build_times_increment();
+        self.build_or_rebuild_by(ctx, build_status);
+    }
+}
+
+impl<R, T> ViewMemberExt<R> for T
+where
+    R: Renderer,
+    T: ViewMember<R>,
+{
+    #[inline]
+    fn build_or_rebuild_by(self, ctx: ViewMemberCtx<R>, build_status: BuildStatus) {
+        if build_status.is_no_build() {
+            self.build(ctx, true);
+        } else {
+            self.rebuild(ctx);
         }
     }
 }

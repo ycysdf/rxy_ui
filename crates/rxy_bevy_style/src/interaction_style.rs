@@ -55,14 +55,14 @@ pub fn interaction_to_style_interaction(interaction: Interaction) -> Option<Styl
     }
 }
 
-pub trait IterExt<M> {
+pub trait AttrSetBitsIterExt<M> {
     fn filter_attr_already_set(
         self,
         attr_is_set: AttrSetBits,
     ) -> impl Iterator<Item = (AttrIndex, M)>;
 }
 
-impl<T, M> IterExt<M> for T
+impl<T, M> AttrSetBitsIterExt<M> for T
 where
     T: Iterator<Item = (AttrIndex, M)>,
 {

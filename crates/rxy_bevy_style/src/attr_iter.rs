@@ -1,6 +1,7 @@
 use bevy_a11y::Focus;
 use core::iter;
 
+use crate::interaction_style::AttrSetBitsIterExt;
 use crate::node_style_state::NodeStyleSheetsState;
 use crate::{
     interaction_to_style_interaction, EntityAttrSyncer, StyleEntityRefExt, StyleItemValue,
@@ -19,6 +20,7 @@ use rxy_style::{
     IterExt, NodeInterStyleAttrInfos, NodeStyleAttrInfo, NodeStyleItemId, NodeStyleSheetId, PipeOp,
     StyleAttrId, StyleError, StyleInteraction, StyleSheetLocation,
 };
+
 pub(crate) trait StateOwner<'a, 's>: Sized {
     fn get_style_sheets_state(&'s self, entity: Entity) -> Result<&'a NodeStyleSheetsState>;
 
@@ -28,14 +30,15 @@ pub(crate) trait StateOwner<'a, 's>: Sized {
         style_item_id: impl Into<NodeStyleItemId>,
     ) -> Result<StyleAttrId> {
         let style_item_id: NodeStyleItemId = style_item_id.into();
-        self.get_style_sheet_definition(entity, style_item_id).and_then(|n| {
-            n.items
-                .get(style_item_id.item_index as usize)
-                .ok_or(StyleError::NoFoundStyleItemId {
-                    item_id: style_item_id,
-                })
-                .map(|n| n.attr_id)
-        })
+        self.get_style_sheet_definition(entity, style_item_id)
+            .and_then(|n| {
+                n.items
+                    .get(style_item_id.item_index as usize)
+                    .ok_or(StyleError::NoFoundStyleItemId {
+                        item_id: style_item_id,
+                    })
+                    .map(|n| n.attr_id)
+            })
     }
 
     #[inline(always)]
@@ -45,11 +48,14 @@ pub(crate) trait StateOwner<'a, 's>: Sized {
         style_item_id: impl Into<NodeStyleItemId>,
     ) -> Result<&'a StyleItemValue> {
         let style_item_id: NodeStyleItemId = style_item_id.into();
-        self.get_style_sheet_definition(entity, style_item_id).and_then(|n| {
-            n.items.get(style_item_id.item_index as usize).ok_or(StyleError::NoFoundStyleItemId {
-                item_id: style_item_id,
+        self.get_style_sheet_definition(entity, style_item_id)
+            .and_then(|n| {
+                n.items.get(style_item_id.item_index as usize).ok_or(
+                    StyleError::NoFoundStyleItemId {
+                        item_id: style_item_id,
+                    },
+                )
             })
-        })
     }
 
     fn get_style_sheet_definition(
@@ -265,19 +271,10 @@ impl<'a> EntityStyleAttrInfoIterArgs<'a> {
         focused_entity: Option<Entity>,
         strict_match: bool,
     ) -> impl Iterator<Item = (StyleAttrId, &NodeStyleAttrInfo)> {
-        let limit_attr_bits = entity_ref.get::<ElementEntityExtraData>().map(|n| n.attr_is_set);
+        let limit_attr_bits = entity_ref
+            .get::<ElementEntityExtraData>()
+            .map(|n| n.attr_is_set);
         let r = iter::empty();
-
-        fn op_limit_attr_bits<'a>(
-            iter: impl Iterator<Item = (StyleAttrId, &'a NodeStyleAttrInfo)>,
-            limit_attr_bits: Option<AttrSetBits>,
-        ) -> impl Iterator<Item = (StyleAttrId, &'a NodeStyleAttrInfo)> {
-            iter.option_map(limit_attr_bits, |n, limit_attr_bits| {
-                n.filter(move |(attr_id, _)| {
-                    !ElementEntityExtraData::static_is_set_attr(limit_attr_bits, *attr_id)
-                })
-            })
-        }
 
         let attr_infos = || {
             let entity_style_state = entity_ref
@@ -289,7 +286,10 @@ impl<'a> EntityStyleAttrInfoIterArgs<'a> {
                     .iter()
                     .filter_map(|id| entity_style_state.get(id).map(|n| (*id, n)))
                     .either_left(),
-                None => entity_style_state.iter().map(|n| (*n.0, n.1)).either_right(),
+                None => entity_style_state
+                    .iter()
+                    .map(|n| (*n.0, n.1))
+                    .either_right(),
             }
         };
 
@@ -331,9 +331,11 @@ impl<'a> EntityStyleAttrInfoIterArgs<'a> {
             )
         };
 
-        r.chain_option(self.iter_normal_style_sheet.then(attr_infos))
-            .chain_option(self.iter_inter_style_sheet.then(inter_attr_infos))
-            .pipe(limit_attr_bits, op_limit_attr_bits)
+        r.chain_option(self.iter_inter_style_sheet.then(inter_attr_infos))
+            .chain_option(self.iter_normal_style_sheet.then(attr_infos))
+            .option_map(limit_attr_bits, |n, limit_attr_bits| {
+                n.filter_attr_already_set(limit_attr_bits)
+            })
     }
     // pub fn iter2<U>(
     //     self,
