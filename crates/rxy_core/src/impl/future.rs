@@ -1,7 +1,7 @@
 use crate::build_info::{node_build_status, node_build_times_increment};
 use crate::renderer::DeferredWorldScoped;
 use crate::{
-    BuildState, IntoView, Renderer, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
+    IntoView, Renderer, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
     ViewMemberIndex,
 };
 use bevy_utils::futures::now_or_never;

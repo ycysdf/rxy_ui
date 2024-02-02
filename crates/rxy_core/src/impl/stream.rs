@@ -7,7 +7,7 @@ use futures_lite::{Stream, StreamExt};
 
 use crate::{
     build_info::{node_build_status, node_build_times_increment},
-    into_view, mutable_view_rebuild, BuildState, Either, IntoView, MutableView,
+    into_view, mutable_view_rebuild, Either, IntoView, MutableView,
     Renderer, RendererNodeId, TaskState, ToIntoView, View, ViewCtx, ViewKey, ViewMember,
     ViewMemberCtx, ViewMemberExt, ViewMemberIndex,
 };
@@ -127,7 +127,7 @@ where
             }
         }
     });
-    R::set_state(
+    R::set_node_state(
         ctx.world,
         &state_node_id,
         XStreamState(TaskState::<R>::new(task)),
@@ -186,7 +186,7 @@ where
         let Some(state_node_id) = key.state_node_id() else {
             return;
         };
-        drop(R::take_state::<XStreamState<R>>(ctx.world, &state_node_id));
+        drop(R::take_node_state::<XStreamState<R>>(ctx.world, &state_node_id));
 
         let stream = self.stream;
         let default_value = self.value;

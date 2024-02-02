@@ -46,7 +46,7 @@ impl<R> ViewCtx<'_, R>
     pub fn get_context_ref<T: Send + Sync + 'static>(&self) -> Option<&T> {
         let mut current_parent = self.parent.clone();
         loop {
-            if let Some(context) = R::get_state_ref::<Context<T>>(self.world, &current_parent) {
+            if let Some(context) = R::get_node_state_ref::<Context<T>>(self.world, &current_parent) {
                 return Some(&context.0);
             }
             if let Some(parent) = R::get_parent(self.world, &current_parent) {
@@ -59,9 +59,9 @@ impl<R> ViewCtx<'_, R>
     pub fn context_scoped<T: Send + Sync + 'static>(&mut self, f: impl FnOnce(&mut T)) -> bool {
         let mut current_parent = self.parent.clone();
         loop {
-            if let Some(mut context) = R::take_state::<Context<T>>(self.world, &current_parent) {
+            if let Some(mut context) = R::take_node_state::<Context<T>>(self.world, &current_parent) {
                 f(&mut context.0);
-                R::set_state(self.world, &current_parent, context);
+                R::set_node_state(self.world, &current_parent, context);
                 return true;
             }
             if let Some(parent) = R::get_parent(self.world, &current_parent) {
@@ -94,7 +94,7 @@ impl<R, T, V> View<R> for ProvideContext<R, T, V>
             reserve_key.unwrap_or_else(|| V::Key::reserve_key(ctx.world, will_rebuild));
         let node_id = V::element_node_id(&reserve_key);
         R::ensure_spawn(ctx.world, node_id.clone());
-        R::set_state::<Context<T>>(ctx.world, node_id, Context(self.provide_context));
+        R::set_node_state::<Context<T>>(ctx.world, node_id, Context(self.provide_context));
         
         self.view.build(
             ViewCtx {
@@ -108,7 +108,7 @@ impl<R, T, V> View<R> for ProvideContext<R, T, V>
 
     fn rebuild(self, ctx: ViewCtx<R>, key: Self::Key) {
         let node_id = V::element_node_id(&key);
-        R::set_state::<Context<T>>(ctx.world, node_id, Context(self.provide_context));
+        R::set_node_state::<Context<T>>(ctx.world, node_id, Context(self.provide_context));
         self.view.rebuild(ctx, key);
     }
 }

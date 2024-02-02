@@ -63,7 +63,7 @@ where
         }
     }
     fn set_view_key(&self, world: &mut R::World, view_key: VK) {
-        R::set_state::<VirtualContainerChildrenViewKey<VK>>(
+        R::set_node_state::<VirtualContainerChildrenViewKey<VK>>(
             world,
             &self.placeholder_node_id,
             VirtualContainerChildrenViewKey(view_key),
@@ -71,7 +71,7 @@ where
     }
 
     fn get_view_key<'a>(&self, world: &'a R::World) -> Option<&'a VK> {
-        R::get_state_ref::<VirtualContainerChildrenViewKey<VK>>(world, &self.placeholder_node_id)
+        R::get_node_state_ref::<VirtualContainerChildrenViewKey<VK>>(world, &self.placeholder_node_id)
             .map(move |n| &n.0)
     }
 }

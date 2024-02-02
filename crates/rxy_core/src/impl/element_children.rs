@@ -120,7 +120,7 @@ impl<V, CV, R> View<R> for ElementViewChildren<V, CV, R>
             will_rebuild,
         );
         if will_rebuild {
-            R::set_state(
+            R::set_node_state(
                 ctx.world,
                 V::node_id(&key),
                 ElementViewChildrenState { children_key },
@@ -131,7 +131,7 @@ impl<V, CV, R> View<R> for ElementViewChildren<V, CV, R>
 
     fn rebuild(self, ctx: ViewCtx<R>, state_key: Self::Key) {
         {
-            let Some(children_key) = R::get_state_ref::<ElementViewChildrenState<CV::Key>>(
+            let Some(children_key) = R::get_node_state_ref::<ElementViewChildrenState<CV::Key>>(
                 ctx.world,
                 V::node_id(&state_key),
             )

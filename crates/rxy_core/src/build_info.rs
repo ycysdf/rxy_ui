@@ -11,11 +11,11 @@ pub fn node_build_times_increment<R>(
 where
     R: Renderer,
 {
-    if let Some(build_info) = R::get_state_mut::<BuildInfo>(world, &state_node_id) {
+    if let Some(build_info) = R::get_node_state_mut::<BuildInfo>(world, &state_node_id) {
         build_info.build_times += 1;
         BuildStatus::AlreadyBuild
     } else {
-        R::set_state(world, &state_node_id, BuildInfo { build_times: 1 });
+        R::set_node_state(world, &state_node_id, BuildInfo { build_times: 1 });
         BuildStatus::NoBuild
     }
 }
@@ -27,7 +27,7 @@ pub fn node_build_status<R>(
 where
     R: Renderer,
 {
-    match R::get_state_ref::<BuildInfo>(world, state_node_id).is_some() {
+    match R::get_node_state_ref::<BuildInfo>(world, state_node_id).is_some() {
         true => BuildStatus::AlreadyBuild,
         false => BuildStatus::NoBuild,
     }

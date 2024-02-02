@@ -77,7 +77,7 @@ fn add_bubble_event<T>(
         system_ids.push(system_id);
     } else {
         entity_world_mut.world_scope(|world| {
-            BevyRenderer::set_state(
+            BevyRenderer::set_node_state(
                 world,
                 &node_id,
                 BubbleEventSystemIds(smallvec::SmallVec::from_elem(system_id, 1)),
@@ -95,7 +95,7 @@ fn add_bubble_event<T>(
                 listerner.stop_propagation();
             }
 
-            BevyRenderer::state_scoped(
+            BevyRenderer::node_state_scoped(
                 world,
                 &node_id,
                 |world, system_ids: &mut BubbleEventSystemIds| {
@@ -306,7 +306,7 @@ impl FocusEventWorldExt for World {
             },
             ElementEventId::Bubble { .. } => {
                 let system_ids =
-                    BevyRenderer::get_state_mut::<BubbleEventSystemIds>(self, &node_id).unwrap();
+                    BevyRenderer::get_node_state_mut::<BubbleEventSystemIds>(self, &node_id).unwrap();
                 system_ids.retain(|n| *n == system_id);
             }
         }

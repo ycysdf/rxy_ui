@@ -310,10 +310,10 @@ where
     K: ViewKey<R>,
 {
     let mut view_keys = core::mem::take(
-        &mut R::get_state_mut::<ForSourceState<R, K>>(world, state_node_id).unwrap().view_keys,
+        &mut R::get_node_state_mut::<ForSourceState<R, K>>(world, state_node_id).unwrap().view_keys,
     );
     let r = f(&mut view_keys, world);
-    R::get_state_mut::<ForSourceState<R, K>>(world, state_node_id).unwrap().view_keys = view_keys;
+    R::get_node_state_mut::<ForSourceState<R, K>>(world, state_node_id).unwrap().view_keys = view_keys;
     r
 }
 
@@ -323,7 +323,7 @@ where
     K: ViewKey<R>,
 {
     fn remove(self, world: &mut RendererWorld<R>) {
-        let state = R::take_state::<ForSourceState<R, K>>(world, self.0.state_node_id()).unwrap();
+        let state = R::take_node_state::<ForSourceState<R, K>>(world, self.0.state_node_id()).unwrap();
         drop(state.task);
         for key in state.view_keys {
             key.remove(world);
@@ -363,7 +363,7 @@ where
     }
 
     fn first_node_id(&self, world: &RendererWorld<R>) -> Option<RendererNodeId<R>> {
-        R::get_state_ref::<ForSourceState<R, K>>(world, self.0.state_node_id())
+        R::get_node_state_ref::<ForSourceState<R, K>>(world, self.0.state_node_id())
             .unwrap()
             .view_keys
             .first()
@@ -561,7 +561,7 @@ where
             }
         }
     });
-    R::set_state(
+    R::set_node_state(
         &mut *ctx.world,
         state_node_id.state_node_id(),
         ForSourceState::<R, _> {
@@ -701,7 +701,7 @@ where
         placeholder_node_id: RendererNodeId<R>,
     ) -> Option<Self::Key> {
         assert!(matches!(_key.0, DataOrPlaceholderNodeId::Placeholder(_)));
-        let view_keys = if let Some(state) = R::take_state::<
+        let view_keys = if let Some(state) = R::take_node_state::<
             ForSourceState<R, <IV::View as View<R>>::Key>,
         >(&mut *ctx.world, &placeholder_node_id)
         {

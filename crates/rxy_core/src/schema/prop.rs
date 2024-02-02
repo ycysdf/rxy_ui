@@ -16,24 +16,24 @@ impl<'a, R: Renderer> SchemaPropCtx<'a, R> {
     pub fn prop_state_mut<S: Send + 'static>(&mut self) -> Option<&mut S> {
         let state_node_id = self.state_node_id.clone();
         let prop_type_id = self.prop_type_id;
-        R::get_state_mut::<TypeIdHashMapState<S>>(self.world, &state_node_id)
+        R::get_node_state_mut::<TypeIdHashMapState<S>>(self.world, &state_node_id)
             .and_then(|s| s.0.get().get_mut(&prop_type_id))
     }
     pub fn take_prop_state<S: Send + 'static>(&mut self) -> Option<S> {
         let state_node_id = self.state_node_id.clone();
         let prop_type_id = self.prop_type_id;
-        R::get_state_mut::<TypeIdHashMapState<S>>(self.world, &state_node_id)
+        R::get_node_state_mut::<TypeIdHashMapState<S>>(self.world, &state_node_id)
             .and_then(|s| s.0.get().remove(&prop_type_id))
     }
     pub fn set_prop_state<S: Send + 'static>(&mut self, state: S) {
         let state_node_id = self.state_node_id.clone();
         let prop_type_id = self.prop_type_id;
-        if let Some(map) = R::get_state_mut::<TypeIdHashMapState<S>>(self.world, &state_node_id) {
+        if let Some(map) = R::get_node_state_mut::<TypeIdHashMapState<S>>(self.world, &state_node_id) {
             map.0.get().insert(prop_type_id, state);
         } else {
             let mut map = bevy_utils::HashMap::default();
             map.insert(prop_type_id, state);
-            R::set_state(
+            R::set_node_state(
                 self.world,
                 &state_node_id,
                 TypeIdHashMapState(SyncCell::new(map)),

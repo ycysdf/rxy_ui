@@ -144,7 +144,7 @@ where
             )));
         }
         if let Some(state_node_id) = placeholder_node_id {
-            R::set_state(ctx.world, &state_node_id, ForKeyedState { data_keys });
+            R::set_node_state(ctx.world, &state_node_id, ForKeyedState { data_keys });
         }
         view_keys
     }
@@ -167,7 +167,7 @@ where
             views.push(Some(view.into_view()));
         }
         let cmds = {
-            let Some(state) = R::get_state_ref::<ForKeyedState<K>>(ctx.world, &placeholder_node_id)
+            let Some(state) = R::get_node_state_ref::<ForKeyedState<K>>(ctx.world, &placeholder_node_id)
             else {
                 panic!("no found keyd state!")
             };
@@ -186,7 +186,7 @@ where
             key,
         );
 
-        R::set_state(
+        R::set_node_state(
             ctx.world,
             &placeholder_node_id,
             ForKeyedState {

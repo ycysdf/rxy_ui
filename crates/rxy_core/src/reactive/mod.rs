@@ -179,7 +179,7 @@ where
 {
     fn remove(self, world: &mut RendererWorld<R>) {
         let state =
-            R::take_state::<ReactiveDisposerState>(world, &self.disposer_state_node_id).unwrap();
+            R::take_node_state::<ReactiveDisposerState>(world, &self.disposer_state_node_id).unwrap();
         drop(state);
         R::remove_node(world, &self.disposer_state_node_id);
         self.key.remove(world);
@@ -260,7 +260,7 @@ where
                 .state_node_id()
                 .unwrap_or_else(|| R::spawn_data_node(ctx.world))
         });
-        R::set_state::<ReactiveDisposerState>(
+        R::set_node_state::<ReactiveDisposerState>(
             ctx.world,
             &disposer_state_node_id,
             ReactiveDisposerState(_effect.erase()),
@@ -280,7 +280,7 @@ where
             disposer_state_node_id,
         }: Self::Key,
     ) {
-        drop(R::take_state::<ReactiveDisposerState>(
+        drop(R::take_node_state::<ReactiveDisposerState>(
             ctx.world,
             &disposer_state_node_id,
         ));
@@ -308,7 +308,7 @@ where
                 });
             },
         );
-        R::set_state::<ReactiveDisposerState>(
+        R::set_node_state::<ReactiveDisposerState>(
             ctx.world,
             &disposer_state_node_id,
             ReactiveDisposerState(_effect.erase()),

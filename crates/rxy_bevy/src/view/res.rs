@@ -41,7 +41,7 @@ fn x_res_view_build<T, F, IV>(
             }
         }
     });
-    BevyRenderer::set_state(ctx.world, state_node_id, TaskState::new(task));
+    BevyRenderer::set_node_state(ctx.world, state_node_id, TaskState::new(task));
 }
 
 impl<T, F, IV> View<BevyRenderer> for XRes<T, F, IV>
@@ -87,7 +87,7 @@ where
         let Some(state_node_id) = key.state_node_id() else {
             return;
         };
-        drop(BevyRenderer::take_state::<TaskState>(
+        drop(BevyRenderer::take_node_state::<TaskState>(
             ctx.world,
             &state_node_id,
         ));

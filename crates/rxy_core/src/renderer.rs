@@ -3,11 +3,7 @@ use bevy_utils::synccell::SyncCell;
 use core::fmt::Debug;
 use core::future::Future;
 
-use oneshot::Sender;
-
-use crate::{
-    MaybeReflect, MaybeTypePath, RendererElementType, ViewKey,
-};
+use crate::{MaybeReflect, MaybeTypePath, RendererElementType, ViewKey};
 
 pub type RendererNodeId<R> = <R as Renderer>::NodeId;
 pub type RendererWorld<R> = <R as Renderer>::World;
@@ -57,18 +53,29 @@ pub trait Renderer:
     type World;
 
     type Task<T: Send + 'static>: Send + 'static;
-    fn get_or_insert_default_state<'a, S: Default + Send + Sync + 'static>(
+
+    fn deferred_world_scoped(world: &mut RendererWorld<Self>) -> impl DeferredWorldScoped<Self>;
+
+    fn get_container_node_id(
+        world: &mut RendererWorld<Self>,
+        container_type: ContainerType,
+    ) -> RendererNodeId<Self>;
+    fn spawn_and_detach(future: impl Future<Output = ()> + Send + 'static);
+    fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) -> Self::Task<T>;
+
+    fn get_or_insert_default_node_state<'a, S: Default + Send + Sync + 'static>(
         world: &'a mut RendererWorld<Self>,
         node_id: &RendererNodeId<Self>,
     ) -> &'a mut S;
-    fn state_scoped<S: Send + Sync + 'static, U>(
+
+    fn node_state_scoped<S: Send + Sync + 'static, U>(
         world: &mut RendererWorld<Self>,
         node_id: &RendererNodeId<Self>,
         f: impl FnOnce(&mut RendererWorld<Self>, &mut S) -> U,
     ) -> Option<U> {
-        Self::take_state(world, node_id).map(|mut n| {
+        Self::take_node_state(world, node_id).map(|mut n| {
             let r = f(world, &mut n);
-            Self::set_state(world, node_id, n);
+            Self::set_node_state(world, node_id, n);
             r
         })
     }
@@ -77,21 +84,15 @@ pub trait Renderer:
         node_id: &RendererNodeId<Self>,
         f: impl FnOnce(&mut RendererWorld<Self>, Option<&mut S>) -> U,
     ) -> U {
-        match Self::take_state(world, node_id) {
+        match Self::take_node_state(world, node_id) {
             Some(mut n) => {
                 let r = f(world, Some(&mut n));
-                Self::set_state(world, node_id, n);
+                Self::set_node_state(world, node_id, n);
                 r
             }
             None => f(world, None),
         }
     }
-    fn deferred_world_scoped(world: &mut RendererWorld<Self>) -> impl DeferredWorldScoped<Self>;
-
-    fn get_container_node_id(
-        world: &mut RendererWorld<Self>,
-        container_type: ContainerType,
-    ) -> RendererNodeId<Self>;
 
     fn spawn_placeholder(
         world: &mut RendererWorld<Self>,
@@ -118,30 +119,28 @@ pub trait Renderer:
 
     fn exist_node_id(world: &mut RendererWorld<Self>, node_id: &RendererNodeId<Self>) -> bool;
 
-    fn get_state_mut<'w, S: Send + Sync + 'static>(
+    fn get_node_state_mut<'w, S: Send + Sync + 'static>(
         world: &'w mut RendererWorld<Self>,
         node_id: &RendererNodeId<Self>,
     ) -> Option<&'w mut S>;
 
-    fn get_state_ref<'w, S: Send + Sync + 'static>(
+    fn get_node_state_ref<'w, S: Send + Sync + 'static>(
         world: &'w RendererWorld<Self>,
         node_id: &RendererNodeId<Self>,
     ) -> Option<&'w S>;
 
-    fn take_state<S: Send + Sync + 'static>(
+    fn take_node_state<S: Send + Sync + 'static>(
         world: &mut RendererWorld<Self>,
         node_id: &RendererNodeId<Self>,
     ) -> Option<S>;
 
-    fn set_state<S: Send + Sync + 'static>(
+    fn set_node_state<S: Send + Sync + 'static>(
         world: &mut RendererWorld<Self>,
         node_id: &RendererNodeId<Self>,
         state: S,
     );
 
     fn reserve_node_id(world: &mut RendererWorld<Self>) -> RendererNodeId<Self>;
-    fn spawn_and_detach(future: impl Future<Output = ()> + Send + 'static);
-    fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) -> Self::Task<T>;
 
     fn remove_node(world: &mut RendererWorld<Self>, node_id: &RendererNodeId<Self>);
 
@@ -159,25 +158,4 @@ pub trait Renderer:
     );
 
     fn get_is_hidden(world: &RendererWorld<Self>, node_id: &RendererNodeId<Self>) -> bool;
-}
-
-pub enum BuildState<K> {
-    AlreadyBuild(K),
-    NoBuild(Sender<K>),
-    NoBuildWithReserveKey(K),
-}
-
-impl<K> BuildState<K> {
-    pub fn try_clone(&self) -> Option<Self>
-    where
-        K: Clone,
-    {
-        match self {
-            BuildState::AlreadyBuild(n) => Some(BuildState::AlreadyBuild(n.clone())),
-            BuildState::NoBuild(_) => None,
-            BuildState::NoBuildWithReserveKey(n) => {
-                Some(BuildState::NoBuildWithReserveKey(n.clone()))
-            }
-        }
-    }
 }

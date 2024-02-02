@@ -77,7 +77,7 @@ pub fn mutable_view_rebuild<R: Renderer, V: MutableView<R>>(
     ctx: ViewCtx<R>,
     state_node_id: R::NodeId,
 ) {
-    let key = R::get_state_ref::<MutableKeySelfStatedWrapper<V::Key>>(ctx.world, &state_node_id)
+    let key = R::get_node_state_ref::<MutableKeySelfStatedWrapper<V::Key>>(ctx.world, &state_node_id)
         .map(|n| &n.0)
         .cloned();
     let new_key = if let Some(key) = key {
@@ -100,7 +100,7 @@ pub fn mutable_view_rebuild<R: Renderer, V: MutableView<R>>(
         Some(key)
     };
     if let Some(new_key) = new_key {
-        R::set_state(
+        R::set_node_state(
             ctx.world,
             &state_node_id,
             MutableKeySelfStatedWrapper(new_key),

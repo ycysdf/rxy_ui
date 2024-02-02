@@ -163,11 +163,11 @@ pub fn scheme_state_scoped<R, U>(
 where
     R: Renderer,
 {
-    let mut taken_map = R::get_state_mut::<SchemaViewState<R>>(&mut *world, node_id)
+    let mut taken_map = R::get_node_state_mut::<SchemaViewState<R>>(&mut *world, node_id)
         .and_then(|n| n.prop_state.get().take())?;
     let u = f(&mut *world, &mut taken_map);
 
-    let option = R::get_state_mut::<SchemaViewState<R>>(world, node_id)
+    let option = R::get_node_state_mut::<SchemaViewState<R>>(world, node_id)
         .unwrap()
         .prop_state
         .get();
@@ -292,7 +292,7 @@ where
         };
         if let Some(state_node_id) = key.state_node_id() {
             // Whether there is a schema nest, occupying state_node_id
-            if R::get_state_ref::<SchemaViewState<R>>(ctx.world, &state_node_id).is_some() {
+            if R::get_node_state_ref::<SchemaViewState<R>>(ctx.world, &state_node_id).is_some() {
                 data_state_node_id(data_node_id, ctx.world)
             } else {
                 (None, state_node_id)
@@ -309,7 +309,7 @@ where
         will_rebuild,
     );
 
-    R::set_state::<SchemaViewState<R>>(
+    R::set_node_state::<SchemaViewState<R>>(
         ctx.world,
         &state_node_id,
         SchemaViewState {

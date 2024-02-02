@@ -50,7 +50,7 @@ pub fn get_erasure_view_fns<'a, R>(
 where
     R: Renderer,
 {
-    let Some(erasure_fns) = R::get_state_ref::<ErasureViewFns<R>>(world, state_node_id) else {
+    let Some(erasure_fns) = R::get_node_state_ref::<ErasureViewFns<R>>(world, state_node_id) else {
         panic!("no found view type data!")
     };
     erasure_fns
@@ -60,7 +60,7 @@ pub fn set_erasure_view_fns<R: Renderer, V: View<R>>(
     world: &mut RendererWorld<R>,
     state_node_id: &<R as Renderer>::NodeId,
 ) {
-    R::set_state(
+    R::set_node_state(
         world,
         state_node_id,
         ErasureViewFns::<R> {
@@ -246,7 +246,7 @@ where
         world: &RendererWorld<R>,
     ) -> Option<(RendererNodeId<R>, Box<(dyn Any + Send + Sync)>)> {
         self.state_node_id.as_ref().and_then(|node_id| {
-            R::get_state_ref::<ErasureViewKeyViewState>(world, node_id)
+            R::get_node_state_ref::<ErasureViewKeyViewState>(world, node_id)
                 .map(|n| {
                     let view_key = &**n.view_key.as_ref().unwrap();
                     n.clone_fn.unwrap()(view_key)
@@ -373,7 +373,7 @@ where
             };
             set_erasure_view_fns::<R, V>(&mut *ctx.world, &state_node_id);
             if will_rebuild {
-                R::set_state(ctx.world, &state_node_id, ErasureViewKeyViewState::new(key));
+                R::set_node_state(ctx.world, &state_node_id, ErasureViewKeyViewState::new(key));
             }
             Some(state_node_id)
         } else {

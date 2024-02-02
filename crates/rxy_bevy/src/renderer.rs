@@ -2,7 +2,6 @@ use bevy_core::Name;
 use bevy_derive::{Deref, DerefMut};
 use rxy_core::build_info::node_build_times_increment;
 use std::borrow::Cow;
-use std::cell::Cell;
 use std::cmp::Ordering;
 use std::future::Future;
 
@@ -18,9 +17,9 @@ use bevy_ui::node_bundles::NodeBundle;
 use bevy_ui::{Display, Style};
 
 use rxy_core::{
-    mutable_view_rebuild, BuildState, ContainerType, DeferredWorldScoped, MemberReBuilder,
+    mutable_view_rebuild, BuildState, ContainerType, DeferredWorldScoped,
     MutableView, Renderer, RendererElementType, RendererNodeId, RendererWorld, View, ViewCtx,
-    ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewReBuilder,
+    ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
 };
 
 use crate::{CmdSender, RxyContainerEntity};
@@ -53,7 +52,7 @@ impl BevyRenderer {
     ) -> Option<U> {
         let entity = entity_world_mut.id();
         entity_world_mut.world_scope(|world| {
-            Self::state_scoped(world, &entity, |world, state| {
+            Self::node_state_scoped(world, &entity, |world, state| {
                 f(&mut world.entity_mut(entity), state)
             })
         })
@@ -89,7 +88,7 @@ impl Renderer for BevyRenderer {
 
     type Task<T: Send + 'static> = Task<T>;
 
-    fn get_or_insert_default_state<'a, S: Default + Send + Sync + 'static>(
+    fn get_or_insert_default_node_state<'a, S: Default + Send + Sync + 'static>(
         world: &'a mut RendererWorld<Self>,
         node_id: &RendererNodeId<Self>,
     ) -> &'a mut S {
@@ -182,7 +181,7 @@ impl Renderer for BevyRenderer {
         world.entities().contains(*node_id)
     }
 
-    fn get_state_mut<'w, S: Send + Sync + 'static>(
+    fn get_node_state_mut<'w, S: Send + Sync + 'static>(
         world: &'w mut RendererWorld<Self>,
         node_id: &RendererNodeId<Self>,
     ) -> Option<&'w mut S> {
@@ -191,14 +190,14 @@ impl Renderer for BevyRenderer {
             .map(|n| &mut n.into_inner().0)
     }
 
-    fn get_state_ref<'w, S: Send + Sync + 'static>(
+    fn get_node_state_ref<'w, S: Send + Sync + 'static>(
         world: &'w RendererWorld<Self>,
         node_id: &RendererNodeId<Self>,
     ) -> Option<&'w S> {
         world.get::<RendererState<S>>(*node_id).map(|n| &n.0)
     }
 
-    fn take_state<S: Send + Sync + 'static>(
+    fn take_node_state<S: Send + Sync + 'static>(
         world: &mut RendererWorld<Self>,
         node_id: &RendererNodeId<Self>,
     ) -> Option<S> {
@@ -208,7 +207,7 @@ impl Renderer for BevyRenderer {
             .map(|n| n.0)
     }
 
-    fn set_state<S: Send + Sync + 'static>(
+    fn set_node_state<S: Send + Sync + 'static>(
         world: &mut RendererWorld<Self>,
         node_id: &RendererNodeId<Self>,
         state: S,
