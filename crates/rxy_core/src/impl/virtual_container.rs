@@ -7,7 +7,7 @@ use rxy_macro::IntoView;
 
 use crate::mutable_view::{MutableView, MutableViewKey};
 use crate::{
-    Either, EitherExt, IntoView, Renderer, RendererNodeId, RendererViewExt, RendererWorld, View,
+    Either, EitherExt, IntoView, Renderer, RendererNodeId, RendererWorld, View,
     ViewCtx, ViewKey,
 };
 

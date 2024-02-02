@@ -22,7 +22,6 @@ pub use schema::*;
 pub use slot::*;
 pub use view::*;
 pub use view_member::*;
-pub use view_state::*;
 
 mod either;
 mod element_type;
@@ -33,7 +32,6 @@ mod rebuild;
 mod renderer;
 mod view;
 mod view_member;
-mod view_state;
 
 pub mod prelude {
     pub use crate::{
@@ -42,7 +40,7 @@ pub mod prelude {
         BoxedCloneableDynamicView, BoxedDynamicView, BoxedErasureView, Context,
         DeferredWorldScoped, DynamicView, Either, EitherExt, ElementView, ErasureView,
         IntoDynamicView, IntoElementView, IntoView, IntoViewErasureExt, Keyed,
-        MemberOwner, Renderer, RendererElementType, RendererViewExt, Required, SoloView, Static,
+        MemberOwner, Renderer, RendererElementType, Required, SoloView, Static,
         View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
     };
     #[cfg(feature = "hooked_collection")]

@@ -1,6 +1,6 @@
 use crate::{
     CloneableDynamicView, DynamicMutableViewKey, DynamicView, IntoView, MutableView,
-    MutableViewKey, Renderer, RendererNodeId, RendererViewExt, RendererWorld, View, ViewCtx,
+    MutableViewKey, Renderer, RendererNodeId, RendererWorld, View, ViewCtx,
     ViewKey, ViewMember, ViewMemberCtx,
 };
 use alloc::boxed::Box;

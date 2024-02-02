@@ -7,7 +7,7 @@ use ahash::AHasher;
 
 use crate::r#impl::erasure::{get_erasure_view_fns, set_erasure_view_fns, ErasureViewFns};
 use crate::{
-    IntoView, MutableView, MutableViewKey, Renderer, RendererNodeId, RendererViewExt,
+    IntoView, MutableView, MutableViewKey, Renderer, RendererNodeId,
     RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, VirtualContainer,
     VirtualContainerNodeId,
 };

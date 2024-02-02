@@ -16,7 +16,7 @@ use rxy_macro::{force_dynamic_view, force_into_dynamic_view};
 use crate::diff::{diff, Diff, DiffOpMove};
 use crate::{
     virtual_container, IntoView, MutableView, MutableViewKey, Renderer, RendererNodeId,
-    RendererViewExt, RendererWorld, View, ViewCtx, ViewKey, VirtualContainer,
+    RendererWorld, View, ViewCtx, ViewKey, VirtualContainer,
 };
 
 type FxIndexSet<T> = IndexSet<T, BuildHasherDefault<AHasher>>;
