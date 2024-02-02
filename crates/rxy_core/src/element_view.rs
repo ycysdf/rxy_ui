@@ -4,6 +4,8 @@ use crate::{
 };
 use rxy_macro::IntoView;
 
+// todo: ElementSoloView , ElementView ?
+
 pub trait ElementSoloView<R>: ElementView<R> + SoloView<R>
 where
     R: Renderer,

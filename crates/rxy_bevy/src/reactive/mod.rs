@@ -182,33 +182,3 @@ macro_rules! impl_into_view_attr_member_for_signal {
 impl_into_view_attr_member_for_signal!(xy_reactive::prelude::Memo);
 impl_into_view_attr_member_for_signal!(xy_reactive::prelude::ReadSignal);
 impl_into_view_attr_member_for_signal!(xy_reactive::prelude::RwSignal);
-
-/*pub trait ViewAttrMember: ViewMember<BevyRenderer> {
-    type EA: ElementUnitAttr;
-}
-
-impl<EA, VM> ViewAttrMember for futures_lite::stream::Boxed<VM>
-    where
-        EA: ElementUnitAttr,
-        VM: ViewAttrMember<EA = EA>,
-{
-    type EA = EA;
-}
-
-
-impl<EA, F, IA> ViewAttrMember for IntoAttrMemberWrapper<rxy_core::Reactive<F, IA>, EA>
-    where
-        EA: ElementUnitAttr,
-        F: Fn() -> IA + Send + 'static,
-        IA: IntoViewAttrMember<EA> + Send + 'static,
-{
-    type EA = EA;
-}
-impl<EA, IA> ViewAttrMember for IntoAttrMemberWrapper<xy_reactive::prelude::Memo<IA>, EA>
-    where
-        EA: ElementUnitAttr,
-        IA: IntoViewAttrMember<EA> + Clone + Send + Sync + 'static,
-{
-    type EA = EA;
-}
-*/
