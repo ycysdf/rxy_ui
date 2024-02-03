@@ -1,8 +1,8 @@
-use crate::DeferredWorldScoped;
 use crate::{
     scheme_state_scoped, BoxedPropValue, IntoSchemaProp, PropHashMap, PropState, Reactive,
     ReactiveDisposerState, Renderer, SchemaProp, SchemaPropCtx,
 };
+use crate::{DeferredWorldScoped, NodeTree};
 use alloc::boxed::Box;
 use bevy_utils::tracing::error;
 use core::any::Any;
@@ -20,12 +20,12 @@ where
 {
     let state_node_id = ctx.state_node_id.clone();
     let prop_type_id = ctx.prop_type_id;
-    let world_scoped = R::deferred_world_scoped(&mut *ctx.world);
+    let world_scoped = ctx.world.deferred_world_scoped();
     let effect = create_effect(move |_| {
         let value = signal.get();
         let state_node_id = state_node_id.clone();
         world_scoped.scoped(move |world| {
-            if !R::exist_node_id(world, &state_node_id) {
+            if !world.exist_node_id(&state_node_id) {
                 return;
             }
             let is_no_found = scheme_state_scoped(

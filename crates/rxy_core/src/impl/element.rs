@@ -2,10 +2,7 @@ use core::fmt::Debug;
 use core::marker::PhantomData;
 use core::{any::TypeId, hash::Hash};
 
-use crate::{
-    ElementSoloView, ElementView, IntoView, MemberOwner, Renderer, RendererElementType,
-    RendererNodeId, SoloView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
-};
+use crate::{ElementSoloView, ElementView, IntoView, MemberOwner, NodeTree, Renderer, RendererElementType, RendererNodeId, SoloView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx};
 
 #[derive(Clone)]
 pub struct Element<R, E, VM> {
@@ -187,7 +184,7 @@ where
     ) -> Self::Key {
         let spawned_node_id = {
             let parent = ctx.parent.clone();
-            R::spawn_node::<E>(&mut *ctx.world, Some(parent), reserve_key.map(|n| n.0))
+            ctx.world.spawn_node::<E>(Some(parent), reserve_key.map(|n| n.0))
         };
         self.members.build(
             ViewMemberCtx {

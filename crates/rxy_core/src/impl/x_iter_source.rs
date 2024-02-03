@@ -1,7 +1,7 @@
 use crate::diff::diff;
 use crate::{
-    virtual_container, Either, EitherExt, IntoView, MutableView, MutableViewKey, Renderer,
-    RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, VirtualContainer,
+    virtual_container, Either, EitherExt, IntoView, MutableView, MutableViewKey, NodeTree,
+    Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, VirtualContainer,
 };
 use alloc::borrow::Cow;
 use async_channel::{Receiver, Recv, RecvError, Sender, TryRecvError};
@@ -52,11 +52,15 @@ impl<T> ListOperator for UseList<T> {
     type Item = T;
 
     fn push(&self, item: T) {
-        let _ = self.op_sender.send_blocking(UseListOperation::Ops(VecOperation::Push { item }));
+        let _ = self
+            .op_sender
+            .send_blocking(UseListOperation::Ops(VecOperation::Push { item }));
     }
 
     fn callback(&self, f: impl FnOnce(&mut HookedVec<T, VecOperationRecord<T>>) + Send + 'static) {
-        let _ = self.op_sender.send_blocking(UseListOperation::Callback(Box::new(f)));
+        let _ = self
+            .op_sender
+            .send_blocking(UseListOperation::Callback(Box::new(f)));
     }
 
     fn patch(&self, index: usize, f: impl FnOnce(&mut T) + Send + 'static)
@@ -69,7 +73,9 @@ impl<T> ListOperator for UseList<T> {
     }
 
     fn pop(&self) {
-        let _ = self.op_sender.send_blocking(UseListOperation::Ops(VecOperation::Pop));
+        let _ = self
+            .op_sender
+            .send_blocking(UseListOperation::Ops(VecOperation::Pop));
     }
 
     fn insert(&self, index: usize, item: T) {
@@ -79,7 +85,9 @@ impl<T> ListOperator for UseList<T> {
     }
 
     fn remove(&self, index: usize) {
-        let _ = self.op_sender.send_blocking(UseListOperation::Ops(VecOperation::Remove { index }));
+        let _ = self
+            .op_sender
+            .send_blocking(UseListOperation::Ops(VecOperation::Remove { index }));
     }
 
     fn update(&self, index: usize, item: T) {
@@ -89,12 +97,15 @@ impl<T> ListOperator for UseList<T> {
     }
 
     fn clear(&self) {
-        let _ = self.op_sender.send_blocking(UseListOperation::Ops(VecOperation::Clear));
+        let _ = self
+            .op_sender
+            .send_blocking(UseListOperation::Ops(VecOperation::Clear));
     }
 
     fn move_item(&self, from: usize, to: usize) {
-        let _ =
-            self.op_sender.send_blocking(UseListOperation::Ops(VecOperation::Move { from, to }));
+        let _ = self
+            .op_sender
+            .send_blocking(UseListOperation::Ops(VecOperation::Move { from, to }));
     }
 
     fn watch_count(&self) -> Receiver<usize> {
@@ -310,10 +321,16 @@ where
     K: ViewKey<R>,
 {
     let mut view_keys = core::mem::take(
-        &mut R::get_node_state_mut::<ForSourceState<R, K>>(world, state_node_id).unwrap().view_keys,
+        &mut world
+            .get_node_state_mut::<ForSourceState<R, K>>(state_node_id)
+            .unwrap()
+            .view_keys,
     );
     let r = f(&mut view_keys, world);
-    R::get_node_state_mut::<ForSourceState<R, K>>(world, state_node_id).unwrap().view_keys = view_keys;
+    world
+        .get_node_state_mut::<ForSourceState<R, K>>(state_node_id)
+        .unwrap()
+        .view_keys = view_keys;
     r
 }
 
@@ -323,13 +340,15 @@ where
     K: ViewKey<R>,
 {
     fn remove(self, world: &mut RendererWorld<R>) {
-        let state = R::take_node_state::<ForSourceState<R, K>>(world, self.0.state_node_id()).unwrap();
+        let state = world
+            .take_node_state::<ForSourceState<R, K>>(self.0.state_node_id())
+            .unwrap();
         drop(state.task);
         for key in state.view_keys {
             key.remove(world);
         }
         if let DataOrPlaceholderNodeId::Data(state_node_id) = self.0 {
-            R::remove_node(world, &state_node_id);
+            world.remove_node(&state_node_id);
         }
     }
 
@@ -363,7 +382,8 @@ where
     }
 
     fn first_node_id(&self, world: &RendererWorld<R>) -> Option<RendererNodeId<R>> {
-        R::get_node_state_ref::<ForSourceState<R, K>>(world, self.0.state_node_id())
+        world
+            .get_node_state_ref::<ForSourceState<R, K>>(self.0.state_node_id())
             .unwrap()
             .view_keys
             .first()
@@ -441,11 +461,11 @@ where
         })
         .collect::<Vec<_>>();
 
-    let deferred_world_scoped = R::deferred_world_scoped(&mut *ctx.world);
+    let world_scoped = ctx.world.deferred_world_scoped();
     let state_node_id = if let Some(state_node_id) = state_node_id {
         DataOrPlaceholderNodeId::Placeholder(state_node_id)
     } else {
-        DataOrPlaceholderNodeId::Data(R::spawn_data_node(ctx.world))
+        DataOrPlaceholderNodeId::Data(ctx.world.spawn_data_node())
     };
 
     let task = R::spawn({
@@ -499,10 +519,10 @@ where
                 }
                 let parent = parent.clone();
                 let (sender, receiver) = oneshot::channel();
-                let mut taked_vec_or_receciver = vec_or_receiver.take();
+                let mut taken_vec_or_receiver = vec_or_receiver.take();
                 vec_or_receiver = Some(receiver.either_right());
 
-                deferred_world_scoped.scoped({
+                world_scoped.scoped({
                     let ops = core::mem::take(&mut ops);
                     let view_f = view_f.clone();
                     let state_node_id = state_node_id.clone();
@@ -511,7 +531,7 @@ where
                             world,
                             state_node_id.state_node_id(),
                             |view_keys: &mut Vec<<IV::View as View<R>>::Key>, world| {
-                                let mut vec = taked_vec_or_receciver
+                                let mut vec = taken_vec_or_receiver
                                     .take()
                                     .unwrap()
                                     .map_right(|n| n.try_recv().unwrap())
@@ -561,8 +581,7 @@ where
             }
         }
     });
-    R::set_node_state(
-        &mut *ctx.world,
+    ctx.world.set_node_state(
         state_node_id.state_node_id(),
         ForSourceState::<R, _> {
             view_keys,
@@ -625,8 +644,9 @@ fn apply_op_to_view_keys<R, T, F, IV>(
             match state_node_id {
                 DataOrPlaceholderNodeId::Data(_state_node_id) => unreachable!(),
                 DataOrPlaceholderNodeId::Placeholder(state_node_id) => {
-                    let first_node_id =
-                        view_keys[index].first_node_id(world).unwrap_or(state_node_id.clone());
+                    let first_node_id = view_keys[index]
+                        .first_node_id(world)
+                        .unwrap_or(state_node_id.clone());
                     view_key.insert_before(world, Some(&parent), Some(&first_node_id));
                 }
             }
@@ -701,9 +721,9 @@ where
         placeholder_node_id: RendererNodeId<R>,
     ) -> Option<Self::Key> {
         assert!(matches!(_key.0, DataOrPlaceholderNodeId::Placeholder(_)));
-        let view_keys = if let Some(state) = R::take_node_state::<
-            ForSourceState<R, <IV::View as View<R>>::Key>,
-        >(&mut *ctx.world, &placeholder_node_id)
+        let view_keys = if let Some(state) = ctx
+            .world
+            .take_node_state::<ForSourceState<R, <IV::View as View<R>>::Key>>(&placeholder_node_id)
         {
             drop(state.task);
             state.view_keys

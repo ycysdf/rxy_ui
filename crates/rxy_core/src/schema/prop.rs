@@ -1,8 +1,8 @@
-use crate::{ConstIndex, PropState, Renderer, RendererNodeId, RendererWorld};
+use crate::{ConstIndex, NodeTree, PropState, Renderer, RendererNodeId, RendererWorld};
 use alloc::boxed::Box;
 use bevy_utils::synccell::SyncCell;
-use core::any::TypeId;
 use bevy_utils::HashMap;
+use core::any::TypeId;
 
 pub struct TypeIdHashMapState<S: Send + 'static>(pub SyncCell<HashMap<TypeId, S>>);
 
@@ -16,28 +16,30 @@ impl<'a, R: Renderer> SchemaPropCtx<'a, R> {
     pub fn prop_state_mut<S: Send + 'static>(&mut self) -> Option<&mut S> {
         let state_node_id = self.state_node_id.clone();
         let prop_type_id = self.prop_type_id;
-        R::get_node_state_mut::<TypeIdHashMapState<S>>(self.world, &state_node_id)
+        self.world
+            .get_node_state_mut::<TypeIdHashMapState<S>>(&state_node_id)
             .and_then(|s| s.0.get().get_mut(&prop_type_id))
     }
     pub fn take_prop_state<S: Send + 'static>(&mut self) -> Option<S> {
         let state_node_id = self.state_node_id.clone();
         let prop_type_id = self.prop_type_id;
-        R::get_node_state_mut::<TypeIdHashMapState<S>>(self.world, &state_node_id)
+        self.world
+            .get_node_state_mut::<TypeIdHashMapState<S>>(&state_node_id)
             .and_then(|s| s.0.get().remove(&prop_type_id))
     }
     pub fn set_prop_state<S: Send + 'static>(&mut self, state: S) {
         let state_node_id = self.state_node_id.clone();
         let prop_type_id = self.prop_type_id;
-        if let Some(map) = R::get_node_state_mut::<TypeIdHashMapState<S>>(self.world, &state_node_id) {
+        if let Some(map) = self
+            .world
+            .get_node_state_mut::<TypeIdHashMapState<S>>(&state_node_id)
+        {
             map.0.get().insert(prop_type_id, state);
         } else {
-            let mut map = bevy_utils::HashMap::default();
+            let mut map = HashMap::default();
             map.insert(prop_type_id, state);
-            R::set_node_state(
-                self.world,
-                &state_node_id,
-                TypeIdHashMapState(SyncCell::new(map)),
-            );
+            self.world
+                .set_node_state(&state_node_id, TypeIdHashMapState(SyncCell::new(map)));
         }
     }
 }

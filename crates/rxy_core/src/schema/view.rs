@@ -1,16 +1,16 @@
 use crate::{
     into_view, BoxedCloneableErasureView, BoxedErasureView, BoxedPropValue, ConstIndex, DataNodeId,
     InnerSchemaCtx, IntoCloneableView, IntoSchemaProp, IntoView, IntoViewCloneableErasureExt,
-    IntoViewErasureExt, PropHashMap, Renderer, RendererNodeId, RendererWorld,
-    Schema, SchemaProp, SchemaProps, View, ViewCtx, ViewKey,
+    IntoViewErasureExt, NodeTree, PropHashMap, Renderer, RendererNodeId, RendererWorld, Schema,
+    SchemaProp, SchemaProps, View, ViewCtx, ViewKey,
 };
+use alloc::boxed::Box;
 use bevy_utils::synccell::SyncCell;
 use bevy_utils::HashMap;
 use core::any::TypeId;
+use core::hash::Hash;
 use core::marker::PhantomData;
 use rxy_macro::IntoView;
-use core::hash::Hash;
-use alloc::boxed::Box;
 
 #[derive(IntoView)]
 pub struct SchemaView<R, U, P = (), M = ()>
@@ -163,11 +163,11 @@ pub fn scheme_state_scoped<R, U>(
 where
     R: Renderer,
 {
-    let mut taken_map = R::get_node_state_mut::<SchemaViewState<R>>(&mut *world, node_id)
+    let mut taken_map = world.get_node_state_mut::<SchemaViewState<R>>(node_id)
         .and_then(|n| n.prop_state.get().take())?;
     let u = f(&mut *world, &mut taken_map);
 
-    let option = R::get_node_state_mut::<SchemaViewState<R>>(world, node_id)
+    let option = world.get_node_state_mut::<SchemaViewState<R>>(node_id)
         .unwrap()
         .prop_state
         .get();
@@ -205,7 +205,7 @@ where
 {
     fn remove(self, world: &mut RendererWorld<R>) {
         if let Some(data_node_id) = self.data_node_id {
-            R::remove_node(world, &data_node_id.0);
+            world.remove_node(&data_node_id.0);
         }
         self.key.remove(world);
     }
@@ -230,7 +230,7 @@ where
     fn reserve_key(world: &mut RendererWorld<R>, will_rebuild: bool) -> Self {
         Self {
             data_node_id: if TypeId::of::<K>() == TypeId::of::<()>() {
-                Some(DataNodeId(R::spawn_data_node(world)))
+                Some(DataNodeId(world.spawn_data_node()))
             } else {
                 None
             },
@@ -284,15 +284,20 @@ where
         false,
     );
     let (data_node_id, state_node_id) = {
-        let data_state_node_id = |data_node_id: Option<Option<DataNodeId<R>>>, world| {
+        let data_state_node_id = |data_node_id: Option<Option<DataNodeId<R>>>,
+                                  world: &mut RendererWorld<R>| {
             let state_node_id = data_node_id
                 .map(|n| n.unwrap())
-                .unwrap_or_else(|| DataNodeId(R::spawn_data_node(world)));
+                .unwrap_or_else(|| DataNodeId(world.spawn_data_node()));
             (Some(state_node_id.clone()), state_node_id.0)
         };
         if let Some(state_node_id) = key.state_node_id() {
             // Whether there is a schema nest, occupying state_node_id
-            if R::get_node_state_ref::<SchemaViewState<R>>(ctx.world, &state_node_id).is_some() {
+            if ctx
+                .world
+                .get_node_state_ref::<SchemaViewState<R>>(&state_node_id)
+                .is_some()
+            {
                 data_state_node_id(data_node_id, ctx.world)
             } else {
                 (None, state_node_id)
@@ -309,8 +314,7 @@ where
         will_rebuild,
     );
 
-    R::set_node_state::<SchemaViewState<R>>(
-        ctx.world,
+    ctx.world.set_node_state::<SchemaViewState<R>>(
         &state_node_id,
         SchemaViewState {
             prop_state: SyncCell::new(Some(prop_state)),

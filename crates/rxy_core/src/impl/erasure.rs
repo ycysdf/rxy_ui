@@ -1,8 +1,4 @@
-use crate::{
-    CloneableDynamicView, DynamicMutableViewKey, DynamicView, IntoView, MutableView,
-    MutableViewKey, Renderer, RendererNodeId, RendererWorld, View, ViewCtx,
-    ViewKey, ViewMember, ViewMemberCtx,
-};
+use crate::{CloneableDynamicView, DynamicMutableViewKey, DynamicView, IntoView, MutableView, MutableViewKey, NodeTree, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx};
 use alloc::boxed::Box;
 use core::any::Any;
 use core::hash::{Hash, Hasher};
@@ -50,7 +46,7 @@ pub fn get_erasure_view_fns<'a, R>(
 where
     R: Renderer,
 {
-    let Some(erasure_fns) = R::get_node_state_ref::<ErasureViewFns<R>>(world, state_node_id) else {
+    let Some(erasure_fns) = world.get_node_state_ref::<ErasureViewFns<R>>(state_node_id) else {
         panic!("no found view type data!")
     };
     erasure_fns
@@ -60,8 +56,7 @@ pub fn set_erasure_view_fns<R: Renderer, V: View<R>>(
     world: &mut RendererWorld<R>,
     state_node_id: &<R as Renderer>::NodeId,
 ) {
-    R::set_node_state(
-        world,
+    world.set_node_state(
         state_node_id,
         ErasureViewFns::<R> {
             remove_fn: Some(|key, world, _state_node_id| {
@@ -246,7 +241,7 @@ where
         world: &RendererWorld<R>,
     ) -> Option<(RendererNodeId<R>, Box<(dyn Any + Send + Sync)>)> {
         self.state_node_id.as_ref().and_then(|node_id| {
-            R::get_node_state_ref::<ErasureViewKeyViewState>(world, node_id)
+            world.get_node_state_ref::<ErasureViewKeyViewState>(node_id)
                 .map(|n| {
                     let view_key = &**n.view_key.as_ref().unwrap();
                     n.clone_fn.unwrap()(view_key)
@@ -301,7 +296,7 @@ where
 
     fn reserve_key(world: &mut RendererWorld<R>, _will_rebuild: bool) -> Self {
         ErasureViewKey {
-            state_node_id: Some(R::spawn_data_node(world)),
+            state_node_id: Some(world.spawn_data_node()),
             is_reserve: true,
         }
     }
@@ -373,12 +368,12 @@ where
             };
             set_erasure_view_fns::<R, V>(&mut *ctx.world, &state_node_id);
             if will_rebuild {
-                R::set_node_state(ctx.world, &state_node_id, ErasureViewKeyViewState::new(key));
+                ctx.world.set_node_state(&state_node_id, ErasureViewKeyViewState::new(key));
             }
             Some(state_node_id)
         } else {
             if let Some(_reserve_key) = reserve_key {
-                R::remove_node(ctx.world, &_reserve_key.state_node_id.unwrap());
+                ctx.world.remove_node(&_reserve_key.state_node_id.unwrap());
             }
             None
         };

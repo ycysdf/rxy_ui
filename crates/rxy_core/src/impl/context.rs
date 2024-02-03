@@ -1,9 +1,9 @@
 use crate::{
-    ElementView, IntoView, MemberOwner, Renderer, RendererNodeId, SoloView, View, ViewCtx, ViewKey,
-    ViewMember,
+    ElementView, IntoView, MemberOwner, NodeTree, Renderer, RendererNodeId, SoloView, View,
+    ViewCtx, ViewKey, ViewMember,
 };
-use rxy_macro::IntoView;
 use core::marker::PhantomData;
+use rxy_macro::IntoView;
 
 pub struct ProvideContext<R, T, V> {
     provide_context: T,
@@ -12,11 +12,11 @@ pub struct ProvideContext<R, T, V> {
 }
 
 pub fn provide_context<R, T, IV>(provide_context: T, view: IV) -> ProvideContext<R, T, IV::View>
-    where
-        R: Renderer,
-        T: Send + Sync + 'static,
-        IV: IntoView<R>,
-        IV::View: SoloView<R>,
+where
+    R: Renderer,
+    T: Send + Sync + 'static,
+    IV: IntoView<R>,
+    IV::View: SoloView<R>,
 {
     ProvideContext {
         provide_context,
@@ -26,8 +26,8 @@ pub fn provide_context<R, T, IV>(provide_context: T, view: IV) -> ProvideContext
 }
 
 impl<R> ViewCtx<'_, R>
-    where
-        R: Renderer,
+where
+    R: Renderer,
 {
     pub fn context<T: Send + Sync + Clone + 'static>(&self) -> T {
         self.get_context()
@@ -46,10 +46,11 @@ impl<R> ViewCtx<'_, R>
     pub fn get_context_ref<T: Send + Sync + 'static>(&self) -> Option<&T> {
         let mut current_parent = self.parent.clone();
         loop {
-            if let Some(context) = R::get_node_state_ref::<Context<T>>(self.world, &current_parent) {
+            if let Some(context) = self.world.get_node_state_ref::<Context<T>>(&current_parent)
+            {
                 return Some(&context.0);
             }
-            if let Some(parent) = R::get_parent(self.world, &current_parent) {
+            if let Some(parent) = self.world.get_parent(&current_parent) {
                 current_parent = parent;
             } else {
                 return None;
@@ -59,12 +60,13 @@ impl<R> ViewCtx<'_, R>
     pub fn context_scoped<T: Send + Sync + 'static>(&mut self, f: impl FnOnce(&mut T)) -> bool {
         let mut current_parent = self.parent.clone();
         loop {
-            if let Some(mut context) = R::take_node_state::<Context<T>>(self.world, &current_parent) {
+            if let Some(mut context) = self.world.take_node_state::<Context<T>>(&current_parent)
+            {
                 f(&mut context.0);
-                R::set_node_state(self.world, &current_parent, context);
+                self.world.set_node_state(&current_parent, context);
                 return true;
             }
-            if let Some(parent) = R::get_parent(self.world, &current_parent) {
+            if let Some(parent) = self.world.get_parent(&current_parent) {
                 current_parent = parent;
             } else {
                 return false;
@@ -77,10 +79,10 @@ impl<R> ViewCtx<'_, R>
 pub struct Context<T>(pub T);
 
 impl<R, T, V> View<R> for ProvideContext<R, T, V>
-    where
-        R: Renderer,
-        T: Send + Sync + 'static,
-        V: ElementView<R>,
+where
+    R: Renderer,
+    T: Send + Sync + 'static,
+    V: ElementView<R>,
 {
     type Key = V::Key;
 
@@ -93,9 +95,10 @@ impl<R, T, V> View<R> for ProvideContext<R, T, V>
         let reserve_key =
             reserve_key.unwrap_or_else(|| V::Key::reserve_key(ctx.world, will_rebuild));
         let node_id = V::element_node_id(&reserve_key);
-        R::ensure_spawn(ctx.world, node_id.clone());
-        R::set_node_state::<Context<T>>(ctx.world, node_id, Context(self.provide_context));
-        
+        ctx.world.ensure_spawn(node_id.clone());
+        ctx.world
+            .set_node_state::<Context<T>>(node_id, Context(self.provide_context));
+
         self.view.build(
             ViewCtx {
                 world: &mut *ctx.world,
@@ -108,16 +111,16 @@ impl<R, T, V> View<R> for ProvideContext<R, T, V>
 
     fn rebuild(self, ctx: ViewCtx<R>, key: Self::Key) {
         let node_id = V::element_node_id(&key);
-        R::set_node_state::<Context<T>>(ctx.world, node_id, Context(self.provide_context));
+        ctx.world.set_node_state::<Context<T>>(node_id, Context(self.provide_context));
         self.view.rebuild(ctx, key);
     }
 }
 
 impl<R, T, V> IntoView<R> for ProvideContext<R, T, V>
-    where
-        R: Renderer,
-        T: Send + Sync + 'static,
-        V: ElementView<R>,
+where
+    R: Renderer,
+    T: Send + Sync + 'static,
+    V: ElementView<R>,
 {
     type View = ProvideContext<R, T, V>;
     fn into_view(self) -> Self::View {
@@ -126,10 +129,10 @@ impl<R, T, V> IntoView<R> for ProvideContext<R, T, V>
 }
 
 impl<R, T, V> SoloView<R> for ProvideContext<R, T, V>
-    where
-        R: Renderer,
-        T: Send + Sync + 'static,
-        V: ElementView<R>,
+where
+    R: Renderer,
+    T: Send + Sync + 'static,
+    V: ElementView<R>,
 {
     fn node_id(key: &Self::Key) -> &RendererNodeId<R> {
         V::element_node_id(key)
@@ -137,10 +140,10 @@ impl<R, T, V> SoloView<R> for ProvideContext<R, T, V>
 }
 
 impl<R, T, V> ElementView<R> for ProvideContext<R, T, V>
-    where
-        R: Renderer,
-        T: Send + Sync + 'static,
-        V: ElementView<R>,
+where
+    R: Renderer,
+    T: Send + Sync + 'static,
+    V: ElementView<R>,
 {
     fn element_node_id(key: &Self::Key) -> &RendererNodeId<R> {
         V::element_node_id(key)
@@ -148,10 +151,10 @@ impl<R, T, V> ElementView<R> for ProvideContext<R, T, V>
 }
 
 impl<R, T, V> MemberOwner<R> for ProvideContext<R, T, V>
-    where
-        R: Renderer,
-        T: Send + Sync + 'static,
-        V: MemberOwner<R>,
+where
+    R: Renderer,
+    T: Send + Sync + 'static,
+    V: MemberOwner<R>,
 {
     type E = V::E;
     type VM = V::VM;
@@ -159,9 +162,9 @@ impl<R, T, V> MemberOwner<R> for ProvideContext<R, T, V>
     type SetMembers<VM: ViewMember<R> + MemberOwner<R>> = ProvideContext<R, T, V::SetMembers<VM>>;
 
     fn member<VM>(self, member: VM) -> Self::AddMember<VM>
-        where
-            (Self::VM, VM): ViewMember<R>,
-            VM: ViewMember<R>,
+    where
+        (Self::VM, VM): ViewMember<R>,
+        VM: ViewMember<R>,
     {
         ProvideContext {
             provide_context: self.provide_context,
@@ -170,9 +173,9 @@ impl<R, T, V> MemberOwner<R> for ProvideContext<R, T, V>
         }
     }
 
-    fn members<VM: ViewMember<R>>(self, members: VM) -> Self::SetMembers<(VM, )>
-        where
-            VM: ViewMember<R>,
+    fn members<VM: ViewMember<R>>(self, members: VM) -> Self::SetMembers<(VM,)>
+    where
+        VM: ViewMember<R>,
     {
         ProvideContext {
             provide_context: self.provide_context,

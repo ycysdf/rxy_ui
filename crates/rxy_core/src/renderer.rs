@@ -20,16 +20,128 @@ pub struct ViewMemberCtx<'a, R: Renderer> {
     pub world: &'a mut RendererWorld<R>,
     pub node_id: RendererNodeId<R>,
 }
-pub enum ContainerType {
-    // UiContainer,
-    SlotContainer,
-}
 
 pub trait DeferredWorldScoped<R>: Clone + Send + Sync + Sized + 'static
 where
     R: Renderer,
 {
     fn scoped(&self, f: impl FnOnce(&mut RendererWorld<R>) + Send + 'static);
+}
+
+pub trait Renderer:
+    MaybeReflect + MaybeTypePath + Clone + Debug + Send + Sync + Sized + 'static
+{
+    type NodeId: ViewKey<Self>;
+    type World: NodeTree<Self>;
+
+    type Task<T: Send + 'static>: Send + 'static;
+
+    fn spawn_and_detach(future: impl Future<Output = ()> + Send + 'static);
+
+    fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) -> Self::Task<T>;
+}
+
+pub trait NodeTree<R>
+where
+    R: Renderer<World = Self>,
+{
+    fn deferred_world_scoped(&mut self) -> impl DeferredWorldScoped<R>;
+    fn get_node_state_mut<S: Send + Sync + 'static>(
+        &mut self,
+        node_id: &RendererNodeId<R>,
+    ) -> Option<&mut S>;
+
+    fn get_node_state_ref<S: Send + Sync + 'static>(
+        &self,
+        node_id: &RendererNodeId<R>,
+    ) -> Option<&S>;
+
+    fn take_node_state<S: Send + Sync + 'static>(
+        &mut self,
+        node_id: &RendererNodeId<R>,
+    ) -> Option<S>;
+
+    fn set_node_state<S: Send + Sync + 'static>(&mut self, node_id: &RendererNodeId<R>, state: S);
+
+    fn exist_node_id(&mut self, node_id: &RendererNodeId<R>) -> bool;
+
+    fn reserve_node_id(&mut self) -> RendererNodeId<R>;
+
+    fn spawn_placeholder(
+        &mut self,
+        name: impl Into<Cow<'static, str>>,
+        parent: Option<&RendererNodeId<R>>,
+        reserve_node_id: Option<RendererNodeId<R>>,
+    ) -> RendererNodeId<R>;
+
+    fn ensure_spawn(&mut self, reserve_node_id: RendererNodeId<R>);
+
+    fn spawn_empty_node(
+        &mut self,
+        parent: Option<RendererNodeId<R>>,
+        reserve_node_id: Option<RendererNodeId<R>>,
+    ) -> RendererNodeId<R>;
+
+    fn spawn_data_node(&mut self) -> RendererNodeId<R>;
+
+    fn spawn_node<E: RendererElementType<R>>(
+        &mut self,
+        parent: Option<RendererNodeId<R>>,
+        reserve_node_id: Option<RendererNodeId<R>>,
+    ) -> RendererNodeId<R> {
+        E::spawn(self, parent, reserve_node_id)
+    }
+
+    fn get_parent(&self, node_id: &RendererNodeId<R>) -> Option<RendererNodeId<R>>;
+
+    fn remove_node(&mut self, node_id: &RendererNodeId<R>);
+
+    fn insert_before(
+        &mut self,
+        parent: Option<&RendererNodeId<R>>,
+        before_node_id: Option<&RendererNodeId<R>>,
+        inserted_node_ids: &[RendererNodeId<R>],
+    );
+
+    fn set_visibility(&mut self, hidden: bool, node_id: &RendererNodeId<R>);
+
+    fn get_visibility(&self, node_id: &RendererNodeId<R>) -> bool;
+
+    fn node_state_scoped<S: Send + Sync + 'static, U>(
+        &mut self,
+        node_id: &RendererNodeId<R>,
+        f: impl FnOnce(&mut Self, &mut S) -> U,
+    ) -> Option<U> {
+        Self::take_node_state(self, node_id).map(|mut n| {
+            let r = f(self, &mut n);
+            Self::set_node_state(self, node_id, n);
+            r
+        })
+    }
+    fn try_state_scoped<S: Send + Sync + 'static, U>(
+        &mut self,
+        node_id: &RendererNodeId<R>,
+        f: impl FnOnce(&mut Self, Option<&mut S>) -> U,
+    ) -> U {
+        match Self::take_node_state(self, node_id) {
+            Some(mut n) => {
+                let r = f(self, Some(&mut n));
+                Self::set_node_state(self, node_id, n);
+                r
+            }
+            None => f(self, None),
+        }
+    }
+
+    fn get_or_insert_default_node_state<S: Default + Send + Sync + 'static>(
+        &mut self,
+        node_id: &RendererNodeId<R>,
+    ) -> &mut S {
+        if self.get_node_state_mut::<S>(node_id).is_none() {
+            self.set_node_state(node_id, S::default());
+        }
+        self.get_node_state_mut::<S>(node_id).unwrap()
+    }
 }
 
 pub struct TaskState<R>(#[allow(dead_code)] pub SyncCell<R::Task<()>>)
@@ -43,119 +155,4 @@ where
     pub fn new(task: R::Task<()>) -> Self {
         Self(SyncCell::new(task))
     }
-}
-
-// todo: refactor, extract methods to World
-pub trait Renderer:
-    MaybeReflect + MaybeTypePath + Clone + Debug + Send + Sync + Sized + 'static
-{
-    type NodeId: ViewKey<Self>;
-    type World;
-
-    type Task<T: Send + 'static>: Send + 'static;
-
-    fn deferred_world_scoped(world: &mut RendererWorld<Self>) -> impl DeferredWorldScoped<Self>;
-
-    fn get_container_node_id(
-        world: &mut RendererWorld<Self>,
-        container_type: ContainerType,
-    ) -> RendererNodeId<Self>;
-    fn spawn_and_detach(future: impl Future<Output = ()> + Send + 'static);
-    fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) -> Self::Task<T>;
-
-    fn get_or_insert_default_node_state<'a, S: Default + Send + Sync + 'static>(
-        world: &'a mut RendererWorld<Self>,
-        node_id: &RendererNodeId<Self>,
-    ) -> &'a mut S;
-
-    fn node_state_scoped<S: Send + Sync + 'static, U>(
-        world: &mut RendererWorld<Self>,
-        node_id: &RendererNodeId<Self>,
-        f: impl FnOnce(&mut RendererWorld<Self>, &mut S) -> U,
-    ) -> Option<U> {
-        Self::take_node_state(world, node_id).map(|mut n| {
-            let r = f(world, &mut n);
-            Self::set_node_state(world, node_id, n);
-            r
-        })
-    }
-    fn try_state_scoped<S: Send + Sync + 'static, U>(
-        world: &mut RendererWorld<Self>,
-        node_id: &RendererNodeId<Self>,
-        f: impl FnOnce(&mut RendererWorld<Self>, Option<&mut S>) -> U,
-    ) -> U {
-        match Self::take_node_state(world, node_id) {
-            Some(mut n) => {
-                let r = f(world, Some(&mut n));
-                Self::set_node_state(world, node_id, n);
-                r
-            }
-            None => f(world, None),
-        }
-    }
-
-    fn spawn_placeholder(
-        world: &mut RendererWorld<Self>,
-        name: impl Into<Cow<'static, str>>,
-        parent: Option<&RendererNodeId<Self>>,
-        reserve_node_id: Option<RendererNodeId<Self>>,
-    ) -> RendererNodeId<Self>;
-
-    fn spawn_data_node(world: &mut RendererWorld<Self>) -> RendererNodeId<Self>;
-
-    fn get_parent(
-        world: &RendererWorld<Self>,
-        node_id: &RendererNodeId<Self>,
-    ) -> Option<RendererNodeId<Self>>;
-
-    fn ensure_spawn(world: &mut RendererWorld<Self>, reserve_node_id: RendererNodeId<Self>);
-    fn spawn_node<E: RendererElementType<Self>>(
-        world: &mut RendererWorld<Self>,
-        parent: Option<RendererNodeId<Self>>,
-        reserve_node_id: Option<RendererNodeId<Self>>,
-    ) -> RendererNodeId<Self> {
-        E::spawn(world, parent, reserve_node_id)
-    }
-
-    fn exist_node_id(world: &mut RendererWorld<Self>, node_id: &RendererNodeId<Self>) -> bool;
-
-    fn get_node_state_mut<'w, S: Send + Sync + 'static>(
-        world: &'w mut RendererWorld<Self>,
-        node_id: &RendererNodeId<Self>,
-    ) -> Option<&'w mut S>;
-
-    fn get_node_state_ref<'w, S: Send + Sync + 'static>(
-        world: &'w RendererWorld<Self>,
-        node_id: &RendererNodeId<Self>,
-    ) -> Option<&'w S>;
-
-    fn take_node_state<S: Send + Sync + 'static>(
-        world: &mut RendererWorld<Self>,
-        node_id: &RendererNodeId<Self>,
-    ) -> Option<S>;
-
-    fn set_node_state<S: Send + Sync + 'static>(
-        world: &mut RendererWorld<Self>,
-        node_id: &RendererNodeId<Self>,
-        state: S,
-    );
-
-    fn reserve_node_id(world: &mut RendererWorld<Self>) -> RendererNodeId<Self>;
-
-    fn remove_node(world: &mut RendererWorld<Self>, node_id: &RendererNodeId<Self>);
-
-    fn insert_before(
-        world: &mut RendererWorld<Self>,
-        parent: Option<&RendererNodeId<Self>>,
-        before_node_id: Option<&RendererNodeId<Self>>,
-        inserted_node_ids: &[RendererNodeId<Self>],
-    );
-
-    fn set_visibility(
-        world: &mut RendererWorld<Self>,
-        hidden: bool,
-        node_id: &RendererNodeId<Self>,
-    );
-
-    fn get_is_hidden(world: &RendererWorld<Self>, node_id: &RendererNodeId<Self>) -> bool;
 }

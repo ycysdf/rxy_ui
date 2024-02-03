@@ -1,4 +1,4 @@
-use crate::{Renderer, RendererNodeId, RendererWorld, ViewMemberCtx};
+use crate::{NodeTree, Renderer, RendererNodeId, RendererWorld, ViewMemberCtx};
 
 pub struct BuildInfo {
     // > 0
@@ -11,11 +11,11 @@ pub fn node_build_times_increment<R>(
 where
     R: Renderer,
 {
-    if let Some(build_info) = R::get_node_state_mut::<BuildInfo>(world, &state_node_id) {
+    if let Some(build_info) = world.get_node_state_mut::<BuildInfo>(&state_node_id) {
         build_info.build_times += 1;
         BuildStatus::AlreadyBuild
     } else {
-        R::set_node_state(world, &state_node_id, BuildInfo { build_times: 1 });
+        world.set_node_state(&state_node_id, BuildInfo { build_times: 1 });
         BuildStatus::NoBuild
     }
 }
@@ -27,7 +27,7 @@ pub fn node_build_status<R>(
 where
     R: Renderer,
 {
-    match R::get_node_state_ref::<BuildInfo>(world, state_node_id).is_some() {
+    match world.get_node_state_ref::<BuildInfo>(state_node_id).is_some() {
         true => BuildStatus::AlreadyBuild,
         false => BuildStatus::NoBuild,
     }

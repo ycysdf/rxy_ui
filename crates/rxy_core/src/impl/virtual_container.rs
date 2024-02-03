@@ -7,8 +7,8 @@ use rxy_macro::IntoView;
 
 use crate::mutable_view::{MutableView, MutableViewKey};
 use crate::{
-    Either, EitherExt, IntoView, Renderer, RendererNodeId, RendererWorld, View,
-    ViewCtx, ViewKey,
+    Either, EitherExt, IntoView, NodeTree, Renderer, RendererNodeId, RendererWorld, View, ViewCtx,
+    ViewKey,
 };
 
 #[derive(Clone, IntoView)]
@@ -63,16 +63,17 @@ where
         }
     }
     fn set_view_key(&self, world: &mut R::World, view_key: VK) {
-        R::set_node_state::<VirtualContainerChildrenViewKey<VK>>(
-            world,
+        world.set_node_state::<VirtualContainerChildrenViewKey<VK>>(
             &self.placeholder_node_id,
             VirtualContainerChildrenViewKey(view_key),
         )
     }
 
     fn get_view_key<'a>(&self, world: &'a R::World) -> Option<&'a VK> {
-        R::get_node_state_ref::<VirtualContainerChildrenViewKey<VK>>(world, &self.placeholder_node_id)
-            .map(move |n| &n.0)
+        world.get_node_state_ref::<VirtualContainerChildrenViewKey<VK>>(
+            &self.placeholder_node_id,
+        )
+        .map(move |n| &n.0)
     }
 }
 
@@ -93,7 +94,7 @@ where
         };
 
         view_key.remove(world);
-        R::remove_node(world, &self.placeholder_node_id);
+        world.remove_node(&self.placeholder_node_id);
     }
 
     #[inline(always)]
@@ -107,8 +108,7 @@ where
             panic!("view_key is None")
         };
         view_key.insert_before(world, parent, before_node_id);
-        R::insert_before(
-            world,
+        world.insert_before(
             parent,
             before_node_id,
             core::slice::from_ref(&self.placeholder_node_id),
@@ -125,7 +125,7 @@ where
 
     #[inline(always)]
     fn reserve_key(world: &mut R::World, _will_rebuild: bool) -> Self {
-        VirtualContainerNodeId::new(R::reserve_node_id(world))
+        VirtualContainerNodeId::new(world.reserve_node_id())
     }
 
     #[inline(always)]
@@ -215,7 +215,7 @@ where
             || !MV::no_placeholder_when_no_rebuild()
         {
             let placeholder_node_id =
-                R::spawn_placeholder(world, self.1, Some(&parent), reserve_placeholder_node_id);
+                world.spawn_placeholder(self.1, Some(&parent), reserve_placeholder_node_id);
             let view_key = self.0.build(
                 ViewCtx {
                     world: &mut *world,
@@ -223,8 +223,7 @@ where
                 },
                 Some(placeholder_node_id.clone()),
             );
-            R::insert_before(
-                &mut *world,
+            world.insert_before(
                 Some(&parent),
                 None,
                 core::slice::from_ref(&placeholder_node_id),

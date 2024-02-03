@@ -7,7 +7,7 @@ use bevy_ecs::{
     world::{EntityMut, EntityRef, EntityWorldMut, World},
 };
 use bevy_hierarchy::DespawnRecursiveExt;
-use rxy_bevy::{BevyRenderer, RendererState};
+use rxy_bevy::{BevyRenderer, EntityWorldMutExt, RendererState};
 use rxy_style::{NodeInterStyleAttrInfos, NodeStyleAttrInfos, StyleSheetId, StyleSheetLocation};
 
 use crate::attr_iter::StateOwnerWithNodeId;
@@ -153,7 +153,7 @@ macro_rules! impl_style_ext_for_entity_mut {
 impl_style_ext_for_entity_mut!(EntityMut<'_>);
 impl_style_ext_for_entity_mut!(EntityWorldMut<'_>);
 
-pub trait EntityWorldMutExt<'a> {
+pub trait StyleEntityWorldMutExt<'a> {
     fn scoped_style_sheets_state<U>(
         &mut self,
         f: impl FnOnce(&mut EntityWorldMut<'a>, &mut NodeStyleSheetsState) -> U,
@@ -176,7 +176,7 @@ pub trait EntityWorldMutExt<'a> {
     ) -> Result<U>;
 }
 
-impl<'a> EntityWorldMutExt<'a> for EntityWorldMut<'a> {
+impl<'a> StyleEntityWorldMutExt<'a> for EntityWorldMut<'a> {
     fn scoped_style_sheets_state<U>(
         &mut self,
         f: impl FnOnce(&mut EntityWorldMut<'a>, &mut NodeStyleSheetsState) -> U,
@@ -218,9 +218,7 @@ impl<'a> EntityWorldMutExt<'a> for EntityWorldMut<'a> {
         &mut self,
         f: impl FnOnce(&mut EntityWorldMut<'a>, &mut NodeInterStyleAttrInfos) -> U,
     ) -> Result<U> {
-        let mut state = core::mem::take(BevyRenderer::get_or_insert_default_state_by_entity_mut::<
-            NodeInterStyleAttrInfos,
-        >(self));
+        let mut state = core::mem::take(self.get_or_default::<NodeInterStyleAttrInfos>());
         let r = f(self, &mut state);
         self.insert::<RendererState<NodeInterStyleAttrInfos>>(RendererState(state));
         Ok(r)

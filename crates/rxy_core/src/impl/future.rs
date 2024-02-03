@@ -1,9 +1,6 @@
 use crate::build_info::{node_build_status, node_build_times_increment};
 use crate::renderer::DeferredWorldScoped;
-use crate::{
-    IntoView, Renderer, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
-    ViewMemberIndex,
-};
+use crate::{IntoView, NodeTree, Renderer, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex};
 use bevy_utils::futures::now_or_never;
 use core::any::TypeId;
 use core::future::{Future, IntoFuture};
@@ -45,7 +42,7 @@ where
             return;
         };
         if !node_build_status::<R>(ctx.world, &state_node_id).is_no_build() {
-            let world_scoped = R::deferred_world_scoped(ctx.world);
+            let world_scoped = ctx.world.deferred_world_scoped();
             R::spawn_and_detach(async move {
                 let view = self.0.await;
                 world_scoped.scoped(|world| {
@@ -74,7 +71,7 @@ fn future_view_build<R, T>(
     T: Future + Send + 'static,
     T::Output: IntoView<R> + Send + 'static,
 {
-    let world_scoped = R::deferred_world_scoped(ctx.world);
+    let world_scoped = ctx.world.deferred_world_scoped();
 
     R::spawn_and_detach(async move {
         let view = future.await;
@@ -122,7 +119,7 @@ where
     T: Future + Send + 'static,
     T::Output: ViewMember<R> + Send + 'static,
 {
-    let world_scoped = R::deferred_world_scoped(ctx.world);
+    let world_scoped = ctx.world.deferred_world_scoped();
 
     R::spawn_and_detach(async move {
         let view_member = future.await;
@@ -171,7 +168,7 @@ where
 
     fn rebuild(self, mut ctx: ViewMemberCtx<R>) {
         if !ctx.build_status().is_no_build() {
-            let world_scoped = R::deferred_world_scoped(ctx.world);
+            let world_scoped = ctx.world.deferred_world_scoped();
             R::spawn_and_detach(async move {
                 let view_member = self.0.await;
                 world_scoped.scoped(move |world| {

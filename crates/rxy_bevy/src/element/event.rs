@@ -21,10 +21,10 @@ use bevy_utils::tracing::error;
 use bevy_utils::{all_tuples, EntityHashMap, HashMap};
 use rxy_core::{
     prelude::{MemberOwner, ViewMember, ViewMemberCtx},
-    Renderer, RendererNodeId, RendererWorld,
+    NodeTree, RendererNodeId, RendererWorld,
 };
 
-use crate::{add_system, BevyRenderer};
+use crate::{add_system, BevyRenderer, EntityWorldMutExt};
 
 fn add_focus_event<T>(
     world: &mut RendererWorld<BevyRenderer>,
@@ -115,8 +115,9 @@ fn remove_bubble_event<T>(
 ) where
     T: EntityEvent + EventIsMatch,
 {
-    let system_ids =
-        BevyRenderer::get_node_state_mut::<BubbleEventSystemIds<T>>(world, &node_id).unwrap();
+    let system_ids = world
+        .get_node_state_mut::<BubbleEventSystemIds<T>>(&node_id)
+        .unwrap();
     system_ids.retain(|n| n.0 != system_id);
 }
 
@@ -131,14 +132,11 @@ fn add_bubble_event<T>(
 {
     let mut entity_world_mut = world.entity_mut(node_id);
     if entity_world_mut.contains::<On<T>>() {
-        let system_ids = BevyRenderer::get_or_insert_default_state_by_entity_mut::<
-            BubbleEventSystemIds<T>,
-        >(&mut entity_world_mut);
+        let system_ids = entity_world_mut.get_or_default::<BubbleEventSystemIds<T>>();
         system_ids.push((system_id, data));
     } else {
         entity_world_mut.world_scope(|world| {
-            BevyRenderer::set_node_state(
-                world,
+            world.set_node_state(
                 &node_id,
                 BubbleEventSystemIds::<T>::new(smallvec::SmallVec::from_elem((system_id, data), 1)),
             );
@@ -150,8 +148,7 @@ fn add_bubble_event<T>(
             }
 
             let event_data: T = ListenerInput::deref(&*listerner).clone();
-            BevyRenderer::node_state_scoped(
-                world,
+            world.node_state_scoped(
                 &node_id,
                 |world, system_ids: &mut BubbleEventSystemIds<T>| {
                     for (system_id, data) in system_ids.iter() {
@@ -604,13 +601,13 @@ pub trait ElementEventIds: Clone + Send + 'static {
 }
 
 impl ElementEventIds for ElementEventId {
-    fn iter_event_ids(self) -> impl Iterator<Item = ElementEventId> + Send + 'static{
+    fn iter_event_ids(self) -> impl Iterator<Item = ElementEventId> + Send + 'static {
         once(self)
     }
 }
 
 impl ElementEventIds for BubblePointerEvent {
-    fn iter_event_ids(self) -> impl Iterator<Item = ElementEventId> + Send + 'static{
+    fn iter_event_ids(self) -> impl Iterator<Item = ElementEventId> + Send + 'static {
         once(ElementEventId::Bubble {
             event: self,
             stop_propagation: false,
@@ -626,7 +623,7 @@ where
     T: IntoIterator<Item = ElementEventId> + Clone + Send + 'static,
     T::IntoIter: Send,
 {
-    fn iter_event_ids(self) -> impl Iterator<Item = ElementEventId> + Send + 'static{
+    fn iter_event_ids(self) -> impl Iterator<Item = ElementEventId> + Send + 'static {
         self.0.into_iter()
     }
 }

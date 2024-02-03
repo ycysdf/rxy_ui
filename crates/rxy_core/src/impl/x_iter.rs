@@ -14,10 +14,7 @@ use indexmap::IndexSet;
 use rxy_macro::{force_dynamic_view, force_into_dynamic_view};
 
 use crate::diff::{diff, Diff, DiffOpMove};
-use crate::{
-    virtual_container, IntoView, MutableView, MutableViewKey, Renderer, RendererNodeId,
-    RendererWorld, View, ViewCtx, ViewKey, VirtualContainer,
-};
+use crate::{virtual_container, IntoView, MutableView, MutableViewKey, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, VirtualContainer, NodeTree};
 
 type FxIndexSet<T> = IndexSet<T, BuildHasherDefault<AHasher>>;
 
@@ -53,7 +50,11 @@ where
     R: Renderer,
 {
     ForKeyed {
-        items: items.into_iter().enumerate().map(|(i, n)| Keyed(i, n)).collect::<Vec<_>>(),
+        items: items
+            .into_iter()
+            .enumerate()
+            .map(|(i, n)| Keyed(i, n))
+            .collect::<Vec<_>>(),
         _marker: PhantomData,
     }
 }
@@ -99,7 +100,9 @@ impl<R: Renderer, K: ViewKey<R>> MutableViewKey<R> for Vec<Option<K>> {
     }
 
     fn first_node_id(&self, world: &RendererWorld<R>) -> Option<RendererNodeId<R>> {
-        self.iter().filter_map(|n| n.as_ref()).find_map(|key| key.first_node_id(world))
+        self.iter()
+            .filter_map(|n| n.as_ref())
+            .find_map(|key| key.first_node_id(world))
     }
 
     fn state_node_id(&self) -> Option<RendererNodeId<R>> {
@@ -144,7 +147,8 @@ where
             )));
         }
         if let Some(state_node_id) = placeholder_node_id {
-            R::set_node_state(ctx.world, &state_node_id, ForKeyedState { data_keys });
+            ctx.world
+                .set_node_state(&state_node_id, ForKeyedState { data_keys });
         }
         view_keys
     }
@@ -167,7 +171,8 @@ where
             views.push(Some(view.into_view()));
         }
         let cmds = {
-            let Some(state) = R::get_node_state_ref::<ForKeyedState<K>>(ctx.world, &placeholder_node_id)
+            let Some(state) =
+                ctx.world.get_node_state_ref::<ForKeyedState<K>>(&placeholder_node_id)
             else {
                 panic!("no found keyd state!")
             };
@@ -186,8 +191,7 @@ where
             key,
         );
 
-        R::set_node_state(
-            ctx.world,
+        ctx.world.set_node_state(
             &placeholder_node_id,
             ForKeyedState {
                 data_keys: new_data_keys,
@@ -268,13 +272,17 @@ where
                 key.remove(&mut *ctx.world);
             }
 
-            let mut moved_children =
-                moved.iter().map(|move_| children_keys[move_.from].take()).collect::<Vec<_>>();
+            let mut moved_children = moved
+                .iter()
+                .map(|move_| children_keys[move_.from].take())
+                .collect::<Vec<_>>();
 
             children_keys.resize_with(children_keys.len() + added.len(), || None);
 
-            for (i, DiffOpMove { to, .. }) in
-                moved.iter().enumerate().filter(|(_, move_)| move_.can_ignored)
+            for (i, DiffOpMove { to, .. }) in moved
+                .iter()
+                .enumerate()
+                .filter(|(_, move_)| move_.can_ignored)
             {
                 children_keys[*to] = moved_children[i].take();
             }
@@ -290,8 +298,10 @@ where
                         .unwrap_or_else(|| placeholder_id.clone()),
                 )
             };
-            for (i, DiffOpMove { to, .. }) in
-                moved.into_iter().enumerate().filter(|(_, move_)| !move_.can_ignored)
+            for (i, DiffOpMove { to, .. }) in moved
+                .into_iter()
+                .enumerate()
+                .filter(|(_, move_)| !move_.can_ignored)
             {
                 let moved_key = moved_children[i].take().unwrap();
 

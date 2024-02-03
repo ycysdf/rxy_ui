@@ -5,12 +5,12 @@ use crate::style_sheets::StyleSheets;
 use crate::EntityStyleAttrInfoIterArgs;
 use crate::StyleError;
 use crate::{
-    AppliedStyleSheet, AttrStyleOwner, EntityWorldMutExt, Previous, StyleEntityMutExt,
+    AppliedStyleSheet, AttrStyleOwner, StyleEntityWorldMutExt, Previous, StyleEntityMutExt,
     StyleSheetDefinition,
 };
 use bevy_ecs::prelude::{EntityWorldMut, World};
 use bevy_ui::Interaction;
-use rxy_bevy::{BevyRenderer, RendererState};
+use rxy_bevy::{BevyRenderer, EntityWorldMutExt, RendererState};
 use rxy_bevy_element::{view_element_type, ElementEntityExtraData, ElementEntityWorldMutExt};
 use rxy_core::{ViewMember, ViewMemberCtx, ViewMemberIndex};
 use rxy_style::{
@@ -61,8 +61,9 @@ where
             return;
         }
         let mut r = || {
-            let member_state =
-                ctx.take_indexed_view_member_state::<ApplyStyleSheetsMemberState>().unwrap();
+            let member_state = ctx
+                .take_indexed_view_member_state::<ApplyStyleSheetsMemberState>()
+                .unwrap();
             let entity = ctx.node_id;
 
             let mut entity_world_mut: EntityWorldMut<'_> = ctx.world.entity_mut(entity);
@@ -83,11 +84,13 @@ where
                 require_reset_f: impl FnMut(StyleAttrId),
             ) -> Result<(), StyleError> {
                 if style_sheet_definition.interaction.is_some() {
-                    entity_world_mut.get_inter_style_state()?.remove_attr_style_of_definition(
-                        style_sheet_definition,
-                        style_sheet_id,
-                        require_reset_f,
-                    )?;
+                    entity_world_mut
+                        .get_inter_style_state()?
+                        .remove_attr_style_of_definition(
+                            style_sheet_definition,
+                            style_sheet_id,
+                            require_reset_f,
+                        )?;
                 } else {
                     style_state.remove_attr_style_of_definition(
                         style_sheet_definition,
@@ -195,25 +198,19 @@ where
     fn build(self, mut ctx: ViewMemberCtx<BevyRenderer>, _will_rebuild: bool) {
         let r = || {
             let mut entity_world_mut = ctx.world.entity_mut(ctx.node_id.clone());
-            if !entity_world_mut.contains::<RendererState<NodeStyleAttrInfos>>() {
-                entity_world_mut.insert(RendererState(NodeStyleAttrInfos::default()));
-            }
-            if !entity_world_mut.contains::<Interaction>() {
-                entity_world_mut.insert(Interaction::None);
-            }
-            if !entity_world_mut.contains::<Previous<Interaction>>() {
-                entity_world_mut.insert(Previous(*entity_world_mut.get::<Interaction>().unwrap()));
-            }
-            let style_sheets_state = BevyRenderer::get_or_insert_default_state_by_entity_mut::<
-                NodeStyleSheetsState,
-            >(&mut entity_world_mut);
+            entity_world_mut.insert_if_not_exist(RendererState(NodeStyleAttrInfos::default()));
+            entity_world_mut.insert_if_not_exist(Interaction::default());
+            entity_world_mut.insert_if_not_exist(Previous(Interaction::default()));
+
+            let style_sheets_state = entity_world_mut.get_or_default::<NodeStyleSheetsState>();
 
             let inline_style_sheet_count = style_sheets_state.inline_style_sheet.len() as _;
             let shared_style_sheet_count = style_sheets_state.shared_style_sheet_ids.len() as _;
 
             let (applied_style_sheets, mut member_state, is_first_build) =
-                if let Some(member_state) =
-                    ctx.indexed_view_member_state_mut::<ApplyStyleSheetsMemberState>().cloned()
+                if let Some(member_state) = ctx
+                    .indexed_view_member_state_mut::<ApplyStyleSheetsMemberState>()
+                    .cloned()
                 {
                     let style_sheet_ctx = StyleSheetCtx {
                         inline_style_sheet_index: member_state.inline_sheet_index,
@@ -347,8 +344,10 @@ where
 
     fn rebuild(self, mut ctx: ViewMemberCtx<BevyRenderer>) {
         let r = || {
-            let mut member_state =
-                ctx.indexed_view_member_state_mut::<ApplyStyleSheetsMemberState>().unwrap().clone();
+            let mut member_state = ctx
+                .indexed_view_member_state_mut::<ApplyStyleSheetsMemberState>()
+                .unwrap()
+                .clone();
 
             let style_sheet_ctx = StyleSheetCtx {
                 inline_style_sheet_index: member_state.inline_sheet_index,

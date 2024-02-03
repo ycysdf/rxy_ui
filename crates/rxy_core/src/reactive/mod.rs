@@ -14,8 +14,9 @@ use xy_reactive::effect::ErasureEffect;
 use xy_reactive::prelude::create_render_effect;
 use xy_reactive::render_effect::RenderEffect;
 
-use crate::{DeferredWorldScoped, IntoView, MemberOwner, Renderer, RendererNodeId,
-            RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
+use crate::{
+    DeferredWorldScoped, IntoView, MemberOwner, NodeTree, Renderer, RendererNodeId, RendererWorld,
+    View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
 };
 
 struct FnOnceCell<'a, I, T> {
@@ -87,7 +88,7 @@ where
     fn build(self, mut ctx: ViewMemberCtx<R>, _will_rebuild: bool) {
         let index = ctx.index;
         let node_id = ctx.node_id.clone();
-        let deferred_world_scoped = R::deferred_world_scoped(ctx.world);
+        let deferred_world_scoped = ctx.world.deferred_world_scoped();
         let _effect = create_effect_with_init(
             self.0,
             |vm: VM| {
@@ -103,7 +104,7 @@ where
             move |member: VM, _| {
                 let node_id = node_id.clone();
                 deferred_world_scoped.scoped(move |world| {
-                    if !R::exist_node_id(world, &node_id) {
+                    if !world.exist_node_id(&node_id) {
                         return;
                     }
                     let ctx = ViewMemberCtx {
@@ -122,14 +123,14 @@ where
     fn rebuild(self, mut ctx: ViewMemberCtx<R>) {
         drop(ctx.take_indexed_view_member_state::<ReactiveDisposerState>());
 
-        let deferred_world_scoped = R::deferred_world_scoped(ctx.world);
+        let deferred_world_scoped = ctx.world.deferred_world_scoped();
         let index = ctx.index;
         let node_id = ctx.node_id.clone();
         let _effect = create_render_effect(move |_| {
             let vm = self.0();
             let node_id = node_id.clone();
             deferred_world_scoped.scoped(move |world| {
-                if !R::exist_node_id(world, &node_id) {
+                if !world.exist_node_id(&node_id) {
                     return;
                 }
                 let ctx: ViewMemberCtx<'_, R> = ViewMemberCtx {
@@ -178,10 +179,11 @@ where
     K: ViewKey<R>,
 {
     fn remove(self, world: &mut RendererWorld<R>) {
-        let state =
-            R::take_node_state::<ReactiveDisposerState>(world, &self.disposer_state_node_id).unwrap();
+        let state = world
+            .take_node_state::<ReactiveDisposerState>(&self.disposer_state_node_id)
+            .unwrap();
         drop(state);
-        R::remove_node(world, &self.disposer_state_node_id);
+        world.remove_node(&self.disposer_state_node_id);
         self.key.remove(world);
     }
 
@@ -206,7 +208,7 @@ where
         let key = K::reserve_key(world, will_rebuild);
         Self {
             key,
-            disposer_state_node_id: R::spawn_data_node(world),
+            disposer_state_node_id: world.spawn_data_node(),
         }
     }
 
@@ -232,7 +234,7 @@ where
         let (reserve_key, reserve_disposer) = reserve_key
             .map(|n| (n.key, n.disposer_state_node_id))
             .unzip();
-        let world_scoped = R::deferred_world_scoped(ctx.world);
+        let world_scoped = ctx.world.deferred_world_scoped();
         let parent = ctx.parent.clone();
         let _effect = create_effect_with_init(
             self.0,
@@ -258,10 +260,9 @@ where
         let disposer_state_node_id = reserve_disposer.unwrap_or_else(|| {
             view_key
                 .state_node_id()
-                .unwrap_or_else(|| R::spawn_data_node(ctx.world))
+                .unwrap_or_else(|| ctx.world.spawn_data_node())
         });
-        R::set_node_state::<ReactiveDisposerState>(
-            ctx.world,
+        ctx.world.set_node_state::<ReactiveDisposerState>(
             &disposer_state_node_id,
             ReactiveDisposerState(_effect.erase()),
         );
@@ -280,12 +281,12 @@ where
             disposer_state_node_id,
         }: Self::Key,
     ) {
-        drop(R::take_node_state::<ReactiveDisposerState>(
-            ctx.world,
-            &disposer_state_node_id,
-        ));
+        drop(
+            ctx.world
+                .take_node_state::<ReactiveDisposerState>(&disposer_state_node_id),
+        );
 
-        let world_scoped = R::deferred_world_scoped(ctx.world);
+        let world_scoped = ctx.world.deferred_world_scoped();
         let parent = ctx.parent.clone();
 
         let _effect = create_effect_with_init(
@@ -308,8 +309,7 @@ where
                 });
             },
         );
-        R::set_node_state::<ReactiveDisposerState>(
-            ctx.world,
+        ctx.world.set_node_state::<ReactiveDisposerState>(
             &disposer_state_node_id,
             ReactiveDisposerState(_effect.erase()),
         );

@@ -3,9 +3,7 @@ use core::hash::Hash;
 
 use bevy_utils::all_tuples;
 
-use crate::{
-    MaybeFromReflect, MaybeReflect, MaybeTypePath, Renderer, RendererNodeId, RendererWorld, ViewCtx,
-};
+use crate::{MaybeFromReflect, MaybeReflect, MaybeTypePath, NodeTree, Renderer, RendererNodeId, RendererWorld, ViewCtx};
 
 
 pub trait View<R: Renderer>: Sized + Send + 'static {
@@ -122,7 +120,7 @@ where
     fn set_visibility(&self, _world: &mut RendererWorld<R>, _hidden: bool) {}
 
     fn reserve_key(world: &mut RendererWorld<R>, _will_rebuild: bool) -> Self {
-        DataNodeId(R::reserve_node_id(&mut *world))
+        DataNodeId(world.reserve_node_id())
     }
 
     fn first_node_id(&self, _world: &RendererWorld<R>) -> Option<RendererNodeId<R>> {

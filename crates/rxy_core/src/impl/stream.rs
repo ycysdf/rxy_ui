@@ -7,9 +7,9 @@ use futures_lite::{Stream, StreamExt};
 
 use crate::{
     build_info::{node_build_status, node_build_times_increment},
-    into_view, mutable_view_rebuild, Either, IntoView, MutableView,
-    Renderer, RendererNodeId, TaskState, ToIntoView, View, ViewCtx, ViewKey, ViewMember,
-    ViewMemberCtx, ViewMemberExt, ViewMemberIndex,
+    into_view, mutable_view_rebuild, Either, IntoView, MutableView, NodeTree, Renderer,
+    RendererNodeId, TaskState, ToIntoView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
+    ViewMemberExt, ViewMemberIndex,
 };
 
 fn stream_vm_rebuild<R, S, VM>(
@@ -41,14 +41,14 @@ fn stream_vm_rebuild<R, S, VM>(
     }
     let index = ctx.index;
     let node_id = ctx.node_id.clone();
-    let world_scoped = R::deferred_world_scoped(ctx.world);
+    let world_scoped = ctx.world.deferred_world_scoped();
 
     ctx.set_indexed_view_member_state(TaskState::<R>::new(R::spawn(async move {
         let mut stream = pin!(stream);
         while let Some(vm) = stream.next().await {
             let node_id = node_id.clone();
             world_scoped.scoped(move |world| {
-                if R::exist_node_id(world, &node_id) {
+                if world.exist_node_id(&node_id) {
                     return;
                 }
                 vm.build_or_rebuild(ViewMemberCtx {
@@ -97,9 +97,9 @@ where
         return key;
     };
 
-    let world_scoped = R::deferred_world_scoped(ctx.world);
+    let world_scoped = ctx.world.deferred_world_scoped();
 
-    R::ensure_spawn(ctx.world, state_node_id.clone());
+    ctx.world.ensure_spawn(state_node_id.clone());
     let task = R::spawn({
         let state_node_id = state_node_id.clone();
         let parent = ctx.parent;
@@ -112,7 +112,7 @@ where
                 let parent = parent.clone();
                 let state_node_id = state_node_id.clone();
                 world_scoped.scoped(move |world| {
-                    if !R::exist_node_id(world, &parent) {
+                    if !world.exist_node_id(&parent) {
                         return;
                     }
 
@@ -127,11 +127,8 @@ where
             }
         }
     });
-    R::set_node_state(
-        ctx.world,
-        &state_node_id,
-        XStreamState(TaskState::<R>::new(task)),
-    );
+    ctx.world
+        .set_node_state(&state_node_id, XStreamState(TaskState::<R>::new(task)));
 
     key
 }
@@ -186,7 +183,7 @@ where
         let Some(state_node_id) = key.state_node_id() else {
             return;
         };
-        drop(R::take_node_state::<XStreamState<R>>(ctx.world, &state_node_id));
+        drop(ctx.world.take_node_state::<XStreamState<R>>(&state_node_id));
 
         let stream = self.stream;
         let default_value = self.value;
