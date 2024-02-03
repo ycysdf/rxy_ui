@@ -4,7 +4,6 @@ pub use traits::*;
 mod traits {
     pub use bevy_reflect::FromReflect as MaybeFromReflect;
     pub use bevy_reflect::Reflect as MaybeReflect;
-    pub use bevy_reflect::Reflect as MaybeReflectOrSendSync;
     pub use bevy_reflect::TypePath as MaybeTypePath;
 }
 
@@ -13,9 +12,6 @@ mod traits {
     pub trait MaybeReflect {}
 
     impl<T> MaybeReflect for T where T: ?Sized {}
-    pub trait MaybeReflectOrSendSync: Send + Sync {}
-
-    impl<T: Send + Sync> MaybeReflectOrSendSync for T where T: ?Sized {}
 
     pub trait MaybeFromReflect {}
 
