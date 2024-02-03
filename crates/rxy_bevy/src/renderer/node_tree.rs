@@ -1,4 +1,6 @@
-use crate::{BevyDeferredWorldScoped, BevyRenderer, CmdSender, RendererState};
+use core::cmp::Ordering;
+use std::borrow::Cow;
+
 use bevy_core::Name;
 use bevy_ecs::prelude::Entity;
 use bevy_ecs::prelude::World;
@@ -6,11 +8,12 @@ use bevy_hierarchy::{BuildWorldChildren, DespawnRecursiveExt};
 use bevy_hierarchy::{Children, Parent};
 use bevy_render::prelude::Visibility;
 use bevy_ui::Display;
-use bevy_ui::Style;
-use core::cmp::Ordering;
-use rxy_core::{DeferredNodeTreeScoped, NodeTree, RendererElementType, RendererNodeId};
-use std::borrow::Cow;
 use bevy_ui::prelude::NodeBundle;
+use bevy_ui::Style;
+
+use rxy_core::{DeferredNodeTreeScoped, NodeTree, RendererElementType, RendererNodeId};
+
+use crate::{BevyDeferredWorldScoped, BevyRenderer, CmdSender, RendererState};
 
 impl NodeTree<BevyRenderer> for World {
     fn deferred_world_scoped(&mut self) -> impl DeferredNodeTreeScoped<BevyRenderer> {
