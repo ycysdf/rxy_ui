@@ -6,11 +6,7 @@ use core::ops::Deref;
 use ahash::AHasher;
 
 use crate::r#impl::erasure::{get_erasure_view_fns, set_erasure_view_fns, ErasureViewFns};
-use crate::{
-    IntoView, MutableView, MutableViewKey, Renderer, RendererNodeId,
-    RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, VirtualContainer,
-    VirtualContainerNodeId,
-};
+use crate::{IntoView, MaybeSend, MaybeSendAnyRef, MaybeSendSyncAnyBox, MaybeSync, MutableView, MutableViewKey, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, VirtualContainer, VirtualContainerNodeId};
 
 use super::virtual_container;
 
@@ -27,11 +23,11 @@ pub type BoxedDynamicView<R> = Box<dyn DynamicView<R>>;
 pub type BoxedDynamicViewView<R> = <Box<dyn DynamicView<R>> as IntoView<R>>::View;
 pub type BoxedCloneableDynamicView<R> = Box<dyn CloneableDynamicView<R>>;
 
-pub trait DynamicView<R>: Send + 'static
+pub trait DynamicView<R>: MaybeSend + 'static
 where
     R: Renderer,
 {
-    fn as_any(&self) -> &(dyn Any + Send);
+    fn as_any(&self) -> MaybeSendAnyRef;
     fn build(
         self: Box<Self>,
         ctx: ViewCtx<R>,
@@ -176,7 +172,7 @@ where
     R: Renderer,
     V: View<R>,
 {
-    fn as_any(&self) -> &(dyn Any + Send) {
+    fn as_any(&self) -> MaybeSendAnyRef {
         self
     }
 
@@ -242,11 +238,11 @@ where
 {
     state_node_id: Option<RendererNodeId<R>>,
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
-    key: Option<Box<dyn Any + Send + Sync>>,
+    key: Option<MaybeSendSyncAnyBox>,
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     view_type_id: Option<TypeId>,
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
-    clone_fn: Option<fn(key: &dyn Any) -> Box<dyn Any + Send + Sync>>,
+    clone_fn: Option<fn(key: &dyn Any) -> MaybeSendSyncAnyBox>,
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     hash_fn: Option<fn(key: &dyn Any) -> Option<u64>>,
 }
@@ -285,7 +281,7 @@ where
         V: View<R>,
     {
         let state_node_id = key.state_node_id();
-        let reflect_key: Box<dyn Any + Send + Sync> = Box::new(key) as _;
+        let reflect_key: MaybeSendSyncAnyBox = Box::new(key) as _;
         Self {
             state_node_id,
             key: Some(reflect_key),
@@ -383,7 +379,7 @@ where
     }
 }
 /*
-pub trait DynamicViewMember<R>: Send + 'static
+pub trait DynamicViewMember<R>: MaybeSend + 'static
 where
     R: Renderer,
 {

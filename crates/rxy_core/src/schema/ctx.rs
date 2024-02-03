@@ -1,14 +1,11 @@
-use crate::{
-    BoxedCloneableErasureView, BoxedErasureView, PropState, Renderer, RendererNodeId,
-    RendererWorld, SchemaParam,
-};
+use crate::{BoxedCloneableErasureView, BoxedErasureView, MaybeSendAnyBox, PropState, Renderer, RendererNodeId, RendererWorld, SchemaParam};
 use alloc::boxed::Box;
 use bevy_utils::HashMap;
-use core::any::{Any, TypeId};
+use core::any::TypeId;
 use core::marker::PhantomData;
 use core::cell::UnsafeCell;
 
-pub type BoxedPropValue = Box<dyn Any + Send>;
+pub type BoxedPropValue = MaybeSendAnyBox;
 
 pub type PropHashMap<R> = HashMap<TypeId, Box<dyn PropState<R>>>;
 
@@ -115,5 +112,5 @@ where
         }
     }
 }
-
-unsafe impl<R> Send for RenderSchemaCtx<R> where R: Renderer {}
+#[cfg(feature = "send_sync")]
+unsafe impl<R> crate::MaybeSend for RenderSchemaCtx<R> where R: Renderer {}

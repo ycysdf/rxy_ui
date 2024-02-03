@@ -1,9 +1,9 @@
-use crate::{ElementView, Renderer, Schema, InnerSchemaCtx};
+use crate::{ElementView, Renderer, Schema, InnerSchemaCtx, MaybeSend};
 
 #[derive(Clone)]
 pub struct ElementSchemaBoundWrapper<T>(pub T);
 
-pub trait SchemaWithElementViewBound<R: Renderer>: Send + 'static {
+pub trait SchemaWithElementViewBound<R: Renderer>: MaybeSend + 'static {
     type View: ElementView<R>;
     fn view(self, ctx: InnerSchemaCtx<R, Self>) -> Self::View;
 }

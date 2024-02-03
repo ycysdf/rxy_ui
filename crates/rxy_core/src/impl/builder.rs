@@ -1,11 +1,7 @@
 use alloc::boxed::Box;
-use core::any::TypeId;
 use core::marker::PhantomData;
 
-use crate::{
-    ElementView, IntoElementView, IntoView, MemberOwner, MutableView, Renderer, RendererNodeId,
-    SoloView, View, ViewCtx, ViewMember, ViewMemberCtx, ViewMemberIndex,
-};
+use crate::{IntoElementView, IntoView, MaybeSend, MutableView, Renderer, RendererNodeId, SoloView, View, ViewCtx, ViewMember, ViewMemberCtx, ViewMemberIndex};
 
 #[derive(Clone)]
 pub struct Builder<R, F>(pub F, PhantomData<R>);
@@ -13,7 +9,7 @@ pub struct Builder<R, F>(pub F, PhantomData<R>);
 pub fn view_builder<R, T, F>(f: F) -> Builder<R, F>
 where
     R: Renderer,
-    F: FnOnce(ViewCtx<R>, BuildFlags) -> T + Send + 'static,
+    F: FnOnce(ViewCtx<R>, BuildFlags) -> T + MaybeSend + 'static,
     T: IntoView<R>,
 {
     Builder(f, Default::default())
@@ -22,7 +18,7 @@ where
 pub fn member_builder<R, T, F>(f: F) -> Builder<R, F>
 where
     R: Renderer,
-    F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> T + Send + 'static,
+    F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> T + MaybeSend + 'static,
     T: ViewMember<R>,
 {
     Builder(f, Default::default())
@@ -31,7 +27,7 @@ where
 pub fn style_builder<R, VM, F>(f: F) -> Builder<R, F>
 where
     R: Renderer,
-    F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> VM + Send + 'static,
+    F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> VM + MaybeSend + 'static,
     VM: ViewMember<R>,
 {
     Builder(f, Default::default())
@@ -46,7 +42,7 @@ pub struct BuildFlags {
 impl<F, R, MV> MutableView<R> for Builder<R, F>
 where
     MV: MutableView<R>,
-    F: FnOnce(ViewCtx<R>, BuildFlags) -> MV + Send + 'static,
+    F: FnOnce(ViewCtx<R>, BuildFlags) -> MV + MaybeSend + 'static,
     R: Renderer,
 {
     type Key = MV::Key;
@@ -91,7 +87,7 @@ where
 
 impl<R, F, VM> ViewMember<R> for Builder<R, F>
 where
-    F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> VM + Send + 'static,
+    F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> VM + MaybeSend + 'static,
     R: Renderer,
     VM: ViewMember<R>,
 {
@@ -148,7 +144,7 @@ where
 impl<R, F, IV> View<R> for Builder<R, F>
 where
     IV: IntoView<R>,
-    F: FnOnce(ViewCtx<R>, BuildFlags) -> IV + Send + 'static,
+    F: FnOnce(ViewCtx<R>, BuildFlags) -> IV + MaybeSend + 'static,
     R: Renderer,
 {
     type Key = <IV::View as View<R>>::Key;
@@ -192,7 +188,7 @@ impl<R, F, IV> SoloView<R> for Builder<R, F>
 where
     IV: IntoView<R>,
     IV::View: SoloView<R>,
-    F: FnOnce(ViewCtx<R>, BuildFlags) -> IV + Send + 'static,
+    F: FnOnce(ViewCtx<R>, BuildFlags) -> IV + MaybeSend + 'static,
     R: Renderer,
 {
     fn node_id(key: &Self::Key) -> &RendererNodeId<R> {
@@ -204,7 +200,7 @@ impl<R, F, IV> MemberOwner<R> for Builder<R, F>
 where
     IV: IntoView<R>,
     IV::View: SoloView<R>,
-    F: FnOnce(ViewCtx<R>, BuildFlags) -> IV + Send + 'static,
+    F: FnOnce(ViewCtx<R>, BuildFlags) -> IV + MaybeSend + 'static,
     R: Renderer,
 {
     type E = ();
@@ -222,7 +218,7 @@ where
 impl<R, F, IV> IntoView<R> for Builder<R, F>
 where
     IV: IntoView<R>,
-    F: FnOnce(ViewCtx<R>, BuildFlags) -> IV + Send + 'static,
+    F: FnOnce(ViewCtx<R>, BuildFlags) -> IV + MaybeSend + 'static,
     R: Renderer,
 {
     type View = Self;
@@ -232,7 +228,14 @@ where
     }
 }
 
-pub struct BoxedBuilder<R, T>(Box<dyn FnOnce(ViewCtx<R>, BuildFlags) -> T + Send + 'static>)
+#[cfg(feature = "send_sync")]
+pub struct BoxedBuilder<R, T>(Box<dyn FnOnce(ViewCtx<R>, BuildFlags) -> T + MaybeSend + 'static>)
+where
+    R: Renderer,
+    T: ?Sized;
+
+#[cfg(not(feature = "send_sync"))]
+pub struct BoxedBuilder<R, T>(Box<dyn FnOnce(ViewCtx<R>, BuildFlags) -> T + 'static>)
 where
     R: Renderer,
     T: ?Sized;

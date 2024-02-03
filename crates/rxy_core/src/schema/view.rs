@@ -1,9 +1,4 @@
-use crate::{
-    into_view, BoxedCloneableErasureView, BoxedErasureView, BoxedPropValue, ConstIndex, DataNodeId,
-    InnerSchemaCtx, IntoCloneableView, IntoSchemaProp, IntoView, IntoViewCloneableErasureExt,
-    IntoViewErasureExt, NodeTree, PropHashMap, Renderer, RendererNodeId, RendererWorld, Schema,
-    SchemaProp, SchemaProps, View, ViewCtx, ViewKey,
-};
+use crate::{into_view, BoxedCloneableErasureView, BoxedErasureView, BoxedPropValue, ConstIndex, DataNodeId, InnerSchemaCtx, IntoCloneableView, IntoSchemaProp, IntoView, IntoViewCloneableErasureExt, IntoViewErasureExt, NodeTree, PropHashMap, Renderer, RendererNodeId, RendererWorld, Schema, SchemaProp, SchemaProps, View, ViewCtx, ViewKey, MaybeSend};
 use alloc::boxed::Box;
 use bevy_utils::synccell::SyncCell;
 use bevy_utils::HashMap;
@@ -18,7 +13,7 @@ where
     R: Renderer,
     U: Schema<R>,
     P: SchemaProps<R>,
-    M: Send + 'static,
+    M: MaybeSend + 'static,
 {
     u: U,
     props: Option<P>,
@@ -33,7 +28,7 @@ impl<R, U, M> Default for SchemaView<R, U, (), M>
 where
     R: Renderer,
     U: Schema<R> + Default,
-    M: Send + 'static,
+    M: MaybeSend + 'static,
 {
     fn default() -> Self {
         Self {
@@ -52,7 +47,7 @@ impl<R, U, M> SchemaView<R, U, (), M>
 where
     R: Renderer,
     U: Schema<R>,
-    M: Send + 'static,
+    M: MaybeSend + 'static,
 {
     #[inline]
     pub fn new(u: U) -> Self {
@@ -73,7 +68,7 @@ where
     R: Renderer,
     U: Schema<R>,
     P: SchemaProps<R>,
-    M: Send + 'static,
+    M: MaybeSend + 'static,
 {
     #[inline(always)]
     pub fn map<MU>(self, f: impl FnOnce(U) -> MU) -> SchemaView<R, MU, P, M>
@@ -119,7 +114,7 @@ where
     where
         P::Props<ConstIndex<I, ISP::Prop>>: SchemaProps<R>,
         ISP: IntoSchemaProp<R, IT>,
-        IT: Send + 'static,
+        IT: MaybeSend + 'static,
     {
         SchemaView {
             u: self.u,
@@ -138,7 +133,7 @@ where
     pub fn set_static_indexed_prop<const I: usize, ISP, IT>(mut self, value: ISP) -> Self
     where
         ISP: IntoSchemaProp<R, IT>,
-        IT: Send + 'static,
+        IT: MaybeSend + 'static,
     {
         let type_id = TypeId::of::<ConstIndex<I>>();
         let mut prop = value.into_schema_prop::<I>();
@@ -254,7 +249,7 @@ where
     R: Renderer,
     U: Schema<R>,
     P: SchemaProps<R>,
-    M: Send + 'static,
+    M: MaybeSend + 'static,
 {
     let mut props = schema_view.props.take().unwrap();
     let mut init_values = props.get_init_values();
@@ -331,7 +326,7 @@ where
     R: Renderer,
     U: Schema<R>,
     P: SchemaProps<R>,
-    M: Send + 'static,
+    M: MaybeSend + 'static,
 {
     type Key = ViewKeyOrDataNodeId<R, <U::View as View<R>>::Key>;
 

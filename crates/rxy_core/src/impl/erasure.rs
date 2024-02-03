@@ -1,12 +1,14 @@
-use crate::{
-    CloneableDynamicView, DynamicMutableViewKey, DynamicView, IntoView, MutableView,
-    MutableViewKey, NodeTree, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey,
-    ViewMember, ViewMemberCtx,
-};
 use alloc::boxed::Box;
 use core::any::Any;
 use core::hash::{Hash, Hasher};
 use core::ops::Deref;
+
+use crate::{
+    DynamicMutableViewKey, IntoView, MaybeSend,
+    MaybeSendAnyRef, MaybeSendSyncAnyBox, MaybeSync, MutableView
+    , NodeTree, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey
+    ,
+};
 
 #[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
 pub struct ErasureViewFns<R>
@@ -92,11 +94,11 @@ pub fn set_erasure_view_fns<R: Renderer, V: View<R>>(
     );
 }
 
-pub trait ErasureView<R>: Send + 'static
+pub trait ErasureView<R>: MaybeSend + 'static
 where
     R: Renderer,
 {
-    fn as_any(&self) -> &(dyn Any + Send);
+    fn as_any(&self) -> MaybeSendAnyRef;
     fn build(
         self: Box<Self>,
         ctx: ViewCtx<R>,
@@ -243,7 +245,7 @@ where
     pub fn get_node_id_and_dyn_view_key(
         &self,
         world: &RendererWorld<R>,
-    ) -> Option<(RendererNodeId<R>, Box<(dyn Any + Send + Sync)>)> {
+    ) -> Option<(RendererNodeId<R>, MaybeSendSyncAnyBox)> {
         self.state_node_id.as_ref().and_then(|node_id| {
             world
                 .get_node_state_ref::<ErasureViewKeyViewState>(node_id)
@@ -320,9 +322,9 @@ where
 )]
 pub struct ErasureViewKeyViewState {
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
-    view_key: Option<Box<dyn Any + Sync + Send>>,
+    view_key: Option<MaybeSendSyncAnyBox>,
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
-    clone_fn: Option<fn(key: &dyn Any) -> Box<dyn Any + Send + Sync>>,
+    clone_fn: Option<fn(key: &dyn Any) -> MaybeSendSyncAnyBox>,
 }
 
 #[cfg(feature = "bevy_reflect")]
@@ -357,7 +359,7 @@ where
     R: Renderer,
     V: View<R>,
 {
-    fn as_any(&self) -> &(dyn Any + Send) {
+    fn as_any(&self) -> MaybeSendAnyRef {
         self
     }
 
@@ -472,7 +474,7 @@ where
     }
 }
 /*
-pub trait ErasureViewMember<R>: Send + 'static
+pub trait ErasureViewMember<R>: MaybeSend + 'static
     where
         R: Renderer,
 {

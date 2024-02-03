@@ -1,19 +1,17 @@
-use crate::build_info::{node_build_status, node_build_times_increment};
-use crate::renderer::DeferredNodeTreeScoped;
-use crate::{
-    IntoView, NodeTree, Renderer, TaskState, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
-    ViewMemberIndex,
-};
-use bevy_utils::futures::now_or_never;
-use core::any::TypeId;
 use core::future::{Future, IntoFuture};
+
 use futures_lite::StreamExt;
 
+use crate::{IntoView, MaybeSend, NodeTree, Renderer, TaskState, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex};
+use crate::build_info::{node_build_status, node_build_times_increment};
+use crate::renderer::DeferredNodeTreeScoped;
+
 pub struct XFuture<T>(pub T);
+
 #[inline(always)]
-pub fn x_future<T>(f: impl IntoFuture<IntoFuture = T>) -> XFuture<T>
-where
-    T: Future,
+pub fn x_future<T>(f: impl IntoFuture<IntoFuture=T>) -> XFuture<T>
+    where
+        T: Future,
 {
     XFuture(f.into_future())
 }
@@ -21,10 +19,10 @@ where
 pub type FutureViewKey<R, T> = <<<T as Future>::Output as IntoView<R>>::View as View<R>>::Key;
 
 impl<R, T> View<R> for XFuture<T>
-where
-    R: Renderer,
-    T: Future + Send + 'static,
-    T::Output: IntoView<R> + Send + 'static,
+    where
+        R: Renderer,
+        T: Future + MaybeSend + 'static,
+        T::Output: IntoView<R> + MaybeSend + 'static,
 {
     type Key = FutureViewKey<R, T>;
 
@@ -50,12 +48,12 @@ where
 }
 
 pub struct XFutureState<R>(pub TaskState<R>)
-where
-    R: Renderer;
+    where
+        R: Renderer;
 
 impl<R> XFutureState<R>
-where
-    R: Renderer,
+    where
+        R: Renderer,
 {
     pub fn new(task: R::Task<()>) -> Self {
         Self(TaskState::new(task))
@@ -69,8 +67,8 @@ fn future_view_rebuild<R, T>(
     key: FutureViewKey<R, T>,
 ) where
     R: Renderer,
-    T: Future + Send + 'static,
-    T::Output: IntoView<R> + Send + 'static,
+    T: Future + MaybeSend + 'static,
+    T::Output: IntoView<R> + MaybeSend + 'static,
 {
     let Some(state_node_id) = key.state_node_id() else {
         return;
@@ -113,10 +111,10 @@ fn future_view_rebuild<R, T>(
 }
 
 impl<R, T> IntoView<R> for XFuture<T>
-where
-    R: Renderer,
-    T: Future + Send + 'static,
-    T::Output: IntoView<R> + Send + 'static,
+    where
+        R: Renderer,
+        T: Future + MaybeSend + 'static,
+        T::Output: IntoView<R> + MaybeSend + 'static,
 {
     type View = Self;
 
@@ -126,10 +124,10 @@ where
 }
 
 pub fn future_view_member_rebuild<R, T>(future: T, mut ctx: ViewMemberCtx<R>, will_rebuild: bool)
-where
-    R: Renderer,
-    T: Future + Send + 'static,
-    T::Output: ViewMember<R> + Send + 'static,
+    where
+        R: Renderer,
+        T: Future + MaybeSend + 'static,
+        T::Output: ViewMember<R> + MaybeSend + 'static,
 {
     drop(ctx.take_indexed_view_member_state::<TaskState<R>>());
     let world_scoped = ctx.world.deferred_world_scoped();
@@ -169,10 +167,10 @@ where
 }
 
 impl<R, T> ViewMember<R> for XFuture<T>
-where
-    R: Renderer,
-    T: Future + Send + 'static,
-    T::Output: ViewMember<R> + Send + 'static,
+    where
+        R: Renderer,
+        T: Future + MaybeSend + 'static,
+        T::Output: ViewMember<R> + MaybeSend + 'static,
 {
     fn count() -> ViewMemberIndex {
         T::Output::count()
@@ -192,9 +190,9 @@ where
 }
 
 impl<R, T> IntoView<R> for futures_lite::future::Boxed<T>
-where
-    R: Renderer,
-    T: IntoView<R> + Send + 'static,
+    where
+        R: Renderer,
+        T: IntoView<R> + MaybeSend + 'static,
 {
     type View = XFuture<Self>;
 

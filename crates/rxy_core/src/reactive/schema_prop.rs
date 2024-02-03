@@ -1,7 +1,4 @@
-use crate::{
-    scheme_state_scoped, BoxedPropValue, IntoSchemaProp, PropHashMap, PropState, Reactive,
-    ReactiveDisposerState, Renderer, SchemaProp, SchemaPropCtx,
-};
+use crate::{scheme_state_scoped, BoxedPropValue, IntoSchemaProp, PropHashMap, PropState, Reactive, ReactiveDisposerState, Renderer, SchemaProp, SchemaPropCtx, MaybeSend, MaybeSync};
 use crate::{DeferredNodeTreeScoped, NodeTree};
 use alloc::boxed::Box;
 use bevy_utils::tracing::error;
@@ -15,8 +12,8 @@ use xy_reactive::prelude::{
 fn schema_prop_build<R, S>(signal: S, mut ctx: SchemaPropCtx<R>)
 where
     R: Renderer,
-    S: SignalGet + Send + 'static,
-    S::Value: Clone + Send + 'static,
+    S: SignalGet + MaybeSend + 'static,
+    S::Value: Clone + MaybeSend + 'static,
 {
     let state_node_id = ctx.state_node_id.clone();
     let prop_type_id = ctx.prop_type_id;
@@ -52,7 +49,7 @@ where
 impl<R, T> SchemaProp<R> for ReadSignal<T>
 where
     R: Renderer,
-    T: Clone + Send + Sync + 'static,
+    T: Clone + MaybeSend + MaybeSync + 'static,
 {
     type Value = T;
 
@@ -73,7 +70,7 @@ where
 impl<R, T> SchemaProp<R> for Memo<T>
 where
     R: Renderer,
-    T: Clone + Send + Sync + 'static,
+    T: Clone + MaybeSend + MaybeSync + 'static,
 {
     type Value = T;
 
@@ -94,7 +91,7 @@ where
 // impl<R, T> SchemaProp<R> for Memo<T>
 // where
 //     R: Renderer,
-//     T: SchemaProp<R> + Sync,
+//     T: SchemaProp<R> + MaybeSync,
 // {
 //     type Value = T::Value;
 
@@ -115,8 +112,8 @@ where
 // impl<R, PV, T> IntoSchemaProp<R, PV> for ReadSignal<T>
 // where
 //     R: Renderer,
-//     T: IntoSchemaProp<R, PV> + Send + Sync + 'static,
-//     PV: Clone + Send + Sync + 'static,
+//     T: IntoSchemaProp<R, PV> + MaybeSend + MaybeSync + 'static,
+//     PV: Clone + MaybeSend + MaybeSync + 'static,
 // {
 //     type Prop = Memo<T::Prop>;
 
@@ -128,7 +125,7 @@ where
 impl<R, T> IntoSchemaProp<R, T> for ReadSignal<T>
 where
     R: Renderer,
-    T: Clone + Send + Sync + 'static,
+    T: Clone + MaybeSend + MaybeSync + 'static,
 {
     type Prop = Self;
 
@@ -140,7 +137,7 @@ where
 impl<R, T> IntoSchemaProp<R, T> for Memo<T>
 where
     R: Renderer,
-    T: Clone + Send + Sync + 'static,
+    T: Clone + MaybeSend + MaybeSync + 'static,
 {
     type Prop = Self;
 
@@ -152,7 +149,7 @@ where
 impl<R, T> IntoSchemaProp<R, T> for RwSignal<T>
 where
     R: Renderer,
-    T: Clone + Send + Sync + 'static,
+    T: Clone + MaybeSend + MaybeSync + 'static,
 {
     type Prop = ReadSignal<T>;
 
@@ -164,8 +161,8 @@ where
 impl<R, F, T> IntoSchemaProp<R, T> for Reactive<F, T>
 where
     R: Renderer,
-    F: Fn() -> T + Send + Sync + 'static,
-    T: Clone + Send + Sync + PartialEq + 'static,
+    F: Fn() -> T + MaybeSend + MaybeSync + 'static,
+    T: Clone + MaybeSend + MaybeSync + PartialEq + 'static,
 {
     type Prop = Memo<T>;
 
@@ -177,7 +174,7 @@ where
 pub struct SignalPropState<R, T>
 where
     R: Renderer,
-    T: Send + Sync + 'static,
+    T: MaybeSend + MaybeSync + 'static,
 {
     write_signal: WriteSignal<T>,
     _marker: PhantomData<R>,
@@ -186,7 +183,7 @@ where
 impl<R, T> SignalPropState<R, T>
 where
     R: Renderer,
-    T: Send + Sync + 'static,
+    T: MaybeSend + MaybeSync + 'static,
 {
     pub fn new(write_signal: WriteSignal<T>) -> Self {
         Self {
@@ -199,7 +196,7 @@ where
 impl<R, T> PropState<R> for SignalPropState<R, T>
 where
     R: Renderer,
-    T: Send + Sync + 'static,
+    T: MaybeSend + MaybeSync + 'static,
 {
     fn apply(&mut self, new_value: BoxedPropValue, _world: &mut R::NodeTree) {
         let Ok(new_value) = new_value.downcast::<T>().map(|n| *n) else {
@@ -208,7 +205,7 @@ where
         self.write_signal.set(new_value);
     }
 
-    fn as_any_mut(&mut self) -> &mut (dyn Any + Send) {
+    fn as_any_mut(&mut self) -> &mut (dyn Any + MaybeSend) {
         self
     }
 }

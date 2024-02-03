@@ -1,0 +1,27 @@
+[package]
+name = "web_playground"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["console_error_panic_hook"]
+
+[dependencies]
+console_error_panic_hook = { version = "0.1.7", optional = true }
+#rxy_web_dom = { path = "../../crates/rxy_web_dom" }
+wasm-bindgen = "0.2"
+wasm-bindgen-futures.workspace = true
+web-sys.workspace = true
+
+[profile.release]
+opt-level = "z"
+debug = false
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+incremental = false

@@ -101,11 +101,11 @@ impl<R: Renderer, K: ViewKey<R>> MutableViewKey<R> for Vec<Option<K>> {
 impl<T, I, K, KF, VF, IV, R> MutableView<R> for Keyed<T, I, K, KF, VF, IV, R>
 where
     T: 'static,
-    I: IntoIterator<Item = T> + Send + 'static,
-    K: Eq + Hash + Send + Sync + 'static,
-    KF: Fn(&T) -> K + Send + 'static,
-    IV: IntoView<R> + Send + 'static,
-    VF: Fn(T) -> IV + Send + 'static,
+    I: IntoIterator<Item = T> + MaybeSend + 'static,
+    K: Eq + Hash + MaybeSend + MaybeSync + 'static,
+    KF: Fn(&T) -> K + MaybeSend + 'static,
+    IV: IntoView<R> + MaybeSend + 'static,
+    VF: Fn(T) -> IV + MaybeSend + 'static,
     R: Renderer,
 {
     type Key = Vec<Option<<IV::View as View<R>>::Key>>;
@@ -194,11 +194,11 @@ where
 impl<T, I, K, KF, VF, IV, R> IntoView<R> for Keyed<T, I, K, KF, VF, IV, R>
 where
     T: 'static,
-    I: IntoIterator<Item = T> + Send + 'static,
-    K: Eq + Hash + Send + Sync + 'static,
-    KF: Fn(&T) -> K + Send + 'static,
-    IV: IntoView<R> + Send + 'static,
-    VF: Fn(T) -> IV + Send + 'static,
+    I: IntoIterator<Item = T> + MaybeSend + 'static,
+    K: Eq + Hash + MaybeSend + MaybeSync + 'static,
+    KF: Fn(&T) -> K + MaybeSend + 'static,
+    IV: IntoView<R> + MaybeSend + 'static,
+    VF: Fn(T) -> IV + MaybeSend + 'static,
     R: Renderer,
 {
     type View = VirtualContainer<R, Self>;

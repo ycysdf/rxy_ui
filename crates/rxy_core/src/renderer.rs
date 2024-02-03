@@ -3,7 +3,7 @@ use bevy_utils::synccell::SyncCell;
 use core::fmt::Debug;
 use core::future::Future;
 
-use crate::{MaybeReflect, MaybeTypePath, RendererElementType, ViewKey};
+use crate::{MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, RendererElementType, ViewKey};
 
 pub type RendererNodeId<R> = <R as Renderer>::NodeId;
 pub type RendererWorld<R> = <R as Renderer>::NodeTree;
@@ -21,45 +21,51 @@ pub struct ViewMemberCtx<'a, R: Renderer> {
     pub node_id: RendererNodeId<R>,
 }
 
-pub trait DeferredNodeTreeScoped<R>: Clone + Send + Sync + Sized + 'static
+pub trait DeferredNodeTreeScoped<R>: Clone + MaybeSend + MaybeSync + Sized + 'static
 where
     R: Renderer,
 {
-    fn scoped(&self, f: impl FnOnce(&mut RendererWorld<R>) + Send + 'static);
+    fn scoped(&self, f: impl FnOnce(&mut RendererWorld<R>) + MaybeSend + 'static);
 }
 
 pub trait Renderer:
-    MaybeReflect + MaybeTypePath + Clone + Debug + Send + Sync + Sized + 'static
+    MaybeReflect + MaybeTypePath + Clone + Debug + MaybeSend + MaybeSync + Sized + 'static
 {
     type NodeId: ViewKey<Self>;
     type NodeTree: NodeTree<Self>;
 
-    type Task<T: Send + 'static>: Send + 'static;
+    type Task<T: MaybeSend + 'static>: MaybeSend + 'static;
 
-    fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) -> Self::Task<T>;
+    fn spawn<T: MaybeSend + 'static>(
+        future: impl Future<Output = T> + MaybeSend + 'static,
+    ) -> Self::Task<T>;
 }
 
 pub trait NodeTree<R>
 where
-    R: Renderer<NodeTree= Self>,
+    R: Renderer<NodeTree = Self>,
 {
     fn deferred_world_scoped(&mut self) -> impl DeferredNodeTreeScoped<R>;
-    fn get_node_state_mut<S: Send + Sync + 'static>(
+    fn get_node_state_mut<S: MaybeSend + MaybeSync + 'static>(
         &mut self,
         node_id: &RendererNodeId<R>,
     ) -> Option<&mut S>;
 
-    fn get_node_state_ref<S: Send + Sync + 'static>(
+    fn get_node_state_ref<S: MaybeSend + MaybeSync + 'static>(
         &self,
         node_id: &RendererNodeId<R>,
     ) -> Option<&S>;
 
-    fn take_node_state<S: Send + Sync + 'static>(
+    fn take_node_state<S: MaybeSend + MaybeSync + 'static>(
         &mut self,
         node_id: &RendererNodeId<R>,
     ) -> Option<S>;
 
-    fn set_node_state<S: Send + Sync + 'static>(&mut self, node_id: &RendererNodeId<R>, state: S);
+    fn set_node_state<S: MaybeSend + MaybeSync + 'static>(
+        &mut self,
+        node_id: &RendererNodeId<R>,
+        state: S,
+    );
 
     fn exist_node_id(&mut self, node_id: &RendererNodeId<R>) -> bool;
 
@@ -105,7 +111,7 @@ where
 
     fn get_visibility(&self, node_id: &RendererNodeId<R>) -> bool;
 
-    fn node_state_scoped<S: Send + Sync + 'static, U>(
+    fn node_state_scoped<S: MaybeSend + MaybeSync + 'static, U>(
         &mut self,
         node_id: &RendererNodeId<R>,
         f: impl FnOnce(&mut Self, &mut S) -> U,
@@ -116,7 +122,7 @@ where
             r
         })
     }
-    fn try_state_scoped<S: Send + Sync + 'static, U>(
+    fn try_state_scoped<S: MaybeSend + MaybeSync + 'static, U>(
         &mut self,
         node_id: &RendererNodeId<R>,
         f: impl FnOnce(&mut Self, Option<&mut S>) -> U,
@@ -131,7 +137,7 @@ where
         }
     }
 
-    fn get_or_insert_default_node_state<S: Default + Send + Sync + 'static>(
+    fn get_or_insert_default_node_state<S: Default + MaybeSend + MaybeSync + 'static>(
         &mut self,
         node_id: &RendererNodeId<R>,
     ) -> &mut S {

@@ -1,10 +1,11 @@
 use core::fmt::Debug;
+use core::hash::Hash;
 use core::marker::PhantomData;
-use core::{any::TypeId, hash::Hash};
 
 use crate::{
-    ElementSoloView, ElementView, IntoView, MemberOwner, NodeTree, Renderer, RendererElementType,
-    RendererNodeId, SoloView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
+    IntoView, MaybeSend, MemberOwner, NodeTree, Renderer,
+    RendererElementType, RendererNodeId, SoloView, View, ViewCtx, ViewKey, ViewMember,
+    ViewMemberCtx,
 };
 
 #[derive(Clone)]
@@ -73,7 +74,7 @@ where
 // #[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
 pub struct ElementViewKey<R, VM>(
     pub RendererNodeId<R>,
-    /*#[cfg_attr(feature = "bevy_reflect", reflect(ignore))] */PhantomData<VM>,
+    /*#[cfg_attr(feature = "bevy_reflect", reflect(ignore))] */ PhantomData<VM>,
 )
 where
     R: Renderer,
@@ -89,13 +90,14 @@ where
     }
 }
 
-unsafe impl<R, VM> Send for ElementViewKey<R, VM>
+#[cfg(feature = "send_sync")]
+unsafe impl<R, VM> MaybeSend for ElementViewKey<R, VM>
 where
     R: Renderer,
     VM: ViewMember<R>,
 {
 }
-
+#[cfg(feature = "send_sync")]
 unsafe impl<R, VM> Sync for ElementViewKey<R, VM>
 where
     R: Renderer,
@@ -223,16 +225,15 @@ where
     }
 }
 
-
 #[cfg(feature = "bevy_reflect")]
 const _: () = {
     #[allow(unused_mut)]
     impl<R, VM> bevy_reflect::GetTypeRegistration for ElementViewKey<R, VM>
-        where
-            R: Renderer,
-            VM: ViewMember<R>,
-            RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
-            R: bevy_reflect::TypePath,
+    where
+        R: Renderer,
+        VM: ViewMember<R>,
+        RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
+        R: bevy_reflect::TypePath,
     {
         fn get_type_registration() -> bevy_reflect::TypeRegistration {
             let mut registration = bevy_reflect::TypeRegistration::of::<Self>();
@@ -244,30 +245,28 @@ const _: () = {
         }
     }
     impl<R, VM> bevy_reflect::Typed for ElementViewKey<R, VM>
-        where
-            R: Renderer,
-            VM: ViewMember<R>,
-            RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
-            R: bevy_reflect::TypePath,
+    where
+        R: Renderer,
+        VM: ViewMember<R>,
+        RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
+        R: bevy_reflect::TypePath,
     {
         fn type_info() -> &'static bevy_reflect::TypeInfo {
             static CELL: bevy_reflect::utility::GenericTypeInfoCell =
                 bevy_reflect::utility::GenericTypeInfoCell::new();
             CELL.get_or_insert::<Self, _>(|| {
-                let fields = [
-                    bevy_reflect::UnnamedField::new::<RendererNodeId<R>>(0),
-                ];
+                let fields = [bevy_reflect::UnnamedField::new::<RendererNodeId<R>>(0)];
                 let info = bevy_reflect::TupleStructInfo::new::<Self>(&fields);
                 bevy_reflect::TypeInfo::TupleStruct(info)
             })
         }
     }
     impl<R, VM> bevy_reflect::TypePath for ElementViewKey<R, VM>
-        where
-            R: Renderer,
-            VM: ViewMember<R>,
-            RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
-            R: bevy_reflect::TypePath,
+    where
+        R: Renderer,
+        VM: ViewMember<R>,
+        RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
+        R: bevy_reflect::TypePath,
     {
         fn type_path() -> &'static str {
             static CELL: bevy_reflect::utility::GenericTypePathCell =
@@ -311,11 +310,11 @@ const _: () = {
         }
     }
     impl<R, VM> bevy_reflect::TupleStruct for ElementViewKey<R, VM>
-        where
-            R: Renderer,
-            VM: ViewMember<R>,
-            RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
-            R: bevy_reflect::TypePath,
+    where
+        R: Renderer,
+        VM: ViewMember<R>,
+        RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
+        R: bevy_reflect::TypePath,
     {
         fn field(&self, index: usize) -> ::core::option::Option<&dyn bevy_reflect::Reflect> {
             match index {
@@ -349,11 +348,11 @@ const _: () = {
         }
     }
     impl<R, VM> bevy_reflect::Reflect for ElementViewKey<R, VM>
-        where
-            R: Renderer,
-            VM: ViewMember<R>,
-            RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
-            R: bevy_reflect::TypePath,
+    where
+        R: Renderer,
+        VM: ViewMember<R>,
+        RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
+        R: bevy_reflect::TypePath,
     {
         #[inline]
         fn get_represented_type_info(
@@ -430,11 +429,11 @@ const _: () = {
         }
     }
     impl<R, VM> bevy_reflect::FromReflect for ElementViewKey<R, VM>
-        where
-            R: Renderer,
-            VM: ViewMember<R>,
-            RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
-            R: bevy_reflect::TypePath,
+    where
+        R: Renderer,
+        VM: ViewMember<R>,
+        RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
+        R: bevy_reflect::TypePath,
     {
         fn from_reflect(reflect: &dyn bevy_reflect::Reflect) -> ::core::option::Option<Self> {
             if let bevy_reflect::ReflectRef::TupleStruct(__ref_struct) =

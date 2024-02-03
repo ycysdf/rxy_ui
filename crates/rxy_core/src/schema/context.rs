@@ -1,9 +1,9 @@
-use crate::{Context, Renderer, InnerSchemaCtx, SchemaParam, ViewCtx};
+use crate::{Context, Renderer, InnerSchemaCtx, SchemaParam, ViewCtx, MaybeSync, MaybeSend};
 
 impl<R, T> SchemaParam<R> for Context<T>
 where
     R: Renderer,
-    T: Send + Sync + Clone + 'static,
+    T: MaybeSend + MaybeSync + Clone + 'static,
 {
     fn from<const I: usize>(ctx: &mut InnerSchemaCtx<R>) -> Self {
         Context(

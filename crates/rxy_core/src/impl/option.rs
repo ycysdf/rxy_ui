@@ -1,13 +1,9 @@
-use crate::{
-    to_mutable, virtual_container, IntoView, MutableView, MutableViewKey, Renderer, RendererNodeId,
-    RendererWorld, ToMutableWrapper, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
-    VirtualContainer,
-};
+use crate::{to_mutable, virtual_container, IntoView, MutableView, MutableViewKey, Renderer, RendererNodeId, RendererWorld, ToMutableWrapper, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex, VirtualContainer, MaybeSend};
 
 impl<R, V> MutableView<R> for Option<V>
-where
-    R: Renderer,
-    V: MutableView<R>,
+    where
+        R: Renderer,
+        V: MutableView<R>,
 {
     type Key = Option<V::Key>;
 
@@ -54,9 +50,9 @@ where
 }
 
 impl<K, R> MutableViewKey<R> for Option<K>
-where
-    R: Renderer,
-    K: MutableViewKey<R>,
+    where
+        R: Renderer,
+        K: MutableViewKey<R>,
 {
     fn remove(self, world: &mut RendererWorld<R>) {
         if let Some(n) = self {
@@ -94,9 +90,9 @@ where
 }
 
 impl<R, IV> IntoView<R> for Option<IV>
-where
-    R: Renderer,
-    IV: IntoView<R> + Send + 'static,
+    where
+        R: Renderer,
+        IV: IntoView<R> + MaybeSend + 'static,
 {
     type View = VirtualContainer<R, Option<ToMutableWrapper<IV::View>>>;
 
@@ -109,9 +105,9 @@ where
 }
 
 impl<R, VM> ViewMember<R> for Option<VM>
-where
-    R: Renderer,
-    VM: ViewMember<R>,
+    where
+        R: Renderer,
+        VM: ViewMember<R>,
 {
     fn count() -> ViewMemberIndex {
         VM::count()
@@ -140,9 +136,9 @@ where
 }
 
 impl<K, R> ViewKey<R> for Option<K>
-where
-    R: Renderer,
-    K: ViewKey<R>,
+    where
+        R: Renderer,
+        K: ViewKey<R>,
 {
     fn remove(self, world: &mut RendererWorld<R>) {
         if let Some(n) = self {

@@ -4,7 +4,7 @@ use futures_lite::{Stream, StreamExt};
 
 pub struct StreamWithDefaultValue<S>
 where
-    S: Stream + Send + 'static,
+    S: Stream + MaybeSend + 'static,
 {
     stream: S,
     default_value: S::Item,
@@ -13,7 +13,7 @@ where
 // impl<R, S> IntoView<R> for StreamWithDefaultValue<S>
 // where
 //     R: Renderer,
-//     S: Stream + Send + 'static,
+//     S: Stream + MaybeSend + 'static,
 //     S::Item: IntoView<R>,
 // {
 //     type View = futures_lite::stream::Boxed<<S::Item as IntoView<R>>::View>;
@@ -29,7 +29,7 @@ pub fn stream_with_default_value<R, S>(
 ) -> StreamWithDefaultValue<S>
 where
     R: Renderer,
-    S: Stream + Send + 'static,
+    S: Stream + MaybeSend + 'static,
     S::Item: IntoView<R>,
 {
     StreamWithDefaultValue {
@@ -41,7 +41,7 @@ where
 impl<R, S> View<R> for StreamWithDefaultValue<S>
 where
     R: Renderer,
-    S: Stream + Send + 'static,
+    S: Stream + MaybeSend + 'static,
     S::Item: IntoView<R>,
 {
     type Key = ();

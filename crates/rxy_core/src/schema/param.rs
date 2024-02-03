@@ -1,13 +1,10 @@
 use crate::r#static::Static;
-use crate::{
-    rebuild_fn, rebuild_fn_channel, ConstIndex, InnerSchemaCtx, MaybeReflect, ReBuildFn,
-    RebuildFnReceiver, ReceiverPropState, Renderer,
-};
+use crate::{rebuild_fn, rebuild_fn_channel, ConstIndex, InnerSchemaCtx, MaybeReflect, ReBuildFn, RebuildFnReceiver, ReceiverPropState, Renderer, MaybeSend};
 use alloc::boxed::Box;
 use bevy_utils::all_tuples;
 use core::any::TypeId;
 
-pub trait SchemaParam<R>: Send + 'static
+pub trait SchemaParam<R>: MaybeSend + 'static
 where
     R: Renderer,
 {
@@ -18,10 +15,10 @@ where
 // where
 //     R: Renderer,
 // {
-//     type Value: Send + 'static;
+//     type Value: MaybeSend + 'static;
 // }
 
-pub trait SchemaParams<R>: Send + 'static
+pub trait SchemaParams<R>: MaybeSend + 'static
 where
     R: Renderer,
 {
@@ -55,7 +52,7 @@ where
 impl<R, T> SchemaParam<R> for Static<T>
 where
     R: Renderer,
-    T: SchemaParamDefault<R> + Send + 'static,
+    T: SchemaParamDefault<R> + MaybeSend + 'static,
 {
     fn from<const I: usize>(ctx: &mut InnerSchemaCtx<R>) -> Self {
         let prop_type_id = TypeId::of::<ConstIndex<I>>();
@@ -69,7 +66,7 @@ where
 // impl<R, T> SchemaPropParam<R> for RebuildFnReceiver<R, T>
 // where
 //     R: Renderer,
-//     T: MaybeReflect + Clone + PartialEq + Send + 'static,
+//     T: MaybeReflect + Clone + PartialEq + MaybeSend + 'static,
 // {
 //     type Value = T;
 // }
@@ -77,7 +74,7 @@ where
 impl<R, T> SchemaParam<R> for RebuildFnReceiver<R, T>
 where
     R: Renderer,
-    T: MaybeReflect + Clone + PartialEq + Send + 'static,
+    T: MaybeReflect + Clone + PartialEq + MaybeSend + 'static,
 {
     fn from<const I: usize>(ctx: &mut InnerSchemaCtx<R>) -> Self {
         let prop_type_id = TypeId::of::<ConstIndex<I>>();

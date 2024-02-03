@@ -1,8 +1,5 @@
 use crate::diff::diff;
-use crate::{
-    virtual_container, Either, EitherExt, IntoView, MutableView, MutableViewKey, NodeTree,
-    Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, VirtualContainer,
-};
+use crate::{virtual_container, Either, EitherExt, IntoView, MutableView, MutableViewKey, NodeTree, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, VirtualContainer, MaybeSend};
 use alloc::borrow::Cow;
 use async_channel::{Receiver, Recv, RecvError, Sender, TryRecvError};
 use bevy_utils::synccell::SyncCell;
@@ -20,7 +17,7 @@ use hooked_collection::{
 pub enum UseListOperation<T> {
     WatchCount(Sender<usize>),
     Ops(VecOperation<T>),
-    Callback(Box<dyn FnOnce(&mut HookedVec<T, VecOperationRecord<T>>) + Send>),
+    Callback(Box<dyn FnOnce(&mut HookedVec<T, VecOperationRecord<T>>) + MaybeSend>),
 }
 
 pub trait ListOperator {
@@ -35,9 +32,9 @@ pub trait ListOperator {
     fn watch_count(&self) -> Receiver<usize>;
     fn callback(
         &self,
-        f: impl FnOnce(&mut HookedVec<Self::Item, VecOperationRecord<Self::Item>>) + Send + 'static,
+        f: impl FnOnce(&mut HookedVec<Self::Item, VecOperationRecord<Self::Item>>) + MaybeSend + 'static,
     );
-    fn patch(&self, index: usize, f: impl FnOnce(&mut Self::Item) + Send + 'static)
+    fn patch(&self, index: usize, f: impl FnOnce(&mut Self::Item) + MaybeSend + 'static)
     where
         Self::Item: Clone;
 }
@@ -56,13 +53,13 @@ impl<T> ListOperator for UseList<T> {
             .send_blocking(UseListOperation::Ops(VecOperation::Push { item }));
     }
 
-    fn callback(&self, f: impl FnOnce(&mut HookedVec<T, VecOperationRecord<T>>) + Send + 'static) {
+    fn callback(&self, f: impl FnOnce(&mut HookedVec<T, VecOperationRecord<T>>) + MaybeSend + 'static) {
         let _ = self
             .op_sender
             .send_blocking(UseListOperation::Callback(Box::new(f)));
     }
 
-    fn patch(&self, index: usize, f: impl FnOnce(&mut T) + Send + 'static)
+    fn patch(&self, index: usize, f: impl FnOnce(&mut T) + MaybeSend + 'static)
     where
         T: Clone,
     {
@@ -123,7 +120,7 @@ pub struct UseListSource<T> {
     op_receiver: Receiver<UseListOperation<T>>,
     op_handlers: Vec<Box<dyn OperatorHandler<Op = VecOperation<T>>>>,
 }
-pub trait OperatorHandler: Send + 'static {
+pub trait OperatorHandler: MaybeSend + 'static {
     type Op;
     fn handle(&mut self, op: &Self::Op);
     fn commit(&mut self);
@@ -135,7 +132,7 @@ pub struct ListCountSender<T> {
     _marker: PhantomData<T>,
 }
 
-impl<T: Clone + Send + 'static> OperatorHandler for ListCountSender<T> {
+impl<T: Clone + MaybeSend + 'static> OperatorHandler for ListCountSender<T> {
     type Op = VecOperation<T>;
 
     fn handle(&mut self, op: &Self::Op) {
@@ -158,7 +155,7 @@ impl<T: Clone + Send + 'static> OperatorHandler for ListCountSender<T> {
     }
 }
 
-impl<T: Clone + Send + 'static> UseListSource<T> {
+impl<T: Clone + MaybeSend + 'static> UseListSource<T> {
     // #[inline(always)]
     // pub fn add_op_handler(&mut self, op_handler: impl OperatorHandler<Op = VecOperation<T>>) {
     //     self.op_handlers.push(Box::new(op_handler));
@@ -246,9 +243,9 @@ pub fn use_list<T>(init: impl IntoIterator<Item = T>) -> (UseList<T>, UseListSou
 pub fn x_iter_source<R, T, F, IV>(source: UseListSource<T>, view_f: F) -> ForSource<T, F>
 where
     R: Renderer,
-    T: Clone + Send + 'static,
+    T: Clone + MaybeSend + 'static,
     IV: IntoView<R>,
-    F: Fn(Cow<T>) -> IV + Clone + Send + 'static,
+    F: Fn(Cow<T>) -> IV + Clone + MaybeSend + 'static,
 {
     ForSource {
         source,
@@ -266,9 +263,9 @@ pub struct ForSource<T, F> {
 impl<R, T, F, IV> IntoView<R> for ForSource<T, F>
 where
     R: Renderer,
-    T: Clone + Debug + Send + 'static,
+    T: Clone + Debug + MaybeSend + 'static,
     IV: IntoView<R>,
-    F: Fn(Cow<T>) -> IV + Clone + Send + 'static,
+    F: Fn(Cow<T>) -> IV + Clone + MaybeSend + 'static,
 {
     type View = VirtualContainer<R, Self>;
 
@@ -440,9 +437,9 @@ pub fn build_for_source<R, T, F, IV>(
 ) -> DataOrPlaceholderNodeId<R>
 where
     R: Renderer,
-    T: Clone + Send + Debug + 'static,
+    T: Clone + MaybeSend + Debug + 'static,
     IV: IntoView<R>,
-    F: Fn(Cow<T>) -> IV + Clone + Send + 'static,
+    F: Fn(Cow<T>) -> IV + Clone + MaybeSend + 'static,
 {
     for_source.source.try_apply_ops();
 
@@ -605,9 +602,9 @@ fn apply_op_to_view_keys<R, T, F, IV>(
     vec: &[T],
 ) where
     R: Renderer,
-    T: Clone + Send + Debug + 'static,
+    T: Clone + MaybeSend + Debug + 'static,
     IV: IntoView<R>,
-    F: Fn(Cow<T>) -> IV + Clone + Send + 'static,
+    F: Fn(Cow<T>) -> IV + Clone + MaybeSend + 'static,
 {
     match op {
         VecOperation::Push { item } => {
@@ -701,9 +698,9 @@ fn apply_op_to_view_keys<R, T, F, IV>(
 impl<R, T, F, IV> MutableView<R> for ForSource<T, F>
 where
     R: Renderer,
-    T: Clone + Send + Debug + 'static,
+    T: Clone + MaybeSend + Debug + 'static,
     IV: IntoView<R>,
-    F: Fn(Cow<T>) -> IV + Clone + Send + 'static,
+    F: Fn(Cow<T>) -> IV + Clone + MaybeSend + 'static,
 {
     type Key = ForSourceViewKey<R, <IV::View as View<R>>::Key>;
 

@@ -1,10 +1,8 @@
-use crate::{
-    BoxedPropValue, PropHashMap, Renderer, RendererNodeId, RendererWorld, SchemaProp, SchemaPropCtx,
-};
+use crate::{BoxedPropValue, MaybeSend, PropHashMap, Renderer, RendererNodeId, RendererWorld, SchemaProp, SchemaPropCtx};
 use bevy_utils::{all_tuples, HashMap};
 use alloc::boxed::Box;
 
-pub trait SchemaProps<R>: Sized + Send + 'static
+pub trait SchemaProps<R>: Sized + MaybeSend + 'static
 where
     R: Renderer,
 {

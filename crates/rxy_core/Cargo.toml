@@ -27,9 +27,10 @@ count-macro.workspace = true
 paste.workspace = true
 
 [features]
-default = ["std", "view_erasure", "async-channel", "either_future"]
+default = ["std", "view_erasure", "async-channel", "either_future", "send_sync"]
+send_sync = []
 std = []
 view_erasure = []
-bevy_reflect = ["dep:bevy_reflect"]
+bevy_reflect = ["dep:bevy_reflect", "send_sync"]
 x_iter_source = ["hooked_collection", "async-channel"]
 either_future = ["pin-project"]

@@ -5,12 +5,7 @@ use crate::renderer::DeferredNodeTreeScoped;
 use bevy_utils::futures::now_or_never;
 use futures_lite::{Stream, StreamExt};
 
-use crate::{
-    build_info::{node_build_status, node_build_times_increment},
-    into_view, mutable_view_rebuild, Either, IntoView, MutableView, NodeTree, Renderer,
-    RendererNodeId, TaskState, ToIntoView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
-    ViewMemberExt, ViewMemberIndex,
-};
+use crate::{build_info::{node_build_status, node_build_times_increment}, into_view, mutable_view_rebuild, Either, IntoView, MutableView, NodeTree, Renderer, RendererNodeId, TaskState, ToIntoView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberExt, ViewMemberIndex, MaybeSend};
 
 fn stream_vm_rebuild<R, S, VM>(
     x_stream: XStream<S>,
@@ -18,7 +13,7 @@ fn stream_vm_rebuild<R, S, VM>(
     maybe_already_build: bool,
 ) where
     R: Renderer,
-    S: Stream<Item = VM> + Send + 'static,
+    S: Stream<Item = VM> + MaybeSend + 'static,
     VM: ViewMember<R>,
 {
     drop(ctx.take_indexed_view_member_state::<TaskState<R>>());
@@ -90,7 +85,7 @@ pub fn stream_view_rebuild<R, S>(
     ctx: ViewCtx<R>,
 ) -> StreamViewKey<R, S>
 where
-    S: Stream + Send + 'static,
+    S: Stream + MaybeSend + 'static,
     R: Renderer,
     S::Item: IntoView<R>,
 {
@@ -152,8 +147,8 @@ where
 impl<R, S> View<R> for XStream<S>
 where
     R: Renderer,
-    S: Stream + Send + 'static,
-    S::Item: IntoView<R> + Send,
+    S: Stream + MaybeSend + 'static,
+    S::Item: IntoView<R> + MaybeSend,
 {
     type Key = StreamViewKey<R, S>;
 
@@ -221,7 +216,7 @@ where
 impl<R, IV> IntoView<R> for futures_lite::stream::Boxed<IV>
 where
     R: Renderer,
-    IV: IntoView<R> + Send,
+    IV: IntoView<R> + MaybeSend,
 {
     type View = XStream<futures_lite::stream::Boxed<IV>>;
 
@@ -232,10 +227,10 @@ where
 
 impl<S, F, R, IV> IntoView<R> for futures_lite::stream::Map<S, F>
 where
-    IV: IntoView<R> + Send,
+    IV: IntoView<R> + MaybeSend,
     R: Renderer,
-    S: Stream + Send + 'static,
-    F: FnMut(S::Item) -> IV + Send + 'static,
+    S: Stream + MaybeSend + 'static,
+    F: FnMut(S::Item) -> IV + MaybeSend + 'static,
 {
     type View = XStream<Self>;
 
@@ -269,8 +264,8 @@ where
 impl<R, S> IntoView<R> for XStream<S>
 where
     R: Renderer,
-    S: Stream + Send + 'static,
-    S::Item: IntoView<R> + Send,
+    S: Stream + MaybeSend + 'static,
+    S::Item: IntoView<R> + MaybeSend,
 {
     type View = Self;
 
@@ -282,7 +277,7 @@ where
 #[inline(always)]
 pub fn x_stream<S>(stream: S) -> XStream<S>
 where
-    S: Stream + Send + 'static,
+    S: Stream + MaybeSend + 'static,
 {
     XStream {
         stream: stream,
@@ -293,7 +288,7 @@ where
 #[inline(always)]
 pub fn x_stream_immediate<S>(mut stream: S) -> XStream<S>
 where
-    S: Stream + Unpin + Send + 'static,
+    S: Stream + Unpin + MaybeSend + 'static,
 {
     if let Some(value) = now_or_never(stream.next()) {
         if value.is_some() {
@@ -321,7 +316,7 @@ where
 impl<R, S> ViewMember<R> for XStream<S>
 where
     R: Renderer,
-    S: Stream + Send + 'static,
+    S: Stream + MaybeSend + 'static,
     S::Item: ViewMember<R>,
 {
     fn count() -> ViewMemberIndex {

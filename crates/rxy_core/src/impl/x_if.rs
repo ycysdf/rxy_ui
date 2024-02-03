@@ -1,10 +1,10 @@
-use crate::{
-    schema_view, ConstIndex, Either, EitherExt, FnSchema, IntoSchemaProp, IntoView,
-    RebuildFnReceiver, Renderer, SchemaView, ToMutableWrapper, VirtualContainer,
-};
 use alloc::boxed::Box;
 use core::marker::PhantomData;
-use rxy_macro::{force_dynamic_view, force_into_dynamic_view};
+
+use crate::{
+    ConstIndex, Either, EitherExt, FnSchema, IntoSchemaProp, IntoView, MaybeSend, RebuildFnReceiver,
+    Renderer, schema_view, SchemaView, ToMutableWrapper, VirtualContainer,
+};
 
 pub struct XIf<R, C, V, V2 = ()>
 where
@@ -21,7 +21,7 @@ where
 impl<R, C, V> XIf<R, C, V, ()>
 where
     R: Renderer,
-    C: Send + 'static,
+    C: MaybeSend + 'static,
     V: IntoView<R> + Clone,
 {
     pub fn else_view<V2: IntoView<R> + Clone>(self, else_view: V2) -> XIf<R, C, V, V2> {
@@ -37,7 +37,7 @@ where
     impl<R, C, V, V2> IfView<R, C, V, V2>
     where
         R: Renderer,
-        C: Send + 'static,
+        C: MaybeSend + 'static,
         V: IntoView<R> + Clone,
         V2: IntoView<R> + Clone,
     {
@@ -71,19 +71,23 @@ pub type IfResultView<R, V, EV> = RebuildFnReceiver<
     >,
 >;
 
+#[cfg(feature = "send_sync")]
+pub type BoxedRebuildFnReceiver<R, IV, EV> =
+    Box<dyn FnOnce(RebuildFnReceiver<R, bool>) -> IfResultView<R, IV, EV> + MaybeSend>;
+#[cfg(not(feature = "send_sync"))]
+pub type BoxedRebuildFnReceiver<R, IV, EV> =
+    Box<dyn FnOnce(RebuildFnReceiver<R, bool>) -> IfResultView<R, IV, EV>>;
+
 impl<R, C, IV, EV> IntoView<R> for XIf<R, C, IV, EV>
 where
     R: Renderer,
-    C: IntoSchemaProp<R, bool> + Send + 'static,
-    IV: IntoView<R> + Send + Clone,
-    EV: IntoView<R> + Send + Clone,
+    C: IntoSchemaProp<R, bool> + MaybeSend + 'static,
+    IV: IntoView<R> + MaybeSend + Clone,
+    EV: IntoView<R> + MaybeSend + Clone,
 {
     type View = SchemaView<
         R,
-        FnSchema<
-            Box<dyn FnOnce(RebuildFnReceiver<R, bool>) -> IfResultView<R, IV, EV> + Send>,
-            (RebuildFnReceiver<R, bool>,),
-        >,
+        FnSchema<BoxedRebuildFnReceiver<R, IV, EV>, (RebuildFnReceiver<R, bool>,)>,
         (ConstIndex<0, C::Prop>,),
     >;
 
@@ -96,8 +100,8 @@ where
 pub fn x_if<R, IV, C>(condition: C, v: IV) -> XIf<R, C, IV>
 where
     R: Renderer,
-    C: IntoSchemaProp<R, bool> + Send + 'static,
-    IV: IntoView<R> + Send + Clone,
+    C: IntoSchemaProp<R, bool> + MaybeSend + 'static,
+    IV: IntoView<R> + MaybeSend + Clone,
 {
     XIf {
         view: v,
@@ -114,15 +118,15 @@ pub fn x_if_else<R, V, EV, C>(
 ) -> SchemaView<
     R,
     FnSchema<
-        impl FnOnce(RebuildFnReceiver<R, bool>) -> IfResultView<R, V, EV> + Send,
+        impl FnOnce(RebuildFnReceiver<R, bool>) -> IfResultView<R, V, EV> + MaybeSend,
         (RebuildFnReceiver<R, bool>,),
     >,
     (ConstIndex<0, C::Prop>,),
 >
 where
     R: Renderer,
-    V: IntoView<R> + Clone + Send,
-    EV: IntoView<R> + Clone + Send,
+    V: IntoView<R> + Clone + MaybeSend,
+    EV: IntoView<R> + Clone + MaybeSend,
     C: IntoSchemaProp<R, bool> + 'static,
 {
     schema_view(

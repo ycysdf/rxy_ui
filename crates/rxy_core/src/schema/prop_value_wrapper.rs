@@ -3,7 +3,7 @@ use core::sync::atomic::*;
 use alloc::vec::Vec;
 use alloc::string::String;
 use core::any::Any;
-use crate::{IntoSchemaProp, Renderer, SchemaPropValue};
+use crate::{IntoSchemaProp, MaybeSend, Renderer, SchemaPropValue};
 use alloc::borrow::Cow;
 use bevy_utils::all_tuples;
 
@@ -17,7 +17,7 @@ impl<R, T, IT> IntoSchemaProp<R, T> for IT
 where
     R: Renderer,
     IT: IntoSchemaPropValue<IntoSchemaPropValueWrapper<T>>,
-    T: Send + 'static,
+    T: MaybeSend + 'static,
 {
     type Prop = SchemaPropValue<T>;
 
@@ -70,8 +70,6 @@ impl_schema_prop_value_wrapper_into! {
     String,
     &'static str,
     Box<dyn Any>,
-    Box<dyn Any+Send>,
-    Box<dyn Any+Send+Sync>,
     AtomicI8,
     AtomicU8,
     AtomicI16,

@@ -1,11 +1,11 @@
-use crate::{Renderer, ViewMember};
+use crate::{MaybeSend, Renderer, ViewMember};
 use bevy_utils::all_tuples;
 /*
 pub trait MemberOwner<R>
 where
     R: Renderer,
 {
-    type E: Send + 'static;
+    type E: MaybeSend + 'static;
     type VM: ViewMember<R>;
     type AddMember<T: ViewMember<R>>;
     type SetMembers<T: ViewMember<R>>;
@@ -58,7 +58,7 @@ pub trait MemberOwner<R>
 where
     R: Renderer,
 {
-    type E: Send + 'static;
+    type E: MaybeSend + 'static;
     type VM: ViewMember<R>;
     type AddMember<VM: ViewMember<R>>:MemberOwner<R>;
     type SetMembers<VM: ViewMember<R> + MemberOwner<R>>:MemberOwner<R>;

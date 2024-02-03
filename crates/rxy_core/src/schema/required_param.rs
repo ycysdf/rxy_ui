@@ -1,7 +1,10 @@
 use core::any::TypeId;
 use core::ops::{Deref, DerefMut};
 
-use crate::{CloneableSchemaSlot, ConstIndex, MaybeReflect, RebuildFnReceiver, Renderer, InnerSchemaCtx, SchemaParam, SchemaSlot, Static};
+use crate::{
+    CloneableSchemaSlot, ConstIndex, InnerSchemaCtx, MaybeReflect, MaybeSend, RebuildFnReceiver,
+    Renderer, SchemaParam, SchemaSlot, Static,
+};
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Required<T>(pub T);
@@ -35,12 +38,11 @@ impl<T> DerefMut for Required<T> {
 impl<R, T> SchemaParam<R> for Required<Static<T>>
 where
     R: Renderer,
-    T: Send + 'static,
+    T: MaybeSend + 'static,
 {
     fn from<const I: usize>(ctx: &mut InnerSchemaCtx<R>) -> Self {
         let prop_type_id = TypeId::of::<ConstIndex<I>>();
-        let value: T = ctx.get_init_value::<T>(prop_type_id)
-            .unwrap();
+        let value: T = ctx.get_init_value::<T>(prop_type_id).unwrap();
         Required(Static(value))
     }
 }
@@ -48,7 +50,7 @@ where
 impl<R, T> SchemaParam<R> for Required<RebuildFnReceiver<R, T>>
 where
     R: Renderer,
-    T: MaybeReflect + Clone + PartialEq + Send + 'static,
+    T: MaybeReflect + Clone + PartialEq + MaybeSend + 'static,
 {
     fn from<const I: usize>(ctx: &mut InnerSchemaCtx<R>) -> Self {
         Required(<RebuildFnReceiver<R, T> as SchemaParam<R>>::from::<I>(ctx))
@@ -69,8 +71,6 @@ where
     R: Renderer,
 {
     fn from<const I: usize>(ctx: &mut InnerSchemaCtx<R>) -> Self {
-        Required(<CloneableSchemaSlot<R> as SchemaParam<R>>::from::<I>(
-            ctx,
-        ))
+        Required(<CloneableSchemaSlot<R> as SchemaParam<R>>::from::<I>(ctx))
     }
 }

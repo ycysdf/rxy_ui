@@ -12,7 +12,7 @@ use indexmap::IndexSet;
 use rxy_macro::{force_dynamic_view, force_into_dynamic_view};
 
 use crate::diff::{diff, Diff, DiffOpMove};
-use crate::{virtual_container, IntoView, MutableView, MutableViewKey, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, VirtualContainer, NodeTree};
+use crate::{virtual_container, IntoView, MutableView, MutableViewKey, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, VirtualContainer, NodeTree, MaybeSend, MaybeSync};
 
 type FxIndexSet<T> = IndexSet<T, BuildHasherDefault<AHasher>>;
 
@@ -28,8 +28,8 @@ impl<K, V> Keyed<K, V> {
 pub fn x_iter_keyed<I, K, IV, R>(items: I) -> ForKeyed<Vec<I::Item>, K, IV, R>
 where
     I: IntoIterator<Item = Keyed<K, IV>>,
-    K: Eq + Debug + Hash + Send + Sync + 'static,
-    IV: IntoView<R> + Send + 'static,
+    K: Eq + Debug + Hash + MaybeSend + MaybeSync + 'static,
+    IV: IntoView<R> + MaybeSend + 'static,
     R: Renderer,
 {
     let items = items.into_iter().collect::<Vec<_>>();
@@ -44,7 +44,7 @@ pub fn x_iter<IV, R>(
     items: impl IntoIterator<Item = IV>,
 ) -> ForKeyed<Vec<Keyed<usize, IV>>, usize, IV, R>
 where
-    IV: IntoView<R> + Send + 'static,
+    IV: IntoView<R> + MaybeSend + 'static,
     R: Renderer,
 {
     ForKeyed {
@@ -110,8 +110,8 @@ impl<R: Renderer, K: ViewKey<R>> MutableViewKey<R> for Vec<Option<K>> {
 
 impl<I, K, IV, R> MutableView<R> for ForKeyed<I, K, IV, R>
 where
-    I: IntoIterator<Item = Keyed<K, IV>> + Send + 'static,
-    K: Eq + Debug + Hash + Send + Sync + 'static,
+    I: IntoIterator<Item = Keyed<K, IV>> + MaybeSend + 'static,
+    K: Eq + Debug + Hash + MaybeSend + MaybeSync + 'static,
     IV: IntoView<R>,
     R: Renderer,
 {
@@ -201,9 +201,9 @@ where
 
 impl<I, K, IV, R> IntoView<R> for ForKeyed<I, K, IV, R>
 where
-    I: IntoIterator<Item = Keyed<K, IV>> + Send + 'static,
-    K: Eq + Debug + Hash + Send + Sync + 'static,
-    IV: IntoView<R> + Send + 'static,
+    I: IntoIterator<Item = Keyed<K, IV>> + MaybeSend + 'static,
+    K: Eq + Debug + Hash + MaybeSend + MaybeSync + 'static,
+    IV: IntoView<R> + MaybeSend + 'static,
     R: Renderer,
 {
     type View = VirtualContainer<R, Self>;

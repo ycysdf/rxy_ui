@@ -2,9 +2,9 @@ use bevy_utils::synccell::SyncCell;
 use bevy_utils::{all_tuples, HashMap};
 
 use crate::build_info::BuildStatus;
-use crate::{NodeTree, Renderer, ViewMemberCtx, ViewMemberIndex};
+use crate::{MaybeSend, NodeTree, Renderer, ViewMemberCtx, ViewMemberIndex};
 
-pub trait ViewMember<R>: Send + 'static
+pub trait ViewMember<R>: MaybeSend + 'static
 where
     R: Renderer,
 {
@@ -30,7 +30,7 @@ where
 
 impl<R, T, F> ViewMember<R> for F
 where
-    F: Fn() -> T + Send + 'static,
+    F: Fn() -> T + MaybeSend + 'static,
     R: Renderer,
     T: ViewMember<R>,
 {
@@ -133,20 +133,20 @@ macro_rules! impl_view_member_for_tuples {
 
 all_tuples!(impl_view_member_for_tuples, 1, 12, M);
 
-pub struct MemberHashMapState<S: Send + 'static>(pub SyncCell<HashMap<ViewMemberIndex, S>>);
+pub struct MemberHashMapState<S: MaybeSend + 'static>(pub SyncCell<HashMap<ViewMemberIndex, S>>);
 
 impl<'a, R: Renderer> ViewMemberCtx<'a, R> {
-    pub fn indexed_view_member_state_mut<S: Send + 'static>(&mut self) -> Option<&mut S> {
+    pub fn indexed_view_member_state_mut<S: MaybeSend + 'static>(&mut self) -> Option<&mut S> {
         self.world
             .get_node_state_mut::<MemberHashMapState<S>>(&self.node_id)
             .and_then(|s| s.0.get().get_mut(&self.index))
     }
-    pub fn take_indexed_view_member_state<S: Send + 'static>(&mut self) -> Option<S> {
+    pub fn take_indexed_view_member_state<S: MaybeSend + 'static>(&mut self) -> Option<S> {
         self.world
             .get_node_state_mut::<MemberHashMapState<S>>(&self.node_id)
             .and_then(|s| s.0.get().remove(&self.index))
     }
-    pub fn set_indexed_view_member_state<S: Send + 'static>(&mut self, state: S) {
+    pub fn set_indexed_view_member_state<S: MaybeSend + 'static>(&mut self, state: S) {
         if let Some(map) = self
             .world
             .get_node_state_mut::<MemberHashMapState<S>>(&self.node_id)

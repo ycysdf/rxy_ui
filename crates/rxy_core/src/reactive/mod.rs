@@ -15,10 +15,7 @@ use xy_reactive::effect::ErasureEffect;
 use xy_reactive::prelude::create_render_effect;
 use xy_reactive::render_effect::RenderEffect;
 
-use crate::{
-    DeferredNodeTreeScoped, IntoView, MemberOwner, NodeTree, Renderer, RendererNodeId,
-    RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
-};
+use crate::{DeferredNodeTreeScoped, IntoView, MaybeSend, MemberOwner, NodeTree, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex};
 
 struct FnOnceCell<'a, I, T> {
     func: Option<Box<dyn FnOnce(I) -> T + 'a>>,
@@ -41,17 +38,17 @@ impl<'a, I, T> FnOnceCell<'a, I, T> {
 #[derive(Clone)]
 pub struct Reactive<F, T, M = ()>(pub F, pub PhantomData<(T, M)>)
 where
-    F: Fn() -> T + Send + 'static;
+    F: Fn() -> T + MaybeSend + 'static;
 
 pub fn rx<F, T>(f: F) -> Reactive<F, T>
 where
-    F: Fn() -> T + Send + 'static,
+    F: Fn() -> T + MaybeSend + 'static,
 {
     Reactive(f, Default::default())
 }
 
 pub fn create_effect_with_init<T: Clone + 'static, I: 'static>(
-    input: impl Fn() -> I + Send + 'static,
+    input: impl Fn() -> I + MaybeSend + 'static,
     init: impl FnOnce(I) -> T,
     f: impl Fn(I, T) + 'static,
 ) -> RenderEffect<T> {
@@ -75,8 +72,8 @@ pub fn create_effect_with_init<T: Clone + 'static, I: 'static>(
 impl<R, F, VM> ViewMember<R> for Reactive<F, VM>
 where
     R: Renderer,
-    F: Fn() -> VM + Send + 'static,
-    VM: ViewMember<R> + Send,
+    F: Fn() -> VM + MaybeSend + 'static,
+    VM: ViewMember<R> + MaybeSend,
 {
     fn count() -> ViewMemberIndex {
         VM::count()
@@ -235,8 +232,8 @@ where
 impl<R, F, IV> View<R> for Reactive<F, IV>
 where
     R: Renderer,
-    F: Fn() -> IV + Send + 'static,
-    IV: IntoView<R> + Send,
+    F: Fn() -> IV + MaybeSend + 'static,
+    IV: IntoView<R> + MaybeSend,
 {
     type Key = ReactiveViewKey<R, <IV::View as View<R>>::Key>;
 
@@ -335,8 +332,8 @@ where
 impl<R, F, IV> IntoView<R> for Reactive<F, IV>
 where
     R: Renderer,
-    F: Fn() -> IV + Send + 'static,
-    IV: IntoView<R> + Send,
+    F: Fn() -> IV + MaybeSend + 'static,
+    IV: IntoView<R> + MaybeSend,
 {
     type View = Reactive<F, IV>;
 
@@ -353,7 +350,7 @@ where
     fn rx_member<T: ViewMember<R>, F>(self, f: F) -> Self::AddMember<Reactive<F, T>>
     where
         Self: Sized,
-        F: Fn() -> T + Send + 'static,
+        F: Fn() -> T + MaybeSend + 'static,
     {
         self.member(rx(f))
     }

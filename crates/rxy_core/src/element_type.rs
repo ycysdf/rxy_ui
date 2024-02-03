@@ -1,6 +1,6 @@
-use crate::{MaybeReflect, Renderer, RendererNodeId, RendererWorld};
+use crate::{MaybeReflect, MaybeSend, Renderer, RendererNodeId, RendererWorld};
 
-pub trait RendererElementType<R>: MaybeReflect + Send + 'static
+pub trait RendererElementType<R>: MaybeReflect + MaybeSend + 'static
 where
     R: Renderer,
 {

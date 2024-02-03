@@ -1,7 +1,7 @@
 use rxy_macro::IntoView;
 
 use crate::schema::view::SchemaView;
-use crate::{ConstIndex, ElementSoloView, ElementView, IntoCloneableView, IntoSchemaProp, IntoView, MemberOwner, Renderer, RendererNodeId, Schema, SchemaProps, SoloView, View, ViewCtx, ViewKeyOrDataNodeId, ViewMember, ViewMemberCtx};
+use crate::{ConstIndex, ElementSoloView, ElementView, IntoCloneableView, IntoSchemaProp, IntoView, MaybeSend, MemberOwner, Renderer, RendererNodeId, Schema, SchemaProps, SoloView, View, ViewCtx, ViewKeyOrDataNodeId, ViewMember, ViewMemberCtx};
 
 #[derive(IntoView)]
 pub struct ElementSchemaView<R, U, VM = (), P = (), M = ()>
@@ -11,7 +11,7 @@ pub struct ElementSchemaView<R, U, VM = (), P = (), M = ()>
         U: Schema<R>,
         U::View: ElementView<R>,
         P: SchemaProps<R>,
-        M: Send + 'static,
+        M: MaybeSend + 'static,
 {
     members: VM,
     schema_view: SchemaView<R, U, P, M>,
@@ -22,7 +22,7 @@ impl<R, U, M> ElementSchemaView<R, U, (), (), M>
         R: Renderer,
         U: Schema<R>,
         U::View: ElementView<R>,
-        M: Send + 'static,
+        M: MaybeSend + 'static,
 {
     #[inline]
     pub fn new(u: U) -> ElementSchemaView<R, U, (), (), M> {
@@ -40,7 +40,7 @@ impl<R, U, VM, P, M> ElementSchemaView<R, U, VM, P, M>
         U: Schema<R>,
         U::View: ElementView<R>,
         P: SchemaProps<R>,
-        M: Send + 'static,
+        M: MaybeSend + 'static,
 {
     #[inline(always)]
     pub fn map<MU>(self, f: impl FnOnce(U) -> MU) -> ElementSchemaView<R, MU, VM, P, M>
@@ -80,7 +80,7 @@ impl<R, U, VM, P, M> ElementSchemaView<R, U, VM, P, M>
         where
             P::Props<ConstIndex<I, ISP::Prop>>: SchemaProps<R>,
             ISP: IntoSchemaProp<R, T>,
-            T: Send + 'static,
+            T: MaybeSend + 'static,
     {
         ElementSchemaView {
             members: self.members,
@@ -92,7 +92,7 @@ impl<R, U, VM, P, M> ElementSchemaView<R, U, VM, P, M>
     pub fn set_static_indexed_prop<const I: usize, ISP, IT>(self, value: ISP) -> Self
         where
             ISP: IntoSchemaProp<R, IT>,
-            IT: Send + 'static,
+            IT: MaybeSend + 'static,
     {
         ElementSchemaView {
             members: self.members,
@@ -108,7 +108,7 @@ impl<R, U, VM, P, M> ElementView<R> for ElementSchemaView<R, U, VM, P, M>
         U: Schema<R>,
         U::View: ElementView<R>,
         P: SchemaProps<R>,
-        M: Send + 'static,
+        M: MaybeSend + 'static,
 {
     fn element_node_id(key: &Self::Key) -> &RendererNodeId<R> {
         U::View::element_node_id(&key.key)
@@ -122,7 +122,7 @@ impl<R, U, VM, P, M> SoloView<R> for ElementSchemaView<R, U, VM, P, M>
         U: Schema<R>,
         U::View: ElementSoloView<R>,
         P: SchemaProps<R>,
-        M: Send + 'static,
+        M: MaybeSend + 'static,
 {
     fn node_id(key: &Self::Key) -> &RendererNodeId<R> {
         U::View::node_id(&key.key)
@@ -137,7 +137,7 @@ impl<R, U, VM, P, M> View<R> for ElementSchemaView<R, U, VM, P, M>
         U: Schema<R>,
         U::View: ElementView<R>,
         P: SchemaProps<R>,
-        M: Send + 'static,
+        M: MaybeSend + 'static,
 {
     type Key = ViewKeyOrDataNodeId<R, <U::View as View<R>>::Key>;
 
@@ -179,7 +179,7 @@ impl<R, VM, U, P, M> MemberOwner<R> for ElementSchemaView<R, U, VM, P, M>
         U: Schema<R>,
         U::View: ElementView<R>,
         P: SchemaProps<R>,
-        M: Send + 'static,
+        M: MaybeSend + 'static,
 {
     type E = <U::View as MemberOwner<R>>::E;
     type VM = VM;
@@ -222,7 +222,7 @@ impl<R, VM, U, P, M> MemberOwner<R> for ElementSchemaView<R, U, VM, P, M>
 // impl<R, T> ViewComponentType<R> for SoloWrapper<T>
 // where
 //     R: Renderer,
-//     OVM: Send + 'static,
+//     OVM: MaybeSend + 'static,
 //     T: SoloViewComponentType<R>,
 // {
 //     type View = T::View;
@@ -232,7 +232,7 @@ impl<R, VM, U, P, M> MemberOwner<R> for ElementSchemaView<R, U, VM, P, M>
 //     }
 // }
 //
-// pub trait SoloViewComponentType<R>: Send + 'static
+// pub trait SoloViewComponentType<R>: MaybeSend + 'static
 // where
 //     R: Renderer,
 // {
@@ -240,7 +240,7 @@ impl<R, VM, U, P, M> MemberOwner<R> for ElementSchemaView<R, U, VM, P, M>
 //     fn view(&mut self, ctx: SchemaCtx<R, Self>) -> Self::View;
 // }
 //
-// pub trait DynSoloViewComponentType<R>: Send + 'static
+// pub trait DynSoloViewComponentType<R>: MaybeSend + 'static
 // where
 //     R: Renderer,
 // {
@@ -266,8 +266,8 @@ impl<R, VM, U, P, M> MemberOwner<R> for ElementSchemaView<R, U, VM, P, M>
 // impl<R, M, T> SoloViewComponentType<R> for SoloWrapper<T, M>
 // where
 //     R: Renderer,
-//     OVM: Send + 'static,
-//     M: Send + 'static,
+//     OVM: MaybeSend + 'static,
+//     M: MaybeSend + 'static,
 //     T: SoloViewComponentType<R>,
 // {
 //     type View = T::View;

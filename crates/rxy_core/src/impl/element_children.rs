@@ -200,8 +200,8 @@ impl<R, VM, CV, V> ElementView<R> for ElementViewChildren<V, CV, R>
 // #[derive(Clone)]
 // pub struct ElementSoloViewMemberOwnerWrapper<T>(pub T);
 //
-// pub trait ElementSoloViewMemberOwner<R: Renderer>: Send + 'static {
-//     type E: Send + 'static;
+// pub trait ElementSoloViewMemberOwner<R: Renderer>: MaybeSend + 'static {
+//     type E: MaybeSend + 'static;
 //     type VM: ViewMember<R>;
 //     type AddMember<T: ViewMember<R>>: ElementSoloView<R>;
 //     type SetMembers<T: ViewMember<R>>: ElementSoloView<R>;

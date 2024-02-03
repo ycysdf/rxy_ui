@@ -1,18 +1,26 @@
 use alloc::boxed::Box;
-use core::any::TypeId;
 
 use bevy_utils::all_tuples;
 
 use crate::{
-    target_rebuild_fn_channel, IntoView, Renderer, RendererNodeId, View, ViewCtx, ViewKey,
-    ViewMember, ViewMemberCtx, ViewMemberIndex,
+    IntoView, MaybeSend, Renderer, RendererNodeId, target_rebuild_fn_channel, View, ViewCtx,
+    ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
 };
 
-pub type RebuildFn<R, T> = Box<dyn FnMut(T, &mut <R as Renderer>::NodeTree) + Send + 'static>;
-pub type RebuildFnSender<R, T> = Box<dyn FnOnce(RebuildFn<R, T>) + Send + 'static>;
+#[cfg(feature = "send_sync")]
+pub type RebuildFn<R, T> = Box<dyn FnMut(T, &mut <R as Renderer>::NodeTree) + MaybeSend + 'static>;
+
+#[cfg(feature = "send_sync")]
+pub type RebuildFnMaybeSender<R, T> = Box<dyn FnOnce(RebuildFn<R, T>) + MaybeSend + 'static>;
+
+#[cfg(not(feature = "send_sync"))]
+pub type RebuildFn<R, T> = Box<dyn FnMut(T, &mut <R as Renderer>::NodeTree) + 'static>;
+
+#[cfg(not(feature = "send_sync"))]
+pub type RebuildFnMaybeSender<R, T> = Box<dyn FnOnce(RebuildFn<R, T>) + 'static>;
 
 pub trait RebuildFnReceiverSplit<R, T, FU, RU> {
-    fn split(self, map_f: impl Fn(T) -> FU + Clone + Send + 'static) -> RU;
+    fn split(self, map_f: impl Fn(T) -> FU + Clone + MaybeSend + 'static) -> RU;
 }
 
 // impl<R, T, U1> RebuildFnReceiverSplit<R, T, (U1,), (RebuildFnReceiver<R, U1>,)>
@@ -23,7 +31,7 @@ pub trait RebuildFnReceiverSplit<R, T, FU, RU> {
 // {
 //     fn split(
 //         self,
-//         map_f: impl Fn(T) -> (U1,) + Clone + Send + 'static,
+//         map_f: impl Fn(T) -> (U1,) + Clone + MaybeSend + 'static,
 //     ) -> (RebuildFnReceiver<R, U1>,) {
 //         let rebuild_fn_sender_fn = self.1;
 //         let (u1,) = map_f(self.0);
@@ -43,7 +51,7 @@ pub trait RebuildFnReceiverSplit<R, T, FU, RU> {
 //     U1: 'static,
 //     U2: 'static,
 // {
-//     fn split(self, map_f: impl Fn(T) -> (U1, U2) + Clone + Send + 'static) -> (RebuildFnReceiver<R, U1>, RebuildFnReceiver<R, U2>) {
+//     fn split(self, map_f: impl Fn(T) -> (U1, U2) + Clone + MaybeSend + 'static) -> (RebuildFnReceiver<R, U1>, RebuildFnReceiver<R, U2>) {
 //         let rebuild_fn_sender_fn = self.1;
 //         let (u1, u2) = map_f(self.0);
 //         let (mut rebuild_fn1, receiver1) = target_rebuild_fn_channel(u1);
@@ -66,7 +74,7 @@ macro_rules! impl_split {
             R: Renderer,
             $($U: 'static),*
         {
-            fn split(self, map_f: impl Fn(T) -> ($($U,)*) + Clone + Send + 'static) -> ($(RebuildFnReceiver<R, $U>,)*) {
+            fn split(self, map_f: impl Fn(T) -> ($($U,)*) + Clone + MaybeSend + 'static) -> ($(RebuildFnReceiver<R, $U>,)*) {
                 let rebuild_fn_sender_fn = self.1;
                 let ($($U,)*) = match self.0.map(&map_f) {
                     Some(($($U,)*)) => ($(Some($U),)*),
@@ -97,7 +105,7 @@ macro_rules! impl_split {
 all_tuples!(impl_split, 1, 8, U);
 
 // pub struct EachMapWrapper<T, M>(T, PhantomData<M>);
-// // impl Fn(T) -> (U1, U2) + Clone + Send + 'static
+// // impl Fn(T) -> (U1, U2) + Clone + MaybeSend + 'static
 // impl<R, T, U1> EachMapRebuildFnReceiver<R> for EachMapWrapper<T, (U1,)>
 // where
 //     R: Renderer,
@@ -121,7 +129,7 @@ all_tuples!(impl_split, 1, 8, U);
 //     }
 // }
 
-pub struct RebuildFnReceiver<R, T>(pub Option<T>, pub RebuildFnSender<R, T>)
+pub struct RebuildFnReceiver<R, T>(pub Option<T>, pub RebuildFnMaybeSender<R, T>)
 where
     R: Renderer,
     T: 'static;
@@ -135,7 +143,7 @@ where
         Self(Some(value), self.1)
     }
 
-    pub fn map<U>(self, map_f: impl Fn(T) -> U + Send + 'static) -> RebuildFnReceiver<R, U> {
+    pub fn map<U>(self, map_f: impl Fn(T) -> U + MaybeSend + 'static) -> RebuildFnReceiver<R, U> {
         let rebuild_fn_sender_fn = self.1;
         RebuildFnReceiver(
             self.0.map(&map_f),
@@ -147,7 +155,7 @@ where
 
     // pub fn split<U1, U2>(
     //     self,
-    //     map_f: impl Fn(T) -> (U1, U2) + Clone + Send + 'static,
+    //     map_f: impl Fn(T) -> (U1, U2) + Clone + MaybeSend + 'static,
     // ) -> (RebuildFnReceiver<R, U1>, RebuildFnReceiver<R, U2>) {
     //     let rebuild_fn_sender_fn = self.1;
     //
@@ -183,7 +191,7 @@ where
     T: 'static,
 {
     pub fn send_view_member_rebuild_fn(
-        f: RebuildFnSender<R, T>,
+        f: RebuildFnMaybeSender<R, T>,
         node_id: RendererNodeId<R>,
         index: ViewMemberIndex,
         is_build: bool,
@@ -214,7 +222,7 @@ where
         });
     }
     pub fn send_view_rebuild_fn(
-        f: RebuildFnSender<R, T>,
+        f: RebuildFnMaybeSender<R, T>,
         key: T::Key,
         parent: RendererNodeId<R>,
         is_build: bool,
@@ -318,7 +326,7 @@ where
 impl<R, IV> IntoView<R> for RebuildFnReceiver<R, IV>
 where
     R: Renderer,
-    IV: IntoView<R> + Send,
+    IV: IntoView<R> + MaybeSend,
 {
     type View = RebuildFnReceiver<R, IV::View>;
 
@@ -329,7 +337,7 @@ where
 
 pub fn rebuild_fn<R: Renderer, T>(
     target: Option<T>,
-    sender: RebuildFnSender<R, T>,
+    sender: RebuildFnMaybeSender<R, T>,
 ) -> RebuildFnReceiver<R, T> {
     RebuildFnReceiver(target, sender)
 }

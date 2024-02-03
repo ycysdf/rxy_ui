@@ -1,4 +1,4 @@
-use crate::{InnerSchemaCtx, RenderSchemaCtx, Renderer};
+use crate::{InnerSchemaCtx, RenderSchemaCtx, Renderer, MaybeSend, MaybeSync};
 use async_channel::Sender;
 use core::fmt::Debug;
 use xy_reactive::prelude::{
@@ -15,7 +15,7 @@ where
         onchange: Sender<T>,
     ) -> RwSignal<T>
     where
-        T: Debug + Send + Sync + PartialEq + Clone + 'static,
+        T: Debug + MaybeSend + MaybeSync + PartialEq + Clone + 'static,
     {
         self.mut_scoped(|ctx| ctx.use_controlled_state(value, onchange))
     }
@@ -31,7 +31,7 @@ where
         onchange: Sender<T>,
     ) -> RwSignal<T>
     where
-        T: Debug + Send + Sync + PartialEq + Clone + 'static,
+        T: Debug + MaybeSend + MaybeSync + PartialEq + Clone + 'static,
     {
         let signal = use_rw_signal(value.get_untracked());
         let (read_signal, write_signal) = signal.split();

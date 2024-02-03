@@ -1,7 +1,4 @@
-use crate::{
-    ElementView, IntoView, MemberOwner, NodeTree, Renderer, RendererNodeId, SoloView, View,
-    ViewCtx, ViewKey, ViewMember,
-};
+use crate::{ElementView, IntoView, MaybeSend, MaybeSync, MemberOwner, NodeTree, Renderer, RendererNodeId, SoloView, View, ViewCtx, ViewKey, ViewMember};
 use core::marker::PhantomData;
 use rxy_macro::IntoView;
 
@@ -14,7 +11,7 @@ pub struct ProvideContext<R, T, V> {
 pub fn provide_context<R, T, IV>(provide_context: T, view: IV) -> ProvideContext<R, T, IV::View>
 where
     R: Renderer,
-    T: Send + Sync + 'static,
+    T: MaybeSend + MaybeSync + 'static,
     IV: IntoView<R>,
     IV::View: SoloView<R>,
 {
@@ -29,21 +26,21 @@ impl<R> ViewCtx<'_, R>
 where
     R: Renderer,
 {
-    pub fn context<T: Send + Sync + Clone + 'static>(&self) -> T {
+    pub fn context<T: MaybeSend + MaybeSync + Clone + 'static>(&self) -> T {
         self.get_context()
             .unwrap_or_else(|| panic!("Tried to access a context that has not been provided."))
     }
 
-    pub fn context_ref<T: Send + Sync + 'static>(&self) -> &T {
+    pub fn context_ref<T: MaybeSend + MaybeSync + 'static>(&self) -> &T {
         self.get_context_ref()
             .unwrap_or_else(|| panic!("Tried to access a context that has not been provided."))
     }
 
-    pub fn get_context<T: Send + Sync + Clone + 'static>(&self) -> Option<T> {
+    pub fn get_context<T: MaybeSend + MaybeSync + Clone + 'static>(&self) -> Option<T> {
         self.get_context_ref().cloned()
     }
 
-    pub fn get_context_ref<T: Send + Sync + 'static>(&self) -> Option<&T> {
+    pub fn get_context_ref<T: MaybeSend + MaybeSync + 'static>(&self) -> Option<&T> {
         let mut current_parent = self.parent.clone();
         loop {
             if let Some(context) = self.world.get_node_state_ref::<Context<T>>(&current_parent)
@@ -57,7 +54,7 @@ where
             }
         }
     }
-    pub fn context_scoped<T: Send + Sync + 'static>(&mut self, f: impl FnOnce(&mut T)) -> bool {
+    pub fn context_scoped<T: MaybeSend + MaybeSync + 'static>(&mut self, f: impl FnOnce(&mut T)) -> bool {
         let mut current_parent = self.parent.clone();
         loop {
             if let Some(mut context) = self.world.take_node_state::<Context<T>>(&current_parent)
@@ -81,7 +78,7 @@ pub struct Context<T>(pub T);
 impl<R, T, V> View<R> for ProvideContext<R, T, V>
 where
     R: Renderer,
-    T: Send + Sync + 'static,
+    T: MaybeSend + MaybeSync + 'static,
     V: ElementView<R>,
 {
     type Key = V::Key;
@@ -119,7 +116,7 @@ where
 impl<R, T, V> IntoView<R> for ProvideContext<R, T, V>
 where
     R: Renderer,
-    T: Send + Sync + 'static,
+    T: MaybeSend + MaybeSync + 'static,
     V: ElementView<R>,
 {
     type View = ProvideContext<R, T, V>;
@@ -131,7 +128,7 @@ where
 impl<R, T, V> SoloView<R> for ProvideContext<R, T, V>
 where
     R: Renderer,
-    T: Send + Sync + 'static,
+    T: MaybeSend + MaybeSync + 'static,
     V: ElementView<R>,
 {
     fn node_id(key: &Self::Key) -> &RendererNodeId<R> {
@@ -142,7 +139,7 @@ where
 impl<R, T, V> ElementView<R> for ProvideContext<R, T, V>
 where
     R: Renderer,
-    T: Send + Sync + 'static,
+    T: MaybeSend + MaybeSync + 'static,
     V: ElementView<R>,
 {
     fn element_node_id(key: &Self::Key) -> &RendererNodeId<R> {
@@ -153,7 +150,7 @@ where
 impl<R, T, V> MemberOwner<R> for ProvideContext<R, T, V>
 where
     R: Renderer,
-    T: Send + Sync + 'static,
+    T: MaybeSend + MaybeSync + 'static,
     V: MemberOwner<R>,
 {
     type E = V::E;

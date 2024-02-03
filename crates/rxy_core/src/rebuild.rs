@@ -2,7 +2,7 @@ use alloc::boxed::Box;
 
 use bevy_utils::synccell::SyncCell;
 
-use crate::{rebuild_fn, RebuildFn, RebuildFnReceiver, Renderer};
+use crate::{MaybeSend, rebuild_fn, RebuildFn, RebuildFnReceiver, Renderer};
 
 #[cfg_attr(
     feature = "bevy_reflect",
@@ -11,7 +11,10 @@ use crate::{rebuild_fn, RebuildFn, RebuildFnReceiver, Renderer};
 )]
 pub struct ReBuildFn<R, T>(
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
-    Option<Box<dyn FnMut(&mut <R as Renderer>::NodeTree, T) + Send + 'static>>,
+    #[cfg(feature = "send_sync")]
+    Option<Box<dyn FnMut(&mut <R as Renderer>::NodeTree, T) + MaybeSend + 'static>>,
+    #[cfg(not(feature = "send_sync"))]
+    Option<Box<dyn FnMut(&mut <R as Renderer>::NodeTree, T) + 'static>>,
 )
 where
     R: Renderer;
@@ -31,7 +34,7 @@ impl<R, T> ReBuildFn<R, T>
 where
     R: Renderer,
 {
-    pub fn new(f: impl FnMut(&mut <R as Renderer>::NodeTree, T) + Send + 'static) -> Self {
+    pub fn new(f: impl FnMut(&mut <R as Renderer>::NodeTree, T) + MaybeSend + 'static) -> Self {
         Self(Some(Box::new(f)))
     }
 

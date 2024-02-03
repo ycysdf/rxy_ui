@@ -3,10 +3,10 @@ use core::hash::Hash;
 
 use bevy_utils::all_tuples;
 
-use crate::{MaybeFromReflect, MaybeReflect, MaybeTypePath, NodeTree, Renderer, RendererNodeId, RendererWorld, ViewCtx};
+use crate::{MaybeFromReflect, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, NodeTree, Renderer, RendererNodeId, RendererWorld, ViewCtx};
 
 
-pub trait View<R: Renderer>: Sized + Send + 'static {
+pub trait View<R: Renderer>: Sized + MaybeSend + 'static {
     type Key: ViewKey<R>;
 
     fn build(
@@ -20,7 +20,7 @@ pub trait View<R: Renderer>: Sized + Send + 'static {
 }
 
 pub trait ViewKey<R: Renderer>:
-    MaybeReflect + MaybeFromReflect + MaybeTypePath + Send + Sync + Clone + Hash + Debug + 'static
+    MaybeReflect + MaybeFromReflect + MaybeTypePath + MaybeSend + MaybeSync + Clone + Hash + Debug + 'static
 {
     fn remove(self, world: &mut RendererWorld<R>);
 

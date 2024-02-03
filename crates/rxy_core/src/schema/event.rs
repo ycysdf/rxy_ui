@@ -1,4 +1,4 @@
-use crate::{BoxedPropValue, ConstIndex, IntoSchemaPropValue, IntoSchemaPropValueWrapper, PropState, Renderer, InnerSchemaCtx, SchemaParam};
+use crate::{BoxedPropValue, ConstIndex, IntoSchemaPropValue, IntoSchemaPropValueWrapper, PropState, Renderer, InnerSchemaCtx, SchemaParam, MaybeSend};
 pub use async_channel::Sender;
 use async_channel::{unbounded, Receiver};
 use core::any::{Any, TypeId};
@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 
 pub struct EventHandler<Args>
 where
-    Args: Send + 'static,
+    Args: MaybeSend + 'static,
 {
     f: BoxedPropValue,
     call_f: fn(&mut BoxedPropValue, Args),
@@ -15,11 +15,11 @@ where
 
 impl<Args> EventHandler<Args>
 where
-    Args: Send + 'static,
+    Args: MaybeSend + 'static,
 {
     pub fn new<F>(f: F) -> Self
     where
-        F: FnMut(Args) + Send + 'static,
+        F: FnMut(Args) + MaybeSend + 'static,
     {
         Self {
             f: Box::new(f),
@@ -39,7 +39,7 @@ where
 pub struct EventHandlerState<R, Args>
 where
     R: Renderer,
-    Args: Send + 'static,
+    Args: MaybeSend + 'static,
 {
     _task: R::Task<()>,
     event_handler: Arc<Mutex<Option<BoxedPropValue>>>,
@@ -49,7 +49,7 @@ where
 impl<R, Args> EventHandlerState<R, Args>
 where
     R: Renderer,
-    Args: Send + 'static,
+    Args: MaybeSend + 'static,
 {
     pub fn new(receiver: Receiver<Args>, event_handler: Option<BoxedPropValue>) -> Self {
         let event_handler = Arc::new(Mutex::new(event_handler));
@@ -73,13 +73,13 @@ where
 impl<R, Args> PropState<R> for EventHandlerState<R, Args>
 where
     R: Renderer,
-    Args: Send + 'static,
+    Args: MaybeSend + 'static,
 {
     fn apply(&mut self, new_value: BoxedPropValue, _world: &mut R::NodeTree) {
         *self.event_handler.lock().unwrap() = Some(new_value);
     }
 
-    fn as_any_mut(&mut self) -> &mut (dyn Any + Send) {
+    fn as_any_mut(&mut self) -> &mut (dyn Any + MaybeSend) {
         self
     }
 }
@@ -87,7 +87,7 @@ where
 impl<R, Args> SchemaParam<R> for Sender<Args>
 where
     R: Renderer,
-    Args: Send + 'static,
+    Args: MaybeSend + 'static,
 {
     fn from<const I: usize>(ctx: &mut InnerSchemaCtx<R>) -> Self {
         let type_id = TypeId::of::<ConstIndex<I>>();
@@ -103,8 +103,8 @@ where
 
 impl<Args, F> IntoSchemaPropValue<IntoSchemaPropValueWrapper<EventHandler<Args>>> for F
 where
-    F: FnMut(Args) + Send + 'static,
-    Args: Send + 'static,
+    F: FnMut(Args) + MaybeSend + 'static,
+    Args: MaybeSend + 'static,
 {
     fn into(self) -> IntoSchemaPropValueWrapper<EventHandler<Args>> {
         IntoSchemaPropValueWrapper(EventHandler::new(self))

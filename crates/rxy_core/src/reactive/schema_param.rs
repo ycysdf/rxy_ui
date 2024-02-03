@@ -1,6 +1,4 @@
-use crate::{
-    ConstIndex, Renderer, Required, InnerSchemaCtx, SchemaParam, SchemaParamDefault, SignalPropState,
-};
+use crate::{ConstIndex, InnerSchemaCtx, MaybeSend, MaybeSync, Renderer, Required, SchemaParam, SchemaParamDefault, SignalPropState};
 use alloc::boxed::Box;
 use core::any::TypeId;
 use xy_reactive::prelude::ReadSignal;
@@ -8,7 +6,7 @@ use xy_reactive::prelude::ReadSignal;
 // impl<R, T> SchemaPropParam<R> for ReadSignal<T>
 // where
 //     R: Renderer,
-//     T: Send /* + Default */ + 'static,
+//     T: MaybeSend /* + Default */ + 'static,
 // {
 //     type Value = T;
 // }
@@ -16,7 +14,7 @@ use xy_reactive::prelude::ReadSignal;
 impl<R, T> SchemaParam<R> for ReadSignal<T>
 where
     R: Renderer,
-    T: Send + Sync + SchemaParamDefault<R> + 'static,
+    T: MaybeSend + MaybeSync + SchemaParamDefault<R> + 'static,
 {
     fn from<const I: usize>(ctx: &mut InnerSchemaCtx<R>) -> Self {
         use xy_reactive::prelude::use_signal;
@@ -39,7 +37,7 @@ where
 impl<R, T> SchemaParam<R> for Required<ReadSignal<T>>
 where
     R: Renderer,
-    T: Send+Sync + 'static,
+    T: MaybeSend + MaybeSync + 'static,
 {
     fn from<const I: usize>(ctx: &mut InnerSchemaCtx<R>) -> Self {
         use xy_reactive::prelude::use_signal;

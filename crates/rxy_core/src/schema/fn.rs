@@ -1,13 +1,14 @@
 use bevy_utils::all_tuples;
+use crate::MaybeSend;
 
-pub trait SchemaFn<P>: Send + 'static {
+pub trait SchemaFn<P>: MaybeSend + 'static {
     type View;
     fn call(self, param: P) -> Self::View;
 }
 
 impl<V, F> SchemaFn<()> for F
 where
-    F: FnOnce() -> V + Send + 'static,
+    F: FnOnce() -> V + MaybeSend + 'static,
 {
     type View = V;
     fn call(self, _p: ()) -> Self::View {
@@ -20,7 +21,7 @@ macro_rules! impl_schema_fn {
         #[allow(non_snake_case)]
         impl<V,F,$($P),*> SchemaFn<($($P,)*)> for F
         where
-            F: FnOnce($($P),*) -> V + Send + 'static,
+            F: FnOnce($($P),*) -> V + MaybeSend + 'static,
         {
             type View = V;
             fn call(self, ($($P,)*): ($($P,)*)) -> Self::View {

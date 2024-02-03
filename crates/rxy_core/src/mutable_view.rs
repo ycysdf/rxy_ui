@@ -1,14 +1,11 @@
 use core::fmt::Debug;
 use core::hash::Hash;
 
-use crate::{
-    MaybeFromReflect, MaybeReflect, MaybeTypePath, NodeTree, Renderer, RendererNodeId,
-    RendererWorld, ViewCtx,
-};
+use crate::{MaybeFromReflect, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, NodeTree, Renderer, RendererNodeId, RendererWorld, ViewCtx};
 
 // impl MutableView for tuple ?
 
-pub trait MutableView<R: Renderer>: Send + 'static {
+pub trait MutableView<R: Renderer>: MaybeSend + 'static {
     type Key: MutableViewKey<R>;
 
     fn no_placeholder_when_no_rebuild() -> bool;
@@ -26,7 +23,15 @@ pub trait MutableView<R: Renderer>: Send + 'static {
 }
 
 pub trait MutableViewKey<R: Renderer>:
-    MaybeReflect + MaybeFromReflect + MaybeTypePath + Send + Sync + Clone + Hash + Debug + 'static
+    MaybeReflect
+    + MaybeFromReflect
+    + MaybeTypePath
+    + MaybeSend
+    + MaybeSync
+    + Clone
+    + Hash
+    + Debug
+    + 'static
 {
     fn remove(self, world: &mut RendererWorld<R>);
 

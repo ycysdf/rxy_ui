@@ -1,10 +1,10 @@
-use crate::{ConstIndex, NodeTree, PropState, Renderer, RendererNodeId, RendererWorld};
+use crate::{ConstIndex, MaybeSend, NodeTree, PropState, Renderer, RendererNodeId, RendererWorld};
 use alloc::boxed::Box;
 use bevy_utils::synccell::SyncCell;
 use bevy_utils::HashMap;
 use core::any::TypeId;
 
-pub struct TypeIdHashMapState<S: Send + 'static>(pub SyncCell<HashMap<TypeId, S>>);
+pub struct TypeIdHashMapState<S: MaybeSend + 'static>(pub SyncCell<HashMap<TypeId, S>>);
 
 pub struct SchemaPropCtx<'a, R: Renderer> {
     pub world: &'a mut RendererWorld<R>,
@@ -13,21 +13,21 @@ pub struct SchemaPropCtx<'a, R: Renderer> {
 }
 
 impl<'a, R: Renderer> SchemaPropCtx<'a, R> {
-    pub fn prop_state_mut<S: Send + 'static>(&mut self) -> Option<&mut S> {
+    pub fn prop_state_mut<S: MaybeSend + 'static>(&mut self) -> Option<&mut S> {
         let state_node_id = self.state_node_id.clone();
         let prop_type_id = self.prop_type_id;
         self.world
             .get_node_state_mut::<TypeIdHashMapState<S>>(&state_node_id)
             .and_then(|s| s.0.get().get_mut(&prop_type_id))
     }
-    pub fn take_prop_state<S: Send + 'static>(&mut self) -> Option<S> {
+    pub fn take_prop_state<S: MaybeSend + 'static>(&mut self) -> Option<S> {
         let state_node_id = self.state_node_id.clone();
         let prop_type_id = self.prop_type_id;
         self.world
             .get_node_state_mut::<TypeIdHashMapState<S>>(&state_node_id)
             .and_then(|s| s.0.get().remove(&prop_type_id))
     }
-    pub fn set_prop_state<S: Send + 'static>(&mut self, state: S) {
+    pub fn set_prop_state<S: MaybeSend + 'static>(&mut self, state: S) {
         let state_node_id = self.state_node_id.clone();
         let prop_type_id = self.prop_type_id;
         if let Some(map) = self
@@ -56,7 +56,7 @@ impl<T> SchemaPropValue<T> {
 impl<R, T> SchemaProp<R> for SchemaPropValue<T>
 where
     R: Renderer,
-    T: Send + 'static,
+    T: MaybeSend + 'static,
 {
     type Value = T;
 
@@ -74,18 +74,18 @@ where
 pub trait IntoSchemaProp<R, T>
 where
     R: Renderer,
-    T: Send + 'static,
+    T: MaybeSend + 'static,
 {
     // refactor variant
     type Prop: SchemaProp<R, Value = T>;
     fn into_schema_prop<const I: usize>(self) -> Self::Prop;
 }
 
-pub trait SchemaProp<R>: Send + 'static
+pub trait SchemaProp<R>: MaybeSend + 'static
 where
     R: Renderer,
 {
-    type Value: Send + 'static;
+    type Value: MaybeSend + 'static;
 
     fn prop_type_id() -> Option<TypeId> {
         None
@@ -99,7 +99,7 @@ where
 impl<R, T> IntoSchemaProp<R, T> for SchemaPropValue<T>
 where
     R: Renderer,
-    T: Send + 'static,
+    T: MaybeSend + 'static,
 {
     type Prop = Self;
 
@@ -158,7 +158,7 @@ where
 
 impl<R, T, PV> IntoSchemaProp<R, PV> for Option<T>
 where
-    PV: Send + 'static,
+    PV: MaybeSend + 'static,
     R: Renderer,
     T: IntoSchemaProp<R, PV>,
 {

@@ -1,18 +1,16 @@
-use core::any::TypeId;
-
-use crate::either::{Either, EitherExt};
-use crate::mutable_view::{MutableView, MutableViewKey};
 use crate::{
-    to_mutable, virtual_container, IntoView, Renderer, RendererNodeId, RendererWorld,
-    ToMutableWrapper, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
+    IntoView, Renderer, RendererNodeId, RendererWorld, to_mutable, ToMutableWrapper,
+    View, ViewCtx, ViewMember, ViewMemberCtx, ViewMemberIndex, virtual_container,
     VirtualContainer,
 };
+use crate::either::{Either, EitherExt};
+use crate::mutable_view::{MutableView, MutableViewKey};
 
 impl<R, LV, RV> MutableView<R> for Either<LV, RV>
-where
-    R: Renderer,
-    LV: MutableView<R>,
-    RV: MutableView<R>,
+    where
+        R: Renderer,
+        LV: MutableView<R>,
+        RV: MutableView<R>,
 {
     type Key = Either<LV::Key, RV::Key>;
 
@@ -68,11 +66,12 @@ where
         }
     }
 }
+
 impl<LK, RK, R> MutableViewKey<R> for Either<LK, RK>
-where
-    LK: MutableViewKey<R>,
-    RK: MutableViewKey<R>,
-    R: Renderer,
+    where
+        LK: MutableViewKey<R>,
+        RK: MutableViewKey<R>,
+        R: Renderer,
 {
     fn remove(self, world: &mut RendererWorld<R>) {
         match self {
@@ -124,10 +123,10 @@ where
 }
 
 impl<R, LV, RV> IntoView<R> for Either<LV, RV>
-where
-    R: Renderer,
-    LV: IntoView<R>,
-    RV: IntoView<R>,
+    where
+        R: Renderer,
+        LV: IntoView<R>,
+        RV: IntoView<R>,
 {
     type View = VirtualContainer<R, Either<ToMutableWrapper<LV::View>, ToMutableWrapper<RV::View>>>;
 
@@ -143,10 +142,10 @@ where
 }
 
 impl<R, LVM, RVM> ViewMember<R> for Either<LVM, RVM>
-where
-    R: Renderer,
-    LVM: ViewMember<R>,
-    RVM: ViewMember<R>,
+    where
+        R: Renderer,
+        LVM: ViewMember<R>,
+        RVM: ViewMember<R>,
 {
     fn count() -> ViewMemberIndex {
         LVM::count() + LVM::count()

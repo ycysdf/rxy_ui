@@ -1,4 +1,4 @@
-use crate::{IntoElementView, IntoView, Renderer, View};
+use crate::{IntoElementView, IntoView, MaybeSend, Renderer, View};
 use core::marker::PhantomData;
 pub use ctx::*;
 pub use element::*;
@@ -30,7 +30,7 @@ mod schema_with_element_view_bound;
 mod slot;
 mod view;
 
-pub trait Schema<R: Renderer>: Send + 'static {
+pub trait Schema<R: Renderer>: MaybeSend + 'static {
     type View: View<R>;
     fn view(self, ctx: InnerSchemaCtx<R, Self>) -> Self::View;
 }
@@ -93,7 +93,7 @@ where
     F: SchemaFn<P>,
     P: SchemaParams<R>,
     F::View: IntoView<R>,
-    M: Send + 'static,
+    M: MaybeSend + 'static,
 {
     SchemaView::new(FnSchema::new(f))
 }
@@ -107,7 +107,7 @@ where
     F: SchemaFn<P>,
     P: SchemaParams<R>,
     F::View: IntoElementView<R>,
-    M: Send + 'static,
+    M: MaybeSend + 'static,
 {
     ElementSchemaView::new(FnElementSchema::new(f))
 }
