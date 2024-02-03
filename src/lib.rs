@@ -5,6 +5,9 @@ pub use rxy_bevy as bevy;
 #[cfg(feature = "bevy")]
 pub use rxy_bevy_macro as bevy_macro;
 
+#[cfg(feature = "web")]
+pub use rxy_web_dom as web_dom;
+
 #[cfg(feature = "style_sheet")]
 pub mod style {
     pub use rxy_bevy_style::prelude;
@@ -25,6 +28,9 @@ pub mod prelude {
     pub use rxy_bevy::prelude::*;
     #[cfg(feature = "bevy")]
     pub use rxy_bevy_macro::schema;
+
+    #[cfg(feature = "web")]
+    pub use rxy_web_dom::prelude::*;
 
     #[cfg(feature = "style_sheet")]
     pub use rxy_bevy_style::prelude::StyleError;

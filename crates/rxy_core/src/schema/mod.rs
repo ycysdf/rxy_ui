@@ -2,7 +2,7 @@ use crate::{IntoElementView, IntoView, MaybeSend, Renderer, View};
 use core::marker::PhantomData;
 pub use ctx::*;
 pub use element::*;
-#[cfg(feature = "async-channel")]
+#[cfg(all(feature = "async-channel", feature = "std"))]
 pub use event::*;
 pub use param::*;
 pub use prop::*;

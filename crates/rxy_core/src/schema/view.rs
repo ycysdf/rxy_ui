@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+use alloc::vec;
 use crate::{into_view, BoxedCloneableErasureView, BoxedErasureView, BoxedPropValue, ConstIndex, DataNodeId, InnerSchemaCtx, IntoCloneableView, IntoSchemaProp, IntoView, IntoViewCloneableErasureExt, IntoViewErasureExt, NodeTree, PropHashMap, Renderer, RendererNodeId, RendererWorld, Schema, SchemaProp, SchemaProps, View, ViewCtx, ViewKey, MaybeSend};
 use alloc::boxed::Box;
 use bevy_utils::synccell::SyncCell;

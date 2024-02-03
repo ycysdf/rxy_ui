@@ -1,3 +1,6 @@
+use alloc::boxed::Box;
+use alloc::vec::Vec;
+use alloc::vec;
 use crate::diff::diff;
 use crate::{virtual_container, Either, EitherExt, IntoView, MutableView, MutableViewKey, NodeTree, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, VirtualContainer, MaybeSend};
 use alloc::borrow::Cow;

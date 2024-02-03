@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 use crate::{BoxedCloneableErasureView, BoxedErasureView, MaybeSendAnyBox, PropState, Renderer, RendererNodeId, RendererWorld, SchemaParam};
 use alloc::boxed::Box;
 use bevy_utils::HashMap;

@@ -51,7 +51,7 @@ pub mod prelude {
     pub use crate::{rx, MemberOwnerRxExt, SignalExt};
 
     #[cfg(feature = "async-channel")]
-    pub use crate::Sender;
+    pub use async_channel::Sender;
 }
 
 mod element_view;

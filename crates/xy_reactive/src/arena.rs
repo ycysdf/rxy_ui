@@ -1,5 +1,4 @@
-#[cfg(feature = "web")]
-use crate::shared_context::HydrateSharedContext;
+// use crate::shared_context::HydrateSharedContext;
 use crate::{
     // shared_context::{SharedContext, SsrSharedContext},
     signal_traits::{
@@ -45,15 +44,15 @@ impl<T> Root<T> {
         value
     }
 
-    #[cfg(feature = "web")]
-    pub fn global_hydrate(fun: impl FnOnce() -> T) -> T {
-        let Root(owner, value) = Root::new_with_shared_context(
-            fun,
-            Some(Arc::new(HydrateSharedContext::new())),
-        );
-        mem::forget(owner);
-        value
-    }
+    // #[cfg(feature = "web")]
+    // pub fn global_hydrate(fun: impl FnOnce() -> T) -> T {
+    //     let Root(owner, value) = Root::new_with_shared_context(
+    //         fun,
+    //         Some(Arc::new(HydrateSharedContext::new())),
+    //     );
+    //     mem::forget(owner);
+    //     value
+    // }
 
     // pub fn global_ssr(fun: impl FnOnce() -> T) -> Root<T> {
     //     Root::new_with_shared_context(

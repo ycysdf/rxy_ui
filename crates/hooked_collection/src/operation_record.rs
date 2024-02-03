@@ -1,5 +1,5 @@
 use core::marker::PhantomData;
-
+use alloc::boxed::Box;
 use smallvec::SmallVec;
 
 use crate::{HookMap, HookVec, HookedVec, MapOperation, VecOperation};

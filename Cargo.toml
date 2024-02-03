@@ -18,14 +18,15 @@ rxy_style = { workspace = true, optional = true }
 rxy_bevy_style = { workspace = true, optional = true }
 bevy_mod_picking = { workspace = true, optional = true }
 
-#rxy_web_dom = { workspace = true, optional = true }
+rxy_web_dom = { workspace = true, optional = true }
 
 [features]
 default = ["std", "view_erasure", "x_iter_source", "signal"]
 default_without_view_erasure = ["std", "x_iter_source", "signal"]
 
 #web = ["std", "rxy_web_dom", "tailwind_aliases", "xy_reactive?/web"]
-web = ["std", "tailwind_aliases", "xy_reactive?/web"]
+#web = ["std", "tailwind_aliases", "xy_reactive?/web", "rxy_web_dom"]
+web = ["std", "rxy_web_dom"]
 
 std = ["rxy_core/async-channel"]
 hooked_collection = ["dep:hooked_collection"]
@@ -41,19 +42,20 @@ bevy = [
 ]
 
 [workspace]
-members = ["crates/*"]
+members = ["crates/*", "examples/web_playground"]
 
 [workspace.dependencies]
-hooked_collection = { path = "crates/hooked_collection" }
-rxy_bevy = { path = "crates/rxy_bevy", features = ["xy_reactive"] }
-rxy_bevy_element = { path = "crates/rxy_bevy_element" }
-rxy_bevy_macro = { path = "crates/rxy_bevy_macro" }
-rxy_bevy_style = { path = "crates/rxy_bevy_style" }
-rxy_core = { path = "crates/rxy_core", features = ["xy_reactive"] }
-rxy_macro = { path = "crates/rxy_macro" }
-rxy_style = { path = "crates/rxy_style" }
+hooked_collection = { path = "crates/hooked_collection", default-features = false }
+rxy_bevy = { path = "crates/rxy_bevy", default-features = false }
+rxy_bevy_element = { path = "crates/rxy_bevy_element", default-features = false }
+rxy_bevy_macro = { path = "crates/rxy_bevy_macro", default-features = false }
+rxy_bevy_style = { path = "crates/rxy_bevy_style", default-features = false }
+rxy_core = { path = "crates/rxy_core", default-features = false }
+rxy_macro = { path = "crates/rxy_macro", default-features = false }
+rxy_style = { path = "crates/rxy_style", default-features = false }
 rxy_style_macro = { path = "crates/rxy_style_macro" }
-xy_reactive = { path = "crates/xy_reactive", features = ["bevy"] }
+xy_reactive = { path = "crates/xy_reactive", default-features = false }
+rxy_web_dom = { path = "crates/rxy_web_dom", default-features = false }
 
 #rxy_web_dom = { path = "crates/rxy_web_dom" }
 
@@ -76,6 +78,7 @@ pin-project-lite = { version = "0.2" }
 thiserror = "1.0"
 
 smallvec = "1.13"
+slotmap = "1"
 
 bevy_app = "0.12"
 bevy_asset = { version = "0.12", optional = false }
@@ -251,33 +254,46 @@ pin-project-lite.workspace = true
 doc-scrape-examples = true
 name = "game_menu"
 path = "examples/game_ui_challenges/game_menu.rs"
+#required-features = ["bevy"]
 
 [[example]]
 doc-scrape-examples = true
 name = "counter"
 path = "examples/counter.rs"
+#required-features = ["bevy"]
 
 [[example]]
 doc-scrape-examples = true
 name = "counter_by_channel"
 path = "examples/counter_by_channel.rs"
+#required-features = ["bevy"]
 
 [[example]]
 doc-scrape-examples = true
 name = "if_else"
 path = "examples/if_else.rs"
+#required-features = ["bevy"]
 
 [[example]]
 doc-scrape-examples = true
 name = "iter_source"
 path = "examples/iter_source.rs"
+#required-features = ["bevy"]
 
 [[example]]
 doc-scrape-examples = true
 name = "style"
 path = "examples/style.rs"
+#required-features = ["bevy"]
 
 [[example]]
 doc-scrape-examples = true
 name = "playground"
 path = "examples/playground.rs"
+#required-features = ["bevy"]
+
+[[example]]
+doc-scrape-examples = true
+name = "web_playground"
+path = "examples/web_playground"
+required-features = ["web"]

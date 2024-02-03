@@ -64,11 +64,7 @@ impl<R> ViewKey<R> for ()
 where
     R: Renderer,
 {
-    fn state_node_id(&self) -> Option<RendererNodeId<R>> {
-        None
-    }
     fn remove(self, _world: &mut RendererWorld<R>) {}
-
     fn insert_before(
         &self,
         _world: &mut RendererWorld<R>,
@@ -78,6 +74,10 @@ where
     }
 
     fn set_visibility(&self, _world: &mut RendererWorld<R>, _hidden: bool) {}
+
+    fn state_node_id(&self) -> Option<RendererNodeId<R>> {
+        None
+    }
 
     fn reserve_key(_world: &mut RendererWorld<R>, _will_rebuild: bool) -> Self {}
 
@@ -95,11 +95,7 @@ impl<R> ViewKey<R> for DataNodeId<R>
 where
     R: Renderer,
 {
-    fn state_node_id(&self) -> Option<RendererNodeId<R>> {
-        Some(self.0.clone())
-    }
     fn remove(self, _world: &mut RendererWorld<R>) {}
-
     fn insert_before(
         &self,
         _world: &mut RendererWorld<R>,
@@ -109,6 +105,10 @@ where
     }
 
     fn set_visibility(&self, _world: &mut RendererWorld<R>, _hidden: bool) {}
+
+    fn state_node_id(&self) -> Option<RendererNodeId<R>> {
+        Some(self.0.clone())
+    }
 
     fn reserve_key(world: &mut RendererWorld<R>, _will_rebuild: bool) -> Self {
         DataNodeId(world.reserve_node_id())

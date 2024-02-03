@@ -6,9 +6,9 @@ use core::any::Any;
 use core::fmt::Debug;
 use core::iter::IntoIterator;
 use core::marker::PhantomData;
-use std::future::Future;
-use std::pin::{pin, Pin};
-use std::task::{Context, Poll};
+use core::future::Future;
+use core::pin::{pin, Pin};
+use core::task::{Context, Poll};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

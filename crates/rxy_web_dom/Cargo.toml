@@ -1,0 +1,26 @@
+[package]
+name = "rxy_web_dom"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+#rxy_core = { workspace = true, features = ["async-channel", "xy_reactive"] }
+#rxy_core = { workspace = true, features = ["std", "view_erasure", "async-channel", "either_future", "send_sync"] }
+#rxy_core = { workspace = true, default-features = false, features = ["std", "view_erasure", "either_future"] }
+rxy_core = { workspace = true, default-features = false, features = [] }
+hashbrown = "0.14"
+#count-macro.workspace = true
+#paste.workspace = true
+#
+#async-channel.workspace = true
+#smallvec.workspace = true
+#futures-lite.workspace = true
+#
+#oneshot.workspace = true
+
+#xy_reactive = { workspace = true, optional = true, features = ["web"] }
+wasm-bindgen-futures.workspace = true
+slotmap.workspace = true
+web-sys.workspace = true
