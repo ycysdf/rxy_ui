@@ -147,6 +147,7 @@ Game Menu and Setting
 
 ```rust
 use bevy::prelude::*;
+use rxy_bevy::navigation::RxyKeyboardNavigationPlugin;
 use rxy_ui::prelude::*;
 
 use bevy::app::AppExit;
@@ -177,6 +178,7 @@ fn main() {
         DefaultPlugins,
         RxyPlugin::default(),
         RxyStyleSheetPlugin::default(),
+        RxyKeyboardNavigationPlugin::default(),
     ))
     .add_state::<GameState>()
     .add_systems(Startup, setup);
@@ -189,12 +191,37 @@ fn setup(mut commands: Commands) {
     commands.spawn_rxy_ui(game_ui);
 }
 
+#[derive(TypedStyle)]
+struct FocusStyle;
+
 fn game_ui() -> impl IntoView<BevyRenderer> {
-    x_res(|state: &State<GameState>| match state.get() {
-        GameState::MainMenu => main_menu().into_dynamic(),
-        GameState::Setting => setting().into_dynamic(),
-        GameState::InGame => in_game().into_dynamic(),
-    })
+    (
+        FocusStyle::def(
+            x_focus()
+                .outline_width(2)
+                .outline_offset(2)
+                .outline_color(COLOR_PRIMARY),
+        ),
+        x_res(|state: &State<GameState>| match state.get() {
+            GameState::MainMenu => main_menu().into_dynamic(),
+            GameState::Setting => setting().into_dynamic(),
+            GameState::InGame => in_game().into_dynamic(),
+        }),
+    )
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct XConfirm;
+
+impl ElementEventIds for XConfirm {
+    fn iter_event_ids(self) -> impl Iterator<Item = ElementEventId> + Send + 'static {
+        (
+            x_just_pressed(KeyCode::Return),
+            x_just_pressed(GamepadButton::new(Gamepad::new(1), GamepadButtonType::West)),
+            x_pointer_click(),
+        )
+            .iter_event_ids()
+    }
 }
 
 #[schema]
@@ -210,27 +237,32 @@ fn schema_main_menu() -> impl IntoView<BevyRenderer> {
                 .center()
                 .bg_color(Color::DARK_GRAY),
             x_hover().bg_color(Color::GRAY),
+            x_active().bg_color(COLOR_PRIMARY),
+            FocusStyle,
         )),
         div().style(x().size_screen().center()).children(
-            div().style(x().flex_col().gap(8).padding(20)).children((
-                div()
-                    .style(MenuBtnStyle)
-                    .children("New Game")
-                    .on_pointer_click(|mut next_state: ResMut<NextState<GameState>>| {
-                        next_state.set(GameState::InGame);
-                    }),
-                div()
-                    .style(MenuBtnStyle)
-                    .children("Setting")
-                    .on_pointer_click(|mut next_state: ResMut<NextState<GameState>>| {
-                        next_state.set(GameState::Setting);
-                    }),
-                div().style(MenuBtnStyle).children("Exit").on_pointer_click(
-                    |mut app_exit: EventWriter<AppExit>| {
-                        app_exit.send(AppExit);
-                    },
-                ),
-            )),
+            div().style(x().flex_col().gap(8).padding(20)).children({
+                (
+                    button().style(MenuBtnStyle).children("New Game").on(
+                        XConfirm,
+                        |mut next_state: ResMut<NextState<GameState>>| {
+                            next_state.set(GameState::InGame);
+                        },
+                    ),
+                    button().style(MenuBtnStyle).children("Setting").on(
+                        XConfirm,
+                        |mut next_state: ResMut<NextState<GameState>>| {
+                            next_state.set(GameState::Setting);
+                        },
+                    ),
+                    button().style(MenuBtnStyle).children("Exit").on(
+                        XConfirm,
+                        |mut app_exit: EventWriter<AppExit>| {
+                            app_exit.send(AppExit);
+                        },
+                    ),
+                )
+            }),
         ),
     )
 }
@@ -271,10 +303,11 @@ fn schema_setting() -> impl IntoView<BevyRenderer> {
                     .slot_content(view_builder(move |_, _| {
                         x_iter(options.map(|n| {
                             selection_item(n, |item| {
-                                div()
+                                button()
                                     .style((
                                         x().flex().py(6).center(),
                                         x_hover().bg_color(Color::DARK_GRAY),
+                                        FocusStyle,
                                     ))
                                     .bg_color(item.is_selected.then_some(Color::BLUE))
                                     .children((item.value,))
@@ -291,10 +324,11 @@ fn schema_setting() -> impl IntoView<BevyRenderer> {
             setting_item(label("Slider"), slider().value(0.3)),
             setting_item(label("Select Item"), {
                 let section_item = |item: SelectionItem<&'static str>| {
-                    div()
+                    button()
                         .style((
                             x().flex().py(8).px(16).center(),
                             x_hover().bg_color(Color::DARK_GRAY),
+                            FocusStyle,
                         ))
                         .bg_color(item.is_selected.then_some(Color::BLUE))
                         .children((item.value,))
@@ -760,7 +794,7 @@ Directly set attrs > Interactive styles > Inline styles > Shared styles > Styles
 
 To add styles using the `style` method, similar to `View` and `ViewMember`, it accepts a tuple where you can include multiple style sheets.
 
-Normal styles are constructed using `x()`, and interactive styles are construct using `x_hover()`,``
+Normal styles are constructed using `x()`, and interactive styles are construct using `x_hover()`,`x_active()`,`x_focus()`.
 
 ```rust
 fn sample_style_sheet() -> impl IntoView<BevyRenderer> {
