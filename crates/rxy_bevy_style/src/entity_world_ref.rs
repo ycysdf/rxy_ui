@@ -1,3 +1,4 @@
+use rxy_bevy::EntityWorldMutExt;
 use core::ops::Deref;
 use std::any::TypeId;
 
@@ -7,7 +8,7 @@ use bevy_ecs::{
     world::{EntityMut, EntityRef, EntityWorldMut, World},
 };
 use bevy_hierarchy::DespawnRecursiveExt;
-use rxy_bevy::{BevyRenderer, EntityWorldMutExt, RendererState};
+use rxy_bevy::{BevyRenderer, RendererState};
 use rxy_style::{NodeInterStyleAttrInfos, NodeStyleAttrInfos, StyleSheetId, StyleSheetLocation};
 
 use crate::attr_iter::StateOwnerWithNodeId;

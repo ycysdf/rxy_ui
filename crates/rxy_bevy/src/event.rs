@@ -8,22 +8,23 @@ use std::iter::once;
 
 use bevy_app::PreUpdate;
 use bevy_ecs::{
-    prelude::{Commands, Entity, IntoSystem, Res, Resource, World},
+    prelude::{Commands, Entity, Res, Resource, World},
     system::SystemId,
 };
 use bevy_input::{
-    gamepad::GamepadButton, keyboard::KeyCode, mouse::MouseButton, Input, InputSystem,
+    gamepad::GamepadButton, Input, InputSystem, keyboard::KeyCode, mouse::MouseButton,
 };
 use bevy_mod_picking::prelude::*;
 use bevy_reflect::Reflect;
 use bevy_utils::tracing::error;
 use bevy_utils::{all_tuples, EntityHashMap, HashMap};
 use rxy_core::{
-    prelude::{MemberOwner, ViewMember, ViewMemberCtx},
-    NodeTree, RendererNodeId, RendererWorld,
+    NodeTree
+    , RendererNodeId, RendererWorld,
 };
 
-use crate::{add_system, BevyRenderer, EntityWorldMutExt, FocusedEntity};
+use crate::{add_system, BevyRenderer, FocusedEntity};
+use crate::world_ext::EntityWorldMutExt;
 
 fn add_focus_event<T>(
     world: &mut RendererWorld<BevyRenderer>,
@@ -550,9 +551,6 @@ where
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct FocusInputEventMemberState<T>(SystemId, T);
-
 pub trait FocusInputEventIterator: 'static {
     fn iter_events(self) -> impl Iterator<Item = FocusInputEvent> + Send + Clone + 'static;
 }
@@ -615,7 +613,7 @@ impl ElementEventIds for BubblePointerEvent {
 }
 
 #[derive(Clone)]
-pub struct IntoIteratorWrapper<T>(T);
+pub struct IntoIteratorWrapper<T>(pub T);
 
 impl<T> ElementEventIds for IntoIteratorWrapper<T>
 where
@@ -646,6 +644,57 @@ macro_rules! impl_element_evet_id_iterator_for_tuples {
 }
 
 all_tuples!(impl_element_evet_id_iterator_for_tuples, 0, 4, T);
+
+
+macro_rules! impl_element_pointer_events_members {
+    ($($name:ident = $event_type:ty;)*) => {
+        $(
+           pub type $name = $event_type;
+           paste::paste!{
+               pub type [<ListenerInput $name>] = ListenerInput<$name>;
+           }
+        )*/*
+
+        impl<T> ElementPointerEvents for T
+        where
+            T: rxy_core::MemberOwner<$crate::BevyRenderer>+Sized {}
+
+        pub trait ElementPointerEvents: rxy_core::MemberOwner<$crate::BevyRenderer>+Sized
+        {
+            $(
+                paste::paste!{
+                    fn [<on_ $name:snake>]<Marker>(
+                        self,
+                        system: impl bevy_ecs::prelude::IntoSystem<(), (), Marker>,
+                    ) -> Self::AddMember<$crate::XBundle<On<$name>>> {
+                        self.bundle(On::<$name>::run(system))
+                    }
+                }
+            )*
+        }
+ */
+    };
+}
+impl_element_pointer_events_members!(
+    PointerOver = Pointer<Over>;
+    PointerOut = Pointer<Out>;
+    PointerDown = Pointer<Down>;
+    PointerUp = Pointer<Up>;
+    PointerClick = Pointer<Click>;
+    PointerMove = Pointer<Move>;
+    PointerDragStart = Pointer<DragStart>;
+    PointerDrag = Pointer<Drag>;
+    PointerDragEnd = Pointer<DragEnd>;
+    PointerDragEnter = Pointer<DragEnter>;
+    PointerDragOver = Pointer<DragOver>;
+    PointerDragLeave = Pointer<DragLeave>;
+    PointerDrop = Pointer<Drop>;
+);
+
+
+
+
+
 
 pub fn x_trigger_way(
     trigger_way: FocusInputTriggerWay,
@@ -709,318 +758,3 @@ pub fn x_pointer_drag_leave() -> BubblePointerEvent {
 pub fn x_pointer_drop() -> BubblePointerEvent {
     BubblePointerEvent::Drop(None)
 }
-
-pub struct FocusInputEventMember<T, S, M> {
-    element_event_ids: T,
-    system: S,
-    _marker: PhantomData<M>,
-}
-
-impl<T, S, M> ViewMember<BevyRenderer> for FocusInputEventMember<T, S, M>
-where
-    T: ElementEventIds,
-    S: IntoSystem<(), (), M> + Send + 'static,
-    M: Send + 'static,
-{
-    fn count() -> rxy_core::ViewMemberIndex {
-        1
-    }
-
-    fn unbuild(mut ctx: ViewMemberCtx<BevyRenderer>, _view_removed: bool) {
-        let state = ctx
-            .take_indexed_view_member_state::<FocusInputEventMemberState<T>>()
-            .unwrap();
-        for event_id in state.1.iter_event_ids() {
-            ctx.world.remove_event(ctx.node_id, event_id, state.0);
-        }
-        if let Err(err) = ctx.world.remove_system(state.0) {
-            error!("remove_system error: {:?}", err);
-        }
-    }
-
-    fn build(self, mut ctx: ViewMemberCtx<BevyRenderer>, _will_rebuild: bool) {
-        let system_id = ctx.world.register_system(self.system);
-
-        for event_id in self.element_event_ids.clone().iter_event_ids() {
-            ctx.world.add_event(ctx.node_id, event_id, system_id);
-        }
-
-        ctx.set_indexed_view_member_state(FocusInputEventMemberState(
-            system_id,
-            self.element_event_ids,
-        ));
-    }
-
-    fn rebuild(self, ctx: ViewMemberCtx<BevyRenderer>) {
-        Self::unbuild(
-            ViewMemberCtx {
-                index: ctx.index,
-                world: &mut *ctx.world,
-                node_id: ctx.node_id,
-            },
-            false,
-        );
-        self.build(ctx, true);
-    }
-}
-
-impl<T> ElementKeyboardEvents for T where T: MemberOwner<BevyRenderer> + Sized {}
-
-pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
-    fn on<T, S, Marker>(
-        self,
-        element_event_ids: T,
-        system: S,
-    ) -> Self::AddMember<FocusInputEventMember<T, S, Marker>>
-    where
-        T: ElementEventIds,
-        S: IntoSystem<(), (), Marker> + Send + 'static,
-        Marker: Send + 'static,
-    {
-        self.member(FocusInputEventMember {
-            element_event_ids,
-            system,
-            _marker: Default::default(),
-        })
-    }
-
-    fn on_pressed<T, S, Marker>(
-        self,
-        events: impl FocusInputEventIterator,
-        system: S,
-    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIds, S, Marker>>
-    where
-        T: Copy + Eq + Hash + Send + Sync + 'static,
-        S: IntoSystem<(), (), Marker> + Send + 'static,
-        Marker: Send + 'static,
-    {
-        self.on(x_pressed(events), system)
-    }
-
-    fn on_return<S, Marker>(
-        self,
-        system: S,
-    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIds, S, Marker>>
-    where
-        S: IntoSystem<(), (), Marker> + Send + 'static,
-        Marker: Send + 'static,
-    {
-        self.on_just_pressed(KeyCode::Return, system)
-    }
-
-    fn on_esc<S, Marker>(
-        self,
-        system: S,
-    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIds, S, Marker>>
-    where
-        S: IntoSystem<(), (), Marker> + Send + 'static,
-        Marker: Send + 'static,
-    {
-        self.on_just_pressed(KeyCode::Escape, system)
-    }
-
-    fn on_just_pressed<S, Marker>(
-        self,
-        events: impl FocusInputEventIterator,
-        system: S,
-    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIds, S, Marker>>
-    where
-        S: IntoSystem<(), (), Marker> + Send + 'static,
-        Marker: Send + 'static,
-    {
-        self.on(x_just_pressed(events), system)
-    }
-
-    fn on_just_released<S, Marker>(
-        self,
-        events: impl FocusInputEventIterator,
-        system: S,
-    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIds, S, Marker>>
-    where
-        S: IntoSystem<(), (), Marker> + Send + 'static,
-        Marker: Send + 'static,
-    {
-        self.on(x_just_released(events), system)
-    }
-
-    fn on_pointer_over<S, Marker>(
-        self,
-        system: S,
-    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIds, S, Marker>>
-    where
-        S: IntoSystem<(), (), Marker> + Send + 'static,
-        Marker: Send + 'static,
-    {
-        self.on(x_pointer_over(), system)
-    }
-
-    fn on_pointer_out<S, Marker>(
-        self,
-        system: S,
-    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIds, S, Marker>>
-    where
-        S: IntoSystem<(), (), Marker> + Send + 'static,
-        Marker: Send + 'static,
-    {
-        self.on(x_pointer_out(), system)
-    }
-
-    fn on_pointer_down<S, Marker>(
-        self,
-        system: S,
-    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIds, S, Marker>>
-    where
-        S: IntoSystem<(), (), Marker> + Send + 'static,
-        Marker: Send + 'static,
-    {
-        self.on(x_pointer_down(), system)
-    }
-
-    fn on_pointer_up<S, Marker>(
-        self,
-        system: S,
-    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIds, S, Marker>>
-    where
-        S: IntoSystem<(), (), Marker> + Send + 'static,
-        Marker: Send + 'static,
-    {
-        self.on(x_pointer_up(), system)
-    }
-
-    fn on_pointer_click<S, Marker>(
-        self,
-        system: S,
-    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIds, S, Marker>>
-    where
-        S: IntoSystem<(), (), Marker> + Send + 'static,
-        Marker: Send + 'static,
-    {
-        self.on(x_pointer_click(), system)
-    }
-
-    fn on_pointer_move<S, Marker>(
-        self,
-        system: S,
-    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIds, S, Marker>>
-    where
-        S: IntoSystem<(), (), Marker> + Send + 'static,
-        Marker: Send + 'static,
-    {
-        self.on(x_pointer_move(), system)
-    }
-    fn on_pointer_drag_start<S, Marker>(
-        self,
-        system: S,
-    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIds, S, Marker>>
-    where
-        S: IntoSystem<(), (), Marker> + Send + 'static,
-        Marker: Send + 'static,
-    {
-        self.on(x_pointer_drag_start(), system)
-    }
-    fn on_pointer_drag<S, Marker>(
-        self,
-        system: S,
-    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIds, S, Marker>>
-    where
-        S: IntoSystem<(), (), Marker> + Send + 'static,
-        Marker: Send + 'static,
-    {
-        self.on(x_pointer_drag(), system)
-    }
-    fn on_pointer_drag_end<S, Marker>(
-        self,
-        system: S,
-    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIds, S, Marker>>
-    where
-        S: IntoSystem<(), (), Marker> + Send + 'static,
-        Marker: Send + 'static,
-    {
-        self.on(x_pointer_drag_end(), system)
-    }
-    fn on_pointer_drag_enter<S, Marker>(
-        self,
-        system: S,
-    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIds, S, Marker>>
-    where
-        S: IntoSystem<(), (), Marker> + Send + 'static,
-        Marker: Send + 'static,
-    {
-        self.on(x_pointer_drag_enter(), system)
-    }
-    fn on_pointer_drag_over<S, Marker>(
-        self,
-        system: S,
-    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIds, S, Marker>>
-    where
-        S: IntoSystem<(), (), Marker> + Send + 'static,
-        Marker: Send + 'static,
-    {
-        self.on(x_pointer_drag_over(), system)
-    }
-    fn on_pointer_drag_leave<S, Marker>(
-        self,
-        system: S,
-    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIds, S, Marker>>
-    where
-        S: IntoSystem<(), (), Marker> + Send + 'static,
-        Marker: Send + 'static,
-    {
-        self.on(x_pointer_drag_leave(), system)
-    }
-    fn on_pointer_drop<S, Marker>(
-        self,
-        system: S,
-    ) -> Self::AddMember<FocusInputEventMember<impl ElementEventIds, S, Marker>>
-    where
-        S: IntoSystem<(), (), Marker> + Send + 'static,
-        Marker: Send + 'static,
-    {
-        self.on(x_pointer_drop(), system)
-    }
-}
-
-macro_rules! impl_element_pointer_events_members {
-    ($($name:ident = $event_type:ty;)*) => {
-        $(
-           pub type $name = $event_type;
-           paste::paste!{
-               pub type [<ListenerInput $name>] = ListenerInput<$name>;
-           }
-        )*/*
-
-        impl<T> ElementPointerEvents for T
-        where
-            T: rxy_core::MemberOwner<$crate::BevyRenderer>+Sized {}
-
-        pub trait ElementPointerEvents: rxy_core::MemberOwner<$crate::BevyRenderer>+Sized
-        {
-            $(
-                paste::paste!{
-                    fn [<on_ $name:snake>]<Marker>(
-                        self,
-                        system: impl bevy_ecs::prelude::IntoSystem<(), (), Marker>,
-                    ) -> Self::AddMember<$crate::XBundle<On<$name>>> {
-                        self.bundle(On::<$name>::run(system))
-                    }
-                }
-            )*
-        }
- */
-    };
-}
-impl_element_pointer_events_members!(
-    PointerOver = Pointer<Over>;
-    PointerOut = Pointer<Out>;
-    PointerDown = Pointer<Down>;
-    PointerUp = Pointer<Up>;
-    PointerClick = Pointer<Click>;
-    PointerMove = Pointer<Move>;
-    PointerDragStart = Pointer<DragStart>;
-    PointerDrag = Pointer<Drag>;
-    PointerDragEnd = Pointer<DragEnd>;
-    PointerDragEnter = Pointer<DragEnter>;
-    PointerDragOver = Pointer<DragOver>;
-    PointerDragLeave = Pointer<DragLeave>;
-    PointerDrop = Pointer<Drop>;
-);
