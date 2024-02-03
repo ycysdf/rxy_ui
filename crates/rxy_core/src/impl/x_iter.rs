@@ -6,8 +6,6 @@ use core::{
     marker::PhantomData,
 };
 
-use bevy_utils::petgraph::visit::Walker;
-use bevy_utils::tracing::info;
 use bevy_utils::AHasher;
 use drain_filter_polyfill::VecExt as VecDrainFilterExt;
 use indexmap::IndexSet;

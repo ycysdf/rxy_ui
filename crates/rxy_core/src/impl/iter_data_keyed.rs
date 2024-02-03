@@ -6,7 +6,6 @@ use core::{
 };
 
 use bevy_utils::AHasher;
-use bevy_utils::petgraph::visit::Walker;
 use drain_filter_polyfill::VecExt as VecDrainFilterExt;
 use indexmap::IndexSet;
 

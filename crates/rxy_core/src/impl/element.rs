@@ -2,7 +2,10 @@ use core::fmt::Debug;
 use core::marker::PhantomData;
 use core::{any::TypeId, hash::Hash};
 
-use crate::{ElementSoloView, ElementView, IntoView, MemberOwner, NodeTree, Renderer, RendererElementType, RendererNodeId, SoloView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx};
+use crate::{
+    ElementSoloView, ElementView, IntoView, MemberOwner, NodeTree, Renderer, RendererElementType,
+    RendererNodeId, SoloView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
+};
 
 #[derive(Clone)]
 pub struct Element<R, E, VM> {
@@ -67,10 +70,10 @@ where
         &key.0
     }
 }
-#[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
+// #[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
 pub struct ElementViewKey<R, VM>(
     pub RendererNodeId<R>,
-    #[cfg_attr(feature = "bevy_reflect", reflect(ignore))] PhantomData<VM>,
+    /*#[cfg_attr(feature = "bevy_reflect", reflect(ignore))] */PhantomData<VM>,
 )
 where
     R: Renderer,
@@ -184,7 +187,8 @@ where
     ) -> Self::Key {
         let spawned_node_id = {
             let parent = ctx.parent.clone();
-            ctx.world.spawn_node::<E>(Some(parent), reserve_key.map(|n| n.0))
+            ctx.world
+                .spawn_node::<E>(Some(parent), reserve_key.map(|n| n.0))
         };
         self.members.build(
             ViewMemberCtx {
@@ -218,3 +222,235 @@ where
         self
     }
 }
+
+
+#[cfg(feature = "bevy_reflect")]
+const _: () = {
+    #[allow(unused_mut)]
+    impl<R, VM> bevy_reflect::GetTypeRegistration for ElementViewKey<R, VM>
+        where
+            R: Renderer,
+            VM: ViewMember<R>,
+            RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
+            R: bevy_reflect::TypePath,
+    {
+        fn get_type_registration() -> bevy_reflect::TypeRegistration {
+            let mut registration = bevy_reflect::TypeRegistration::of::<Self>();
+            registration.insert::<bevy_reflect::ReflectFromPtr>(bevy_reflect::FromType::<Self>::from_type());
+            registration.insert::<bevy_reflect::ReflectFromReflect>(
+                bevy_reflect::FromType::<Self>::from_type(),
+            );
+            registration
+        }
+    }
+    impl<R, VM> bevy_reflect::Typed for ElementViewKey<R, VM>
+        where
+            R: Renderer,
+            VM: ViewMember<R>,
+            RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
+            R: bevy_reflect::TypePath,
+    {
+        fn type_info() -> &'static bevy_reflect::TypeInfo {
+            static CELL: bevy_reflect::utility::GenericTypeInfoCell =
+                bevy_reflect::utility::GenericTypeInfoCell::new();
+            CELL.get_or_insert::<Self, _>(|| {
+                let fields = [
+                    bevy_reflect::UnnamedField::new::<RendererNodeId<R>>(0),
+                ];
+                let info = bevy_reflect::TupleStructInfo::new::<Self>(&fields);
+                bevy_reflect::TypeInfo::TupleStruct(info)
+            })
+        }
+    }
+    impl<R, VM> bevy_reflect::TypePath for ElementViewKey<R, VM>
+        where
+            R: Renderer,
+            VM: ViewMember<R>,
+            RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
+            R: bevy_reflect::TypePath,
+    {
+        fn type_path() -> &'static str {
+            static CELL: bevy_reflect::utility::GenericTypePathCell =
+                bevy_reflect::utility::GenericTypePathCell::new();
+            CELL.get_or_insert::<Self, _>(|| {
+                ::std::string::ToString::to_string(::core::concat!(
+                ::core::concat!(
+                ::core::concat!(::core::module_path!(), "::"),
+                "ElementViewKey"
+                ),
+                "<"
+                )) + &::std::string::ToString::to_string(<R as bevy_reflect::TypePath>::type_path())
+                    + ", "
+                    // + <VM as bevy_reflect::TypePath>::type_path()
+                    + "VM"
+                    + ">"
+            })
+        }
+        fn short_type_path() -> &'static str {
+            static CELL: bevy_reflect::utility::GenericTypePathCell =
+                bevy_reflect::utility::GenericTypePathCell::new();
+            CELL.get_or_insert::<Self, _>(|| {
+                ::std::string::ToString::to_string("ElementViewKey<")
+                    + &::std::string::ToString::to_string(
+                    <R as bevy_reflect::TypePath>::short_type_path(),
+                )
+                    + ", "
+                    // + <VM as bevy_reflect::TypePath>::short_type_path()
+                    + "VM"
+                    + ">"
+            })
+        }
+        fn type_ident() -> Option<&'static str> {
+            ::core::option::Option::Some("ElementViewKey")
+        }
+        fn crate_name() -> Option<&'static str> {
+            ::core::option::Option::Some(::core::module_path!().split(':').next().unwrap())
+        }
+        fn module_path() -> Option<&'static str> {
+            ::core::option::Option::Some(::core::module_path!())
+        }
+    }
+    impl<R, VM> bevy_reflect::TupleStruct for ElementViewKey<R, VM>
+        where
+            R: Renderer,
+            VM: ViewMember<R>,
+            RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
+            R: bevy_reflect::TypePath,
+    {
+        fn field(&self, index: usize) -> ::core::option::Option<&dyn bevy_reflect::Reflect> {
+            match index {
+                0usize => ::core::option::Option::Some(&self.0),
+                1usize => ::core::option::Option::None,
+                _ => ::core::option::Option::None,
+            }
+        }
+        fn field_mut(
+            &mut self,
+            index: usize,
+        ) -> ::core::option::Option<&mut dyn bevy_reflect::Reflect> {
+            match index {
+                0usize => ::core::option::Option::Some(&mut self.0),
+                1usize => ::core::option::Option::None,
+                _ => ::core::option::Option::None,
+            }
+        }
+        fn field_len(&self) -> usize {
+            2usize
+        }
+        fn iter_fields(&self) -> bevy_reflect::TupleStructFieldIter {
+            bevy_reflect::TupleStructFieldIter::new(self)
+        }
+        fn clone_dynamic(&self) -> bevy_reflect::DynamicTupleStruct {
+            let mut dynamic: bevy_reflect::DynamicTupleStruct = ::core::default::Default::default();
+            dynamic.set_represented_type(bevy_reflect::Reflect::get_represented_type_info(self));
+            dynamic.insert_boxed(bevy_reflect::Reflect::clone_value(&self.0));
+            // dynamic.insert_boxed(bevy_reflect::Reflect::clone_value(&self.1));
+            dynamic
+        }
+    }
+    impl<R, VM> bevy_reflect::Reflect for ElementViewKey<R, VM>
+        where
+            R: Renderer,
+            VM: ViewMember<R>,
+            RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
+            R: bevy_reflect::TypePath,
+    {
+        #[inline]
+        fn get_represented_type_info(
+            &self,
+        ) -> ::core::option::Option<&'static bevy_reflect::TypeInfo> {
+            ::core::option::Option::Some(<Self as bevy_reflect::Typed>::type_info())
+        }
+        #[inline]
+        fn into_any(self: ::std::boxed::Box<Self>) -> ::std::boxed::Box<dyn ::core::any::Any> {
+            self
+        }
+        #[inline]
+        fn as_any(&self) -> &dyn ::core::any::Any {
+            self
+        }
+        #[inline]
+        fn as_any_mut(&mut self) -> &mut dyn ::core::any::Any {
+            self
+        }
+        #[inline]
+        fn into_reflect(
+            self: ::std::boxed::Box<Self>,
+        ) -> ::std::boxed::Box<dyn bevy_reflect::Reflect> {
+            self
+        }
+        #[inline]
+        fn as_reflect(&self) -> &dyn bevy_reflect::Reflect {
+            self
+        }
+        #[inline]
+        fn as_reflect_mut(&mut self) -> &mut dyn bevy_reflect::Reflect {
+            self
+        }
+        #[inline]
+        fn clone_value(&self) -> ::std::boxed::Box<dyn bevy_reflect::Reflect> {
+            ::std::boxed::Box::new(bevy_reflect::TupleStruct::clone_dynamic(self))
+        }
+        #[inline]
+        fn set(
+            &mut self,
+            value: ::std::boxed::Box<dyn bevy_reflect::Reflect>,
+        ) -> ::core::result::Result<(), ::std::boxed::Box<dyn bevy_reflect::Reflect>> {
+            *self = <dyn bevy_reflect::Reflect>::take(value)?;
+            ::core::result::Result::Ok(())
+        }
+        #[inline]
+        fn apply(&mut self, value: &dyn bevy_reflect::Reflect) {
+            if let bevy_reflect::ReflectRef::TupleStruct(struct_value) =
+                bevy_reflect::Reflect::reflect_ref(value)
+            {
+                for (i, value) in ::core::iter::Iterator::enumerate(
+                    bevy_reflect::TupleStruct::iter_fields(struct_value),
+                ) {
+                    bevy_reflect::TupleStruct::field_mut(self, i).map(|v| v.apply(value));
+                }
+            } else {
+                panic!("Attempted to apply non-TupleStruct type to TupleStruct type.");
+            }
+        }
+        fn reflect_ref(&self) -> bevy_reflect::ReflectRef {
+            bevy_reflect::ReflectRef::TupleStruct(self)
+        }
+        fn reflect_mut(&mut self) -> bevy_reflect::ReflectMut {
+            bevy_reflect::ReflectMut::TupleStruct(self)
+        }
+        fn reflect_owned(self: ::std::boxed::Box<Self>) -> bevy_reflect::ReflectOwned {
+            bevy_reflect::ReflectOwned::TupleStruct(self)
+        }
+        fn reflect_partial_eq(
+            &self,
+            value: &dyn bevy_reflect::Reflect,
+        ) -> ::core::option::Option<bool> {
+            bevy_reflect::tuple_struct_partial_eq(self, value)
+        }
+    }
+    impl<R, VM> bevy_reflect::FromReflect for ElementViewKey<R, VM>
+        where
+            R: Renderer,
+            VM: ViewMember<R>,
+            RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
+            R: bevy_reflect::TypePath,
+    {
+        fn from_reflect(reflect: &dyn bevy_reflect::Reflect) -> ::core::option::Option<Self> {
+            if let bevy_reflect::ReflectRef::TupleStruct(__ref_struct) =
+                bevy_reflect::Reflect::reflect_ref(reflect)
+            {
+                ::core::option::Option::Some(Self {
+                    0: (|| {
+                        <RendererNodeId<R> as bevy_reflect::FromReflect>::from_reflect(
+                            bevy_reflect::TupleStruct::field(__ref_struct, 0)?,
+                        )
+                    })()?,
+                    1: Default::default(),
+                })
+            } else {
+                ::core::option::Option::None
+            }
+        }
+    }
+};

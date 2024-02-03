@@ -1,14 +1,28 @@
-use pin_project::pin_project;
-use core::future::Future;
-use core::pin::Pin;
-use core::task::{Context, Poll};
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
-#[pin_project(project = EitherProj)]
+#[cfg_attr(feature = "either_future",pin_project::pin_project(project = EitherProj))]
 pub enum Either<L, R> {
-    Left(#[pin] L),
-    Right(#[pin] R),
+    Left(#[cfg_attr(feature = "either_future", pin)] L),
+    Right(#[cfg_attr(feature = "either_future", pin)] R),
+}
+
+#[cfg(feature = "either_future")]
+impl<L, R, LO, RO> core::future::Future for Either<L, R>
+where
+    L: core::future::Future<Output = LO>,
+    R: core::future::Future<Output = RO>,
+{
+    type Output = Either<LO, RO>;
+
+    fn poll(
+        self: core::pin::Pin<&mut Self>,
+        cx: &mut core::task::Context<'_>,
+    ) -> core::task::Poll<Self::Output> {
+        match self.project() {
+            EitherProj::Left(l) => l.poll(cx).map(Either::Left),
+            EitherProj::Right(r) => r.poll(cx).map(Either::Right),
+        }
+    }
 }
 
 impl<L, R> Iterator for Either<L, R>
@@ -21,21 +35,6 @@ where
         match self {
             Either::Left(l) => l.next(),
             Either::Right(r) => r.next(),
-        }
-    }
-}
-
-impl<L, R, LO, RO> Future for Either<L, R>
-where
-    L: Future<Output = LO>,
-    R: Future<Output = RO>,
-{
-    type Output = Either<LO, RO>;
-
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        match self.project() {
-            EitherProj::Left(l) => l.poll(cx).map(Either::Left),
-            EitherProj::Right(r) => r.poll(cx).map(Either::Right),
         }
     }
 }

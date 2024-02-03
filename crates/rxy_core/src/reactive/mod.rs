@@ -6,6 +6,7 @@ mod schema_prop;
 mod state;
 
 use alloc::boxed::Box;
+use bevy_reflect::TypePath;
 use core::cell::UnsafeCell;
 use core::hash::{Hash, Hasher};
 use core::marker::PhantomData;
@@ -15,8 +16,8 @@ use xy_reactive::prelude::create_render_effect;
 use xy_reactive::render_effect::RenderEffect;
 
 use crate::{
-    DeferredNodeTreeScoped, IntoView, MemberOwner, NodeTree, Renderer, RendererNodeId, RendererWorld,
-    View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
+    DeferredNodeTreeScoped, IntoView, MemberOwner, NodeTree, Renderer, RendererNodeId,
+    RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
 };
 
 struct FnOnceCell<'a, I, T> {
@@ -159,6 +160,20 @@ where
 {
     key: K,
     disposer_state_node_id: RendererNodeId<R>,
+}
+
+impl<R, K> TypePath for ReactiveViewKey<R, K>
+where
+    R: Renderer,
+    K: ViewKey<R>,
+{
+    fn type_path() -> &'static str {
+        "rxy_core::ReactiveViewKey<R,K>"
+    }
+
+    fn short_type_path() -> &'static str {
+        "ReactiveViewKey<R,K>"
+    }
 }
 
 impl<R, K> Hash for ReactiveViewKey<R, K>

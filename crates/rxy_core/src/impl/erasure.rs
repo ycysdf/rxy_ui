@@ -1,4 +1,8 @@
-use crate::{CloneableDynamicView, DynamicMutableViewKey, DynamicView, IntoView, MutableView, MutableViewKey, NodeTree, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx};
+use crate::{
+    CloneableDynamicView, DynamicMutableViewKey, DynamicView, IntoView, MutableView,
+    MutableViewKey, NodeTree, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey,
+    ViewMember, ViewMemberCtx,
+};
 use alloc::boxed::Box;
 use core::any::Any;
 use core::hash::{Hash, Hasher};
@@ -25,8 +29,9 @@ where
     >,
 
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
-    pub set_visibility_fn:
-        Option<fn(key: &dyn Any, &mut R::NodeTree, hidden: bool, state_node_id: &RendererNodeId<R>)>,
+    pub set_visibility_fn: Option<
+        fn(key: &dyn Any, &mut R::NodeTree, hidden: bool, state_node_id: &RendererNodeId<R>),
+    >,
 
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub state_node_id: Option<fn(key: &dyn Any) -> Option<RendererNodeId<R>>>,
@@ -137,7 +142,6 @@ where
 }
 
 pub trait IntoViewCloneableErasureExt<R> {
-    
     /// .
     ///
     /// # Safety
@@ -241,7 +245,8 @@ where
         world: &RendererWorld<R>,
     ) -> Option<(RendererNodeId<R>, Box<(dyn Any + Send + Sync)>)> {
         self.state_node_id.as_ref().and_then(|node_id| {
-            world.get_node_state_ref::<ErasureViewKeyViewState>(node_id)
+            world
+                .get_node_state_ref::<ErasureViewKeyViewState>(node_id)
                 .map(|n| {
                     let view_key = &**n.view_key.as_ref().unwrap();
                     n.clone_fn.unwrap()(view_key)
@@ -314,9 +319,21 @@ where
     reflect(type_path = false)
 )]
 pub struct ErasureViewKeyViewState {
+    #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     view_key: Option<Box<dyn Any + Sync + Send>>,
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     clone_fn: Option<fn(key: &dyn Any) -> Box<dyn Any + Send + Sync>>,
+}
+
+#[cfg(feature = "bevy_reflect")]
+impl bevy_reflect::TypePath for ErasureViewKeyViewState {
+    fn type_path() -> &'static str {
+        "rxy_core::ErasureViewKeyViewState"
+    }
+
+    fn short_type_path() -> &'static str {
+        "ErasureViewKeyViewState"
+    }
 }
 
 impl ErasureViewKeyViewState {
@@ -368,7 +385,8 @@ where
             };
             set_erasure_view_fns::<R, V>(&mut *ctx.world, &state_node_id);
             if will_rebuild {
-                ctx.world.set_node_state(&state_node_id, ErasureViewKeyViewState::new(key));
+                ctx.world
+                    .set_node_state(&state_node_id, ErasureViewKeyViewState::new(key));
             }
             Some(state_node_id)
         } else {

@@ -8,7 +8,8 @@ version = "0.1.0"
 [dependencies]
 rxy_bevy_element.workspace = true
 rxy_bevy_macro.workspace = true
-rxy_core = {workspace = true, features = ["async-channel", "xy_reactive"]}
+rxy_core = { workspace = true, features = ["async-channel", "xy_reactive", "bevy_reflect"] }
+xy_reactive = { workspace = true, optional = true, features = ["bevy"] }
 rxy_macro.workspace = true
 
 glam.workspace = true
@@ -36,14 +37,13 @@ bevy_transform.workspace = true
 bevy_ui.workspace = true
 bevy_utils.workspace = true
 bevy_a11y.workspace = true
-bevy_input.workspace =true
+bevy_input.workspace = true
 
 futures-lite.workspace = true
 
 # cosmic-text.workspace = true
 
 oneshot.workspace = true
-xy_reactive = {workspace = true, optional = true}
 
 [features]
 default = ["view_erasure", "xy_reactive"]

@@ -6,7 +6,6 @@ use crate::{
 use alloc::borrow::Cow;
 use async_channel::{Receiver, Recv, RecvError, Sender, TryRecvError};
 use bevy_utils::synccell::SyncCell;
-use bevy_utils::tracing::error;
 use core::fmt::Debug;
 use core::future::Future;
 use core::hash::{Hash, Hasher};
@@ -288,13 +287,18 @@ where
 
 #[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
 #[derive(Clone, Debug)]
-pub struct ForSourceViewKey<R, K>(DataOrPlaceholderNodeId<R>, PhantomData<K>)
+pub struct ForSourceViewKey<R, K>(
+    DataOrPlaceholderNodeId<R>,
+    #[cfg_attr(feature = "bevy_reflect", reflect(ignore))] PhantomData<K>,
+)
 where
-    R: Renderer;
+    R: Renderer,
+    K: ViewKey<R>;
 
 impl<R, K> ForSourceViewKey<R, K>
 where
     R: Renderer,
+    K: ViewKey<R>,
 {
     pub fn new(state_node_id: DataOrPlaceholderNodeId<R>) -> Self {
         Self(state_node_id, Default::default())

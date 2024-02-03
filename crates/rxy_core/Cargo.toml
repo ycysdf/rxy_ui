@@ -8,14 +8,9 @@ version = "0.1.0"
 [dependencies]
 rxy_macro.workspace = true
 xy_reactive = { workspace = true, optional = true }
-
 bevy_reflect = { workspace = true, optional = true }
+pin-project = { workspace = true, optional = true }
 bevy_utils.workspace = true
-
-count-macro.workspace = true
-paste.workspace = true
-pin-project.workspace = true
-smallvec.workspace = true
 
 ahash.workspace = true
 async-channel = { workspace = true, optional = true }
@@ -27,8 +22,14 @@ once_cell.workspace = true
 oneshot.workspace = true
 # serde.workspace = true
 
+
+count-macro.workspace = true
+paste.workspace = true
+
 [features]
-default = ["std", "view_erasure", "async-channel"]
+default = ["std", "view_erasure", "async-channel", "either_future"]
 std = []
 view_erasure = []
+bevy_reflect = ["dep:bevy_reflect"]
 x_iter_source = ["hooked_collection", "async-channel"]
+either_future = ["pin-project"]
