@@ -75,7 +75,7 @@ where
     R: Renderer,
     Args: Send + 'static,
 {
-    fn apply(&mut self, new_value: BoxedPropValue, _world: &mut R::World) {
+    fn apply(&mut self, new_value: BoxedPropValue, _world: &mut R::NodeTree) {
         *self.event_handler.lock().unwrap() = Some(new_value);
     }
 

@@ -38,7 +38,7 @@ pub mod prelude {
         add_members, build_configure, into_view, member_builder, provide_context, style_builder,
         view_builder, x_future, x_if, x_if_else, x_iter, x_iter_keyed, x_stream,
         BoxedCloneableDynamicView, BoxedDynamicView, BoxedErasureView, Context,
-        DeferredWorldScoped, DynamicView, Either, EitherExt, ElementView, ErasureView,
+        DeferredNodeTreeScoped, DynamicView, Either, EitherExt, ElementView, ErasureView,
         IntoDynamicView, IntoElementView, IntoView, IntoViewErasureExt, Keyed,
         MemberOwner, Renderer, RendererElementType, Required, SoloView, Static,
         View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,

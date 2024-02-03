@@ -16,7 +16,7 @@ use bevy_ui::node_bundles::NodeBundle;
 use bevy_ui::{Display, Style};
 
 use rxy_core::{
-    DeferredWorldScoped, NodeTree, Renderer, RendererElementType, RendererNodeId, RendererWorld,
+    DeferredNodeTreeScoped, NodeTree, Renderer, RendererElementType, RendererNodeId, RendererWorld,
     ViewKey,
 };
 
@@ -28,7 +28,7 @@ pub struct BevyWrapper<T>(pub T);
 #[derive(Deref, DerefMut, Component, Reflect, Clone)]
 pub struct RendererState<T: Send + Sync + 'static>(pub T);
 
-#[derive(Reflect, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Reflect, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct BevyRenderer;
 
 #[derive(Clone)]
@@ -38,22 +38,16 @@ pub struct BevyDeferredWorldScoped {
 
 pub type TaskState = rxy_core::TaskState<BevyRenderer>;
 
-impl DeferredWorldScoped<BevyRenderer> for BevyDeferredWorldScoped {
+impl DeferredNodeTreeScoped<BevyRenderer> for BevyDeferredWorldScoped {
     fn scoped(&self, f: impl FnOnce(&mut RendererWorld<BevyRenderer>) + Send + 'static) {
         self.cmd_sender.add(move |world: &mut World| f(world))
     }
 }
 impl Renderer for BevyRenderer {
     type NodeId = Entity;
-    type World = World;
+    type NodeTree = World;
 
     type Task<T: Send + 'static> = Task<T>;
-
-    fn spawn_and_detach(future: impl Future<Output = ()> + Send + 'static) {
-        bevy_tasks::AsyncComputeTaskPool::get()
-            .spawn(future)
-            .detach();
-    }
 
     fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) -> Self::Task<T> {
         bevy_tasks::AsyncComputeTaskPool::get().spawn(future)
@@ -98,7 +92,7 @@ impl ViewKey<BevyRenderer> for Entity {
 }
 
 impl NodeTree<BevyRenderer> for World {
-    fn deferred_world_scoped(&mut self) -> impl DeferredWorldScoped<BevyRenderer> {
+    fn deferred_world_scoped(&mut self) -> impl DeferredNodeTreeScoped<BevyRenderer> {
         BevyDeferredWorldScoped {
             cmd_sender: self.resource::<CmdSender>().clone(),
         }
@@ -173,12 +167,14 @@ impl NodeTree<BevyRenderer> for World {
     }
 
     fn ensure_spawn(&mut self, reserve_node_id: RendererNodeId<BevyRenderer>) {
-        self.get_or_spawn(reserve_node_id);
+        self.get_or_spawn(reserve_node_id)
+            .unwrap()
+            .insert(Name::new("[TEMP DATA]"));
     }
 
     fn spawn_empty_node(
         &mut self,
-        parent: Option<RendererNodeId<BevyRenderer>>,
+        parent: Option<&RendererNodeId<BevyRenderer>>,
         reserve_node_id: Option<RendererNodeId<BevyRenderer>>,
     ) -> RendererNodeId<BevyRenderer> {
         let mut entity_world_mut = match reserve_node_id {
@@ -186,12 +182,13 @@ impl NodeTree<BevyRenderer> for World {
             Some(reserve_node_id) => self.get_or_spawn(reserve_node_id).unwrap(),
         };
         if let Some(parent) = parent {
-            entity_world_mut.set_parent(parent);
+            entity_world_mut.set_parent(*parent);
         }
         entity_world_mut.id()
     }
 
     fn spawn_data_node(&mut self) -> RendererNodeId<BevyRenderer> {
+        // spawn to container
         self.spawn((Name::new("[DATA]"),)).id()
     }
 

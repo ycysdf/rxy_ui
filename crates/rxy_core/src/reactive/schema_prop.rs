@@ -2,7 +2,7 @@ use crate::{
     scheme_state_scoped, BoxedPropValue, IntoSchemaProp, PropHashMap, PropState, Reactive,
     ReactiveDisposerState, Renderer, SchemaProp, SchemaPropCtx,
 };
-use crate::{DeferredWorldScoped, NodeTree};
+use crate::{DeferredNodeTreeScoped, NodeTree};
 use alloc::boxed::Box;
 use bevy_utils::tracing::error;
 use core::any::Any;
@@ -201,7 +201,7 @@ where
     R: Renderer,
     T: Send + Sync + 'static,
 {
-    fn apply(&mut self, new_value: BoxedPropValue, _world: &mut R::World) {
+    fn apply(&mut self, new_value: BoxedPropValue, _world: &mut R::NodeTree) {
         let Ok(new_value) = new_value.downcast::<T>().map(|n| *n) else {
             return;
         };

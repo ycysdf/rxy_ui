@@ -6,7 +6,7 @@ use core::future::Future;
 use crate::{MaybeReflect, MaybeTypePath, RendererElementType, ViewKey};
 
 pub type RendererNodeId<R> = <R as Renderer>::NodeId;
-pub type RendererWorld<R> = <R as Renderer>::World;
+pub type RendererWorld<R> = <R as Renderer>::NodeTree;
 
 pub struct ViewCtx<'a, R: Renderer> {
     pub world: &'a mut RendererWorld<R>,
@@ -21,7 +21,7 @@ pub struct ViewMemberCtx<'a, R: Renderer> {
     pub node_id: RendererNodeId<R>,
 }
 
-pub trait DeferredWorldScoped<R>: Clone + Send + Sync + Sized + 'static
+pub trait DeferredNodeTreeScoped<R>: Clone + Send + Sync + Sized + 'static
 where
     R: Renderer,
 {
@@ -32,20 +32,18 @@ pub trait Renderer:
     MaybeReflect + MaybeTypePath + Clone + Debug + Send + Sync + Sized + 'static
 {
     type NodeId: ViewKey<Self>;
-    type World: NodeTree<Self>;
+    type NodeTree: NodeTree<Self>;
 
     type Task<T: Send + 'static>: Send + 'static;
-
-    fn spawn_and_detach(future: impl Future<Output = ()> + Send + 'static);
 
     fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) -> Self::Task<T>;
 }
 
 pub trait NodeTree<R>
 where
-    R: Renderer<World = Self>,
+    R: Renderer<NodeTree= Self>,
 {
-    fn deferred_world_scoped(&mut self) -> impl DeferredWorldScoped<R>;
+    fn deferred_world_scoped(&mut self) -> impl DeferredNodeTreeScoped<R>;
     fn get_node_state_mut<S: Send + Sync + 'static>(
         &mut self,
         node_id: &RendererNodeId<R>,
@@ -78,7 +76,7 @@ where
 
     fn spawn_empty_node(
         &mut self,
-        parent: Option<RendererNodeId<R>>,
+        parent: Option<&RendererNodeId<R>>,
         reserve_node_id: Option<RendererNodeId<R>>,
     ) -> RendererNodeId<R>;
 

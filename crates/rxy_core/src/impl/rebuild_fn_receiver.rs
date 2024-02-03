@@ -8,7 +8,7 @@ use crate::{
     ViewMember, ViewMemberCtx, ViewMemberIndex,
 };
 
-pub type RebuildFn<R, T> = Box<dyn FnMut(T, &mut <R as Renderer>::World) + Send + 'static>;
+pub type RebuildFn<R, T> = Box<dyn FnMut(T, &mut <R as Renderer>::NodeTree) + Send + 'static>;
 pub type RebuildFnSender<R, T> = Box<dyn FnOnce(RebuildFn<R, T>) + Send + 'static>;
 
 pub trait RebuildFnReceiverSplit<R, T, FU, RU> {

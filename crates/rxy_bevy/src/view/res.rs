@@ -2,7 +2,7 @@ use core::marker::PhantomData;
 
 use bevy_ecs::prelude::Entity;
 use bevy_ecs::system::Resource;
-use rxy_core::{prelude::{ViewMember, ViewMemberCtx}, DeferredWorldScoped, Renderer, View, ViewCtx, ViewKey, ViewMemberIndex, NodeTree};
+use rxy_core::{prelude::{ViewMember, ViewMemberCtx}, DeferredNodeTreeScoped, Renderer, View, ViewCtx, ViewKey, ViewMemberIndex, NodeTree};
 
 use crate::{BevyRenderer, ResChangeWorldExt, TaskState};
 use rxy_core::IntoView;

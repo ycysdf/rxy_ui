@@ -469,7 +469,7 @@ where
     };
 
     let task = R::spawn({
-        use crate::renderer::DeferredWorldScoped;
+        use crate::renderer::DeferredNodeTreeScoped;
         let parent = ctx.parent;
         let view_f = for_source.view_f;
         let state_node_id = state_node_id.clone();

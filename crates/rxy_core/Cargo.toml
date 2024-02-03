@@ -9,7 +9,7 @@ version = "0.1.0"
 rxy_macro.workspace = true
 xy_reactive = { workspace = true, optional = true }
 
-bevy_reflect.workspace = true
+bevy_reflect = { workspace = true, optional = true }
 bevy_utils.workspace = true
 
 count-macro.workspace = true

@@ -15,7 +15,7 @@ use xy_reactive::prelude::create_render_effect;
 use xy_reactive::render_effect::RenderEffect;
 
 use crate::{
-    DeferredWorldScoped, IntoView, MemberOwner, NodeTree, Renderer, RendererNodeId, RendererWorld,
+    DeferredNodeTreeScoped, IntoView, MemberOwner, NodeTree, Renderer, RendererNodeId, RendererWorld,
     View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
 };
 
@@ -257,6 +257,7 @@ where
             },
         );
         let view_key = _effect.with_value_mut(|n| n.clone()).unwrap();
+        // todo: no save disposer_state_node_id ? , no handle empty view
         let disposer_state_node_id = reserve_disposer.unwrap_or_else(|| {
             view_key
                 .state_node_id()

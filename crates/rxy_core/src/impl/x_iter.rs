@@ -287,10 +287,10 @@ where
                 children_keys[*to] = moved_children[i].take();
             }
 
-            let get_next_some_node_id = |world: &R::World,
+            let get_next_some_node_id = |world: &R::NodeTree,
                                          children_keys: &mut Vec<Option<V::Key>>,
                                          to: usize|
-             -> Option<R::NodeId> {
+                                         -> Option<R::NodeId> {
                 Some(
                     children_keys[to..]
                         .iter()

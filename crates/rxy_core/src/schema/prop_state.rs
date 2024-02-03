@@ -7,7 +7,7 @@ pub trait PropState<R>: Send
 where
     R: Renderer,
 {
-    fn apply(&mut self, new_value: BoxedPropValue, world: &mut R::World);
+    fn apply(&mut self, new_value: BoxedPropValue, world: &mut R::NodeTree);
     fn as_any_mut(&mut self) -> &mut (dyn Any + Send);
 }
 
@@ -53,7 +53,7 @@ where
     R: Renderer,
     T: Clone + PartialEq + Send + 'static,
 {
-    fn apply(&mut self, new_value: BoxedPropValue, world: &mut R::World) {
+    fn apply(&mut self, new_value: BoxedPropValue, world: &mut R::NodeTree) {
         let Ok(new_value) = new_value.downcast::<T>().map(|n| *n) else {
             return;
         };

@@ -18,9 +18,14 @@ rxy_style = { workspace = true, optional = true }
 rxy_bevy_style = { workspace = true, optional = true }
 bevy_mod_picking = { workspace = true, optional = true }
 
+#rxy_web_dom = { workspace = true, optional = true }
+
 [features]
 default = ["std", "view_erasure", "x_iter_source", "signal"]
 default_without_view_erasure = ["std", "x_iter_source", "signal"]
+
+#web = ["std", "rxy_web_dom", "tailwind_aliases", "xy_reactive?/web"]
+web = ["std", "tailwind_aliases", "xy_reactive?/web"]
 
 std = ["rxy_core/async-channel"]
 hooked_collection = ["dep:hooked_collection"]
@@ -32,6 +37,7 @@ style_sheet = ["rxy_style", "rxy_style_macro", "rxy_bevy_style"]
 signal = ["xy_reactive", "rxy_core/xy_reactive", "rxy_bevy?/xy_reactive"]
 bevy = [
     "std", "rxy_bevy", "rxy_bevy_element", "bevy_mod_picking", "rxy_bevy_macro", "style_sheet", "tailwind_aliases",
+    "xy_reactive?/bevy"
 ]
 
 [workspace]
@@ -48,6 +54,8 @@ rxy_macro = { path = "crates/rxy_macro" }
 rxy_style = { path = "crates/rxy_style" }
 rxy_style_macro = { path = "crates/rxy_style_macro" }
 xy_reactive = { path = "crates/xy_reactive", features = ["bevy"] }
+
+#rxy_web_dom = { path = "crates/rxy_web_dom" }
 
 async-channel = { version = "2.1" }
 glam = "0.24"
@@ -75,7 +83,7 @@ bevy_core = "0.12"
 bevy_derive = "0.12"
 bevy_ecs = "0.12"
 bevy_hierarchy = "0.12"
-bevy_reflect = "0.12"
+bevy_reflect = { version = "0.12" }
 bevy_render = "0.12"
 bevy_sprite = "0.12"
 bevy_tasks = "0.12"
@@ -95,6 +103,127 @@ proc-macro2 = "1.0.66"
 quote = "^1.0.26"
 syn = { version = "2", features = ["full"] }
 
+wasm-bindgen-futures = { version = "0.4" }
+web-sys = { version = "0.3", features = [
+    "Window",
+    "Document",
+    "HtmlElement",
+    "HtmlInputElement",
+    "Element",
+    "Event",
+    "console",
+    "Comment",
+    "Text",
+    "Node",
+    "HtmlTemplateElement",
+    "DocumentFragment",
+    "DomTokenList",
+    "CssStyleDeclaration",
+    #    "ShadowRoot",
+
+    # Events we cast to in leptos_macro -- added here so we don't force users to import them
+    #    "AddEventListenerOptions",
+    #    "AnimationEvent",
+    #    "BeforeUnloadEvent",
+    #    "ClipboardEvent",
+    #    "CompositionEvent",
+    #    "CustomEvent",
+    #    "DeviceMotionEvent",
+    #    "DeviceOrientationEvent",
+    #    "DragEvent",
+    #    "ErrorEvent",
+    #    "Event",
+    #    "FocusEvent",
+    #    "GamepadEvent",
+    #    "HashChangeEvent",
+    #    "InputEvent",
+    #    "KeyboardEvent",
+    #    "MessageEvent",
+    #    "MouseEvent",
+    #    "PageTransitionEvent",
+    #    "PointerEvent",
+    #    "PopStateEvent",
+    #    "ProgressEvent",
+    #    "PromiseRejectionEvent",
+    #    "SecurityPolicyViolationEvent",
+    #    "StorageEvent",
+    #    "SubmitEvent",
+    #    "TouchEvent",
+    #    "TransitionEvent",
+    #    "UiEvent",
+    #    "WheelEvent",
+
+    # HTML Element Types
+    "HtmlHtmlElement",
+    "HtmlBaseElement",
+    "HtmlHeadElement",
+    "HtmlLinkElement",
+    "HtmlMetaElement",
+    "HtmlStyleElement",
+    "HtmlTitleElement",
+    "HtmlBodyElement",
+    "HtmlHeadingElement",
+    "HtmlQuoteElement",
+    "HtmlDivElement",
+    "HtmlDListElement",
+    "HtmlHrElement",
+    "HtmlLiElement",
+    "HtmlOListElement",
+    "HtmlParagraphElement",
+    "HtmlPreElement",
+    "HtmlUListElement",
+    "HtmlAnchorElement",
+    "HtmlBrElement",
+    "HtmlDataElement",
+    "HtmlQuoteElement",
+    "HtmlSpanElement",
+    "HtmlTimeElement",
+    "HtmlAreaElement",
+    "HtmlAudioElement",
+    "HtmlImageElement",
+    "HtmlMapElement",
+    "HtmlTrackElement",
+    "HtmlVideoElement",
+    "HtmlEmbedElement",
+    "HtmlIFrameElement",
+    "HtmlObjectElement",
+    "HtmlParamElement",
+    "HtmlPictureElement",
+    "HtmlSourceElement",
+    "SvgElement",
+    "HtmlCanvasElement",
+    "HtmlScriptElement",
+    "HtmlModElement",
+    "HtmlTableCaptionElement",
+    "HtmlTableColElement",
+    "HtmlTableColElement",
+    "HtmlTableElement",
+    "HtmlTableSectionElement",
+    "HtmlTableCellElement",
+    "HtmlTableSectionElement",
+    "HtmlTableCellElement",
+    "HtmlTableSectionElement",
+    "HtmlTableRowElement",
+    "HtmlButtonElement",
+    "HtmlDataListElement",
+    "HtmlFieldSetElement",
+    "HtmlFormElement",
+    "HtmlInputElement",
+    "HtmlLabelElement",
+    "HtmlLegendElement",
+    "HtmlMeterElement",
+    "HtmlOptGroupElement",
+    "HtmlOutputElement",
+    "HtmlProgressElement",
+    "HtmlSelectElement",
+    "HtmlTextAreaElement",
+    "HtmlDetailsElement",
+    "HtmlDialogElement",
+    "HtmlMenuElement",
+    "HtmlSlotElement",
+    "HtmlTemplateElement",
+    "HtmlOptionElement",
+] }
 
 [dev-dependencies]
 bevy = { version = "0.12.1", features = [

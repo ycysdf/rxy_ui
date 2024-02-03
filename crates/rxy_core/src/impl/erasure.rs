@@ -11,13 +11,13 @@ where
 {
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub remove_fn:
-        Option<fn(key: Box<dyn Any>, world: &mut R::World, state_node_id: &RendererNodeId<R>)>,
+        Option<fn(key: Box<dyn Any>, world: &mut R::NodeTree, state_node_id: &RendererNodeId<R>)>,
 
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub insert_before_fn: Option<
         fn(
             key: &dyn Any,
-            world: &mut <R as Renderer>::World,
+            world: &mut <R as Renderer>::NodeTree,
             parent: Option<&<R as Renderer>::NodeId>,
             before_node_id: Option<&<R as Renderer>::NodeId>,
             state_node_id: &RendererNodeId<R>,
@@ -26,7 +26,7 @@ where
 
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub set_visibility_fn:
-        Option<fn(key: &dyn Any, &mut R::World, hidden: bool, state_node_id: &RendererNodeId<R>)>,
+        Option<fn(key: &dyn Any, &mut R::NodeTree, hidden: bool, state_node_id: &RendererNodeId<R>)>,
 
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub state_node_id: Option<fn(key: &dyn Any) -> Option<RendererNodeId<R>>>,

@@ -11,7 +11,7 @@ use crate::{rebuild_fn, RebuildFn, RebuildFnReceiver, Renderer};
 )]
 pub struct ReBuildFn<R, T>(
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
-    Option<Box<dyn FnMut(&mut <R as Renderer>::World, T) + Send + 'static>>,
+    Option<Box<dyn FnMut(&mut <R as Renderer>::NodeTree, T) + Send + 'static>>,
 )
 where
     R: Renderer;
@@ -31,11 +31,11 @@ impl<R, T> ReBuildFn<R, T>
 where
     R: Renderer,
 {
-    pub fn new(f: impl FnMut(&mut <R as Renderer>::World, T) + Send + 'static) -> Self {
+    pub fn new(f: impl FnMut(&mut <R as Renderer>::NodeTree, T) + Send + 'static) -> Self {
         Self(Some(Box::new(f)))
     }
 
-    pub fn call(&mut self, world: &mut <R as Renderer>::World, vp: T) {
+    pub fn call(&mut self, world: &mut <R as Renderer>::NodeTree, vp: T) {
         self.0.as_mut().unwrap()(world, vp);
     }
 }

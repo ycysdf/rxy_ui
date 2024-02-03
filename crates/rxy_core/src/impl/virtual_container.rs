@@ -62,14 +62,14 @@ where
             _marker: Default::default(),
         }
     }
-    fn set_view_key(&self, world: &mut R::World, view_key: VK) {
+    fn set_view_key(&self, world: &mut R::NodeTree, view_key: VK) {
         world.set_node_state::<VirtualContainerChildrenViewKey<VK>>(
             &self.placeholder_node_id,
             VirtualContainerChildrenViewKey(view_key),
         )
     }
 
-    fn get_view_key<'a>(&self, world: &'a R::World) -> Option<&'a VK> {
+    fn get_view_key<'a>(&self, world: &'a R::NodeTree) -> Option<&'a VK> {
         world.get_node_state_ref::<VirtualContainerChildrenViewKey<VK>>(
             &self.placeholder_node_id,
         )
@@ -124,7 +124,7 @@ where
     }
 
     #[inline(always)]
-    fn reserve_key(world: &mut R::World, _will_rebuild: bool) -> Self {
+    fn reserve_key(world: &mut R::NodeTree, _will_rebuild: bool) -> Self {
         VirtualContainerNodeId::new(world.reserve_node_id())
     }
 

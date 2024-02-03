@@ -1,7 +1,7 @@
 use core::any::TypeId;
 use std::pin::pin;
 
-use crate::renderer::DeferredWorldScoped;
+use crate::renderer::DeferredNodeTreeScoped;
 use bevy_utils::futures::now_or_never;
 use futures_lite::{Stream, StreamExt};
 
@@ -21,6 +21,7 @@ fn stream_vm_rebuild<R, S, VM>(
     S: Stream<Item = VM> + Send + 'static,
     VM: ViewMember<R>,
 {
+    drop(ctx.take_indexed_view_member_state::<TaskState<R>>());
     let default_value = x_stream.value;
     let stream = x_stream.stream;
     if let Some(vm) = default_value {
@@ -128,15 +129,25 @@ where
         }
     });
     ctx.world
-        .set_node_state(&state_node_id, XStreamState(TaskState::<R>::new(task)));
+        .set_node_state(&state_node_id, XStreamState::<R>::new(task));
 
     key
 }
 
 pub type StreamViewKey<R, S> = <<<S as Stream>::Item as IntoView<R>>::View as View<R>>::Key;
 
-#[derive(Clone, Debug)]
-pub struct XStreamState<T>(T);
+pub struct XStreamState<R>(TaskState<R>)
+where
+    R: Renderer;
+
+impl<R> XStreamState<R>
+where
+    R: Renderer,
+{
+    pub fn new(task: R::Task<()>) -> Self {
+        Self(TaskState::new(task))
+    }
+}
 
 impl<R, S> View<R> for XStream<S>
 where
