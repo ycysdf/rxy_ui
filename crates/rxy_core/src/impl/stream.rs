@@ -1,5 +1,5 @@
 use core::any::TypeId;
-use std::pin::pin;
+use core::pin::pin;
 
 use crate::renderer::DeferredNodeTreeScoped;
 use bevy_utils::futures::now_or_never;
