@@ -221,16 +221,6 @@ where
     }
 }
 
-impl<R> Hash for ErasureViewKey<R>
-where
-    R: Renderer,
-{
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.state_node_id.hash(state);
-        self.is_reserve.hash(state);
-    }
-}
-
 impl<R> ErasureViewKey<R>
 where
     R: Renderer,

@@ -150,7 +150,7 @@ where
     }
 }
 
-#[derive(Clone, Debug, Hash)]
+#[derive(Clone, Debug)]
 pub struct StyleSheetId<R>
 where
     R: Renderer,

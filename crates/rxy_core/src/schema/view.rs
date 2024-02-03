@@ -3,7 +3,6 @@ use alloc::boxed::Box;
 use bevy_utils::synccell::SyncCell;
 use bevy_utils::HashMap;
 use core::any::TypeId;
-use core::hash::Hash;
 use core::marker::PhantomData;
 use rxy_macro::IntoView;
 
@@ -182,16 +181,6 @@ where
     pub key: K,
 }
 
-impl<R, K> Hash for ViewKeyOrDataNodeId<R, K>
-where
-    R: Renderer,
-    K: ViewKey<R>,
-{
-    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
-        self.data_node_id.hash(state);
-        self.key.hash(state);
-    }
-}
 
 impl<R, K> ViewKey<R> for ViewKeyOrDataNodeId<R, K>
 where

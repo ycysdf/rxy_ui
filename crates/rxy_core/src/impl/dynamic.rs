@@ -243,8 +243,6 @@ where
     view_type_id: Option<TypeId>,
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     clone_fn: Option<fn(key: &dyn Any) -> MaybeSendSyncAnyBox>,
-    #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
-    hash_fn: Option<fn(key: &dyn Any) -> Option<u64>>,
 }
 
 impl<R> Clone for DynamicMutableViewKey<R>
@@ -256,19 +254,8 @@ where
             key: Some(self.clone_fn.unwrap()(self.key_ref())),
             view_type_id: self.view_type_id,
             clone_fn: self.clone_fn,
-            hash_fn: self.hash_fn,
             state_node_id: self.state_node_id.clone(),
         }
-    }
-}
-
-impl<R> Hash for DynamicMutableViewKey<R>
-where
-    R: Renderer,
-{
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        state.write_u64(self.hash_fn.unwrap()(self.key_ref()).unwrap());
-        self.view_type_id.hash(state)
     }
 }
 
@@ -289,12 +276,6 @@ where
             clone_fn: Some(|key| {
                 let key = key.downcast_ref::<V::Key>().unwrap();
                 Box::new(key.clone()) as _
-            }),
-            hash_fn: Some(|key| {
-                let key = key.downcast_ref::<V::Key>().unwrap();
-                let mut hasher = AHasher::default();
-                key.hash(&mut hasher);
-                Some(hasher.finish())
             }),
         }
     }

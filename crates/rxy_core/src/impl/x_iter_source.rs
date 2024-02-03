@@ -302,16 +302,6 @@ where
     }
 }
 
-impl<R, K> Hash for ForSourceViewKey<R, K>
-where
-    R: Renderer,
-    K: ViewKey<R>,
-{
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.0.hash(state)
-    }
-}
-
 pub fn get_for_source_view_keys_scoped<R, K, U>(
     world: &mut RendererWorld<R>,
     state_node_id: &RendererNodeId<R>,
@@ -404,18 +394,6 @@ where
 {
     Data(RendererNodeId<R>),
     Placeholder(RendererNodeId<R>),
-}
-
-impl<R> Hash for DataOrPlaceholderNodeId<R>
-where
-    R: Renderer,
-{
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        match self {
-            DataOrPlaceholderNodeId::Data(node_id) => node_id.hash(state),
-            DataOrPlaceholderNodeId::Placeholder(node_id) => node_id.hash(state),
-        }
-    }
 }
 
 impl<R> DataOrPlaceholderNodeId<R>

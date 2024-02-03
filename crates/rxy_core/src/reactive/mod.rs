@@ -7,7 +7,6 @@ mod state;
 
 use alloc::boxed::Box;
 use core::cell::UnsafeCell;
-use core::hash::{Hash, Hasher};
 use core::marker::PhantomData;
 use xy_reactive::effect::ErasureEffect;
 
@@ -173,15 +172,6 @@ where
     }
 }
 
-impl<R, K> Hash for ReactiveViewKey<R, K>
-where
-    R: Renderer,
-    K: ViewKey<R>,
-{
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.key.hash(state)
-    }
-}
 
 pub struct ReactiveDisposerState(pub ErasureEffect);
 

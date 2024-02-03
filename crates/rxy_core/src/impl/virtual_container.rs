@@ -41,15 +41,6 @@ where
     _marker: PhantomData<VK>,
 }
 
-impl<R, VK> Hash for VirtualContainerNodeId<R, VK>
-where
-    R: Renderer,
-    VK: MutableViewKey<R>,
-{
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.placeholder_node_id.hash(state)
-    }
-}
 
 impl<R, VK> VirtualContainerNodeId<R, VK>
 where

@@ -1,5 +1,4 @@
 use core::fmt::Debug;
-use core::hash::Hash;
 
 use crate::{MaybeFromReflect, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, NodeTree, Renderer, RendererNodeId, RendererWorld, ViewCtx};
 
@@ -29,7 +28,6 @@ pub trait MutableViewKey<R: Renderer>:
     + MaybeSend
     + MaybeSync
     + Clone
-    + Hash
     + Debug
     + 'static
 {

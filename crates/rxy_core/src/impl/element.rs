@@ -115,16 +115,6 @@ where
     }
 }
 
-impl<R, VM> Hash for ElementViewKey<R, VM>
-where
-    R: Renderer,
-    VM: ViewMember<R>,
-{
-    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
-        self.0.hash(state);
-    }
-}
-
 impl<R, VM> ViewKey<R> for ElementViewKey<R, VM>
 where
     R: Renderer,

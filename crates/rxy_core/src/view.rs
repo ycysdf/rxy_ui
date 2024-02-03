@@ -1,5 +1,4 @@
 use core::fmt::Debug;
-use core::hash::Hash;
 
 use bevy_utils::all_tuples;
 
@@ -20,7 +19,7 @@ pub trait View<R: Renderer>: Sized + MaybeSend + 'static {
 }
 
 pub trait ViewKey<R: Renderer>:
-    MaybeReflect + MaybeFromReflect + MaybeTypePath + MaybeSend + MaybeSync + Clone + Hash + Debug + 'static
+    MaybeReflect + MaybeFromReflect + MaybeTypePath + MaybeSend + MaybeSync + Clone + Debug + 'static
 {
     fn remove(self, world: &mut RendererWorld<R>);
 
@@ -91,14 +90,6 @@ where
 #[derive(Clone, Debug)]
 pub struct DataNodeId<R: Renderer>(pub RendererNodeId<R>);
 
-impl<R> Hash for DataNodeId<R>
-where
-    R: Renderer,
-{
-    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
-        self.0.hash(state)
-    }
-}
 
 impl<R> ViewKey<R> for DataNodeId<R>
 where
