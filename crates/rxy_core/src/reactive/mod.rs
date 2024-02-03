@@ -6,7 +6,6 @@ mod schema_prop;
 mod state;
 
 use alloc::boxed::Box;
-use bevy_reflect::TypePath;
 use core::cell::UnsafeCell;
 use core::hash::{Hash, Hasher};
 use core::marker::PhantomData;
@@ -159,7 +158,8 @@ where
     disposer_state_node_id: RendererNodeId<R>,
 }
 
-impl<R, K> TypePath for ReactiveViewKey<R, K>
+#[cfg(feature = "bevy_reflect")]
+impl<R, K> bevy_reflect::TypePath for ReactiveViewKey<R, K>
 where
     R: Renderer,
     K: ViewKey<R>,
