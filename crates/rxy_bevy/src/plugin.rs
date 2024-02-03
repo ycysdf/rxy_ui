@@ -1,4 +1,4 @@
-use bevy_a11y::Focus;
+use bevy_a11y::{AccessibilitySystem, Focus};
 use bevy_app::prelude::*;
 use bevy_core::Name;
 use bevy_ecs::prelude::{
@@ -73,8 +73,10 @@ impl Plugin for RxyPlugin {
                     .run_if(|systems: Res<ScheduleSystemAdds>| !systems.systems.is_empty()),
             )
             .add_systems(
-                PreUpdate,
-                check_focus.run_if(|removed: RemovedComponents<Focusable>| !removed.is_empty()),
+                PostUpdate,
+                check_focus
+                    .before(AccessibilitySystem::Update)
+                    .run_if(|removed: RemovedComponents<Focusable>| !removed.is_empty()),
             );
     }
 }

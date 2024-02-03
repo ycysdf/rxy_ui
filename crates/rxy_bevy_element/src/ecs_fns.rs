@@ -47,7 +47,9 @@ pub trait WorldViewAttrExt {
 
 impl WorldViewAttrExt for World {
     fn build_attr<A: ElementUnitAttr>(&mut self, entity: Entity, value: A::Value) {
-        let mut entity_world_mut = self.entity_mut(entity);
+        let Some(mut entity_world_mut) = self.get_entity_mut(entity) else {
+            return;
+        };
         A::init(&mut entity_world_mut, value);
         entity_world_mut
             .as_entity_mut()
@@ -57,7 +59,9 @@ impl WorldViewAttrExt for World {
     }
     fn rebuild_attr<A: ElementUnitAttr>(&mut self, entity: Entity, value: A::Value) {
         let type_registry = self.resource::<AppTypeRegistry>().clone();
-        let mut entity_world_mut = self.entity_mut(entity);
+        let Some(mut entity_world_mut) = self.get_entity_mut(entity) else {
+            return;
+        };
         let mut context = SetAttrValueContext {
             entity_mut: &mut entity_world_mut.as_entity_mut(),
             type_registry: &type_registry,
