@@ -1,6 +1,10 @@
+use bevy_a11y::Focus;
 use bevy_app::prelude::*;
 use bevy_core::Name;
-use bevy_ecs::prelude::{Entity, FromWorld, IntoSystemConfigs, Res, Resource, World};
+use bevy_ecs::prelude::{
+    Entity, FromWorld, IntoSystemConfigs, RemovedComponents, Res, Resource, World,
+};
+use bevy_ecs::system::ResMut;
 use bevy_mod_picking::prelude::*;
 use bevy_render::prelude::Visibility;
 use bevy_ui::prelude::NodeBundle;
@@ -10,7 +14,7 @@ use bevy_ui::Style;
 use rxy_bevy_element::attr_values::BevyAppAttrValueRegistryExt;
 use rxy_bevy_element::BevyDioxusAppExt;
 
-use crate::{handle_schedule_event, CommandChannelPlugin, ScheduleSystemAdds};
+use crate::{handle_schedule_event, CommandChannelPlugin, Focusable, ScheduleSystemAdds};
 
 #[derive(Resource)]
 pub struct RxyContainerEntity {
@@ -67,6 +71,17 @@ impl Plugin for RxyPlugin {
                 First,
                 handle_schedule_event
                     .run_if(|systems: Res<ScheduleSystemAdds>| !systems.systems.is_empty()),
+            )
+            .add_systems(
+                PreUpdate,
+                check_focus.run_if(|removed: RemovedComponents<Focusable>| !removed.is_empty()),
             );
+    }
+}
+fn check_focus(mut focus: ResMut<Focus>, mut removed: RemovedComponents<Focusable>) {
+    for entity in removed.read() {
+        if focus.0 == Some(entity) {
+            focus.0 = None;
+        }
     }
 }
