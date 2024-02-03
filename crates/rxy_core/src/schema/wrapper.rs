@@ -1,17 +1,17 @@
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
-use crate::{FnSchema, IntoView, Renderer, SchemaFn, SchemaParams, SchemaView};
+use crate::{FnSchema, IntoView, MaybeSend, Renderer, SchemaFn, SchemaParams, SchemaView};
 
 #[derive(Clone)]
 pub struct IntoViewSchemaFnWrapper<T, M>(pub T, PhantomData<M>);
 
 impl<T, M> IntoViewSchemaFnWrapper<T, M> {
     pub fn new(t: T) -> Self {
-        IntoViewSchemaFnWrapper(t, Default::default())
+        IntoViewSchemaFnWrapper::<T,M>(t, Default::default())
     }
 }
 
-pub trait SchemaIntoViewFn<R, P = ()>: Send + 'static
+pub trait SchemaIntoViewFn<R, P = ()>: MaybeSend + 'static
 where
     R: Renderer,
 {
@@ -22,7 +22,7 @@ where
 impl<R, P, T> SchemaFn<P> for IntoViewSchemaFnWrapper<T, R>
 where
     R: Renderer,
-    P: Send + 'static,
+    P: MaybeSend + 'static,
     T: SchemaIntoViewFn<R, P>,
 {
     type View = T::View;
@@ -54,5 +54,5 @@ where
     F: SchemaIntoViewFn<R, P>,
     P: SchemaParams<R>,
 {
-    SchemaView::new(FnSchema::new(IntoViewSchemaFnWrapper::new(f)))
+    SchemaView::new(FnSchema::new(IntoViewSchemaFnWrapper::<F,R>::new(f)))
 }
