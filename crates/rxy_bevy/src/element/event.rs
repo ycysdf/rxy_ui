@@ -6,7 +6,6 @@ use core::{
 };
 use std::iter::once;
 
-use bevy_a11y::Focus;
 use bevy_app::PreUpdate;
 use bevy_ecs::{
     prelude::{Commands, Entity, IntoSystem, Res, Resource, World},
@@ -24,7 +23,7 @@ use rxy_core::{
     NodeTree, RendererNodeId, RendererWorld,
 };
 
-use crate::{add_system, BevyRenderer, EntityWorldMutExt};
+use crate::{add_system, BevyRenderer, EntityWorldMutExt, FocusedEntity};
 
 fn add_focus_event<T>(
     world: &mut RendererWorld<BevyRenderer>,
@@ -508,7 +507,7 @@ where
     pub fn system_handle(
         registers: Res<FocusInputEvents<T>>,
         event_reader: Res<Input<T>>,
-        focus: Res<Focus>,
+        focus: Res<FocusedEntity>,
         mut commands: Commands,
     ) {
         let Some(focus) = focus.0 else {

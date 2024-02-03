@@ -1,7 +1,6 @@
 use crate::focus_style::update_focus_style;
 use crate::interaction_style::update_interaction_styles;
 use crate::{Result, StyleSheetDefinition, StyleWorldExt};
-use bevy_a11y::Focus;
 use bevy_app::{App, Plugin, Update};
 use bevy_ecs::component::Component;
 use bevy_ecs::entity::Entity;
@@ -11,7 +10,7 @@ use bevy_utils::HashMap;
 use core::any::TypeId;
 use core::fmt::Debug;
 use derive_more::{Deref, DerefMut};
-use rxy_bevy::BevyRenderer;
+use rxy_bevy::{BevyRenderer, FocusedEntity};
 use rxy_bevy_element::{AttrValue, SmallBox, S1};
 use rxy_style::{StyleAttrId, StyleSheetId, StyleSheetLocation};
 use std::ops::AddAssign;
@@ -35,12 +34,12 @@ impl Plugin for RxyStyleSheetPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<RxySharedStyleContainer>()
             .init_resource::<TypedEntities>()
-            .init_resource::<Previous<Focus>>()
+            .init_resource::<Previous<FocusedEntity>>()
             .add_systems(
                 Update,
                 (
                     update_interaction_styles.after(update_focus_style),
-                    update_focus_style.run_if(|res: Res<Focus>| res.is_changed()),
+                    update_focus_style.run_if(|res: Res<FocusedEntity>| res.is_changed()),
                 ),
             );
     }

@@ -2,14 +2,13 @@ use crate::attr_iter::{EntityStyleWorldQuery, StateOwnerWithNodeId};
 use crate::node_style_state::NodeStyleSheetsState;
 use crate::plugin::StyleAttrValue;
 use crate::{Previous, StyleItemValue};
-use bevy_a11y::Focus;
 use bevy_ecs::entity::Entity;
 use bevy_ecs::prelude::{Changed, Commands, Query, With, World};
 use bevy_ecs::system::{Command, ResMut};
 use bevy_ui::Interaction;
 use bevy_utils::EntityHashMap;
 use derive_more::{Deref, DerefMut};
-use rxy_bevy::RendererState;
+use rxy_bevy::{FocusedEntity, RendererState};
 use rxy_bevy_element::{view_element_type, AttrIndex, AttrSetBits, ElementEntityExtraData};
 use rxy_style::{NodeInterStyleAttrInfos, NodeStyleAttrInfos, StyleInteraction};
 
@@ -93,7 +92,7 @@ pub fn update_interaction_styles(
             With<RendererState<NodeStyleSheetsState>>,
         ),
     >,
-    mut focus: ResMut<Focus>,
+    mut focus: ResMut<FocusedEntity>,
 ) {
     if inter_styled_query.is_empty() {
         return;
@@ -167,7 +166,7 @@ pub fn update_interaction_styles(
             | (Interaction::Pressed, Interaction::Hovered) => {
                 // todo: code decoupling
                 if interaction == Interaction::Pressed && focus.0 != Some(entity) {
-                    *focus = Focus(Some(entity));
+                    *focus = FocusedEntity(Some(entity));
                 }
 
                 for (attr_index, matched_interaction) in entity_inter_style_state

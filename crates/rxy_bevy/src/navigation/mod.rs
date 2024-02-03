@@ -1,4 +1,3 @@
-use bevy_a11y::Focus;
 use bevy_app::{Plugin, PreUpdate};
 use bevy_ecs::query::With;
 use bevy_ecs::schedule::IntoSystemConfigs;
@@ -9,7 +8,7 @@ use bevy_input::{prelude::KeyCode, Input};
 use bevy_render::view::ViewVisibility;
 use bevy_ui::{Interaction, UiStack, UiSystem};
 
-use crate::Focusable;
+use crate::{Focusable, FocusedEntity};
 
 #[derive(Default, Debug)]
 pub struct RxyKeyboardNavigationPlugin {}
@@ -65,7 +64,7 @@ pub(crate) fn tab_pressed(
 ///
 /// Entities can be focused if [`ComputedVisibility`] is visible and they have the [`Focusable`] component.
 pub(crate) fn keyboard_navigation_system(
-    mut focus: ResMut<Focus>,
+    mut focus: ResMut<FocusedEntity>,
     mut interactions: Query<&mut Interaction>,
     focusables: Query<&ViewVisibility, With<Focusable>>,
     keyboard_input: Res<Input<KeyCode>>,
@@ -112,7 +111,7 @@ pub(crate) fn keyboard_navigation_system(
     }
 
     if focus.0 != new_focus {
-        *focus = Focus(new_focus);
+        *focus = FocusedEntity(new_focus);
     }
     // focus.set_if_neq(Focus {
     //     entity: new_focus,
@@ -126,7 +125,7 @@ pub(crate) fn trigger_click(keyboard_input: Res<Input<KeyCode>>) -> bool {
 }
 
 /// Trigger the [`Focus`] entity to be clicked.
-pub(crate) fn keyboard_click(mut interactions: Query<&mut Interaction>, focus: Res<Focus>) {
+pub(crate) fn keyboard_click(mut interactions: Query<&mut Interaction>, focus: Res<FocusedEntity>) {
     if let Some(mut interaction) = focus.0.and_then(|entity| interactions.get_mut(entity).ok()) {
         interaction.set_if_neq(Interaction::Pressed);
     }

@@ -1,4 +1,3 @@
-use bevy_a11y::Focus;
 use core::iter;
 
 use crate::interaction_style::AttrSetBitsIterExt;
@@ -7,6 +6,7 @@ use crate::{
     interaction_to_style_interaction, EntityAttrSyncer, StyleEntityRefExt, StyleItemValue,
     StyleSheetDefinition,
 };
+use rxy_bevy::FocusedEntity;
 use crate::{EntityWorldRef, Result};
 use bevy_ecs::prelude::{Entity, Query};
 use bevy_ecs::query::ReadOnlyWorldQuery;
@@ -242,7 +242,7 @@ impl<'a> EntityStyleAttrInfoIterArgs<'a> {
         self,
         mut entity_world_mut: EntityWorldMut, // strict_match: bool,
     ) -> Result {
-        let focus = entity_world_mut.world().resource::<Focus>().0;
+        let focus = entity_world_mut.world().resource::<FocusedEntity>().0;
         let entity_ref = entity_world_mut.as_entity_mut();
         let item_ids = self
             .iter_match_attrs(

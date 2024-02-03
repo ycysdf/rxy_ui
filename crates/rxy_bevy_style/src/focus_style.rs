@@ -2,11 +2,10 @@ use crate::attr_iter::{EntityStyleWorldQuery, StateOwnerWithNodeId};
 use crate::interaction_style::{AttrSetBitsIterExt, SetAttrValuesCommand};
 use crate::node_style_state::NodeStyleSheetsState;
 use crate::Previous;
-use bevy_a11y::Focus;
 use bevy_ecs::entity::Entity;
 use bevy_ecs::prelude::{Query, Res};
 use bevy_ecs::system::{Commands, ResMut};
-use rxy_bevy::RendererState;
+use rxy_bevy::{FocusedEntity, RendererState};
 use rxy_bevy_element::ElementEntityExtraData;
 use rxy_style::{NodeInterStyleAttrInfos, NodeStyleAttrInfos, StyleInteraction};
 
@@ -18,14 +17,14 @@ pub fn update_focus_style(
         &RendererState<NodeInterStyleAttrInfos>,
         &RendererState<NodeStyleAttrInfos>,
     )>,
-    focus: Res<Focus>,
-    mut previous_focus: ResMut<Previous<Focus>>,
+    focus: Res<FocusedEntity>,
+    mut previous_focus: ResMut<Previous<FocusedEntity>>,
 ) {
     let mut set_attrs_cmd = SetAttrValuesCommand::default();
 
     let focus_entity = focus.0;
     let previous_focus_entity = previous_focus.0 .0;
-    *previous_focus = Previous(Focus(focus_entity));
+    *previous_focus = Previous(FocusedEntity(focus_entity));
 
     do_f(
         previous_focus_entity,

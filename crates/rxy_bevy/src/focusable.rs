@@ -1,6 +1,7 @@
-use bevy_a11y::Focus;
-use bevy_app::{Plugin, PreUpdate};
-use bevy_ecs::prelude::{DetectChangesMut, Entity, Local, Query, Res};
+use bevy_app::{Plugin, PostUpdate, PreUpdate};
+use bevy_ecs::prelude::{
+    DetectChangesMut, Entity, Local, Query, RemovedComponents, Res, ResMut, Resource,
+};
 use bevy_ecs::{
     component::Component, prelude::resource_changed, schedule::IntoSystemConfigs,
     system::SystemParam,
@@ -8,17 +9,34 @@ use bevy_ecs::{
 use bevy_reflect::Reflect;
 use bevy_ui::UiSystem;
 
-pub struct FocusablePlugin {}
+#[derive(Resource, Default, Debug, Copy, Clone, PartialEq, Eq)]
+pub struct FocusedEntity(pub Option<Entity>);
+
+pub struct FocusablePlugin;
 
 impl Plugin for FocusablePlugin {
     fn build(&self, app: &mut bevy_app::App) {
-        app.register_type::<Focusable>().add_systems(
-            PreUpdate,
-            FocusableSystemParam::update_focused_state
-                // .in_set(UiSystem::Interactions)
-                .after(UiSystem::Focus)
-                .run_if(resource_changed::<Focus>()),
-        );
+        app.register_type::<Focusable>()
+            .init_resource::<FocusedEntity>()
+            .add_systems(
+                PreUpdate,
+                FocusableSystemParam::update_focused_state
+                    // .in_set(UiSystem::Interactions)
+                    .after(UiSystem::Focus)
+                    .run_if(resource_changed::<FocusedEntity>()),
+            )
+            .add_systems(
+                PostUpdate,
+                check_focus.run_if(|removed: RemovedComponents<Focusable>| !removed.is_empty()),
+            );
+    }
+}
+
+fn check_focus(mut focus: ResMut<FocusedEntity>, mut removed: RemovedComponents<Focusable>) {
+    for entity in removed.read() {
+        if focus.0 == Some(entity) {
+            focus.0 = None;
+        }
     }
 }
 
@@ -45,7 +63,7 @@ impl FocusableSystemParam<'_, '_> {
 
     pub fn update_focused_state(
         mut query: FocusableSystemParam,
-        focus: Res<Focus>,
+        focus: Res<FocusedEntity>,
         mut old_focused: Local<Option<Entity>>,
     ) {
         // Remove the interaction from the last focused entity
