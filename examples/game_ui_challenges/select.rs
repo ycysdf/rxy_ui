@@ -1,12 +1,14 @@
+use core::fmt::Display;
+use std::fmt::Debug;
+
 use bevy::prelude::*;
+use bevy::render::color::Color;
+use rxy_core::fn_schema_view;
+
 use rxy_ui::prelude::*;
 
 use crate::FocusStyle;
 use crate::XConfirm;
-use bevy::prelude::Resource;
-use bevy::render::color::Color;
-use core::fmt::Display;
-use std::fmt::Debug;
 
 #[derive(TypedStyle)]
 pub struct SelectStyle;
@@ -103,12 +105,12 @@ pub struct SelectionItem<T> {
 pub fn selection_item<T, V>(
     value: T,
     f: impl Fn(SelectionItem<T>) -> V + Send + 'static,
-) -> FnSchemaView<impl SchemaIntoViewFn>
+) -> FnSchemaView<impl SchemaIntoViewFn<BevyRenderer>>
 where
     T: Default + Send + Sync + PartialEq + Clone + 'static,
     V: IntoElementView<BevyRenderer> + Send,
 {
-    pl_schema_view(move || {
+    fn_schema_view(move || {
         view_builder(|ctx, _| {
             let ctx = ctx.context::<SelectionListContext<T>>();
             let is_selected = use_memo({

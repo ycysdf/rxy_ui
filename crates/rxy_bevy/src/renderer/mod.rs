@@ -320,34 +320,34 @@ impl BevyRenderer {
 
 pub trait EntityWorldMutExt {
     fn insert_if_not_exist<C>(&mut self, component: C)
-    where
-        C: Component;
+        where
+            C: Component;
     fn get_or_default<S>(&mut self) -> &mut S
-    where
-        S: Default + Send + Sync + 'static;
+        where
+            S: Default + Send + Sync + 'static;
     fn state_scoped<S, U>(&mut self, f: impl FnOnce(&mut EntityWorldMut, &mut S) -> U) -> Option<U>
-    where
-        S: Send + Sync + 'static;
+        where
+            S: Send + Sync + 'static;
     fn try_state_scoped<S, U>(
         &mut self,
         f: impl FnOnce(&mut EntityWorldMut, Option<&mut S>) -> U,
     ) -> U
-    where
-        S: Send + Sync + 'static;
+        where
+            S: Send + Sync + 'static;
 }
 
 impl EntityWorldMutExt for EntityWorldMut<'_> {
     fn insert_if_not_exist<C>(&mut self, component: C)
-    where
-        C: Component,
+        where
+            C: Component,
     {
         if !self.contains::<C>() {
             self.insert(component);
         }
     }
     fn get_or_default<S>(&mut self) -> &mut S
-    where
-        S: Default + Send + Sync + 'static,
+        where
+            S: Default + Send + Sync + 'static,
     {
         if !self.contains::<RendererState<S>>() {
             self.insert(RendererState::<S>(Default::default()));
@@ -358,8 +358,8 @@ impl EntityWorldMutExt for EntityWorldMut<'_> {
     }
 
     fn state_scoped<S, U>(&mut self, f: impl FnOnce(&mut EntityWorldMut, &mut S) -> U) -> Option<U>
-    where
-        S: Send + Sync + 'static,
+        where
+            S: Send + Sync + 'static,
     {
         let entity = self.id();
         self.world_scope(|world| {
@@ -373,8 +373,8 @@ impl EntityWorldMutExt for EntityWorldMut<'_> {
         &mut self,
         f: impl FnOnce(&mut EntityWorldMut, Option<&mut S>) -> U,
     ) -> U
-    where
-        S: Send + Sync + 'static,
+        where
+            S: Send + Sync + 'static,
     {
         let entity = self.id();
         self.world_scope(|world| {

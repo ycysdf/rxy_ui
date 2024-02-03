@@ -10,9 +10,10 @@ pub use res_change_observe::*;
 pub use rxy_bevy_element::all_attrs;
 pub use rxy_bevy_element::elements;
 pub use rxy_bevy_element::ElementType;
-use rxy_core::{CloneableSchemaSlot, RebuildFnReceiver, RenderSchemaCtx, SchemaSlot};
+use rxy_core::{CloneableSchemaSlot, FnSchema, IntoViewSchemaFnWrapper, RebuildFnReceiver, RenderSchemaCtx, SchemaSlot, SchemaView};
 pub use view::*;
 pub use view_member::*;
+
 mod cmd;
 mod command;
 mod element;
@@ -25,9 +26,9 @@ mod renderer;
 mod res_change_observe;
 mod view;
 mod view_member;
-pub mod wrapper;
 
-pub use wrapper::{pl_schema_view, FnSchemaView, SchemaIntoViewFn};
+pub type FnSchemaView<F, P = ()> =
+SchemaView<BevyRenderer, FnSchema<IntoViewSchemaFnWrapper<F, BevyRenderer>, P>, (), ()>;
 
 pub type SchemaCtx = RenderSchemaCtx<BevyRenderer>;
 
@@ -37,12 +38,13 @@ pub type Slot = SchemaSlot<BevyRenderer>;
 pub type CloneableSlot = CloneableSchemaSlot<BevyRenderer>;
 
 pub mod prelude {
+    pub use bevy_ui::prelude::Val;
+
     pub use super::{button, div, span};
     pub use super::{
-        element::event::*, pl_schema_view, system_once, x_res, BevyElement, BevyRenderer,
-        BevyWrapper, CloneableSlot, CmdReceiver, CmdSender, CommonAttrsViewBuilder, CompositeAttrs,
-        ElementType, FnSchemaView, Focusable, MemberOwnerBundleExt, ReceiverProp,
-        ResChangeWorldExt, RxyPlugin, RxyUiCommandExt, SchemaCtx, SchemaIntoViewFn, Slot,
+        BevyElement, BevyRenderer, BevyWrapper, CloneableSlot, CmdReceiver, CmdSender,
+        CommonAttrsViewBuilder, CompositeAttrs, element::event::*, ElementType, FnSchemaView,
+        Focusable, MemberOwnerBundleExt, ReceiverProp, ResChangeWorldExt, RxyPlugin,
+        RxyUiCommandExt, SchemaCtx, Slot, system_once, x_res,
     };
-    pub use bevy_ui::prelude::Val;
 }

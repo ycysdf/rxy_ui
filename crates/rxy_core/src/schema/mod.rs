@@ -13,6 +13,7 @@ pub use r#fn::*;
 pub use required_param::*;
 pub use schema_with_element_view_bound::*;
 pub use view::*;
+pub use wrapper::*;
 
 mod context;
 mod ctx;
@@ -29,6 +30,7 @@ mod required_param;
 mod schema_with_element_view_bound;
 mod slot;
 mod view;
+mod wrapper;
 
 pub trait Schema<R: Renderer>: MaybeSend + 'static {
     type View: View<R>;

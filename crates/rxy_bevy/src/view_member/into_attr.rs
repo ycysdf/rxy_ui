@@ -49,11 +49,11 @@ where
 {
     type Attr = Self;
 
+    type OtherAttr<OEA: ElementUnitAttr<Value = <EA>::Value>> = ViewAttr<OEA>;
+
     fn into_attr(self) -> Self::Attr {
         self
     }
-
-    type OtherAttr<OEA: ElementUnitAttr<Value = <EA>::Value>> = ViewAttr<OEA>;
 
     fn into_other_attr<OEA: ElementUnitAttr<Value = <EA>::Value>>(self) -> Self::OtherAttr<OEA> {
         ViewAttr(self.0)
@@ -67,11 +67,11 @@ where
 {
     type Attr = ViewAttr<EA>;
 
+    type OtherAttr<OEA: ElementUnitAttr<Value = <EA>::Value>> = ViewAttr<OEA>;
+
     fn into_attr(self) -> Self::Attr {
         ViewAttr(self.into().0)
     }
-
-    type OtherAttr<OEA: ElementUnitAttr<Value = <EA>::Value>> = ViewAttr<OEA>;
 
     fn into_other_attr<OEA: ElementUnitAttr<Value = <EA>::Value>>(self) -> Self::OtherAttr<OEA> {
         ViewAttr(self.into().0)
@@ -85,11 +85,11 @@ where
 {
     type Attr = Option<T::Attr>;
 
+    type OtherAttr<OEA: ElementUnitAttr<Value = <EA>::Value>> = Option<T::OtherAttr<OEA>>;
+
     fn into_attr(self) -> Self::Attr {
         self.map(|n| n.into_attr())
     }
-
-    type OtherAttr<OEA: ElementUnitAttr<Value = <EA>::Value>> = Option<T::OtherAttr<OEA>>;
 
     fn into_other_attr<OEA: ElementUnitAttr<Value = <EA>::Value>>(self) -> Self::OtherAttr<OEA> {
         self.map(|n| n.into_other_attr::<OEA>())
@@ -104,15 +104,15 @@ where
 {
     type Attr = Either<L::Attr, R::Attr>;
 
+    type OtherAttr<OEA: ElementUnitAttr<Value = <EA>::Value>> =
+        Either<L::OtherAttr<OEA>, R::OtherAttr<OEA>>;
+
     fn into_attr(self) -> Self::Attr {
         match self {
             Either::Left(n) => Either::Left(n.into_attr()),
             Either::Right(n) => Either::Right(n.into_attr()),
         }
     }
-
-    type OtherAttr<OEA: ElementUnitAttr<Value = <EA>::Value>> =
-        Either<L::OtherAttr<OEA>, R::OtherAttr<OEA>>;
 
     fn into_other_attr<OEA: ElementUnitAttr<Value = <EA>::Value>>(self) -> Self::OtherAttr<OEA> {
         match self {
@@ -129,12 +129,12 @@ where
 {
     type Attr = futures_lite::stream::Boxed<T::Attr>;
 
+    type OtherAttr<OEA: ElementUnitAttr<Value = <EA>::Value>> =
+        futures_lite::stream::Boxed<T::OtherAttr<OEA>>;
+
     fn into_attr(self) -> Self::Attr {
         self.map(|n| n.into_attr()).boxed()
     }
-
-    type OtherAttr<OEA: ElementUnitAttr<Value = <EA>::Value>> =
-        futures_lite::stream::Boxed<T::OtherAttr<OEA>>;
 
     fn into_other_attr<OEA: ElementUnitAttr<Value = <EA>::Value>>(self) -> Self::OtherAttr<OEA> {
         self.map(|n| n.into_other_attr()).boxed()
@@ -149,6 +149,9 @@ where
 {
     type Attr = XFuture<futures_lite::future::Boxed<<T::Output as IntoViewAttrMember<EA>>::Attr>>;
 
+    type OtherAttr<OEA: ElementUnitAttr<Value = <EA>::Value>> =
+        XFuture<futures_lite::future::Boxed<<T::Output as IntoViewAttrMember<EA>>::OtherAttr<OEA>>>;
+
     fn into_attr(self) -> Self::Attr {
         use futures_lite::FutureExt;
         XFuture(
@@ -159,9 +162,6 @@ where
             .boxed(),
         )
     }
-
-    type OtherAttr<OEA: ElementUnitAttr<Value = <EA>::Value>> =
-        XFuture<futures_lite::future::Boxed<<T::Output as IntoViewAttrMember<EA>>::OtherAttr<OEA>>>;
 
     fn into_other_attr<OEA: ElementUnitAttr<Value = <EA>::Value>>(self) -> Self::OtherAttr<OEA> {
         use futures_lite::FutureExt;
@@ -183,6 +183,9 @@ where
 {
     type Attr = XFuture<futures_lite::future::Boxed<T::Attr>>;
 
+    type OtherAttr<OEA: ElementUnitAttr<Value = <EA>::Value>> =
+        XFuture<futures_lite::future::Boxed<T::OtherAttr<OEA>>>;
+
     fn into_attr(self) -> Self::Attr {
         use futures_lite::FutureExt;
         XFuture(
@@ -193,9 +196,6 @@ where
             .boxed(),
         )
     }
-
-    type OtherAttr<OEA: ElementUnitAttr<Value = <EA>::Value>> =
-        XFuture<futures_lite::future::Boxed<T::OtherAttr<OEA>>>;
 
     fn into_other_attr<OEA: ElementUnitAttr<Value = <EA>::Value>>(self) -> Self::OtherAttr<OEA> {
         use futures_lite::FutureExt;
@@ -220,11 +220,11 @@ where
 {
     type Attr = Self;
 
+    type OtherAttr<OEA: ElementUnitAttr<Value = <EA>::Value>> = Self;
+
     fn into_attr(self) -> Self::Attr {
         self
     }
-
-    type OtherAttr<OEA: ElementUnitAttr<Value = <EA>::Value>> = Self;
 
     fn into_other_attr<OEA: ElementUnitAttr<Value = <EA>::Value>>(self) -> Self::OtherAttr<OEA> {
         self
