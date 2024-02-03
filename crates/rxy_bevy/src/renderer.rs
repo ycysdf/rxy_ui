@@ -1,3 +1,4 @@
+use bevy_a11y::Focus;
 use bevy_core::Name;
 use bevy_derive::{Deref, DerefMut};
 use std::borrow::Cow;
@@ -62,6 +63,10 @@ impl Renderer for BevyRenderer {
 
 impl ViewKey<BevyRenderer> for Entity {
     fn remove(self, world: &mut RendererWorld<BevyRenderer>) {
+        let mut focus = world.resource_mut::<Focus>();
+        if focus.0 == Some(self) {
+            focus.0 = None;
+        }
         world.entity_mut(self).despawn_recursive();
     }
 
