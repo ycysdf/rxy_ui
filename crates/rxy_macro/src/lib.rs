@@ -7,6 +7,17 @@ mod into_view;
 
 mod force_dynamic_view;
 mod ident_count;
+mod all_tuples;
+
+#[proc_macro]
+pub fn all_tuples(input: TokenStream) -> TokenStream {
+    all_tuples::all_tuples(input)
+}
+
+#[proc_macro]
+pub fn all_tuples_with_size(input: TokenStream) -> TokenStream {
+    all_tuples::all_tuples_with_size(input)
+}
 
 fn impl_into_prop_value_wrapper(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
@@ -52,3 +63,4 @@ pub fn impl_into_view(input: TokenStream) -> TokenStream {
 pub fn into_view(input: TokenStream) -> TokenStream {
     into_view::into_view(input)
 }
+

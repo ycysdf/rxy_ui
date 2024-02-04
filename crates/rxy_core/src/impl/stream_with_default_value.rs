@@ -1,5 +1,5 @@
 /* use crate::{mutable_view_rebuild, IntoView, MutableView, Renderer, RendererNodeId, View, ViewCtx, ViewReBuilder, stream};
-use bevy_utils::futures::now_or_never;
+use use crate::utils::SyncCell;::futures::now_or_never;
 use futures_lite::{Stream, StreamExt};
 
 pub struct StreamWithDefaultValue<S>

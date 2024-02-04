@@ -1,6 +1,6 @@
 use core::fmt::Debug;
 
-use bevy_utils::all_tuples;
+use crate::utils::all_tuples;
 
 use crate::{MaybeFromReflect, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, NodeTree, Renderer, RendererNodeId, RendererWorld, ViewCtx};
 

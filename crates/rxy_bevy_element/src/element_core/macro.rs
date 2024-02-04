@@ -30,7 +30,7 @@ macro_rules! define_elements {
      )*
    ) => {
 
-      impl $crate::BevyDioxusAppExt for bevy_app::App{
+      impl $crate::RxyBevyAppExt for bevy_app::App{
          fn register_elements_type(&mut self)-> &mut Self{
             self
                 $(

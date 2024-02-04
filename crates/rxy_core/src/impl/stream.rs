@@ -2,7 +2,7 @@ use core::any::TypeId;
 use core::pin::pin;
 
 use crate::renderer::DeferredNodeTreeScoped;
-use bevy_utils::futures::now_or_never;
+use crate::utils::now_or_never;
 use futures_lite::{Stream, StreamExt};
 
 use crate::{build_info::{node_build_status, node_build_times_increment}, into_view, mutable_view_rebuild, Either, IntoView, MutableView, NodeTree, Renderer, RendererNodeId, TaskState, ToIntoView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberExt, ViewMemberIndex, MaybeSend};

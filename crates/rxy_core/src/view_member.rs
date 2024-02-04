@@ -1,5 +1,5 @@
-use bevy_utils::synccell::SyncCell;
-use bevy_utils::{all_tuples, HashMap};
+use crate::utils::SyncCell;
+use crate::utils::{all_tuples, HashMap};
 
 use crate::build_info::BuildStatus;
 use crate::{MaybeSend, NodeTree, Renderer, ViewMemberCtx, ViewMemberIndex};

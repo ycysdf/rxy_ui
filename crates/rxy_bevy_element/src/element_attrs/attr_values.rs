@@ -575,64 +575,6 @@ impl MyFromStr for TextAlignment {
     }
 }
 
-impl AttrValue for UiOptionalRect {
-    fn clone_att_value(&self) -> SmallBox<dyn AttrValue, S1> {
-        smallbox!(*self)
-    }
-    fn default_value() -> Self {
-        <Self as Default>::default()
-    }
-
-    fn merge_value(&mut self, value: Self) {
-        self.left = self.left.or(value.left);
-        self.right = self.right.or(value.right);
-        self.top = self.top.or(value.top);
-        self.bottom = self.bottom.or(value.bottom);
-    }
-
-    fn eq(&self, other: &Self) -> bool {
-        self == other
-    }
-}
-
-impl AttrValue for OptionalOverflow {
-    fn clone_att_value(&self) -> SmallBox<dyn AttrValue, S1> {
-        smallbox!(*self)
-    }
-    fn default_value() -> Self {
-        <Self as Default>::default()
-    }
-
-    fn merge_value(&mut self, value: Self) {
-        self.x = self.x.or(value.x);
-        self.y = self.y.or(value.y);
-    }
-
-    fn eq(&self, other: &Self) -> bool {
-        self == other
-    }
-}
-
-impl AttrValue for OptionalTransform {
-    fn clone_att_value(&self) -> SmallBox<dyn AttrValue, S1> {
-        smallbox!(*self)
-    }
-
-    fn default_value() -> Self {
-        <Self as Default>::default()
-    }
-
-    fn merge_value(&mut self, value: Self) {
-        self.translation = self.translation.or(value.translation);
-        self.rotation = self.rotation.or(value.rotation);
-        self.scale = self.scale.or(value.scale);
-    }
-
-    fn eq(&self, other: &Self) -> bool {
-        self == other
-    }
-}
-
 impl AttrValue for ZIndex {
     fn clone_att_value(&self) -> SmallBox<dyn AttrValue, S1> {
         smallbox!(*self)

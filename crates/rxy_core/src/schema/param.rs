@@ -1,7 +1,7 @@
 use crate::r#static::Static;
 use crate::{rebuild_fn, rebuild_fn_channel, ConstIndex, InnerSchemaCtx, MaybeReflect, ReBuildFn, RebuildFnReceiver, ReceiverPropState, Renderer, MaybeSend};
 use alloc::boxed::Box;
-use bevy_utils::all_tuples;
+use crate::utils::all_tuples;
 use core::any::TypeId;
 
 pub trait SchemaParam<R>: MaybeSend + 'static

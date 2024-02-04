@@ -5,7 +5,7 @@ use crate::diff::diff;
 use crate::{virtual_container, Either, EitherExt, IntoView, MutableView, MutableViewKey, NodeTree, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, VirtualContainer, MaybeSend};
 use alloc::borrow::Cow;
 use async_channel::{Receiver, Recv, RecvError, Sender, TryRecvError};
-use bevy_utils::synccell::SyncCell;
+use crate::utils::SyncCell;
 use core::fmt::Debug;
 use core::future::Future;
 use core::hash::{Hash, Hasher};

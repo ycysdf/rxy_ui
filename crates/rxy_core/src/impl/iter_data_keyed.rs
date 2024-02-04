@@ -5,7 +5,7 @@ use core::{
     marker::PhantomData,
 };
 
-use bevy_utils::AHasher;
+use crate::utils::AHasher;
 use drain_filter_polyfill::VecExt as VecDrainFilterExt;
 use indexmap::IndexSet;
 

@@ -1,7 +1,7 @@
 use crate::{ConstIndex, MaybeSend, NodeTree, PropState, Renderer, RendererNodeId, RendererWorld};
 use alloc::boxed::Box;
-use bevy_utils::synccell::SyncCell;
-use bevy_utils::HashMap;
+use crate::utils::SyncCell;
+use crate::utils::HashMap;
 use core::any::TypeId;
 
 pub struct TypeIdHashMapState<S: MaybeSend + 'static>(pub SyncCell<HashMap<TypeId, S>>);

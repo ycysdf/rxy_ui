@@ -1,4 +1,4 @@
-use bevy_utils::all_tuples;
+use crate::utils::all_tuples;
 use crate::MaybeSend;
 
 pub trait SchemaFn<P>: MaybeSend + 'static {

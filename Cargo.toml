@@ -38,7 +38,7 @@ style_sheet = ["rxy_style", "rxy_style_macro", "rxy_bevy_style"]
 signal = ["xy_reactive", "rxy_core/xy_reactive", "rxy_bevy?/xy_reactive"]
 bevy = [
     "std", "rxy_bevy", "rxy_bevy_element", "bevy_mod_picking", "rxy_bevy_macro", "style_sheet", "tailwind_aliases",
-    "xy_reactive?/bevy"
+    "xy_reactive?/bevy", "rxy_core/bevy"
 ]
 
 [workspace]
@@ -56,6 +56,7 @@ rxy_style = { path = "crates/rxy_style", default-features = false }
 rxy_style_macro = { path = "crates/rxy_style_macro" }
 xy_reactive = { path = "crates/xy_reactive", default-features = false }
 rxy_web_dom = { path = "crates/rxy_web_dom", default-features = false }
+rxy_element = { path = "crates/rxy_element", default-features = false }
 
 #rxy_web_dom = { path = "crates/rxy_web_dom" }
 

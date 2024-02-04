@@ -14,10 +14,7 @@ use bevy_ecs::prelude::World;
 use bevy_hierarchy::DespawnRecursiveExt;
 use bevy_reflect::Reflect;
 use bevy_tasks::Task;
-use rxy_core::{
-    DeferredNodeTreeScoped, NodeTree, Renderer, RendererNodeId, RendererWorld,
-    ViewKey,
-};
+use rxy_core::{DeferredNodeTreeScoped, NodeTree, Renderer, RendererElementType, RendererNodeId, RendererWorld, ViewKey};
 
 use crate::CmdSender;
 

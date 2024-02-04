@@ -1,4 +1,3 @@
-use bevy_ecs::component::ComponentInfo;
 use bevy_ecs::prelude::*;
 use bevy_reflect::prelude::*;
 

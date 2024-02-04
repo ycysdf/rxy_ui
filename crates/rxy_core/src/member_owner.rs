@@ -1,5 +1,5 @@
 use crate::{MaybeSend, Renderer, ViewMember};
-use bevy_utils::all_tuples;
+use crate::utils::all_tuples;
 /*
 pub trait MemberOwner<R>
 where

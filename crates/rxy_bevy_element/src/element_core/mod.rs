@@ -7,6 +7,6 @@ mod element_type;
 mod element_unit_attr;
 mod r#macro;
 
-pub trait BevyDioxusAppExt {
+pub trait RxyBevyAppExt {
     fn register_elements_type(&mut self) -> &mut Self;
 }

@@ -10,9 +10,11 @@ rxy_macro.workspace = true
 xy_reactive = { workspace = true, optional = true }
 bevy_reflect = { workspace = true, optional = true }
 pin-project = { workspace = true, optional = true }
-bevy_utils.workspace = true
 
 ahash.workspace = true
+hashbrown.workspace = true
+bevy_utils = { workspace = true, optional = true }
+
 async-channel = { workspace = true, optional = true }
 hooked_collection = { workspace = true, optional = true }
 drain_filter_polyfill.workspace = true
@@ -30,6 +32,7 @@ paste.workspace = true
 default = ["std", "view_erasure", "async-channel", "either_future", "send_sync"]
 send_sync = []
 std = []
+bevy = ["std", "send_sync", "bevy_utils"]
 view_erasure = []
 xy_reactive = ["dep:xy_reactive", "send_sync"]
 bevy_reflect = ["dep:bevy_reflect", "std", "send_sync"]

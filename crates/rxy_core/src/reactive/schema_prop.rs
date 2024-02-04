@@ -1,7 +1,6 @@
 use crate::{scheme_state_scoped, BoxedPropValue, IntoSchemaProp, PropHashMap, PropState, Reactive, ReactiveDisposerState, Renderer, SchemaProp, SchemaPropCtx, MaybeSend, MaybeSync};
 use crate::{DeferredNodeTreeScoped, NodeTree};
 use alloc::boxed::Box;
-use bevy_utils::tracing::error;
 use core::any::Any;
 use core::marker::PhantomData;
 use xy_reactive::prelude::{
@@ -30,7 +29,8 @@ where
                 &state_node_id,
                 |world, schema_state: &mut PropHashMap<R>| {
                     let Some(state) = schema_state.get_mut(&prop_type_id) else {
-                        error!("prop not found by index!");
+                        // todo: tracing
+                        // error!("prop not found by index!");
                         return;
                     };
                     state.apply(Box::new(value), &mut *world);
@@ -38,7 +38,8 @@ where
             )
             .is_none();
             if is_no_found {
-                error!("not found schema prop_map");
+                // todo: tracing
+                // error!("not found schema prop_map");
             }
         });
     });

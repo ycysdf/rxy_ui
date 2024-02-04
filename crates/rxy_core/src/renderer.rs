@@ -1,5 +1,5 @@
+use crate::utils::SyncCell;
 use alloc::borrow::Cow;
-use bevy_utils::synccell::SyncCell;
 use core::fmt::Debug;
 use core::future::Future;
 

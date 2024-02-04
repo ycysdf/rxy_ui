@@ -42,10 +42,8 @@ pub type CloneableSlot = CloneableSchemaSlot<BevyRenderer>;
 
 pub mod prelude {
     pub use bevy_ui::prelude::Val;
-    pub use crate::renderer::BevyElement;
-    pub use crate::renderer::button;
-    pub use crate::renderer::div;
-    pub use crate::renderer::span;
+
+    pub use crate::renderer::{BevyElement, button, div, span};
 
     pub use super::{
         BevyRenderer, BevyWrapper, CloneableSlot, CmdReceiver, CmdSender, CommonAttrsViewBuilder,

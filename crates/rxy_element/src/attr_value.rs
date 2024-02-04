@@ -1,31 +1,27 @@
-use std::borrow::Cow;
-use std::fmt::Debug;
-use std::ops::Deref;
+use alloc::borrow::Cow;
+use core::fmt::Debug;
+use core::ops::Deref;
 
-use bevy_reflect::prelude::*;
-use bevy_reflect::{FromReflect, TypePath};
-use bevy_ui::Val;
+use rxy_core::{MaybeFromReflect, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath};
 
 use crate::smallbox;
 use crate::smallbox::S1;
 use crate::SmallBox;
 
-pub trait AttrValue: Reflect + Send + Sync + 'static // where Option<Self>: From<DomAttributeValue>
+pub trait AttrValue: MaybeReflect + MaybeSend + MaybeSync + Debug + 'static
+// where Option<Self>: From<DomAttributeValue>
 {
     fn clone_att_value(&self) -> SmallBox<dyn AttrValue, S1>;
     fn default_value() -> Self
     where
         Self: Sized;
 
+    #[cfg(not(feature = "bevy_reflect"))]
+    fn as_any(&self) -> &dyn core::any::Any;
+
     fn eq(&self, other: &Self) -> bool
     where
         Self: Sized;
-}
-
-impl Debug for dyn AttrValue {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.debug(f)
-    }
 }
 
 impl Clone for SmallBox<dyn AttrValue, S1> {
@@ -64,6 +60,11 @@ macro_rules! impl_default_attr_value {
             fn eq(&self, other: &Self) -> bool {
                 *self == *other
             }
+
+            #[cfg(not(feature = "bevy_reflect"))]
+            fn as_any(&self) -> &dyn core::any::Any {
+                self
+            }
         }
     };
 }
@@ -83,14 +84,44 @@ impl_default_attr_values! {
     bool,
     usize,
     isize,
-    String
+    alloc::string::String
 }
 
+#[cfg(feature = "bevy_ui")]
 impl_default_attr_values! {
-    Val
+    bevy_ui::prelude::Val
 }
 
-impl<T: AttrValue + TypePath + FromReflect + Clone + PartialEq> AttrValue for Option<T> {
+impl<T> AttrValue for Option<T>
+where
+    T: AttrValue + Clone + PartialEq + MaybeTypePath + MaybeFromReflect,
+{
+    fn clone_att_value(&self) -> SmallBox<dyn AttrValue, S1> {
+        smallbox!(self.clone())
+    }
+
+    fn default_value() -> Self
+    where
+        Self: Sized,
+    {
+        <Self as Default>::default()
+    }
+
+    #[cfg(not(feature = "bevy_reflect"))]
+    fn as_any(&self) -> &dyn core::any::Any {
+        self
+    }
+
+    fn eq(&self, other: &Self) -> bool {
+        self == other
+    }
+}
+
+#[cfg(feature = "bevy_asset")]
+impl<T> AttrValue for bevy_asset::Handle<T>
+where
+    T: bevy_asset::Asset,
+{
     fn clone_att_value(&self) -> SmallBox<dyn AttrValue, S1> {
         smallbox!(self.clone())
     }
@@ -105,23 +136,10 @@ impl<T: AttrValue + TypePath + FromReflect + Clone + PartialEq> AttrValue for Op
     fn eq(&self, other: &Self) -> bool {
         self == other
     }
-}
 
-// #[cfg(feature = "bevy_asset")]
-impl<T: bevy_asset::Asset> AttrValue for bevy_asset::Handle<T> {
-    fn clone_att_value(&self) -> SmallBox<dyn AttrValue, S1> {
-        smallbox!(self.clone())
-    }
-
-    fn default_value() -> Self
-    where
-        Self: Sized,
-    {
-        <Self as Default>::default()
-    }
-
-    fn eq(&self, other: &Self) -> bool {
-        self == other
+    #[cfg(not(feature = "bevy_reflect"))]
+    fn as_any(&self) -> &dyn core::any::Any {
+        self
     }
 }
 
@@ -139,5 +157,10 @@ impl AttrValue for Cow<'static, str> {
 
     fn eq(&self, other: &Self) -> bool {
         self == other
+    }
+
+    #[cfg(not(feature = "bevy_reflect"))]
+    fn as_any(&self) -> &dyn core::any::Any {
+        self
     }
 }

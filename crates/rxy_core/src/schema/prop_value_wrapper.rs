@@ -5,7 +5,7 @@ use alloc::string::String;
 use core::any::Any;
 use crate::{IntoSchemaProp, MaybeSend, Renderer, SchemaPropValue};
 use alloc::borrow::Cow;
-use bevy_utils::all_tuples;
+use crate::utils::all_tuples;
 
 pub struct IntoSchemaPropValueWrapper<T>(pub T);
 

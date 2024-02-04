@@ -1,6 +1,6 @@
 use alloc::boxed::Box;
 
-use bevy_utils::all_tuples;
+use crate::utils::all_tuples;
 
 use crate::{
     IntoView, MaybeSend, Renderer, RendererNodeId, target_rebuild_fn_channel, View, ViewCtx,

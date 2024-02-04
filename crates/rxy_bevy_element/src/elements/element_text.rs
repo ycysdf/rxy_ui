@@ -1,11 +1,9 @@
 #![allow(non_upper_case_globals)]
 #![allow(non_camel_case_types)]
 
-use std::any::TypeId;
 
-use bevy_ecs::component::ComponentInfo;
 use bevy_ecs::prelude::*;
-use bevy_text::{Text, TextLayoutInfo};
+use bevy_text::Text;
 use bevy_ui::prelude::TextBundle;
 
 use crate::all_attrs;

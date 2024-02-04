@@ -1,6 +1,6 @@
 // Much of the code was copied from https://github.com/gbj/tachys/blob/main/tachydom/src/view/keyed.rs
 
-use ahash::AHasher;
+use crate::utils::AHasher;
 use alloc::vec;
 use alloc::vec::Vec;
 use core::clone::Clone;

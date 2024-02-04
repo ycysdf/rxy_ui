@@ -8,7 +8,7 @@ use bevy_ui::widget::TextFlags;
 use bevy_ui::Style;
 
 use rxy_bevy_element::attr_values::BevyAppAttrValueRegistryExt;
-use rxy_bevy_element::BevyDioxusAppExt;
+use rxy_bevy_element::RxyBevyAppExt;
 
 use crate::{handle_schedule_event, CommandChannelPlugin, FocusablePlugin, ScheduleSystemAdds};
 

@@ -1,6 +1,6 @@
 use alloc::boxed::Box;
 
-use bevy_utils::synccell::SyncCell;
+use crate::utils::SyncCell;
 
 use crate::{MaybeSend, rebuild_fn, RebuildFn, RebuildFnReceiver, Renderer};
 
@@ -50,7 +50,7 @@ where
 {
     let (sender, receiver) = oneshot::channel();
     let mut receiver = SyncCell::new(receiver);
-    let mut cell = once_cell::sync::OnceCell::new();
+    let mut cell = core::cell::OnceCell::new();
 
     // let mut once_lock = core::sync::OnceLock::new();
     let build_fn = ReBuildFn::new(move |world, n| {
