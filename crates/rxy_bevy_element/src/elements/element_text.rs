@@ -17,24 +17,6 @@ impl ElementType for text {
     fn update_entity(entity_mut: &mut EntityWorldMut) {
         entity_mut.insert(TextBundle::default());
     }
-
-    fn try_insert_no_reflect_components(
-        _entity_mut: &mut EntityWorldMut,
-        _template_world: &World,
-        _template_entity: Entity,
-        _type_registry: AppTypeRegistry,
-        _component_info: &ComponentInfo,
-    ) -> bool {
-        let type_id = ComponentInfo::type_id(_component_info).unwrap();
-
-        match type_id {
-            n if n == TypeId::of::<TextLayoutInfo>() => {
-                _entity_mut.insert(TextLayoutInfo::default());
-            }
-            _ => return false,
-        }
-        true
-    }
 }
 
 impl TextStyledElementType for text {

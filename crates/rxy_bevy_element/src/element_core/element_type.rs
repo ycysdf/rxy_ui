@@ -22,14 +22,6 @@ pub trait ElementTypeUnTyped: Reflect {
         unreachable!();
     }
     fn spawn(&self, entity_mut: &mut EntityWorldMut);
-    fn try_insert_no_reflect_components(
-        &self,
-        entity_mut: &mut EntityWorldMut,
-        template_world: &World,
-        template_entity: Entity,
-        type_registry: AppTypeRegistry,
-        component_info: &ComponentInfo,
-    ) -> bool;
 }
 
 impl<T: ElementTypeBase + ElementType> ElementTypeUnTyped for T {
@@ -51,24 +43,6 @@ impl<T: ElementTypeBase + ElementType> ElementTypeUnTyped for T {
     #[inline]
     fn spawn<'w>(&self, entity_mut: &mut EntityWorldMut) {
         T::update_entity(entity_mut)
-    }
-
-    #[inline]
-    fn try_insert_no_reflect_components(
-        &self,
-        entity_mut: &mut EntityWorldMut,
-        template_world: &World,
-        template_entity: Entity,
-        type_registry: AppTypeRegistry,
-        component_info: &ComponentInfo,
-    ) -> bool {
-        T::try_insert_no_reflect_components(
-            entity_mut,
-            template_world,
-            template_entity,
-            type_registry,
-            component_info,
-        )
     }
 }
 
@@ -95,14 +69,4 @@ pub trait ElementTypeBase: Reflect + FromReflect + TypePath {
 
 pub trait ElementType: ElementTypeBase {
     fn update_entity(entity_mut: &mut EntityWorldMut);
-    #[inline]
-    fn try_insert_no_reflect_components(
-        _entity_mut: &mut EntityWorldMut,
-        _template_world: &World,
-        _template_entity: Entity,
-        _type_registry: AppTypeRegistry,
-        _component_info: &ComponentInfo,
-    ) -> bool {
-        false
-    }
 }
