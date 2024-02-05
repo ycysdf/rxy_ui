@@ -1,6 +1,6 @@
 use bevy_ecs::bundle::Bundle;
 
-use rxy_core::{MemberOwner, ViewMember, ViewMemberCtx, ViewMemberIndex};
+use rxy_core::{IntoViewMember, MemberOwner, ViewMember, ViewMemberCtx, ViewMemberIndex};
 
 use crate::BevyRenderer;
 
@@ -8,6 +8,15 @@ pub struct XBundle<T: Bundle>(pub T);
 
 pub fn x_bundle<T: Bundle>(bundle: T) -> XBundle<T> {
     XBundle(bundle)
+}
+
+impl<T> IntoViewMember<BevyRenderer, Self> for XBundle<T>
+where
+    T: Bundle,
+{
+    fn into_member(self) -> Self {
+        self
+    }
 }
 
 impl<T> ViewMember<BevyRenderer> for XBundle<T>

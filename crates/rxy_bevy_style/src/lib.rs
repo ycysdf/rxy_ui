@@ -28,7 +28,7 @@ pub use crate::tailwind_attrs::TailwindAttrs;
 pub use crate::attr_iter::EntityStyleAttrInfoIterArgs;
 pub(crate) use crate::attr_iter::StateOwner;
 pub use crate::element_view_ext::ElementStyleExt;
-pub use crate::into_view_member::IntoViewMemberWithOrigin;
+pub use crate::into_view_member::ViewMemberWithOrigin;
 pub use crate::plugin::{
     AppliedStyleSheet, Previous, RxyStyleSheetPlugin, StyleItemValue,
     StyleSheetsInfo,
@@ -53,6 +53,8 @@ pub use rxy_style_macro;
 pub mod prelude {
     pub use super::{
         res, rxy_style_macro::TypedStyle, ElementStyleExt, RxyStyleSheetPlugin, SchemaCtxExt,
-        StyleError, StyleSheets, TailwindAttrs, TypedStyleLabel,
+        StyleError, StyleSheets, TypedStyleLabel,
     };
+    #[cfg(feature = "tailwind_aliases")]
+    pub use super::TailwindAttrs;
 }

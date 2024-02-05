@@ -7,7 +7,6 @@ version = "0.1.0"
 
 [dependencies]
 rxy_bevy.workspace = true
-rxy_bevy_element.workspace = true
 rxy_core.workspace = true
 rxy_style.workspace = true
 rxy_bevy_macro.workspace = true

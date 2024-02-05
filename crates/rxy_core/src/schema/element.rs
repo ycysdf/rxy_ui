@@ -1,7 +1,7 @@
 use rxy_macro::IntoView;
 
 use crate::schema::view::SchemaView;
-use crate::{ConstIndex, ElementSoloView, ElementView, IntoCloneableView, IntoSchemaProp, IntoView, MaybeSend, MemberOwner, Renderer, RendererNodeId, Schema, SchemaProps, SoloView, View, ViewCtx, ViewKeyOrDataNodeId, ViewMember, ViewMemberCtx};
+use crate::{ConstIndex, ElementSoloView, ElementView, IntoCloneableView, IntoSchemaProp, IntoView, IntoViewMember, MaybeSend, MemberOwner, Renderer, RendererNodeId, Schema, SchemaProps, SoloView, View, ViewCtx, ViewKeyOrDataNodeId, ViewMember, ViewMemberCtx};
 
 #[derive(IntoView)]
 pub struct ElementSchemaView<R, U, VM = (), P = (), M = ()>
@@ -187,22 +187,22 @@ impl<R, VM, U, P, M> MemberOwner<R> for ElementSchemaView<R, U, VM, P, M>
     type SetMembers<Members: ViewMember<R> + MemberOwner<R>> =
     ElementSchemaView<R, U, Members, P, M>;
 
-    fn member<T>(self, member: T) -> Self::AddMember<T>
+    fn member<T>(self, member: impl IntoViewMember<R,T>) -> Self::AddMember<T>
         where
             (VM, T): ViewMember<R>, T: ViewMember<R>
     {
         ElementSchemaView {
-            members: (self.members, member),
+            members: (self.members, member.into_member()),
             schema_view: self.schema_view,
         }
     }
 
-    fn members<T>(self, members: T) -> Self::SetMembers<(T, )>
+    fn members<T>(self, members: impl IntoViewMember<R,T>) -> Self::SetMembers<(T, )>
         where
             T: ViewMember<R>,
     {
         ElementSchemaView {
-            members: (members, ),
+            members: (members.into_member(), ),
             schema_view: self.schema_view,
         }
     }

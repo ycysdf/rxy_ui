@@ -83,7 +83,7 @@ impl ElementAttr for z_index {
 pub struct bg_color;
 
 impl ElementAttr for bg_color {
-    type Value = BackgroundColor;
+    type Value = Color;
 
     const NAME: &'static str = stringify!(bg_color);
 
@@ -93,7 +93,7 @@ impl ElementAttr for bg_color {
 
     fn set_value(context: &mut SetAttrValueContext, value: impl Into<Self::Value>) {
         if let Some(mut bc) = context.entity_mut.get_mut::<BackgroundColor>() {
-            *bc = value.into();
+            *bc = BackgroundColor(value.into());
         }
         // let entity = context.entity_mut.id();
         // context.commands.add(move |world| {
@@ -218,7 +218,7 @@ impl ElementAttr for border_bottom {
 pub struct border_color;
 
 impl ElementAttr for border_color {
-    type Value = BorderColor;
+    type Value = Color;
 
     const NAME: &'static str = stringify!(border_color);
 
@@ -228,7 +228,7 @@ impl ElementAttr for border_color {
 
     fn set_value(context: &mut SetAttrValueContext, value: impl Into<Self::Value>) {
         if let Some(mut br) = context.entity_mut.get_mut::<BorderColor>() {
-            *br = value.into();
+            *br = BorderColor(value.into());
         }
         // context.entity_mut.insert(value.into());
     }

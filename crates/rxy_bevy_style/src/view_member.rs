@@ -10,10 +10,11 @@ use crate::{
 };
 use bevy_ecs::prelude::{EntityWorldMut, World};
 use bevy_ui::Interaction;
-use rxy_bevy::{BevyRenderer, RendererState};
-use rxy_bevy::EntityWorldMutExt;
-use rxy_bevy_element::{ElementEntityExtraData, ElementEntityWorldMutExt, view_element_type};
-use rxy_core::{ViewMember, ViewMemberCtx, ViewMemberIndex};
+use rxy_bevy::{
+    view_element_type, BevyRenderer, ElementEntityExtraData, ElementEntityWorldMutExt,
+    EntityWorldMutExt, RendererState,
+};
+use rxy_core::{IntoViewMember, ViewMember, ViewMemberCtx, ViewMemberIndex};
 use rxy_style::{
     NodeInterStyleAttrInfos, NodeStyleAttrInfos, NodeStyleSheetId, StyleAttrId, StyleSheetCtx,
     StyleSheetIndex, StyleSheetLocation,
@@ -48,6 +49,15 @@ impl ApplyStyleSheetsMemberState {
 }
 
 pub struct ApplyStyleSheets<T>(pub T);
+
+impl<T> IntoViewMember<BevyRenderer, Self> for ApplyStyleSheets<T>
+where
+    T: StyleSheets<BevyRenderer>,
+{
+    fn into_member(self) -> Self {
+        self
+    }
+}
 
 impl<T> ViewMember<BevyRenderer> for ApplyStyleSheets<T>
 where
@@ -178,10 +188,12 @@ where
                 },
             )??;
 
-            for key in reset_keys.iter().cloned() {
-                let attr = view_element_type().attr_by_index(key as _);
-                attr.init_or_set(&mut entity_world_mut, None);
-            }
+            entity_world_mut.world_scope(|world: &mut World| {
+                for key in reset_keys.iter().cloned() {
+                    let attr = view_element_type().attr_by_index(key as _);
+                    attr.set_value(world, entity, None);
+                }
+            });
 
             EntityStyleAttrInfoIterArgs {
                 iter_normal_style_sheet: true,

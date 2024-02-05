@@ -1,9 +1,10 @@
-use crate::utils::SyncCell;
+use crate::utils::{HashMap, SyncCell};
 use alloc::borrow::Cow;
 use core::fmt::Debug;
 use core::future::Future;
 
-use crate::{MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, RendererElementType, ViewKey};
+use crate::element::{AttrIndex, ElementAttr};
+use crate::{ElementType, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, ViewKey};
 
 pub type RendererNodeId<R> = <R as Renderer>::NodeId;
 pub type RendererWorld<R> = <R as Renderer>::NodeTree;
@@ -19,6 +20,34 @@ pub struct ViewMemberCtx<'a, R: Renderer> {
     pub index: ViewMemberIndex,
     pub world: &'a mut RendererWorld<R>,
     pub node_id: RendererNodeId<R>,
+}
+
+pub struct MemberHashMapState<S: MaybeSend + 'static>(pub SyncCell<HashMap<ViewMemberIndex, S>>);
+
+impl<'a, R: Renderer> ViewMemberCtx<'a, R> {
+    pub fn indexed_view_member_state_mut<S: MaybeSend + 'static>(&mut self) -> Option<&mut S> {
+        self.world
+            .get_node_state_mut::<MemberHashMapState<S>>(&self.node_id)
+            .and_then(|s| s.0.get().get_mut(&self.index))
+    }
+    pub fn take_indexed_view_member_state<S: MaybeSend + 'static>(&mut self) -> Option<S> {
+        self.world
+            .get_node_state_mut::<MemberHashMapState<S>>(&self.node_id)
+            .and_then(|s| s.0.get().remove(&self.index))
+    }
+    pub fn set_indexed_view_member_state<S: MaybeSend + 'static>(&mut self, state: S) {
+        if let Some(map) = self
+            .world
+            .get_node_state_mut::<MemberHashMapState<S>>(&self.node_id)
+        {
+            map.0.get().insert(self.index, state);
+        } else {
+            let mut map = HashMap::default();
+            map.insert(self.index, state);
+            self.world
+                .set_node_state(&self.node_id, MemberHashMapState(SyncCell::new(map)));
+        }
+    }
 }
 
 pub trait DeferredNodeTreeScoped<R>: Clone + MaybeSend + MaybeSync + Sized + 'static
@@ -45,6 +74,16 @@ pub trait NodeTree<R>
 where
     R: Renderer<NodeTree = Self>,
 {
+    fn prepare_set_attr_and_get_is_init(
+        &mut self,
+        node_id: &RendererNodeId<R>,
+        attr_index: AttrIndex,
+    ) -> bool;
+
+    fn build_attr<A: ElementAttr<R>>(&mut self, node_id: RendererNodeId<R>, value: A::Value);
+    fn rebuild_attr<A: ElementAttr<R>>(&mut self, node_id: RendererNodeId<R>, value: A::Value);
+    fn unbuild_attr<A: ElementAttr<R>>(&mut self, node_id: RendererNodeId<R>);
+
     fn deferred_world_scoped(&mut self) -> impl DeferredNodeTreeScoped<R>;
     fn get_node_state_mut<S: MaybeSend + MaybeSync + 'static>(
         &mut self,
@@ -88,9 +127,9 @@ where
 
     fn spawn_data_node(&mut self) -> RendererNodeId<R>;
 
-    fn spawn_node<E: RendererElementType<R>>(
+    fn spawn_node<E: ElementType<R>>(
         &mut self,
-        parent: Option<RendererNodeId<R>>,
+        parent: Option<&RendererNodeId<R>>,
         reserve_node_id: Option<RendererNodeId<R>>,
     ) -> RendererNodeId<R> {
         E::spawn(self, parent, reserve_node_id)

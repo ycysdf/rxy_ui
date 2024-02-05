@@ -12,19 +12,17 @@ use bevy_ecs::{
     system::SystemId,
 };
 use bevy_input::{
-    gamepad::GamepadButton, Input, InputSystem, keyboard::KeyCode, mouse::MouseButton,
+    gamepad::GamepadButton, keyboard::KeyCode, mouse::MouseButton, Input, InputSystem,
 };
 use bevy_mod_picking::prelude::*;
 use bevy_reflect::Reflect;
 use bevy_utils::tracing::error;
 use bevy_utils::{all_tuples, EntityHashMap, HashMap};
-use rxy_core::{
-    NodeTree
-    , RendererNodeId, RendererWorld,
-};
 
-use crate::{add_system, BevyRenderer, FocusedEntity};
+use rxy_core::{NodeTree, RendererNodeId, RendererWorld};
+
 use crate::world_ext::EntityWorldMutExt;
+use crate::{add_system, BevyRenderer, FocusedEntity};
 
 fn add_focus_event<T>(
     world: &mut RendererWorld<BevyRenderer>,
@@ -645,7 +643,6 @@ macro_rules! impl_element_evet_id_iterator_for_tuples {
 
 all_tuples!(impl_element_evet_id_iterator_for_tuples, 0, 4, T);
 
-
 macro_rules! impl_element_pointer_events_members {
     ($($name:ident = $event_type:ty;)*) => {
         $(
@@ -691,11 +688,6 @@ impl_element_pointer_events_members!(
     PointerDrop = Pointer<Drop>;
 );
 
-
-
-
-
-
 pub fn x_trigger_way(
     trigger_way: FocusInputTriggerWay,
     events: impl FocusInputEventIterator,
@@ -709,9 +701,11 @@ pub fn x_trigger_way(
 pub fn x_just_pressed(events: impl FocusInputEventIterator) -> impl ElementEventIds {
     x_trigger_way(FocusInputTriggerWay::JustPressed, events)
 }
+
 pub fn x_just_released(events: impl FocusInputEventIterator) -> impl ElementEventIds {
     x_trigger_way(FocusInputTriggerWay::JustReleased, events)
 }
+
 pub fn x_pressed(events: impl FocusInputEventIterator) -> impl ElementEventIds {
     x_trigger_way(FocusInputTriggerWay::Pressed, events)
 }
@@ -723,9 +717,11 @@ pub fn x_pointer_over() -> BubblePointerEvent {
 pub fn x_pointer_out() -> BubblePointerEvent {
     BubblePointerEvent::Out
 }
+
 pub fn x_pointer_down() -> BubblePointerEvent {
     BubblePointerEvent::Down(None)
 }
+
 pub fn x_pointer_up() -> BubblePointerEvent {
     BubblePointerEvent::Up(None)
 }
@@ -737,24 +733,31 @@ pub fn x_pointer_click() -> BubblePointerEvent {
 pub fn x_pointer_move() -> BubblePointerEvent {
     BubblePointerEvent::Move
 }
+
 pub fn x_pointer_drag_start() -> BubblePointerEvent {
     BubblePointerEvent::DragStart(None)
 }
+
 pub fn x_pointer_drag() -> BubblePointerEvent {
     BubblePointerEvent::Drag(None)
 }
+
 pub fn x_pointer_drag_end() -> BubblePointerEvent {
     BubblePointerEvent::DragEnd(None)
 }
+
 pub fn x_pointer_drag_enter() -> BubblePointerEvent {
     BubblePointerEvent::DragEnter(None)
 }
+
 pub fn x_pointer_drag_over() -> BubblePointerEvent {
     BubblePointerEvent::DragOver(None)
 }
+
 pub fn x_pointer_drag_leave() -> BubblePointerEvent {
     BubblePointerEvent::DragLeave(None)
 }
+
 pub fn x_pointer_drop() -> BubblePointerEvent {
     BubblePointerEvent::Drop(None)
 }

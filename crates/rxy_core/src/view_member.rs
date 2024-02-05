@@ -1,8 +1,5 @@
-use crate::utils::SyncCell;
-use crate::utils::{all_tuples, HashMap};
-
-use crate::build_info::BuildStatus;
-use crate::{MaybeSend, NodeTree, Renderer, ViewMemberCtx, ViewMemberIndex};
+use crate::utils::all_tuples;
+use crate::{MaybeSend, Renderer, ViewMemberCtx, ViewMemberIndex};
 
 pub trait ViewMember<R>: MaybeSend + 'static
 where
@@ -132,61 +129,3 @@ macro_rules! impl_view_member_for_tuples {
 }
 
 all_tuples!(impl_view_member_for_tuples, 1, 12, M);
-
-pub struct MemberHashMapState<S: MaybeSend + 'static>(pub SyncCell<HashMap<ViewMemberIndex, S>>);
-
-impl<'a, R: Renderer> ViewMemberCtx<'a, R> {
-    pub fn indexed_view_member_state_mut<S: MaybeSend + 'static>(&mut self) -> Option<&mut S> {
-        self.world
-            .get_node_state_mut::<MemberHashMapState<S>>(&self.node_id)
-            .and_then(|s| s.0.get().get_mut(&self.index))
-    }
-    pub fn take_indexed_view_member_state<S: MaybeSend + 'static>(&mut self) -> Option<S> {
-        self.world
-            .get_node_state_mut::<MemberHashMapState<S>>(&self.node_id)
-            .and_then(|s| s.0.get().remove(&self.index))
-    }
-    pub fn set_indexed_view_member_state<S: MaybeSend + 'static>(&mut self, state: S) {
-        if let Some(map) = self
-            .world
-            .get_node_state_mut::<MemberHashMapState<S>>(&self.node_id)
-        {
-            map.0.get().insert(self.index, state);
-        } else {
-            let mut map = HashMap::default();
-            map.insert(self.index, state);
-            self.world
-                .set_node_state(&self.node_id, MemberHashMapState(SyncCell::new(map)));
-        }
-    }
-}
-
-pub trait ViewMemberExt<R>
-where
-    R: Renderer,
-{
-    fn build_or_rebuild_by(self, ctx: ViewMemberCtx<R>, build_status: BuildStatus);
-    #[inline]
-    fn build_or_rebuild(self, mut ctx: ViewMemberCtx<R>)
-    where
-        Self: Sized,
-    {
-        let build_status = ctx.build_times_increment();
-        self.build_or_rebuild_by(ctx, build_status);
-    }
-}
-
-impl<R, T> ViewMemberExt<R> for T
-where
-    R: Renderer,
-    T: ViewMember<R>,
-{
-    #[inline]
-    fn build_or_rebuild_by(self, ctx: ViewMemberCtx<R>, build_status: BuildStatus) {
-        if build_status.is_no_build() {
-            self.build(ctx, true);
-        } else {
-            self.rebuild(ctx);
-        }
-    }
-}

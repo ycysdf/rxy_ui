@@ -10,12 +10,17 @@ pub use prop_state::*;
 pub use prop_value_wrapper::*;
 pub use props::*;
 pub use r#fn::*;
+#[cfg(feature = "xy_reactive")]
+pub use reactive::*;
 pub use required_param::*;
 pub use schema_with_element_view_bound::*;
+pub use slot::*;
 pub use view::*;
 pub use wrapper::*;
 
 mod context;
+#[cfg(all(feature = "xy_reactive", feature = "async-channel"))]
+mod controlled_state;
 mod ctx;
 mod element;
 #[cfg(all(feature = "async-channel", feature = "std"))]
@@ -26,6 +31,8 @@ mod prop;
 mod prop_state;
 mod prop_value_wrapper;
 mod props;
+#[cfg(feature = "xy_reactive")]
+mod reactive;
 mod required_param;
 mod schema_with_element_view_bound;
 mod slot;

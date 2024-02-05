@@ -1,4 +1,7 @@
-use crate::{ElementView, IntoView, MaybeSend, MaybeSync, MemberOwner, NodeTree, Renderer, RendererNodeId, SoloView, View, ViewCtx, ViewKey, ViewMember};
+use crate::{
+    ElementView, IntoView, IntoViewMember, MaybeSend, MaybeSync, MemberOwner, NodeTree, Renderer,
+    RendererNodeId, SoloView, View, ViewCtx, ViewKey, ViewMember,
+};
 use core::marker::PhantomData;
 use rxy_macro::IntoView;
 
@@ -43,8 +46,7 @@ where
     pub fn get_context_ref<T: MaybeSend + MaybeSync + 'static>(&self) -> Option<&T> {
         let mut current_parent = self.parent.clone();
         loop {
-            if let Some(context) = self.world.get_node_state_ref::<Context<T>>(&current_parent)
-            {
+            if let Some(context) = self.world.get_node_state_ref::<Context<T>>(&current_parent) {
                 return Some(&context.0);
             }
             if let Some(parent) = self.world.get_parent(&current_parent) {
@@ -54,11 +56,13 @@ where
             }
         }
     }
-    pub fn context_scoped<T: MaybeSend + MaybeSync + 'static>(&mut self, f: impl FnOnce(&mut T)) -> bool {
+    pub fn context_scoped<T: MaybeSend + MaybeSync + 'static>(
+        &mut self,
+        f: impl FnOnce(&mut T),
+    ) -> bool {
         let mut current_parent = self.parent.clone();
         loop {
-            if let Some(mut context) = self.world.take_node_state::<Context<T>>(&current_parent)
-            {
+            if let Some(mut context) = self.world.take_node_state::<Context<T>>(&current_parent) {
                 f(&mut context.0);
                 self.world.set_node_state(&current_parent, context);
                 return true;
@@ -108,7 +112,8 @@ where
 
     fn rebuild(self, ctx: ViewCtx<R>, key: Self::Key) {
         let node_id = V::element_node_id(&key);
-        ctx.world.set_node_state::<Context<T>>(node_id, Context(self.provide_context));
+        ctx.world
+            .set_node_state::<Context<T>>(node_id, Context(self.provide_context));
         self.view.rebuild(ctx, key);
     }
 }
@@ -158,7 +163,7 @@ where
     type AddMember<VM: ViewMember<R>> = ProvideContext<R, T, V::AddMember<VM>>;
     type SetMembers<VM: ViewMember<R> + MemberOwner<R>> = ProvideContext<R, T, V::SetMembers<VM>>;
 
-    fn member<VM>(self, member: VM) -> Self::AddMember<VM>
+    fn member<VM>(self, member: impl IntoViewMember<R,VM>) -> Self::AddMember<VM>
     where
         (Self::VM, VM): ViewMember<R>,
         VM: ViewMember<R>,
@@ -170,7 +175,7 @@ where
         }
     }
 
-    fn members<VM: ViewMember<R>>(self, members: VM) -> Self::SetMembers<(VM,)>
+    fn members<VM: ViewMember<R>>(self, members: impl IntoViewMember<R,VM>) -> Self::SetMembers<(VM,)>
     where
         VM: ViewMember<R>,
     {

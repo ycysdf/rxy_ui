@@ -3,8 +3,9 @@ use std::marker::PhantomData;
 use bevy_ecs::prelude::{IntoSystem, System};
 use bevy_utils::default;
 
-use rxy_core::{IntoView, View, ViewCtx};
 use rxy_bevy_macro::BevyIntoView;
+use rxy_core::{IntoView, View, ViewCtx};
+
 use crate::BevyRenderer;
 
 #[derive(BevyIntoView)]

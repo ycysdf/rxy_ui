@@ -7,9 +7,7 @@ use derive_more::IntoIterator;
 #[allow(unused_imports)]
 #[allow(dead_code)]
 use derive_more::{Deref, DerefMut, From};
-use rxy_core::{
-    Either, EitherExt, MemberOwner, Renderer, RendererNodeId, RendererWorld, ViewMember,
-};
+use rxy_core::{Either, EitherExt, IntoViewMember, MemberOwner, Renderer, RendererNodeId, RendererWorld, ViewMember};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::hash::Hash;
@@ -134,7 +132,7 @@ where
     type AddMember<VM: ViewMember<R>> = StyleSheetOwner<T::AddMember<VM>>;
     type SetMembers<VM: ViewMember<R> + MemberOwner<R>> = StyleSheetOwner<T::SetMembers<VM>>;
 
-    fn member<VM>(self, member: VM) -> Self::AddMember<VM>
+    fn member<VM>(self, member: impl IntoViewMember<R,VM>) -> Self::AddMember<VM>
     where
         (Self::VM, VM): ViewMember<R>,
         VM: ViewMember<R>,
@@ -142,7 +140,7 @@ where
         StyleSheetOwner(self.0, self.1.member(member))
     }
 
-    fn members<VM: ViewMember<R>>(self, members: VM) -> Self::SetMembers<(VM,)>
+    fn members<VM: ViewMember<R>>(self, members: impl IntoViewMember<R,VM>) -> Self::SetMembers<(VM,)>
     where
         VM: ViewMember<R>,
     {

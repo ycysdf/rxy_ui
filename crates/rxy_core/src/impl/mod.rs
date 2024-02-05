@@ -5,8 +5,6 @@ pub use builder::*;
 pub use context::*;
 pub use dynamic::*;
 pub use either::*;
-pub use element::*;
-pub use element_children::*;
 pub use erasure::*;
 pub use future::*;
 pub use option::*;
@@ -26,8 +24,6 @@ pub use x_iter_source::*;
 mod build_configure;
 mod builder;
 mod either;
-mod element;
-mod element_children;
 mod x_if;
 mod x_iter;
 mod option;
@@ -45,3 +41,9 @@ mod context;
 mod result;
 mod future;
 // mod stream_with_default_value;
+
+
+#[cfg(feature = "xy_reactive")]
+pub use reactive::*;
+#[cfg(feature = "xy_reactive")]
+mod reactive;

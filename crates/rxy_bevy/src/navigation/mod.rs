@@ -74,13 +74,17 @@ pub(crate) fn keyboard_navigation_system(
         keyboard_input.pressed(KeyCode::ShiftLeft) || keyboard_input.pressed(KeyCode::ShiftRight);
 
     let can_focus = |entity: &&Entity| {
-        focusables.get(**entity).map_or(false, |computed_visibility| computed_visibility.get())
+        focusables
+            .get(**entity)
+            .map_or(false, |computed_visibility| computed_visibility.get())
     };
 
     let ui_nodes = &ui_stack.uinodes;
 
     // Current index of the focused entity within the ui nodes list.
-    let current_index = ui_nodes.iter().position(|&ui_node| Some(ui_node) == focus.0);
+    let current_index = ui_nodes
+        .iter()
+        .position(|&ui_node| Some(ui_node) == focus.0);
 
     let new_focus = if reverse_order {
         // Start with the entity before the current focused or at the end of the list

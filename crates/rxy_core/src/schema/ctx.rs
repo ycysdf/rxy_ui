@@ -20,7 +20,7 @@ where
     pub(crate) cloneable_slots: &'a mut HashMap<TypeId, BoxedCloneableErasureView<R>>,
     pub(crate) prop_state: &'a mut PropHashMap<R>,
     #[cfg(feature = "xy_reactive")]
-    pub(crate) effect_state: &'a mut Vec<xy_reactive::effect::ErasureEffect>,
+    pub(crate) effect_state: &'a mut alloc::vec::Vec<xy_reactive::effect::ErasureEffect>,
     pub(crate) init_values: HashMap<TypeId, BoxedPropValue>,
     pub(crate) _marker: PhantomData<U>,
 }
@@ -34,7 +34,7 @@ where
     }
 
     #[cfg(feature = "xy_reactive")]
-    pub fn effect_state(&mut self) -> &mut Vec<xy_reactive::effect::ErasureEffect> {
+    pub fn effect_state(&mut self) -> &mut alloc::vec::Vec<xy_reactive::effect::ErasureEffect> {
         self.effect_state
     }
 

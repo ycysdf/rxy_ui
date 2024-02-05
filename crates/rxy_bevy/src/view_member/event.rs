@@ -1,21 +1,35 @@
 use std::hash::Hash;
 use std::marker::PhantomData;
+
 use bevy_ecs::prelude::IntoSystem;
 use bevy_ecs::system::SystemId;
 use bevy_input::prelude::KeyCode;
 use bevy_utils::tracing::error;
-use rxy_core::{MemberOwner, ViewMember, ViewMemberCtx};
-use crate::BevyRenderer;
+
+use rxy_core::{IntoViewMember, MemberOwner, ViewMember, ViewMemberCtx};
+
 use crate::event::*;
 use crate::prelude::FocusInputEventIterator;
+use crate::BevyRenderer;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct FocusInputEventMemberState<T>(pub SystemId,pub  T);
+pub struct FocusInputEventMemberState<T>(pub SystemId, pub T);
 
 pub struct EventViewMember<T, S, M> {
     element_event_ids: T,
     system: S,
     _marker: PhantomData<M>,
+}
+
+impl<T, S, M> IntoViewMember<BevyRenderer, Self> for EventViewMember<T, S, M>
+where
+    T: ElementEventIds,
+    S: IntoSystem<(), (), M> + Send + 'static,
+    M: Send + 'static,
+{
+    fn into_member(self) -> Self {
+        self
+    }
 }
 
 impl<T, S, M> ViewMember<BevyRenderer> for EventViewMember<T, S, M>
@@ -74,10 +88,10 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         element_event_ids: T,
         system: S,
     ) -> Self::AddMember<EventViewMember<T, S, Marker>>
-        where
-            T: ElementEventIds,
-            S: IntoSystem<(), (), Marker> + Send + 'static,
-            Marker: Send + 'static,
+    where
+        T: ElementEventIds,
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
     {
         self.member(EventViewMember {
             element_event_ids,
@@ -91,10 +105,10 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         events: impl FocusInputEventIterator,
         system: S,
     ) -> Self::AddMember<EventViewMember<impl ElementEventIds, S, Marker>>
-        where
-            T: Copy + Eq + Hash + Send + Sync + 'static,
-            S: IntoSystem<(), (), Marker> + Send + 'static,
-            Marker: Send + 'static,
+    where
+        T: Copy + Eq + Hash + Send + Sync + 'static,
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
     {
         self.on(x_pressed(events), system)
     }
@@ -103,9 +117,9 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         self,
         system: S,
     ) -> Self::AddMember<EventViewMember<impl ElementEventIds, S, Marker>>
-        where
-            S: IntoSystem<(), (), Marker> + Send + 'static,
-            Marker: Send + 'static,
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
     {
         self.on_just_pressed(KeyCode::Return, system)
     }
@@ -114,9 +128,9 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         self,
         system: S,
     ) -> Self::AddMember<EventViewMember<impl ElementEventIds, S, Marker>>
-        where
-            S: IntoSystem<(), (), Marker> + Send + 'static,
-            Marker: Send + 'static,
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
     {
         self.on_just_pressed(KeyCode::Escape, system)
     }
@@ -126,9 +140,9 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         events: impl FocusInputEventIterator,
         system: S,
     ) -> Self::AddMember<EventViewMember<impl ElementEventIds, S, Marker>>
-        where
-            S: IntoSystem<(), (), Marker> + Send + 'static,
-            Marker: Send + 'static,
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
     {
         self.on(x_just_pressed(events), system)
     }
@@ -138,9 +152,9 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         events: impl FocusInputEventIterator,
         system: S,
     ) -> Self::AddMember<EventViewMember<impl ElementEventIds, S, Marker>>
-        where
-            S: IntoSystem<(), (), Marker> + Send + 'static,
-            Marker: Send + 'static,
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
     {
         self.on(x_just_released(events), system)
     }
@@ -149,9 +163,9 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         self,
         system: S,
     ) -> Self::AddMember<EventViewMember<impl ElementEventIds, S, Marker>>
-        where
-            S: IntoSystem<(), (), Marker> + Send + 'static,
-            Marker: Send + 'static,
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
     {
         self.on(x_pointer_over(), system)
     }
@@ -160,9 +174,9 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         self,
         system: S,
     ) -> Self::AddMember<EventViewMember<impl ElementEventIds, S, Marker>>
-        where
-            S: IntoSystem<(), (), Marker> + Send + 'static,
-            Marker: Send + 'static,
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
     {
         self.on(x_pointer_out(), system)
     }
@@ -171,9 +185,9 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         self,
         system: S,
     ) -> Self::AddMember<EventViewMember<impl ElementEventIds, S, Marker>>
-        where
-            S: IntoSystem<(), (), Marker> + Send + 'static,
-            Marker: Send + 'static,
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
     {
         self.on(x_pointer_down(), system)
     }
@@ -182,9 +196,9 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         self,
         system: S,
     ) -> Self::AddMember<EventViewMember<impl ElementEventIds, S, Marker>>
-        where
-            S: IntoSystem<(), (), Marker> + Send + 'static,
-            Marker: Send + 'static,
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
     {
         self.on(x_pointer_up(), system)
     }
@@ -193,9 +207,9 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         self,
         system: S,
     ) -> Self::AddMember<EventViewMember<impl ElementEventIds, S, Marker>>
-        where
-            S: IntoSystem<(), (), Marker> + Send + 'static,
-            Marker: Send + 'static,
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
     {
         self.on(x_pointer_click(), system)
     }
@@ -204,9 +218,9 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         self,
         system: S,
     ) -> Self::AddMember<EventViewMember<impl ElementEventIds, S, Marker>>
-        where
-            S: IntoSystem<(), (), Marker> + Send + 'static,
-            Marker: Send + 'static,
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
     {
         self.on(x_pointer_move(), system)
     }
@@ -214,9 +228,9 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         self,
         system: S,
     ) -> Self::AddMember<EventViewMember<impl ElementEventIds, S, Marker>>
-        where
-            S: IntoSystem<(), (), Marker> + Send + 'static,
-            Marker: Send + 'static,
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
     {
         self.on(x_pointer_drag_start(), system)
     }
@@ -224,9 +238,9 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         self,
         system: S,
     ) -> Self::AddMember<EventViewMember<impl ElementEventIds, S, Marker>>
-        where
-            S: IntoSystem<(), (), Marker> + Send + 'static,
-            Marker: Send + 'static,
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
     {
         self.on(x_pointer_drag(), system)
     }
@@ -234,9 +248,9 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         self,
         system: S,
     ) -> Self::AddMember<EventViewMember<impl ElementEventIds, S, Marker>>
-        where
-            S: IntoSystem<(), (), Marker> + Send + 'static,
-            Marker: Send + 'static,
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
     {
         self.on(x_pointer_drag_end(), system)
     }
@@ -244,9 +258,9 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         self,
         system: S,
     ) -> Self::AddMember<EventViewMember<impl ElementEventIds, S, Marker>>
-        where
-            S: IntoSystem<(), (), Marker> + Send + 'static,
-            Marker: Send + 'static,
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
     {
         self.on(x_pointer_drag_enter(), system)
     }
@@ -254,9 +268,9 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         self,
         system: S,
     ) -> Self::AddMember<EventViewMember<impl ElementEventIds, S, Marker>>
-        where
-            S: IntoSystem<(), (), Marker> + Send + 'static,
-            Marker: Send + 'static,
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
     {
         self.on(x_pointer_drag_over(), system)
     }
@@ -264,9 +278,9 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         self,
         system: S,
     ) -> Self::AddMember<EventViewMember<impl ElementEventIds, S, Marker>>
-        where
-            S: IntoSystem<(), (), Marker> + Send + 'static,
-            Marker: Send + 'static,
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
     {
         self.on(x_pointer_drag_leave(), system)
     }
@@ -274,9 +288,9 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         self,
         system: S,
     ) -> Self::AddMember<EventViewMember<impl ElementEventIds, S, Marker>>
-        where
-            S: IntoSystem<(), (), Marker> + Send + 'static,
-            Marker: Send + 'static,
+    where
+        S: IntoSystem<(), (), Marker> + Send + 'static,
+        Marker: Send + 'static,
     {
         self.on(x_pointer_drop(), system)
     }

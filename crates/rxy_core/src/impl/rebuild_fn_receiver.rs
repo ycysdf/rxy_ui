@@ -3,8 +3,8 @@ use alloc::boxed::Box;
 use crate::utils::all_tuples;
 
 use crate::{
-    IntoView, MaybeSend, Renderer, RendererNodeId, target_rebuild_fn_channel, View, ViewCtx,
-    ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
+    target_rebuild_fn_channel, IntoView, IntoViewMember, MaybeSend, Renderer, RendererNodeId, View,
+    ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
 };
 
 #[cfg(feature = "send_sync")]
@@ -253,6 +253,16 @@ where
                 }
             })
         });
+    }
+}
+
+impl<R, VM> IntoViewMember<R, Self> for RebuildFnReceiver<R, VM>
+where
+    R: Renderer,
+    VM: ViewMember<R>,
+{
+    fn into_member(self) -> Self {
+        self
     }
 }
 

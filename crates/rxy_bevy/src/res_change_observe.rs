@@ -3,10 +3,10 @@ use core::{
     ops::Deref,
     sync::atomic::{AtomicUsize, Ordering},
 };
+use std::sync::Arc;
 
 use bevy_app::PreUpdate;
 use bevy_ecs::prelude::*;
-use std::sync::Arc;
 
 use crate::add_system;
 

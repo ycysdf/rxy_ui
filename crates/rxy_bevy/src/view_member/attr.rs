@@ -1,7 +1,4 @@
-use rxy_bevy_element::{ElementUnitAttr, WorldViewAttrExt};
-use rxy_core::{ViewMember, ViewMemberCtx, ViewMemberIndex};
-
-use crate::BevyRenderer;
+/*
 
 #[derive(Clone, Debug)]
 pub struct ViewAttr<A>(pub A::Value)
@@ -32,7 +29,6 @@ where
     }
 }
 
-/*
 impl<EA> ViewAttrMember for ViewAttr<EA>
 where
     EA: ElementUnitAttr,

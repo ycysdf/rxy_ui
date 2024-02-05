@@ -2,10 +2,14 @@ use core::marker::PhantomData;
 
 use bevy_ecs::prelude::Entity;
 use bevy_ecs::system::Resource;
-use rxy_core::{prelude::{ViewMember, ViewMemberCtx}, DeferredNodeTreeScoped, Renderer, View, ViewCtx, ViewKey, ViewMemberIndex, NodeTree};
+
+use rxy_core::{
+    prelude::{ViewMember, ViewMemberCtx},
+    DeferredNodeTreeScoped, NodeTree, Renderer, View, ViewCtx, ViewKey, ViewMemberIndex,
+};
+use rxy_core::{IntoView, IntoViewMember};
 
 use crate::{BevyRenderer, ResChangeWorldExt, TaskState};
-use rxy_core::IntoView;
 
 pub struct XRes<T, F, V> {
     pub f: F,
@@ -41,7 +45,8 @@ fn x_res_view_build<T, F, IV>(
             }
         }
     });
-    ctx.world.set_node_state(state_node_id, TaskState::new(task));
+    ctx.world
+        .set_node_state(state_node_id, TaskState::new(task));
 }
 
 impl<T, F, IV> View<BevyRenderer> for XRes<T, F, IV>
@@ -87,9 +92,7 @@ where
         let Some(state_node_id) = key.state_node_id() else {
             return;
         };
-        drop(ctx.world.take_node_state::<TaskState>(
-            &state_node_id,
-        ));
+        drop(ctx.world.take_node_state::<TaskState>(&state_node_id));
 
         x_res_view_build(self, key, &state_node_id, ctx);
     }
@@ -151,6 +154,17 @@ where
         }
     });
     ctx.set_indexed_view_member_state(TaskState::new(task));
+}
+
+impl<T, F, VM> IntoViewMember<BevyRenderer, Self> for XRes<T, F, VM>
+where
+    T: Resource,
+    F: Fn(&T) -> VM + Clone + Send + Sync + 'static,
+    VM: ViewMember<BevyRenderer>,
+{
+    fn into_member(self) -> Self {
+        self
+    }
 }
 
 impl<T, F, VM> ViewMember<BevyRenderer> for XRes<T, F, VM>

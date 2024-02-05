@@ -1,7 +1,10 @@
 use alloc::boxed::Box;
 use core::marker::PhantomData;
 
-use crate::{IntoElementView, IntoView, MaybeSend, MutableView, Renderer, RendererNodeId, SoloView, View, ViewCtx, ViewMember, ViewMemberCtx, ViewMemberIndex};
+use crate::{
+    IntoElementView, IntoView, IntoViewMember, MaybeSend, MutableView, Renderer, RendererNodeId,
+    SoloView, View, ViewCtx, ViewMember, ViewMemberCtx, ViewMemberIndex,
+};
 
 #[derive(Clone)]
 pub struct Builder<R, F>(pub F, PhantomData<R>);
@@ -82,6 +85,17 @@ where
             },
         )
         .rebuild(ctx, key, placeholder_node_id)
+    }
+}
+
+impl<R, F, VM> IntoViewMember<R, Self> for Builder<R, F>
+where
+    F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> VM + MaybeSend + 'static,
+    R: Renderer,
+    VM: ViewMember<R>,
+{
+    fn into_member(self) -> Self {
+        self
     }
 }
 

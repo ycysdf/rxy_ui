@@ -1,4 +1,6 @@
-use crate::{Either, IntoView, Renderer, View, ViewMember, ViewMemberCtx, ViewMemberIndex};
+use crate::{
+    Either, IntoView, IntoViewMember, Renderer, View, ViewMember, ViewMemberCtx, ViewMemberIndex,
+};
 
 impl<R, T, E> IntoView<R> for Result<T, E>
 where
@@ -13,6 +15,18 @@ where
         IntoView::into_view(either)
     }
 }
+
+impl<R, T, E> IntoViewMember<R, Self> for Result<T, E>
+where
+    R: Renderer,
+    T: ViewMember<R>,
+    E: ViewMember<R>,
+{
+    fn into_member(self) -> Self {
+        self
+    }
+}
+
 impl<R, T, E> ViewMember<R> for Result<T, E>
 where
     R: Renderer,

@@ -7,15 +7,77 @@ use bevy_ecs::prelude::World;
 use bevy_hierarchy::{BuildWorldChildren, DespawnRecursiveExt};
 use bevy_hierarchy::{Children, Parent};
 use bevy_render::prelude::Visibility;
-use bevy_ui::Display;
 use bevy_ui::prelude::NodeBundle;
+use bevy_ui::Display;
 use bevy_ui::Style;
 
-use rxy_core::{DeferredNodeTreeScoped, NodeTree, RendererElementType, RendererNodeId};
+use rxy_core::{
+    AttrIndex, DeferredNodeTreeScoped, ElementAttr, ElementType, NodeTree, RendererNodeId,
+};
 
-use crate::{BevyDeferredWorldScoped, BevyRenderer, CmdSender, RendererState};
+use crate::{
+    BevyDeferredWorldScoped, BevyRenderer, BevyWorldExt, CmdSender, ElementEntityExtraData,
+    ElementEntityWorldMutExt, ElementStyleEntityExt, RendererState,
+};
 
 impl NodeTree<BevyRenderer> for World {
+    fn prepare_set_attr_and_get_is_init(
+        &mut self,
+        node_id: &RendererNodeId<BevyRenderer>,
+        attr_index: AttrIndex,
+    ) -> bool {
+        let mut entity_mut = self.entity_mut(*node_id);
+        let mut extra_data = entity_mut.get_mut::<ElementEntityExtraData>().unwrap();
+        let is_init = extra_data.is_init_attr(attr_index);
+        if !is_init {
+            extra_data.init_attr(attr_index, true);
+        }
+        is_init
+    }
+
+    fn build_attr<A: ElementAttr<BevyRenderer>>(
+        &mut self,
+        entity: RendererNodeId<BevyRenderer>,
+        value: A::Value,
+    ) {
+        A::first_set_value(self, entity, value);
+        let Some(mut entity_world_mut) = self.get_entity_mut(entity) else {
+            return;
+        };
+        entity_world_mut
+            .as_entity_mut()
+            .get_element_extra_data_mut()
+            .unwrap() // todo: error handle
+            .set_attr(A::INDEX, true);
+    }
+    fn rebuild_attr<A: ElementAttr<BevyRenderer>>(
+        &mut self,
+        entity: RendererNodeId<BevyRenderer>,
+        value: A::Value,
+    ) {
+        A::update_value(self, entity, value);
+        let Some(mut entity_world_mut) = self.get_entity_mut(entity) else {
+            return;
+        };
+        entity_world_mut
+            .as_entity_mut()
+            .get_element_extra_data_mut()
+            .unwrap() // todo: error handle
+            .set_attr(A::INDEX, true);
+    }
+
+    fn unbuild_attr<A: ElementAttr<BevyRenderer>>(&mut self, entity: RendererNodeId<BevyRenderer>) {
+        A::set_value(self, entity, None::<A::Value>);
+        let Some(mut entity_world_mut) = self.get_entity_mut(entity) else {
+            return;
+        };
+        entity_world_mut
+            .as_entity_mut()
+            .get_element_extra_data_mut()
+            .unwrap() // todo: error handle
+            .set_attr(A::INDEX, false);
+    }
+
     fn deferred_world_scoped(&mut self) -> impl DeferredNodeTreeScoped<BevyRenderer> {
         BevyDeferredWorldScoped {
             cmd_sender: self.resource::<CmdSender>().clone(),
@@ -101,14 +163,7 @@ impl NodeTree<BevyRenderer> for World {
         parent: Option<&RendererNodeId<BevyRenderer>>,
         reserve_node_id: Option<RendererNodeId<BevyRenderer>>,
     ) -> RendererNodeId<BevyRenderer> {
-        let mut entity_world_mut = match reserve_node_id {
-            None => self.spawn_empty(),
-            Some(reserve_node_id) => self.get_or_spawn(reserve_node_id).unwrap(),
-        };
-        if let Some(parent) = parent {
-            entity_world_mut.set_parent(*parent);
-        }
-        entity_world_mut.id()
+        self.get_or_spawn_empty(parent, reserve_node_id).id()
     }
 
     fn spawn_data_node(&mut self) -> RendererNodeId<BevyRenderer> {
@@ -116,15 +171,14 @@ impl NodeTree<BevyRenderer> for World {
         self.spawn((Name::new("[DATA]"),)).id()
     }
 
-    fn spawn_node<E: RendererElementType<BevyRenderer>>(
+    fn spawn_node<E: ElementType<BevyRenderer>>(
         &mut self,
-        parent: Option<RendererNodeId<BevyRenderer>>,
+        parent: Option<&RendererNodeId<BevyRenderer>>,
         reserve_node_id: Option<RendererNodeId<BevyRenderer>>,
     ) -> RendererNodeId<BevyRenderer> {
         let node_id = E::spawn(self, parent, reserve_node_id);
-        use rxy_bevy_element::ElementEntityExtraData;
         {
-            let entity_extra_data = ElementEntityExtraData::new(E::NAME);
+            let entity_extra_data = ElementEntityExtraData::new(E::TAG_NAME);
             self.entity_mut(node_id).insert(entity_extra_data);
         };
         node_id

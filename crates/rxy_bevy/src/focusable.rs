@@ -108,9 +108,10 @@ pub enum FocusState {
     #[default]
     None,
     /// Entity is focused
-    Focused, /*  {
-                 /// Focus has been reached through keyboard navigation and so a focus style should be displayed.
-                 /// This is similar to the `:focus-visible` pseudo-class in css.
-                 // visible: bool,
-             } */
+    Focused,
+    /*  {
+        /// Focus has been reached through keyboard navigation and so a focus style should be displayed.
+        /// This is similar to the `:focus-visible` pseudo-class in css.
+        // visible: bool,
+    } */
 }

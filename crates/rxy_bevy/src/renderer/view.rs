@@ -1,23 +1,28 @@
-use bevy_ui::{FocusPolicy, Interaction};
 use bevy_ui::prelude::Button;
-use rxy_bevy_element::{all_attrs, elements};
-use rxy_core::{IntoView, MemberOwner};
-use crate::{BevyRenderer, Focusable, ViewAttr, x_bundle, XBundle};
-use crate::renderer::element::{BevyElement};
+use bevy_ui::{FocusPolicy, Interaction};
+
+use rxy_core::{ElementAttrViewMember, IntoView, MemberOwner};
+
+use crate::elements::{element_div, element_span};
+use crate::{
+    all_attrs, x_bundle, BevyElement, BevyElementAttrMember, BevyRenderer, Focusable, XBundle,
+};
 
 // todo: merge span
 pub fn span(
     str: impl Into<String>,
-) -> BevyElement<elements::text, (ViewAttr<all_attrs::content>,)> {
-    BevyElement::default().members(ViewAttr::<all_attrs::content>(str.into()))
+) -> BevyElement<element_span, (BevyElementAttrMember<all_attrs::content>,)> {
+    BevyElement::default().members(ElementAttrViewMember::<BevyRenderer, all_attrs::content>(
+        str.into(),
+    ))
 }
 
-pub fn div() -> BevyElement<elements::view, ()> {
+pub fn div() -> BevyElement<element_div, ()> {
     BevyElement::default()
 }
 
 pub fn button(
-) -> BevyElement<elements::view, (XBundle<(FocusPolicy, Interaction, Button, Focusable)>,)> {
+) -> BevyElement<element_div, (XBundle<(FocusPolicy, Interaction, Button, Focusable)>,)> {
     BevyElement::default().members(x_bundle((
         FocusPolicy::default(),
         Interaction::default(),
@@ -27,7 +32,7 @@ pub fn button(
 }
 
 impl IntoView<BevyRenderer> for &'static str {
-    type View = BevyElement<elements::text, (ViewAttr<all_attrs::content>,)>;
+    type View = BevyElement<element_span, (BevyElementAttrMember<all_attrs::content>,)>;
 
     fn into_view(self) -> Self::View {
         span(self)
@@ -35,7 +40,7 @@ impl IntoView<BevyRenderer> for &'static str {
 }
 
 impl IntoView<BevyRenderer> for String {
-    type View = BevyElement<elements::text, (ViewAttr<all_attrs::content>,)>;
+    type View = BevyElement<element_span, (BevyElementAttrMember<all_attrs::content>,)>;
 
     fn into_view(self) -> Self::View {
         span(self)

@@ -1,9 +1,14 @@
-use crate::{to_mutable, virtual_container, IntoView, MutableView, MutableViewKey, Renderer, RendererNodeId, RendererWorld, ToMutableWrapper, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex, VirtualContainer, MaybeSend};
+use crate::into_view_member::IntoViewMember;
+use crate::{
+    to_mutable, virtual_container, IntoView, MaybeSend, MutableView, MutableViewKey, Renderer,
+    RendererNodeId, RendererWorld, ToMutableWrapper, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
+    ViewMemberIndex, VirtualContainer,
+};
 
 impl<R, V> MutableView<R> for Option<V>
-    where
-        R: Renderer,
-        V: MutableView<R>,
+where
+    R: Renderer,
+    V: MutableView<R>,
 {
     type Key = Option<V::Key>;
 
@@ -50,9 +55,9 @@ impl<R, V> MutableView<R> for Option<V>
 }
 
 impl<K, R> MutableViewKey<R> for Option<K>
-    where
-        R: Renderer,
-        K: MutableViewKey<R>,
+where
+    R: Renderer,
+    K: MutableViewKey<R>,
 {
     fn remove(self, world: &mut RendererWorld<R>) {
         if let Some(n) = self {
@@ -90,9 +95,9 @@ impl<K, R> MutableViewKey<R> for Option<K>
 }
 
 impl<R, IV> IntoView<R> for Option<IV>
-    where
-        R: Renderer,
-        IV: IntoView<R> + MaybeSend + 'static,
+where
+    R: Renderer,
+    IV: IntoView<R> + MaybeSend + 'static,
 {
     type View = VirtualContainer<R, Option<ToMutableWrapper<IV::View>>>;
 
@@ -104,10 +109,21 @@ impl<R, IV> IntoView<R> for Option<IV>
     }
 }
 
-impl<R, VM> ViewMember<R> for Option<VM>
+impl<R, VM, T> IntoViewMember<R, Option<VM>> for Option<T>
     where
         R: Renderer,
+        T: IntoViewMember<R, VM>,
         VM: ViewMember<R>,
+{
+    fn into_member(self) -> Option<VM> {
+        self.map(|n| n.into_member())
+    }
+}
+
+impl<R, VM> ViewMember<R> for Option<VM>
+where
+    R: Renderer,
+    VM: ViewMember<R>,
 {
     fn count() -> ViewMemberIndex {
         VM::count()
@@ -136,9 +152,9 @@ impl<R, VM> ViewMember<R> for Option<VM>
 }
 
 impl<K, R> ViewKey<R> for Option<K>
-    where
-        R: Renderer,
-        K: ViewKey<R>,
+where
+    R: Renderer,
+    K: ViewKey<R>,
 {
     fn remove(self, world: &mut RendererWorld<R>) {
         if let Some(n) = self {

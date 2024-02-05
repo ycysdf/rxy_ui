@@ -6,7 +6,7 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rxy_bevy_element.workspace = true
+#rxy_bevy_element.workspace = true
 rxy_bevy_macro.workspace = true
 rxy_core = { workspace = true, features = ["async-channel", "xy_reactive", "bevy_reflect"] }
 xy_reactive = { workspace = true, optional = true, features = ["bevy"] }
@@ -22,7 +22,7 @@ async-channel.workspace = true
 smallvec.workspace = true
 
 bevy_app.workspace = true
-bevy_asset.workspace = true
+bevy_asset = { workspace = true, optional = false }
 bevy_core.workspace = true
 bevy_derive.workspace = true
 bevy_ecs.workspace = true
@@ -32,8 +32,8 @@ bevy_reflect.workspace = true
 bevy_render.workspace = true
 bevy_sprite.workspace = true
 bevy_tasks.workspace = true
-bevy_text.workspace = true
-bevy_transform.workspace = true
+bevy_text = { workspace = true, optional = false }
+bevy_transform = { workspace = true, optional = false }
 bevy_ui.workspace = true
 bevy_utils.workspace = true
 bevy_a11y.workspace = true

@@ -8,8 +8,10 @@ use bevy_ecs::system::{Command, ResMut};
 use bevy_ui::Interaction;
 use bevy_utils::EntityHashMap;
 use derive_more::{Deref, DerefMut};
-use rxy_bevy::{FocusedEntity, RendererState};
-use rxy_bevy_element::{view_element_type, AttrIndex, AttrSetBits, ElementEntityExtraData};
+use rxy_bevy::{
+    view_element_type, AttrSetBits, ElementEntityExtraData, FocusedEntity, RendererState,
+};
+use rxy_core::AttrIndex;
 use rxy_style::{NodeInterStyleAttrInfos, NodeStyleAttrInfos, StyleInteraction};
 
 #[derive(Default, DerefMut, Deref, Debug)]
@@ -35,12 +37,15 @@ impl Command for SetAttrValuesCommand {
             let Some(mut entity_world_mut) = world.get_entity_mut(entity) else {
                 continue;
             };
-            let attr_is_set =
-                entity_world_mut.get_mut::<ElementEntityExtraData>().unwrap().attr_is_set;
+            let attr_is_set = entity_world_mut
+                .get_mut::<ElementEntityExtraData>()
+                .unwrap()
+                .attr_is_set;
+            let world = entity_world_mut.into_world_mut();
             for (attr_index, value) in changed.into_iter().filter_attr_already_set(attr_is_set) {
                 view_element_type()
                     .attr_by_index(attr_index as _)
-                    .init_or_set(&mut entity_world_mut, value);
+                    .set_value(world, entity, value);
             }
         }
     }

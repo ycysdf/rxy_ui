@@ -1,22 +1,41 @@
-mod view;
-mod element;
-mod node_tree;
-
-pub use element::*;
-pub use view::*;
-
-use bevy_derive::{Deref, DerefMut};
 use std::future::Future;
 
+use bevy_derive::{Deref, DerefMut};
 use bevy_ecs::component::Component;
 use bevy_ecs::entity::Entity;
 use bevy_ecs::prelude::World;
 use bevy_hierarchy::DespawnRecursiveExt;
 use bevy_reflect::Reflect;
 use bevy_tasks::Task;
-use rxy_core::{DeferredNodeTreeScoped, NodeTree, Renderer, RendererElementType, RendererNodeId, RendererWorld, ViewKey};
+
+pub use element::*;
+use rxy_core::{DeferredNodeTreeScoped, Element, ElementAttrViewMember, ElementTypeUnTyped, ElementViewChildren, NodeTree, Renderer, RendererNodeId, RendererWorld, ViewKey};
+pub use view::*;
+pub use composite_attrs::*;
 
 use crate::CmdSender;
+use crate::elements::element_div;
+
+pub mod element;
+pub mod elements;
+mod into_attr;
+pub mod into_attr_value;
+mod node_tree;
+mod view;
+pub mod attrs;
+mod text_styled_element;
+mod composite_attrs;
+
+#[inline(always)]
+pub fn view_element_type() -> &'static dyn ElementTypeUnTyped<BevyRenderer> {
+    &element_div
+}
+
+pub type BevyElement<E, VM> = Element<BevyRenderer, E, VM>;
+pub type BevyElementViewChildren<CV, E, VM> =
+    ElementViewChildren<BevyRenderer, Element<BevyRenderer, E, VM>, CV>;
+
+pub type BevyElementAttrMember<EA> = ElementAttrViewMember<BevyRenderer, EA>;
 
 #[derive(Reflect, Clone)]
 pub struct BevyWrapper<T>(pub T);
@@ -39,14 +58,25 @@ impl DeferredNodeTreeScoped<BevyRenderer> for BevyDeferredWorldScoped {
         self.cmd_sender.add(move |world: &mut World| f(world))
     }
 }
+
 impl Renderer for BevyRenderer {
     type NodeId = Entity;
     type NodeTree = World;
 
+    #[cfg(not(target_arch = "wasm32"))]
     type Task<T: Send + 'static> = Task<T>;
 
+    #[cfg(target_arch = "wasm32")]
+    type Task<T: Send + 'static> = ();
+
+    #[cfg(any(target_arch = "wasm32", not(feature = "multi-threaded")))]
     fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) -> Self::Task<T> {
         bevy_tasks::AsyncComputeTaskPool::get().spawn(future)
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) -> Self::Task<T> {
+        bevy_tasks::AsyncComputeTaskPool::get().spawn(future);
     }
 }
 

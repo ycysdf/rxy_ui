@@ -38,3 +38,7 @@ xy_reactive = ["dep:xy_reactive", "send_sync"]
 bevy_reflect = ["dep:bevy_reflect", "std", "send_sync"]
 x_iter_source = ["hooked_collection", "async-channel"]
 either_future = ["pin-project"]
+
+
+[dev-dependencies]
+static_assertions = "1.1"

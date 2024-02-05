@@ -1,4 +1,4 @@
-use crate::{MaybeSend, Renderer, ViewMember};
+use crate::{IntoViewMember, MaybeSend, Renderer, ViewMember};
 use crate::utils::all_tuples;
 /*
 pub trait MemberOwner<R>
@@ -62,11 +62,11 @@ where
     type VM: ViewMember<R>;
     type AddMember<VM: ViewMember<R>>:MemberOwner<R>;
     type SetMembers<VM: ViewMember<R> + MemberOwner<R>>:MemberOwner<R>;
-    fn member<VM>(self, member: VM) -> Self::AddMember<VM>
+    fn member<VM>(self, member: impl IntoViewMember<R,VM>) -> Self::AddMember<VM>
     where
         (Self::VM, VM): ViewMember<R>,
         VM: ViewMember<R>;
-    fn members<VM: ViewMember<R>>(self, members: VM) -> Self::SetMembers<(VM,)>
+    fn members<VM: ViewMember<R>>(self, members: impl IntoViewMember<R,VM>) -> Self::SetMembers<(VM,)>
     where
         VM: ViewMember<R>;
 }
@@ -84,21 +84,21 @@ macro_rules! impl_member_owner_for_tuple {
             type AddMember<T: ViewMember<R>> = (Self, T);
             type SetMembers<T: ViewMember<R> + MemberOwner<R>> = T;
 
-            fn member<T>(self, member: T) -> Self::AddMember<T>
+            fn member<T>(self, member: impl IntoViewMember<R,T>) -> Self::AddMember<T>
             where
                 (Self::VM, T): ViewMember<R>,
                 T: ViewMember<R>,
             {
                 // let ($($t,)*) = self;
                 // ($($t,)* member,)
-                (self,member)
+                (self,member.into_member())
             }
 
-            fn members<T>(self, members: T) -> Self::SetMembers<(T,)>
+            fn members<T>(self, members: impl IntoViewMember<R,T>) -> Self::SetMembers<(T,)>
             where
                 T: ViewMember<R>
             {
-                (members,)
+                (members.into_member(),)
             }
         }
     };

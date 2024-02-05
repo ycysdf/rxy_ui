@@ -5,7 +5,12 @@ use crate::renderer::DeferredNodeTreeScoped;
 use crate::utils::now_or_never;
 use futures_lite::{Stream, StreamExt};
 
-use crate::{build_info::{node_build_status, node_build_times_increment}, into_view, mutable_view_rebuild, Either, IntoView, MutableView, NodeTree, Renderer, RendererNodeId, TaskState, ToIntoView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberExt, ViewMemberIndex, MaybeSend};
+use crate::{
+    build_info::{node_build_status, node_build_times_increment},
+    into_view, mutable_view_rebuild, Either, IntoView, IntoViewMember, MaybeSend, MutableView,
+    NodeTree, Renderer, RendererNodeId, TaskState, ToIntoView, View, ViewCtx, ViewKey, ViewMember,
+    ViewMemberBuildExt, ViewMemberCtx, ViewMemberIndex,
+};
 
 fn stream_vm_rebuild<R, S, VM>(
     x_stream: XStream<S>,
@@ -55,6 +60,16 @@ fn stream_vm_rebuild<R, S, VM>(
             });
         }
     })));
+}
+
+impl<R, VM> IntoViewMember<R, Self> for futures_lite::stream::Boxed<VM>
+where
+    R: Renderer,
+    VM: ViewMember<R>,
+{
+    fn into_member(self) -> Self {
+        self
+    }
 }
 
 impl<R, VM> ViewMember<R> for futures_lite::stream::Boxed<VM>
@@ -310,6 +325,17 @@ where
             value: None,
             already_end: false,
         }
+    }
+}
+
+impl<R, S> IntoViewMember<R, Self> for XStream<S>
+where
+    R: Renderer,
+    S: Stream + MaybeSend + 'static,
+    S::Item: ViewMember<R>,
+{
+    fn into_member(self) -> Self {
+        self
     }
 }
 

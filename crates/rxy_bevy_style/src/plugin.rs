@@ -11,9 +11,9 @@ use core::any::TypeId;
 use core::fmt::Debug;
 use derive_more::{Deref, DerefMut};
 use rxy_bevy::{BevyRenderer, FocusedEntity};
-use rxy_bevy_element::{AttrValue, SmallBox, S1};
 use rxy_style::{StyleAttrId, StyleSheetId, StyleSheetLocation};
 use std::ops::AddAssign;
+use rxy_core::{AttrValue, S1, SmallBox};
 
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct TypedEntities(HashMap<TypeId, Entity>);

@@ -146,7 +146,7 @@ where
 pub struct SchemaViewState<R> {
     prop_state: SyncCell<Option<PropHashMap<R>>>,
     #[cfg(feature = "xy_reactive")]
-    _other_state: Vec<xy_reactive::effect::ErasureEffect>,
+    _other_state: alloc::vec::Vec<xy_reactive::effect::ErasureEffect>,
 }
 
 pub fn scheme_state_scoped<R, U>(
@@ -246,7 +246,7 @@ where
 
     let mut prop_state = PropHashMap::<R>::default();
     #[cfg(feature = "xy_reactive")]
-    let mut _effect_state = vec![];
+    let mut _effect_state = alloc::vec![];
     let view = schema_view.u.view(InnerSchemaCtx {
         world: &mut *ctx.world,
         parent: ctx.parent.clone(),

@@ -77,7 +77,11 @@ pub struct ScheduleSystemAdds {
 }
 
 pub fn handle_schedule_event(world: &mut World) {
-    let systems: Vec<_> = world.resource_mut::<ScheduleSystemAdds>().systems.drain(..).collect();
+    let systems: Vec<_> = world
+        .resource_mut::<ScheduleSystemAdds>()
+        .systems
+        .drain(..)
+        .collect();
 
     for (label, system) in systems {
         world.schedule_scope(label, move |_world, scheduler| {
@@ -92,7 +96,10 @@ pub fn add_system(world: &mut World, label: impl ScheduleLabel, system: SystemCo
             scheduler.add_systems(system);
         })
     } else {
-        world.resource_mut::<ScheduleSystemAdds>().systems.push((label.intern(), system));
+        world
+            .resource_mut::<ScheduleSystemAdds>()
+            .systems
+            .push((label.intern(), system));
     }
 }
 

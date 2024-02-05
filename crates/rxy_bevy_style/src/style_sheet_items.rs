@@ -1,33 +1,29 @@
-use std::iter::once;
-use bevy_ecs::all_tuples;
-use rxy_bevy::{BevyRenderer, ViewAttr};
-use rxy_bevy_element::{ElementUnitAttr, smallbox};
-use rxy_core::Renderer;
-use rxy_style::StyleSheetCtx;
 use crate::plugin::StyleItemValue;
+use bevy_ecs::all_tuples;
+use rxy_bevy::BevyRenderer;
+use rxy_core::{ElementAttr, ElementAttrViewMember, Renderer, smallbox};
+use rxy_style::StyleSheetCtx;
+use std::iter::once;
 
 pub trait StyleSheetItems<R>: Send + 'static
 where
     R: Renderer,
 {
-    fn iter(
-        self,
-        ctx: StyleSheetCtx<R>,
-    ) -> impl Iterator<Item = StyleItemValue> + 'static;
+    fn iter(self, ctx: StyleSheetCtx<R>) -> impl Iterator<Item = StyleItemValue> + 'static;
 }
 
-impl<EA> StyleSheetItems<BevyRenderer> for ViewAttr<EA>
+impl<EA> StyleSheetItems<BevyRenderer> for ElementAttrViewMember<BevyRenderer, EA>
 where
-    EA: ElementUnitAttr,
+    EA: ElementAttr<BevyRenderer>,
 {
     #[inline(always)]
     fn iter(
         self,
         _ctx: StyleSheetCtx<BevyRenderer>,
     ) -> impl Iterator<Item = StyleItemValue> + 'static {
-        once(StyleItemValue{
-            attr_id: EA::INDEX, 
-            value: smallbox!(self.0)
+        once(StyleItemValue {
+            attr_id: EA::INDEX,
+            value: smallbox!(self.0),
         })
     }
 }
