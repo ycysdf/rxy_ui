@@ -140,6 +140,7 @@ where
         )
     }
 }
+
 impl<R, LVM, RVM> IntoViewMember<R, Self> for Either<LVM, RVM>
 where
     R: Renderer,

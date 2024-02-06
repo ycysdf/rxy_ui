@@ -7,6 +7,7 @@ use crate::{IntoSchemaProp, MaybeSend, Renderer, SchemaPropValue};
 use alloc::borrow::Cow;
 use crate::utils::all_tuples;
 
+#[derive(Clone, Debug, PartialEq,Eq)]
 pub struct IntoSchemaPropValueWrapper<T>(pub T);
 
 pub trait IntoSchemaPropValue<T> {

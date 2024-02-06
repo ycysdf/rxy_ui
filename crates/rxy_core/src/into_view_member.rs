@@ -38,6 +38,7 @@ macro_rules! impl_into_view_member_for_tuples {
 
 all_tuples!(impl_into_view_member_for_tuples, 1, 12, T, M);
 
+#[derive(Clone, Debug, PartialEq,Eq)]
 pub struct IntoViewMemberWrapper<T>(pub T);
 
 impl<R, VM> IntoViewMember<R, VM> for IntoViewMemberWrapper<VM>

@@ -88,14 +88,22 @@ where
     }
 }
 
-impl<R, F, VM> IntoViewMember<R, Self> for Builder<R, F>
+impl<R, F, IVM, VM>
+    IntoViewMember<
+        R,
+        Builder<R, Box<dyn FnOnce(ViewMemberCtx<R>, BuildFlags) -> VM + MaybeSend + 'static>>,
+    > for Builder<R, F>
 where
-    F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> VM + MaybeSend + 'static,
+    F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> IVM + MaybeSend + 'static,
     R: Renderer,
     VM: ViewMember<R>,
+    IVM: IntoViewMember<R, VM>,
 {
-    fn into_member(self) -> Self {
-        self
+    fn into_member(self) -> Builder<R, Box<dyn FnOnce(ViewMemberCtx<R>, BuildFlags) -> VM + MaybeSend + 'static>> {
+        Builder(
+            Box::new(move |ctx, flags| self.0(ctx, flags).into_member()),
+            Default::default(),
+        )
     }
 }
 
@@ -241,7 +249,7 @@ where
         self
     }
 }
-
+/*
 #[cfg(feature = "send_sync")]
 pub struct BoxedBuilder<R, T>(Box<dyn FnOnce(ViewCtx<R>, BuildFlags) -> T + MaybeSend + 'static>)
 where
@@ -325,3 +333,4 @@ where
         self
     }
 }
+*/

@@ -184,6 +184,7 @@ where
     }
 }
 
+#[derive(Clone, Debug, PartialEq,Eq)]
 pub struct InnerIvmToVmWrapper<T, M>(pub(crate) T, PhantomData<M>);
 
 impl<T, M> InnerIvmToVmWrapper<T, M> {
@@ -245,7 +246,7 @@ macro_rules! impl_view_member_for_signal_get {
         impl<R, VM> ViewMember<R> for $ident<VM>
         where
             R: Renderer,
-            VM: ViewMember<R> +MaybeSync + Clone,
+            VM: ViewMember<R> + MaybeSync + Clone,
         {
             fn count() -> ViewMemberIndex {
                 VM::count()
@@ -269,7 +270,6 @@ macro_rules! impl_view_member_for_signal_get {
 impl_view_member_for_signal_get!(Memo);
 impl_view_member_for_signal_get!(ReadSignal);
 impl_view_member_for_signal_get!(RwSignal);
-
 
 #[cfg_attr(
     feature = "bevy_reflect",

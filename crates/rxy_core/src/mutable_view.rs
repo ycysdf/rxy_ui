@@ -74,6 +74,7 @@ where
     }
 }
 
+#[derive(Clone, Debug, PartialEq,Eq)]
 pub struct MutableKeySelfStatedWrapper<T>(pub T);
 
 pub fn mutable_view_rebuild<R: Renderer, V: MutableView<R>>(

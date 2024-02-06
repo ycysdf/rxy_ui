@@ -1,13 +1,44 @@
+use core::fmt::{Debug, Formatter};
 use core::marker::PhantomData;
 
 use crate::{FnSchema, IntoView, MaybeSend, Renderer, SchemaFn, SchemaParams, SchemaView};
 
-#[derive(Clone)]
 pub struct IntoViewSchemaFnWrapper<T, M>(pub T, PhantomData<M>);
+
+impl<T, M> Debug for IntoViewSchemaFnWrapper<T, M>
+where
+    T: Debug,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        f.debug_tuple("IntoViewSchemaFnWrapper")
+            .field(&self.0)
+            .finish()
+    }
+}
+
+impl<T, M> Clone for IntoViewSchemaFnWrapper<T, M>
+where
+    T: Clone,
+{
+    fn clone(&self) -> Self {
+        IntoViewSchemaFnWrapper(self.0.clone(), Default::default())
+    }
+}
+
+impl<T, M> PartialEq for IntoViewSchemaFnWrapper<T, M>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl<T, M> Eq for IntoViewSchemaFnWrapper<T, M> where T: Eq {}
 
 impl<T, M> IntoViewSchemaFnWrapper<T, M> {
     pub fn new(t: T) -> Self {
-        IntoViewSchemaFnWrapper::<T,M>(t, Default::default())
+        IntoViewSchemaFnWrapper::<T, M>(t, Default::default())
     }
 }
 
@@ -54,5 +85,5 @@ where
     F: SchemaIntoViewFn<R, P>,
     P: SchemaParams<R>,
 {
-    SchemaView::new(FnSchema::new(IntoViewSchemaFnWrapper::<F,R>::new(f)))
+    SchemaView::new(FnSchema::new(IntoViewSchemaFnWrapper::<F, R>::new(f)))
 }

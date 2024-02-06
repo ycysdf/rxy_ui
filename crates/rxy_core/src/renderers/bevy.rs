@@ -54,6 +54,12 @@ impl Into<AttrValueWrapper<i32>> for f32 {
     }
 }
 
+impl Into<AttrValueWrapper<f32>> for i32 {
+    fn into(self) -> AttrValueWrapper<f32> {
+        AttrValueWrapper(self as _)
+    }
+}
+
 impl Into<AttrValueWrapper<bevy_render::prelude::Visibility>> for bool {
     fn into(self) -> AttrValueWrapper<bevy_render::prelude::Visibility> {
         AttrValueWrapper(

@@ -72,6 +72,7 @@ where
     }
 }
 
+#[derive(Clone, Debug, PartialEq,Eq)]
 pub struct ViewMemberWithOriginWrapper<T, M>(pub T, PhantomData<M>);
 
 impl<T, M> ViewMemberWithOriginWrapper<T, M> {

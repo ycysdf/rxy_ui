@@ -256,13 +256,14 @@ where
     }
 }
 
-impl<R, VM> IntoViewMember<R, Self> for RebuildFnReceiver<R, VM>
+impl<R, VM, IVM> IntoViewMember<R, RebuildFnReceiver<R, VM>> for RebuildFnReceiver<R, IVM>
 where
     R: Renderer,
     VM: ViewMember<R>,
+    IVM: IntoViewMember<R, VM>,
 {
-    fn into_member(self) -> Self {
-        self
+    fn into_member(self) -> RebuildFnReceiver<R, VM> {
+        self.map(|n| n.into_member())
     }
 }
 

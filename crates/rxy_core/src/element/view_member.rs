@@ -77,6 +77,7 @@ where
     }
 }
 
+#[derive(Clone, Debug, PartialEq,Eq)]
 pub struct AttrValueWrapper<T>(pub T);
 
 impl<EA, R, T> IntoViewMember<R, ElementAttrViewMember<R, EA>> for T

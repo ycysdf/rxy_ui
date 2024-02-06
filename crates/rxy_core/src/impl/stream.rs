@@ -62,13 +62,15 @@ fn stream_vm_rebuild<R, S, VM>(
     })));
 }
 
-impl<R, VM> IntoViewMember<R, Self> for futures_lite::stream::Boxed<VM>
+impl<R, IVM, VM> IntoViewMember<R, futures_lite::stream::Boxed<VM>>
+    for futures_lite::stream::Boxed<IVM>
 where
     R: Renderer,
     VM: ViewMember<R>,
+    IVM: IntoViewMember<R, VM> + 'static,
 {
-    fn into_member(self) -> Self {
-        self
+    fn into_member(self) -> futures_lite::stream::Boxed<VM> {
+        self.map(|n| n.into_member()).boxed()
     }
 }
 

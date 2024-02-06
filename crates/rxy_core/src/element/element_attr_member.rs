@@ -4,6 +4,8 @@ use crate::{
 };
 use core::future::Future;
 use core::marker::PhantomData;
+use futures_lite::FutureExt;
+use futures_lite::StreamExt;
 
 pub trait ElementAttrMember<R>: ViewMember<R>
 where
@@ -77,6 +79,22 @@ where
     }
 }
 
+impl<R, T> ElementAttrMember<R> for futures_lite::future::Boxed<T>
+where
+    R: Renderer,
+    T: ElementAttrMember<R> + 'static,
+{
+    type EA = T::EA;
+    type Attr<OEA: ElementAttr<R, Value = <Self::EA as ElementAttr<R>>::Value>> =
+        futures_lite::future::Boxed<T::Attr<OEA>>;
+
+    fn into_other_attr<OEA: ElementAttr<R, Value = <Self::EA as ElementAttr<R>>::Value>>(
+        self,
+    ) -> Self::Attr<OEA> {
+        async move { self.await.into_other_attr() }.boxed()
+    }
+}
+
 impl<R, TO, VM, OEA, EA> ViewMember<R> for ElementAttrMemberWrapper<XFuture<TO>, OEA>
 where
     OEA: ElementAttr<R, Value = EA::Value>,
@@ -116,6 +134,22 @@ where
 
     fn into_other_attr<OEA: ElementAttr<R, Value = EA::Value>>(self) -> Self::Attr<OEA> {
         ElementAttrMemberWrapper::new(self)
+    }
+}
+
+impl<R, T> ElementAttrMember<R> for futures_lite::stream::Boxed<T>
+where
+    R: Renderer,
+    T: ElementAttrMember<R> + 'static,
+{
+    type EA = T::EA;
+    type Attr<OEA: ElementAttr<R, Value = <Self::EA as ElementAttr<R>>::Value>> =
+        futures_lite::stream::Boxed<T::Attr<OEA>>;
+
+    fn into_other_attr<OEA: ElementAttr<R, Value = <Self::EA as ElementAttr<R>>::Value>>(
+        self,
+    ) -> Self::Attr<OEA> {
+        self.map(|n| n.into_other_attr()).boxed()
     }
 }
 
@@ -228,7 +262,7 @@ const _: () = {
     where
         R: Renderer,
         F: Fn() -> VM + MaybeSend + 'static,
-        VM: ElementAttrMember<R> + MaybeSend,
+        VM: ElementAttrMember<R>,
     {
         type EA = VM::EA;
         type Attr<OEA: ElementAttr<R, Value = <Self::EA as ElementAttr<R>>::Value>> =

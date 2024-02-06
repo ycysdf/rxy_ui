@@ -7,7 +7,7 @@ pub fn to_mutable<T>(t: T) -> ToMutableWrapper<T> {
 }
 
 #[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
-#[derive(Hash, Clone, Debug)]
+#[derive(Hash, Clone, Debug, PartialEq)]
 pub struct ToMutableWrapper<T>(pub T);
 
 impl<VK: ViewKey<R>, R: Renderer> MutableViewKey<R> for ToMutableWrapper<VK> {

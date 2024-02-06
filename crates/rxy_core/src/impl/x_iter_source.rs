@@ -20,7 +20,10 @@ use hooked_collection::{
 pub enum UseListOperation<T> {
     WatchCount(Sender<usize>),
     Ops(VecOperation<T>),
+    #[cfg(feature = "send_sync")]
     Callback(Box<dyn FnOnce(&mut HookedVec<T, VecOperationRecord<T>>) + MaybeSend>),
+    #[cfg(not(feature = "send_sync"))]
+    Callback(Box<dyn FnOnce(&mut HookedVec<T, VecOperationRecord<T>>)>),
 }
 
 pub trait ListOperator {

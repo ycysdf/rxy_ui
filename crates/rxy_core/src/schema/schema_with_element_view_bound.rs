@@ -1,6 +1,6 @@
 use crate::{ElementView, Renderer, Schema, InnerSchemaCtx, MaybeSend};
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq,Eq)]
 pub struct ElementSchemaBoundWrapper<T>(pub T);
 
 pub trait SchemaWithElementViewBound<R: Renderer>: MaybeSend + 'static {

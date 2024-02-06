@@ -50,7 +50,7 @@ pub trait ElementStyleExt: ElementView<BevyRenderer> {
         VMO: ViewMemberWithOrigin<BevyRenderer, VM, Origin = ApplyStyleSheets<SS>>,
         SS: StyleSheets<BevyRenderer>,
     {
-        self.member(style_builder(|ctx, flags| f(ctx, flags).into_view_member()))
+        self.member(IntoViewMemberWrapper(style_builder(|ctx, flags| f(ctx, flags).into_view_member())))
     }
 
     fn style_future<TO, VM, VMO, SS>(

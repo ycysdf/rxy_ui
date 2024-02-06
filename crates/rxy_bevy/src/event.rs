@@ -610,7 +610,7 @@ impl ElementEventIds for BubblePointerEvent {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq,Eq)]
 pub struct IntoIteratorWrapper<T>(pub T);
 
 impl<T> ElementEventIds for IntoIteratorWrapper<T>

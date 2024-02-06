@@ -1,6 +1,6 @@
 use core::future::{Future, IntoFuture};
 
-use futures_lite::StreamExt;
+use futures_lite::{FutureExt, StreamExt};
 
 use crate::build_info::{node_build_status, node_build_times_increment};
 use crate::renderer::DeferredNodeTreeScoped;
@@ -200,6 +200,16 @@ where
 
     fn rebuild(self, ctx: ViewMemberCtx<R>) {
         self.build(ctx, true);
+    }
+}
+impl<R, T, T2> IntoViewMember<R, futures_lite::future::Boxed<T2>> for futures_lite::future::Boxed<T>
+where
+    R: Renderer,
+    T2: ViewMember<R>,
+    T: IntoViewMember<R, T2> + MaybeSend + 'static,
+{
+    fn into_member(self) -> futures_lite::future::Boxed<T2> {
+        async move { self.await.into_member() }.boxed()
     }
 }
 impl<R, T> ViewMember<R> for futures_lite::future::Boxed<T>
