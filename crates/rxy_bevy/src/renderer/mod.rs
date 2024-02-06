@@ -8,23 +8,23 @@ use bevy_hierarchy::DespawnRecursiveExt;
 use bevy_reflect::Reflect;
 use bevy_tasks::Task;
 
-pub use element::*;
-use rxy_core::{DeferredNodeTreeScoped, Element, ElementAttrViewMember, ElementTypeUnTyped, ElementViewChildren, NodeTree, Renderer, RendererNodeId, RendererWorld, ViewKey};
-pub use view::*;
 pub use composite_attrs::*;
+use rxy_core::{
+    DeferredNodeTreeScoped, Element, ElementAttrViewMember, ElementTypeUnTyped,
+    ElementViewChildren, NodeTree, Renderer, RendererNodeId, RendererWorld, ViewKey,
+};
+pub use view::*;
 
-use crate::CmdSender;
 use crate::elements::element_div;
+use crate::CmdSender;
 
-pub mod element;
-pub mod elements;
-mod into_attr;
-pub mod into_attr_value;
-mod node_tree;
-mod view;
+pub mod attr_value;
 pub mod attrs;
-mod text_styled_element;
 mod composite_attrs;
+pub mod elements;
+mod node_tree;
+mod text_styled_element;
+mod view;
 
 #[inline(always)]
 pub fn view_element_type() -> &'static dyn ElementTypeUnTyped<BevyRenderer> {
@@ -43,7 +43,7 @@ pub struct BevyWrapper<T>(pub T);
 #[derive(Deref, DerefMut, Component, Reflect, Clone)]
 pub struct RendererState<T: Send + Sync + 'static>(pub T);
 
-#[derive(Reflect, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Reflect, Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct BevyRenderer;
 
 #[derive(Clone)]

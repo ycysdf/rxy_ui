@@ -15,6 +15,14 @@ ahash.workspace = true
 hashbrown.workspace = true
 bevy_utils = { workspace = true, optional = true }
 
+glam = { workspace = true, optional = true }
+bevy_asset = { workspace = true, optional = true }
+bevy_text = { workspace = true, optional = true }
+bevy_ui = { workspace = true, optional = true }
+#bevy_transform = { workspace = true, optional = true }
+bevy_render = { workspace = true, optional = true }
+
+
 async-channel = { workspace = true, optional = true }
 hooked_collection = { workspace = true, optional = true }
 drain_filter_polyfill.workspace = true
@@ -32,7 +40,15 @@ paste.workspace = true
 default = ["std", "view_erasure", "async-channel", "either_future", "send_sync"]
 send_sync = []
 std = []
-bevy = ["std", "send_sync", "bevy_utils"]
+bevy = [
+    "std", "send_sync", "bevy_utils",
+    "dep:glam",
+    "dep:bevy_asset",
+    "dep:bevy_text",
+    "dep:bevy_ui",
+    #bevy_transform
+    "dep:bevy_render",
+]
 view_erasure = []
 xy_reactive = ["dep:xy_reactive", "send_sync"]
 bevy_reflect = ["dep:bevy_reflect", "std", "send_sync"]

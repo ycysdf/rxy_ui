@@ -6,16 +6,21 @@ use bevy_ui::prelude::NodeBundle;
 
 use rxy_core::{ElementAttrUntyped, ElementType, RendererNodeId, RendererWorld};
 
-use crate::{BevyRenderer, BevyWorldExt};
+use crate::all_attrs::CommonAttrs;
+use crate::{BevyRenderer, BevyWorldExt, CompositeAttrs};
 
 use super::*;
+
+impl CommonAttrs for element_div {}
 
 #[derive(Reflect, Debug, Clone, Copy)]
 pub struct element_div;
 
 impl ElementType<BevyRenderer> for element_div {
     const TAG_NAME: &'static str = "div";
-    const ATTRS: &'static [&'static [&'static dyn ElementAttrUntyped<BevyRenderer>]] = &[];
+    const ATTRS: &'static [&'static [&'static dyn ElementAttrUntyped<BevyRenderer>]] = &[
+        <Self as CommonAttrs>::ATTRS,
+    ];
 
     fn spawn(
         world: &mut RendererWorld<BevyRenderer>,

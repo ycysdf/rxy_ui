@@ -9,12 +9,15 @@ where
     fn into_member(self) -> VM;
 }
 
-impl<R> IntoViewMember<R, ()> for ()
+impl<R> IntoViewMember<R, Self> for ()
 where
     R: Renderer,
 {
-    fn into_member(self) {}
+    fn into_member(self) -> Self {
+        ()
+    }
 }
+
 
 macro_rules! impl_into_view_member_for_tuples {
     ($(($ty:ident,$vm:ident)),*$(,)?) => {

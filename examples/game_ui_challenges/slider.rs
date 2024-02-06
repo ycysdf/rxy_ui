@@ -105,6 +105,7 @@ pub fn schema_slider(
                         is_drag.set(false);
                     }),
                 )
-            }),
+            })
+        ,
     ))
 }

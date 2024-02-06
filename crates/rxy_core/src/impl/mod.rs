@@ -24,26 +24,25 @@ pub use x_iter_source::*;
 mod build_configure;
 mod builder;
 mod either;
-mod x_if;
-mod x_iter;
 mod option;
 mod rebuild_fn_receiver;
 mod stream;
 mod to_mutable;
 mod virtual_container;
+mod x_if;
+mod x_iter;
 // mod r#static;
+mod context;
 mod dynamic;
 mod erasure;
+mod future;
 mod reflect;
+mod result;
 #[cfg(feature = "x_iter_source")]
 mod x_iter_source;
-mod context;
-mod result;
-mod future;
 // mod stream_with_default_value;
 
-
-#[cfg(feature = "xy_reactive")]
+#[cfg(all(feature = "xy_reactive", feature = "send_sync"))]
 pub use reactive::*;
-#[cfg(feature = "xy_reactive")]
+#[cfg(all(feature = "xy_reactive", feature = "send_sync"))]
 mod reactive;

@@ -3,7 +3,7 @@ use std::fmt::Debug;
 
 use bevy::prelude::*;
 use bevy::render::color::Color;
-use rxy_core::fn_schema_view;
+use rxy_core::{ElementAttrViewMember, fn_schema_view, IntoViewMember};
 
 use rxy_ui::prelude::*;
 
@@ -50,6 +50,7 @@ where
             .bg_color(Color::GRAY)
             .w_full()
     });
+
     button()
         .name("select")
         .style(SelectStyle)

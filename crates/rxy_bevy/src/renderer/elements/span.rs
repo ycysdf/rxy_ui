@@ -9,6 +9,7 @@ use bevy_ui::prelude::TextBundle;
 use rxy_core::{ElementAttrUntyped, ElementType, RendererNodeId, RendererWorld};
 
 use crate::{BevyRenderer, BevyWorldExt};
+use crate::all_attrs::CommonAttrs;
 
 use super::*;
 
@@ -22,7 +23,9 @@ pub struct element_span;
 impl ElementType<BevyRenderer> for element_span {
     const TAG_NAME: &'static str = "span";
 
-    const ATTRS: &'static [&'static [&'static dyn ElementAttrUntyped<BevyRenderer>]] = &[];
+    const ATTRS: &'static [&'static [&'static dyn ElementAttrUntyped<BevyRenderer>]] = &[
+        <element_div as CommonAttrs>::ATTRS,
+    ];
 
     fn spawn(
         world: &mut RendererWorld<BevyRenderer>,

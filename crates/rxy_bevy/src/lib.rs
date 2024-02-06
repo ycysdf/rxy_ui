@@ -2,7 +2,6 @@
 
 pub use cmd::*;
 pub use command::*;
-pub use element::*;
 pub use entity_extra_data::*;
 pub use focusable::*;
 pub use plugin::*;
@@ -21,7 +20,6 @@ pub use world_ext::*;
 
 mod cmd;
 mod command;
-mod element;
 mod entity_extra_data;
 mod event;
 mod focusable;
@@ -57,8 +55,9 @@ pub mod prelude {
     pub use crate::renderer::{button, div, span, BevyElement};
 
     pub use super::{
-        event::*, system_once, x_res, BevyRenderer, BevyWrapper, CloneableSlot, CmdReceiver,
-        CmdSender, ElementKeyboardEvents, FnSchemaView, Focusable, MemberOwnerBundleExt,
-        ReceiverProp, ResChangeWorldExt, RxyPlugin, RxyUiCommandExt, SchemaCtx, Slot,
+        all_attrs::CommonAttrsViewBuilder, event::*, system_once, x_res,
+        BevyRenderer, BevyWrapper, CloneableSlot, CmdReceiver, CmdSender, ElementKeyboardEvents,
+        FnSchemaView, Focusable, MemberOwnerBundleExt, ReceiverProp, ResChangeWorldExt, RxyPlugin,
+        RxyUiCommandExt, SchemaCtx, Slot,CompositeAttrs
     };
 }

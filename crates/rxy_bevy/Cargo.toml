@@ -23,18 +23,18 @@ smallvec.workspace = true
 
 bevy_app.workspace = true
 bevy_asset = { workspace = true, optional = false }
+bevy_text = { workspace = true, optional = false }
+bevy_transform = { workspace = true, optional = false }
+bevy_render.workspace = true
+bevy_ui.workspace = true
 bevy_core.workspace = true
 bevy_derive.workspace = true
 bevy_ecs.workspace = true
 bevy_hierarchy.workspace = true
 bevy_mod_picking.workspace = true
 bevy_reflect.workspace = true
-bevy_render.workspace = true
 bevy_sprite.workspace = true
 bevy_tasks.workspace = true
-bevy_text = { workspace = true, optional = false }
-bevy_transform = { workspace = true, optional = false }
-bevy_ui.workspace = true
 bevy_utils.workspace = true
 bevy_a11y.workspace = true
 bevy_input.workspace = true

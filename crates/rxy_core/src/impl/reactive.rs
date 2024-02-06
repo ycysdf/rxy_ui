@@ -3,13 +3,13 @@ use core::cell::UnsafeCell;
 use core::marker::PhantomData;
 use xy_reactive::effect::ErasureEffect;
 
-use xy_reactive::prelude::create_render_effect;
+use xy_reactive::prelude::{create_render_effect, use_memo, Memo, ReadSignal, RwSignal, SignalGet};
 use xy_reactive::render_effect::RenderEffect;
 
 use crate::{
-    DeferredNodeTreeScoped, IntoView, IntoViewMember, MaybeSend, MemberOwner, NodeTree, Renderer,
-    RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
-    ViewMemberIndex,
+    DeferredNodeTreeScoped, IntoView, IntoViewMember, IntoViewMemberWrapper, MaybeSend, MaybeSync,
+    MemberOwner, NodeTree, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey,
+    ViewMember, ViewMemberCtx, ViewMemberIndex,
 };
 
 struct FnOnceCell<'a, I, T> {
@@ -64,14 +64,48 @@ pub fn create_effect_with_init<T: Clone + 'static, I: 'static>(
     }
 }
 
-impl<R, F, VM> IntoViewMember<R, Self> for Reactive<F, VM>
+impl<R, VM, IVM> IntoViewMember<R, InnerIvmToVmWrapper<Self, VM>> for Memo<IVM>
 where
     R: Renderer,
-    F: Fn() -> VM + MaybeSend + 'static,
-    VM: ViewMember<R> + MaybeSend,
+    VM: ViewMember<R> + MaybeSync + Clone + PartialEq,
+    IVM: IntoViewMember<R, VM> + MaybeSend + MaybeSync + Clone + 'static,
 {
-    fn into_member(self) -> Self {
-        self
+    fn into_member(self) -> InnerIvmToVmWrapper<Self, VM> {
+        InnerIvmToVmWrapper::new(self)
+    }
+}
+
+impl<R, VM, IVM> IntoViewMember<R, InnerIvmToVmWrapper<Self, VM>> for ReadSignal<IVM>
+where
+    R: Renderer,
+    VM: ViewMember<R> + MaybeSync + Clone + PartialEq,
+    IVM: IntoViewMember<R, VM> + MaybeSend + MaybeSync + Clone + 'static,
+{
+    fn into_member(self) -> InnerIvmToVmWrapper<Self, VM> {
+        InnerIvmToVmWrapper::new(self)
+    }
+}
+
+impl<R, VM, IVM> IntoViewMember<R, InnerIvmToVmWrapper<Self, VM>> for RwSignal<IVM>
+where
+    R: Renderer,
+    VM: ViewMember<R> + MaybeSync + Clone + PartialEq,
+    IVM: IntoViewMember<R, VM> + MaybeSend + MaybeSync + Clone + 'static,
+{
+    fn into_member(self) -> InnerIvmToVmWrapper<Self, VM> {
+        InnerIvmToVmWrapper::new(self)
+    }
+}
+
+impl<R, F, VM, IVM> IntoViewMember<R, InnerIvmToVmWrapper<Self, VM>> for Reactive<F, IVM>
+where
+    R: Renderer,
+    F: Fn() -> IVM + MaybeSend + 'static,
+    IVM: IntoViewMember<R, VM> + MaybeSend + MaybeSync + Clone + 'static,
+    VM: ViewMember<R>,
+{
+    fn into_member(self) -> InnerIvmToVmWrapper<Self, VM> {
+        InnerIvmToVmWrapper::new(self)
     }
 }
 
@@ -149,6 +183,93 @@ where
         ctx.set_indexed_view_member_state(ReactiveDisposerState(_effect.erase()))
     }
 }
+
+pub struct InnerIvmToVmWrapper<T, M>(pub(crate) T, PhantomData<M>);
+
+impl<T, M> InnerIvmToVmWrapper<T, M> {
+    pub fn new(t: T) -> Self {
+        Self(t, Default::default())
+    }
+}
+
+impl<R, F, IVM, VM> ViewMember<R> for InnerIvmToVmWrapper<Reactive<F, IVM>, VM>
+where
+    R: Renderer,
+    F: Fn() -> IVM + MaybeSend + 'static,
+    IVM: IntoViewMember<R, VM> + MaybeSend + MaybeSync + Clone + 'static,
+    VM: ViewMember<R>,
+{
+    fn count() -> ViewMemberIndex {
+        VM::count()
+    }
+
+    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
+        VM::unbuild(ctx, view_removed);
+    }
+
+    fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
+        rx(move || self.0 .0().into_member()).build(ctx, will_rebuild);
+    }
+
+    fn rebuild(self, ctx: ViewMemberCtx<R>) {
+        rx(move || self.0 .0().into_member()).rebuild(ctx);
+    }
+}
+
+impl<R, T, VM, IVM> ViewMember<R> for InnerIvmToVmWrapper<T, VM>
+where
+    R: Renderer,
+    T: SignalGet<Value = IVM> + MaybeSend + 'static,
+    IVM: IntoViewMember<R, VM> + MaybeSync + Clone + 'static,
+    VM: ViewMember<R>,
+{
+    fn count() -> ViewMemberIndex {
+        VM::count()
+    }
+
+    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
+        VM::unbuild(ctx, view_removed);
+    }
+
+    fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
+        rx(move || self.0.get().into_member()).build(ctx, will_rebuild);
+    }
+
+    fn rebuild(self, ctx: ViewMemberCtx<R>) {
+        rx(move || self.0.get().into_member()).rebuild(ctx);
+    }
+}
+
+macro_rules! impl_view_member_for_signal_get {
+    ($ident:ident) => {
+        impl<R, VM> ViewMember<R> for $ident<VM>
+        where
+            R: Renderer,
+            VM: ViewMember<R> +MaybeSync + Clone,
+        {
+            fn count() -> ViewMemberIndex {
+                VM::count()
+            }
+
+            fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
+                VM::unbuild(ctx, view_removed);
+            }
+
+            fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
+                rx(move || self.get()).build(ctx, will_rebuild);
+            }
+
+            fn rebuild(self, ctx: ViewMemberCtx<R>) {
+                rx(move || self.get()).rebuild(ctx);
+            }
+        }
+    };
+}
+
+impl_view_member_for_signal_get!(Memo);
+impl_view_member_for_signal_get!(ReadSignal);
+impl_view_member_for_signal_get!(RwSignal);
+
 
 #[cfg_attr(
     feature = "bevy_reflect",
@@ -353,7 +474,7 @@ where
         VM: ViewMember<R>,
         T: IntoViewMember<R, VM>,
     {
-        self.member(rx(move || f().into_member()))
+        self.member(IntoViewMemberWrapper(rx(move || f().into_member())))
     }
 }
 

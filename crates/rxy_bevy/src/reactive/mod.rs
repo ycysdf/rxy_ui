@@ -29,7 +29,7 @@
 //     }
 // }
 //
-// // impl<EA, T> IntoViewAttrMember<EA> for IntoAttrMemberWrapper<T, EA>
+// // impl<EA, T> IntoViewAttrMember<EA> for IntoAttrMemberWrapper<T>
 // // where
 // //     EA: ElementUnitAttr,
 // //     T: IntoViewAttrMember<EA> + ViewMember<BevyRenderer>,

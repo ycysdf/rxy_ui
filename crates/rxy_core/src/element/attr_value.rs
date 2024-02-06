@@ -1,10 +1,10 @@
+use crate::AttrValueWrapper;
 use alloc::string::String;
 use alloc::borrow::Cow;
 use core::fmt::Debug;
 use core::ops::Deref;
 use crate::{MaybeFromReflect, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, smallbox};
 use crate::smallbox::{S1, SmallBox};
-use crate::element::AttrValueWrapper;
 use crate::element::ElementAttr;
 use crate::renderer::Renderer;
 
@@ -33,37 +33,44 @@ impl Clone for SmallBox<dyn AttrValue, S1> {
     }
 }
 
-
-// todo: generic params
-macro_rules! impl_into_attr_value_wrapper {
-    ($ty:ty) => {
-        impl<R, EA> Into<AttrValueWrapper<R, EA>> for $ty
-        where
-            EA: ElementAttr<R>,
-            EA::Value: From<$ty>,
-            R: Renderer,
-        {
-            fn into(self) -> AttrValueWrapper<R, EA> {
-                AttrValueWrapper(self.into())
-            }
-        }
-    };
-}
 #[macro_export]
-macro_rules! impl_default_attr_values {
-    ($($ty:ty $(:$value:stmt)?),*) => {
+macro_rules! impl_into_attr_value_wrappers {
+    ($($ty:ty),*) => {
         $(
-            impl_default_attr_value!($ty $(,$value)?);
+            impl Into<AttrValueWrapper<Self>> for $ty
+            {
+                fn into(self) -> AttrValueWrapper<Self> {
+                    AttrValueWrapper(self)
+                }
+            }
         )*
     };
 }
 
 #[macro_export]
-macro_rules! impl_default_attr_value {
-    ($ty:ty) => {
-        impl_default_attr_value!($ty, <Self as Default>::default());
+macro_rules! impl_attr_value_and_wrapper {
+    ($($ty:ty $(=> $value:expr)?),*) => {
+        $(
+            impl_attr_value!($ty $(=> $value)?);
+            impl_into_attr_value_wrappers!($ty);
+        )*
     };
-    ($ty:ty,$value:stmt) => {
+}
+#[macro_export]
+macro_rules! impl_attr_values {
+    ($($ty:ty $(=> $value:expr)?),*) => {
+        $(
+            impl_attr_value!($ty $(=> $value)?);
+        )*
+    };
+}
+
+#[macro_export]
+macro_rules! impl_attr_value {
+    ($ty:ty) => {
+        impl_attr_value!($ty => <Self as Default>::default());
+    };
+    ($ty:ty => $value:expr) => {
         impl AttrValue for $ty {
             fn clone_att_value(&self) -> SmallBox<dyn AttrValue, S1> {
                 smallbox!(self.clone())
@@ -76,16 +83,15 @@ macro_rules! impl_default_attr_value {
                 *self == *other
             }
 
-            #[cfg(not(feature = "bevy_reflect"))]
+            #[cfg(all(not(feature = "bevy_reflect"),not(feature = "bevy")))]
             fn as_any(&self) -> &dyn core::any::Any {
                 self
             }
         }
-        impl_into_attr_value_wrapper!($ty);
     };
 }
 
-impl_default_attr_values! {
+impl_attr_value_and_wrapper! {
     u8,
     u16,
     u32,
@@ -105,10 +111,7 @@ impl_default_attr_values! {
     Cow<'static, str>
 }
 
-#[cfg(feature = "bevy_ui")]
-impl_default_attr_values! {
-    bevy_ui::prelude::Val
-}
+impl_into_attr_value_wrappers!(&'static str);
 
 impl<T> AttrValue for Option<T>
 where

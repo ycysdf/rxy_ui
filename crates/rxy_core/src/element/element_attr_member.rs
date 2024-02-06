@@ -1,9 +1,10 @@
+use alloc::boxed::Box;
+
 use crate::element::ElementAttr;
-use crate::{
-    x_future, Either, MaybeSend, Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, XFuture,
-};
+use crate::{x_future, Either, IntoViewMember, MaybeSend, MaybeSync, Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, XFuture, AttrValueWrapper};
 use core::future::Future;
 use core::marker::PhantomData;
+use xy_reactive::prelude::SignalGet;
 
 pub trait ElementAttrMember<R>: ViewMember<R>
 where
@@ -64,7 +65,7 @@ impl<T, M> ElementAttrMemberWrapper<T, M> {
 impl<R, TO, VM, EA, OOEA> ElementAttrMember<R> for ElementAttrMemberWrapper<XFuture<TO>, OOEA>
 where
     EA: ElementAttr<R>,
-    OOEA: ElementAttr<R,Value=EA::Value>,
+    OOEA: ElementAttr<R, Value = EA::Value>,
     R: Renderer,
     TO: Future<Output = VM> + MaybeSend + 'static,
     VM: ElementAttrMember<R, EA = EA>,
@@ -119,6 +120,192 @@ where
     }
 }
 
+#[cfg(feature = "xy_reactive")]
+const _: () = {
+    use crate::Reactive;
+    use xy_reactive::prelude::Memo;
+    use xy_reactive::prelude::ReadSignal;
+    use xy_reactive::prelude::RwSignal;
+
+    impl<R, T, EA, OEA, VM> ViewMember<R> for ElementAttrMemberWrapper<T, OEA>
+    where
+        R: Renderer,
+        T: SignalGet<Value = VM> + MaybeSend + 'static,
+        VM: ElementAttrMember<R, EA = EA> + MaybeSync + Clone,
+        EA: ElementAttr<R>,
+        OEA: ElementAttr<R, Value = EA::Value>,
+        OEA: ElementAttr<R>,
+    {
+        fn count() -> ViewMemberIndex {
+            VM::count()
+        }
+
+        fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
+            VM::unbuild(ctx, view_removed)
+        }
+
+        fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
+            let reactive = crate::rx(move || self.0.get().into_other_attr::<OEA>());
+            reactive.build(ctx, will_rebuild)
+        }
+
+        fn rebuild(self, ctx: ViewMemberCtx<R>) {
+            let reactive = crate::rx(move || self.0.get().into_other_attr::<OEA>());
+            reactive.rebuild(ctx)
+        }
+    }
+
+    impl<R, F, EA, OEA, VM> ViewMember<R> for ElementAttrMemberWrapper<Reactive<F, VM>, OEA>
+    where
+        R: Renderer,
+        F: Fn() -> VM + MaybeSend + 'static,
+        VM: ElementAttrMember<R, EA = EA> + MaybeSend,
+        EA: ElementAttr<R>,
+        OEA: ElementAttr<R, Value = EA::Value>,
+        OEA: ElementAttr<R>,
+    {
+        fn count() -> ViewMemberIndex {
+            VM::count()
+        }
+
+        fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
+            VM::unbuild(ctx, view_removed)
+        }
+
+        fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
+            let reactive = crate::rx(move || self.0 .0().into_other_attr::<OEA>());
+            reactive.build(ctx, will_rebuild)
+        }
+
+        fn rebuild(self, ctx: ViewMemberCtx<R>) {
+            let reactive = crate::rx(move || self.0 .0().into_other_attr::<OEA>());
+            reactive.rebuild(ctx)
+        }
+    }
+
+    impl<R, T, EA, OOEA, VM> ElementAttrMember<R> for ElementAttrMemberWrapper<T, OOEA>
+    where
+        R: Renderer,
+        T: SignalGet<Value = VM> + MaybeSend + 'static,
+        VM: ElementAttrMember<R, EA = EA> + MaybeSync + Clone,
+        EA: ElementAttr<R>,
+        OOEA: ElementAttr<R, Value = EA::Value>,
+        OOEA: ElementAttr<R>,
+    {
+        type EA = OOEA;
+        type Attr<OEA: ElementAttr<R, Value = <Self::EA as ElementAttr<R>>::Value>> =
+            ElementAttrMemberWrapper<T, OEA>;
+
+        fn into_other_attr<OEA: ElementAttr<R, Value = <Self::EA as ElementAttr<R>>::Value>>(
+            self,
+        ) -> Self::Attr<OEA> {
+            ElementAttrMemberWrapper::new(self.0)
+        }
+    }
+
+    impl<R, F, EA, OOEA, VM> ElementAttrMember<R> for ElementAttrMemberWrapper<Reactive<F, VM>, OOEA>
+    where
+        R: Renderer,
+        F: Fn() -> VM + MaybeSend + 'static,
+        VM: ElementAttrMember<R, EA = EA> + MaybeSend,
+        EA: ElementAttr<R>,
+        OOEA: ElementAttr<R, Value = EA::Value>,
+        OOEA: ElementAttr<R>,
+    {
+        type EA = OOEA;
+        type Attr<OEA: ElementAttr<R, Value = <Self::EA as ElementAttr<R>>::Value>> =
+            ElementAttrMemberWrapper<Reactive<F, VM>, OEA>;
+
+        fn into_other_attr<OEA: ElementAttr<R, Value = <Self::EA as ElementAttr<R>>::Value>>(
+            self,
+        ) -> Self::Attr<OEA> {
+            ElementAttrMemberWrapper::new(self.0)
+        }
+    }
+
+    impl<R, F, VM> ElementAttrMember<R> for Reactive<F, VM>
+    where
+        R: Renderer,
+        F: Fn() -> VM + MaybeSend + 'static,
+        VM: ElementAttrMember<R> + MaybeSend,
+    {
+        type EA = VM::EA;
+        type Attr<OEA: ElementAttr<R, Value = <Self::EA as ElementAttr<R>>::Value>> =
+            ElementAttrMemberWrapper<Self, OEA>;
+
+        fn into_other_attr<OEA: ElementAttr<R, Value = <Self::EA as ElementAttr<R>>::Value>>(
+            self,
+        ) -> Self::Attr<OEA> {
+            ElementAttrMemberWrapper::new(self)
+        }
+    }
+
+    macro_rules! impl_element_view_member_for_signal_get {
+        ($ident:ident) => {
+            impl<R, VM> ElementAttrMember<R> for $ident<VM>
+            where
+                R: Renderer,
+                VM: ElementAttrMember<R> + MaybeSync + Clone,
+            {
+                type EA = VM::EA;
+                type Attr<OEA: ElementAttr<R, Value = <Self::EA as ElementAttr<R>>::Value>> =
+                    ElementAttrMemberWrapper<Self, OEA>;
+
+                fn into_other_attr<
+                    OEA: ElementAttr<R, Value = <Self::EA as ElementAttr<R>>::Value>,
+                >(
+                    self,
+                ) -> Self::Attr<OEA> {
+                    ElementAttrMemberWrapper::new(self)
+                }
+            }
+        };
+    }
+    impl_element_view_member_for_signal_get!(Memo);
+    impl_element_view_member_for_signal_get!(ReadSignal);
+    impl_element_view_member_for_signal_get!(RwSignal);
+
+    impl<R, F, IVM, VM> ElementAttrMember<R> for crate::InnerIvmToVmWrapper<Reactive<F, IVM>, VM>
+    where
+        R: Renderer,
+        F: Fn() -> IVM + MaybeSend + 'static,
+        IVM: IntoViewMember<R, VM> + MaybeSend + MaybeSync + Clone + 'static,
+        VM: ElementAttrMember<R>,
+    {
+        type EA = VM::EA;
+        type Attr<OEA: ElementAttr<R, Value = <Self::EA as ElementAttr<R>>::Value>> =
+        Reactive<Box<dyn Fn() -> VM::Attr<OEA> + MaybeSend>, VM::Attr<OEA>>;
+
+        fn into_other_attr<OEA: ElementAttr<R, Value = <Self::EA as ElementAttr<R>>::Value>>(
+            self,
+        ) -> Self::Attr<OEA> {
+            crate::rx(Box::new(move || {
+                self.0.0().into_member().into_other_attr::<OEA>()
+            }))
+        }
+    }
+
+    impl<R, T, VM, IVM> ElementAttrMember<R> for crate::InnerIvmToVmWrapper<T, VM>
+    where
+        R: Renderer,
+        T: SignalGet<Value = IVM> + MaybeSend + 'static,
+        IVM: IntoViewMember<R, VM> + MaybeSync + Clone + 'static,
+        VM: ElementAttrMember<R>,
+    {
+        type EA = VM::EA;
+        type Attr<OEA: ElementAttr<R, Value = <Self::EA as ElementAttr<R>>::Value>> =
+            Reactive<Box<dyn Fn() -> VM::Attr<OEA> + MaybeSend>, VM::Attr<OEA>>;
+
+        fn into_other_attr<OEA: ElementAttr<R, Value = <Self::EA as ElementAttr<R>>::Value>>(
+            self,
+        ) -> Self::Attr<OEA> {
+            crate::rx(Box::new(move || {
+                self.0.get().into_member().into_other_attr::<OEA>()
+            }))
+        }
+    }
+};
+
 #[cfg(test)]
 mod test {
     use crate::element::{ElementAttr, ElementAttrMember};
@@ -132,7 +319,7 @@ mod test {
         VM1: ElementAttrMember<R, EA = EA1>,
         VM2: ElementAttrMember<R, EA = EA2>,
     >() {
-        assert_not_impl_all!(Either<VM1,VM2>: ElementAttrMember<()>);
+        assert_not_impl_all!(Either<VM2,VM2>: ElementAttrMember<()>);
         assert_impl_all!(Option<VM1>: ElementAttrMember<()>);
         assert_impl_all!(Option<Option<VM2 >>: ElementAttrMember<()>);
         assert_impl_all!(Either<VM1,VM1>: ElementAttrMember<()>);

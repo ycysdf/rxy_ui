@@ -132,7 +132,33 @@ macro_rules! impl_member_owner_for_tuple {
     };
 }
 
-all_tuples!(impl_member_owner_for_tuple, 0, 12, M);
+#[allow(non_snake_case)]
+impl<R, > MemberOwner<R> for ()
+    where
+        R: Renderer,
+{
+    type E = ();
+    type VM = Self;
+    type AddMember<T: ViewMember<R>> = (T,);
+    type SetMembers<T: ViewMember<R> + MemberOwner<R>> = T;
+
+    fn member<T>(self, member: impl IntoViewMember<R, T>) -> Self::AddMember<T>
+        where
+            (Self::VM, T): ViewMember<R>,
+            T: ViewMember<R>,
+    {
+        (member.into_member(),)
+    }
+
+    fn members<T>(self, members: impl IntoViewMember<R, T>) -> Self::SetMembers<(T, )>
+        where
+            T: ViewMember<R>
+    {
+        (members.into_member(), )
+    }
+}
+
+all_tuples!(impl_member_owner_for_tuple, 1, 12, M);
 // impl_member_owner_for_tuple!(END;M0 , M1 , M2 , M3 , M4 , M5 , M6 , M7 , M8 , M9 , M10 , M11 ,M12);
 
 

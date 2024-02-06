@@ -7,7 +7,10 @@ use derive_more::IntoIterator;
 #[allow(unused_imports)]
 #[allow(dead_code)]
 use derive_more::{Deref, DerefMut, From};
-use rxy_core::{Either, EitherExt, IntoViewMember, MemberOwner, Renderer, RendererNodeId, RendererWorld, ViewMember};
+use rxy_core::{
+    Either, EitherExt, IntoViewMember, MemberOwner, Renderer, RendererNodeId, RendererWorld,
+    ViewMember,
+};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::hash::Hash;
@@ -132,7 +135,7 @@ where
     type AddMember<VM: ViewMember<R>> = StyleSheetOwner<T::AddMember<VM>>;
     type SetMembers<VM: ViewMember<R> + MemberOwner<R>> = StyleSheetOwner<T::SetMembers<VM>>;
 
-    fn member<VM>(self, member: impl IntoViewMember<R,VM>) -> Self::AddMember<VM>
+    fn member<VM>(self, member: impl IntoViewMember<R, VM>) -> Self::AddMember<VM>
     where
         (Self::VM, VM): ViewMember<R>,
         VM: ViewMember<R>,
@@ -140,7 +143,10 @@ where
         StyleSheetOwner(self.0, self.1.member(member))
     }
 
-    fn members<VM: ViewMember<R>>(self, members: impl IntoViewMember<R,VM>) -> Self::SetMembers<(VM,)>
+    fn members<VM: ViewMember<R>>(
+        self,
+        members: impl IntoViewMember<R, VM>,
+    ) -> Self::SetMembers<(VM,)>
     where
         VM: ViewMember<R>,
     {
@@ -277,7 +283,8 @@ impl NodeInterStyleAttrInfos {
         &mut self,
         attr_id: &StyleAttrId,
     ) -> Option<(StyleInteraction, NodeStyleAttrInfo)> {
-        self.iter_mut().find_map(|(interaction, n)| n.remove(attr_id).map(|n| (*interaction, n)))
+        self.iter_mut()
+            .find_map(|(interaction, n)| n.remove(attr_id).map(|n| (*interaction, n)))
     }
     pub fn get_attr_info(
         &self,
@@ -297,7 +304,10 @@ impl NodeInterStyleAttrInfos {
                 .get(&StyleInteraction::Active)
                 .and_then(|n| n.get(&attr_id))
                 .condition(strict, |n| {
-                    n.or_else(|| self.get(&StyleInteraction::Hover).and_then(|n| n.get(&attr_id)))
+                    n.or_else(|| {
+                        self.get(&StyleInteraction::Hover)
+                            .and_then(|n| n.get(&attr_id))
+                    })
                 }),
             interaction => self.get(&interaction).and_then(|n| n.get(&attr_id)),
         }
@@ -373,7 +383,9 @@ impl StyleInteraction {
         if strict {
             Some(self).into_iter().either_left()
         } else {
-            Self::priority_iter().filter(move |n| self.contains(*n)).either_right()
+            Self::priority_iter()
+                .filter(move |n| self.contains(*n))
+                .either_right()
         }
     }
 }

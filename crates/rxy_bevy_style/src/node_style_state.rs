@@ -9,7 +9,6 @@ use crate::{AppliedStyleSheet, ApplyStyleSheetsMemberState, StyleSheetDefinition
 #[derive(Default, Clone, Debug)]
 pub struct NodeStyleSheetsState {
     pub inline_style_sheet: Vec<Option<StyleSheetDefinition>>,
-    // pub shared_style_sheet_ids: Vec<Option<SharedStyleSheetId>>,
     pub shared_style_sheet_ids: Vec<Option<StyleSheetId<BevyRenderer>>>,
 }
 
