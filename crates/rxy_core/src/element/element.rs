@@ -1,10 +1,9 @@
 use core::fmt::Debug;
-use core::hash::Hash;
 use core::marker::PhantomData;
 
 use crate::element::{view_children, ElementType, ElementViewChildren};
 use crate::{
-    BoxedErasureView, ElementView, IntoView, IntoViewMember, MemberOwner, NodeTree, Renderer,
+    ElementView, IntoView, IntoViewMember, MemberOwner, NodeTree, Renderer,
     RendererNodeId, SoloView, View, ViewCtx, ViewKey, ViewMember,
     ViewMemberCtx,
 };
@@ -38,7 +37,7 @@ impl<R, E, VM> Element<R, E, VM>
     }
 
     #[cfg(feature = "view_erasure")]
-    pub fn children<CV>(self, children: CV) -> ElementViewChildren<R, Element<R, E, VM>, BoxedErasureView<R>>
+    pub fn children<CV>(self, children: CV) -> ElementViewChildren<R, Element<R, E, VM>, crate::BoxedErasureView<R>>
         where
             CV: IntoView<R>,
     {

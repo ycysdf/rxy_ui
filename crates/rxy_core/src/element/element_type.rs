@@ -65,6 +65,8 @@ where
     const TAG_NAME: &'static str;
     const ATTRS: &'static [&'static [&'static dyn ElementAttrUntyped<R>]];
 
+    fn get()-> &'static dyn ElementTypeUnTyped<R>;
+
     // fn attr(attr_name: &str) -> Option<&'static dyn ElementUnitAttrUntyped<R>> {
     //     use rxy_core::utils::HashMap;
     //

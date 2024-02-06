@@ -1,10 +1,9 @@
-use alloc::boxed::Box;
-
 use crate::element::ElementAttr;
-use crate::{x_future, Either, IntoViewMember, MaybeSend, MaybeSync, Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, XFuture, AttrValueWrapper};
+use crate::{
+    x_future, Either, MaybeSend, Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, XFuture,
+};
 use core::future::Future;
 use core::marker::PhantomData;
-use xy_reactive::prelude::SignalGet;
 
 pub trait ElementAttrMember<R>: ViewMember<R>
 where
@@ -123,9 +122,11 @@ where
 #[cfg(feature = "xy_reactive")]
 const _: () = {
     use crate::Reactive;
+    use crate::{IntoViewMember, MaybeSync};
     use xy_reactive::prelude::Memo;
     use xy_reactive::prelude::ReadSignal;
     use xy_reactive::prelude::RwSignal;
+    use xy_reactive::prelude::SignalGet;
 
     impl<R, T, EA, OEA, VM> ViewMember<R> for ElementAttrMemberWrapper<T, OEA>
     where
@@ -274,13 +275,13 @@ const _: () = {
     {
         type EA = VM::EA;
         type Attr<OEA: ElementAttr<R, Value = <Self::EA as ElementAttr<R>>::Value>> =
-        Reactive<Box<dyn Fn() -> VM::Attr<OEA> + MaybeSend>, VM::Attr<OEA>>;
+            Reactive<Box<dyn Fn() -> VM::Attr<OEA> + MaybeSend>, VM::Attr<OEA>>;
 
         fn into_other_attr<OEA: ElementAttr<R, Value = <Self::EA as ElementAttr<R>>::Value>>(
             self,
         ) -> Self::Attr<OEA> {
             crate::rx(Box::new(move || {
-                self.0.0().into_member().into_other_attr::<OEA>()
+                self.0 .0().into_member().into_other_attr::<OEA>()
             }))
         }
     }

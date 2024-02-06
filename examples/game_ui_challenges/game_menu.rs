@@ -145,8 +145,8 @@ fn schema_setting() -> impl IntoView<BevyRenderer> {
             .children((label, content))
     }
 
-    fn label(str: &str) -> impl IntoView<BevyRenderer> {
-        span(str).font_size(17.)
+    fn label(str: impl Into<String>) -> impl IntoView<BevyRenderer> {
+        span(str.into()).font_size(17.)
     }
 
     div().style(x().size_screen().center()).children(

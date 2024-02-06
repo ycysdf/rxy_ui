@@ -55,7 +55,7 @@ where
         let event_handler = Arc::new(Mutex::new(event_handler));
         Self {
             event_handler: event_handler.clone(),
-            _task: R::spawn(async move {
+            _task: R::spawn_task(async move {
                 while let Ok(args) = receiver.recv().await {
                     let mut event_handler = event_handler.lock().unwrap();
                     if let Some(event_handler) = event_handler.as_mut() {

@@ -178,7 +178,7 @@ impl NodeTree<BevyRenderer> for World {
     ) -> RendererNodeId<BevyRenderer> {
         let node_id = E::spawn(self, parent, reserve_node_id);
         {
-            let entity_extra_data = ElementEntityExtraData::new(E::TAG_NAME);
+            let entity_extra_data = ElementEntityExtraData::new(E::get());
             self.entity_mut(node_id).insert(entity_extra_data);
         };
         node_id

@@ -7,9 +7,6 @@ pub use focusable::*;
 pub use plugin::*;
 pub use renderer::*;
 pub use res_change_observe::*;
-// pub use rxy_bevy_element::all_attrs;
-// pub use rxy_bevy_element::elements;
-// pub use rxy_bevy_element::ElementType;
 use rxy_core::{
     CloneableSchemaSlot, FnSchema, IntoViewSchemaFnWrapper, RebuildFnReceiver, RenderSchemaCtx,
     SchemaSlot, SchemaView,
@@ -52,11 +49,12 @@ pub mod all_attrs {
 pub mod prelude {
     pub use bevy_ui::prelude::Val;
 
-    pub use crate::renderer::{button, div, span, BevyElement};
+    pub use crate::renderer::BevyElement;
+    pub use crate::renderer::common_renderer::*;
 
     pub use super::{
         all_attrs::CommonAttrsViewBuilder, event::*, system_once, x_res,
-        BevyRenderer, BevyWrapper, CloneableSlot, CmdReceiver, CmdSender, ElementKeyboardEvents,
+        BevyRenderer, CloneableSlot, CmdReceiver, CmdSender, ElementKeyboardEvents,
         FnSchemaView, Focusable, MemberOwnerBundleExt, ReceiverProp, ResChangeWorldExt, RxyPlugin,
         RxyUiCommandExt, SchemaCtx, Slot,CompositeAttrs
     };

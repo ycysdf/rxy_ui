@@ -450,7 +450,7 @@ where
         DataOrPlaceholderNodeId::Data(ctx.world.spawn_data_node())
     };
 
-    let task = R::spawn({
+    let task = R::spawn_task({
         use crate::renderer::DeferredNodeTreeScoped;
         let parent = ctx.parent;
         let view_f = for_source.view_f;

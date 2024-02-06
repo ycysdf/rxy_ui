@@ -643,36 +643,17 @@ macro_rules! impl_element_evet_id_iterator_for_tuples {
 
 all_tuples!(impl_element_evet_id_iterator_for_tuples, 0, 4, T);
 
-macro_rules! impl_element_pointer_events_members {
+macro_rules! impl_element_pointer_events_alias {
     ($($name:ident = $event_type:ty;)*) => {
         $(
            pub type $name = $event_type;
            paste::paste!{
                pub type [<ListenerInput $name>] = ListenerInput<$name>;
            }
-        )*/*
-
-        impl<T> ElementPointerEvents for T
-        where
-            T: rxy_core::MemberOwner<$crate::BevyRenderer>+Sized {}
-
-        pub trait ElementPointerEvents: rxy_core::MemberOwner<$crate::BevyRenderer>+Sized
-        {
-            $(
-                paste::paste!{
-                    fn [<on_ $name:snake>]<Marker>(
-                        self,
-                        system: impl bevy_ecs::prelude::IntoSystem<(), (), Marker>,
-                    ) -> Self::AddMember<$crate::XBundle<On<$name>>> {
-                        self.bundle(On::<$name>::run(system))
-                    }
-                }
-            )*
-        }
- */
+        )*
     };
 }
-impl_element_pointer_events_members!(
+impl_element_pointer_events_alias!(
     PointerOver = Pointer<Over>;
     PointerOut = Pointer<Out>;
     PointerDown = Pointer<Down>;

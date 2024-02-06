@@ -1,15 +1,12 @@
+use crate::smallbox::{SmallBox, S1};
 use crate::AttrValueWrapper;
-use alloc::string::String;
+use crate::{smallbox, MaybeFromReflect, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath};
 use alloc::borrow::Cow;
+use alloc::string::String;
 use core::fmt::Debug;
 use core::ops::Deref;
-use crate::{MaybeFromReflect, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, smallbox};
-use crate::smallbox::{S1, SmallBox};
-use crate::element::ElementAttr;
-use crate::renderer::Renderer;
 
-pub trait AttrValue: MaybeReflect + MaybeSend + MaybeSync + Debug + 'static
-{
+pub trait AttrValue: MaybeReflect + MaybeSend + MaybeSync + Debug + 'static {
     fn clone_att_value(&self) -> SmallBox<dyn AttrValue, S1>;
     fn default_value() -> Self
     where
@@ -107,11 +104,16 @@ impl_attr_value_and_wrapper! {
     usize,
     isize,
     String,
-    // &'static str,
     Cow<'static, str>
 }
 
 impl_into_attr_value_wrappers!(&'static str);
+
+impl Into<AttrValueWrapper<Cow<'static, str>>> for String {
+    fn into(self) -> AttrValueWrapper<Cow<'static, str>> {
+        AttrValueWrapper(self.into())
+    }
+}
 
 impl<T> AttrValue for Option<T>
 where
@@ -137,25 +139,3 @@ where
         self == other
     }
 }
-
-// impl AttrValue for Cow<'static, str> {
-//     fn clone_att_value(&self) -> SmallBox<dyn AttrValue, S1> {
-//         smallbox!(self.clone())
-//     }
-//
-//     fn default_value() -> Self
-//     where
-//         Self: Sized,
-//     {
-//         <Self as Default>::default()
-//     }
-//
-//     fn eq(&self, other: &Self) -> bool {
-//         self == other
-//     }
-//
-//     #[cfg(not(feature = "bevy_reflect"))]
-//     fn as_any(&self) -> &dyn core::any::Any {
-//         self
-//     }
-// }

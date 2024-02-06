@@ -78,7 +78,7 @@ fn future_view_rebuild<R, T>(
     };
     let world_scoped = ctx.world.deferred_world_scoped();
 
-    let task = R::spawn(async move {
+    let task = R::spawn_task(async move {
         let view = future.await;
         world_scoped.scoped(move |world| {
             let Some(state_node_id) = key.state_node_id() else {
@@ -136,7 +136,7 @@ where
     let world_scoped = ctx.world.deferred_world_scoped();
 
     let node_id = ctx.node_id.clone();
-    let task = R::spawn(async move {
+    let task = R::spawn_task(async move {
         let view_member = future.await;
         world_scoped.scoped(move |world| {
             let mut ctx = ViewMemberCtx::<R> {

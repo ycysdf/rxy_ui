@@ -3,8 +3,7 @@
 use std::borrow::Cow;
 use bevy_asset::Handle;
 
-use crate::renderer::text_styled_element::TextStyledElementEntityWorldMutExt;
-use crate::{BevyRenderer, ElementStyleEntityExt};
+use crate::{BevyRenderer, ElementStyleEntityExt, TextStyledElementEntityWorldMutExt};
 use bevy_render::color::Color;
 use bevy_render::view::Visibility;
 use bevy_text::{BreakLineOn, Font, TextAlignment};
@@ -78,7 +77,6 @@ macro_rules! element_attrs_fn_define {
         paste::paste!{
             pub trait [<$name ViewBuilder>]: rxy_core::MemberOwner<$crate::BevyRenderer> + Sized
             {
-
                 $(
                     fn $attr<T>(self, value: impl rxy_core::IntoViewMember<$crate::BevyRenderer, T>) -> Self::AddMember<T>
                     where

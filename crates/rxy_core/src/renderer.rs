@@ -65,7 +65,7 @@ pub trait Renderer:
 
     type Task<T: MaybeSend + 'static>: MaybeSend + 'static;
 
-    fn spawn<T: MaybeSend + 'static>(
+    fn spawn_task<T: MaybeSend + 'static>(
         future: impl Future<Output = T> + MaybeSend + 'static,
     ) -> Self::Task<T>;
 }

@@ -1,4 +1,4 @@
-use crate::{all_attrs, BevyRenderer};
+use crate::{all_attrs, BevyRenderer, ElementStyleEntityExt};
 use bevy_ecs::prelude::*;
 use bevy_reflect::prelude::*;
 use rxy_core::ElementAttr;
@@ -6,24 +6,25 @@ use rxy_core::ElementAttr;
 pub trait TextStyledElementEntityWorldMutExt {
     fn scoped_text_styled_element_type(
         &mut self,
-        f: impl FnMut(&'static dyn TextStyledElementType, &mut EntityMut),
+        f: impl FnMut(&'static dyn TextStyledElementType, &mut EntityWorldMut<'_>),
     );
 }
 
 impl TextStyledElementEntityWorldMutExt for EntityWorldMut<'_> {
     fn scoped_text_styled_element_type(
         &mut self,
-        mut f: impl FnMut(&'static dyn TextStyledElementType, &mut EntityMut),
+        mut f: impl FnMut(&'static dyn TextStyledElementType, &mut EntityWorldMut<'_>),
     ) {
-        todo!()
-        // let schema_name = self
-        //     .get_element_extra_data_mut()
-        //     .map(|n| n.element_name)?;
-        // let schema_type = get_element_type(schema_name);
-        // let type_registry = self.type_registry.read();
-        // type_registry
-        //     .get_type_data::<ReflectTextStyledElementType>(schema_type.type_id())
-        //     .and_then(|n| n.get(schema_type.as_reflect()))
+        let element_type = self
+            .get_element_extra_data_mut()
+            .map(|n| n.element_type)
+            .unwrap();
+        let type_registry = self.world().resource::<AppTypeRegistry>().clone();
+        let type_registry = type_registry.read();
+        let option = type_registry
+            .get_type_data::<ReflectTextStyledElementType>(element_type.type_id())
+            .and_then(|n| n.get(element_type.as_reflect()));
+        f(option.unwrap(), self)
     }
 }
 
@@ -31,27 +32,27 @@ impl TextStyledElementEntityWorldMutExt for EntityWorldMut<'_> {
 pub trait TextStyledElementType {
     fn set_font(
         &self,
-        entity_ref: &mut EntityMut,
+        entity_ref: &mut EntityWorldMut<'_>,
         value: <all_attrs::font as ElementAttr<BevyRenderer>>::Value,
     );
     fn set_font_size(
         &self,
-        entity_ref: &mut EntityMut,
+        entity_ref: &mut EntityWorldMut<'_>,
         value: <all_attrs::font_size as ElementAttr<BevyRenderer>>::Value,
     );
     fn set_text_color(
         &self,
-        entity_ref: &mut EntityMut,
+        entity_ref: &mut EntityWorldMut<'_>,
         value: <all_attrs::text_color as ElementAttr<BevyRenderer>>::Value,
     );
     fn set_text_linebreak(
         &self,
-        entity_ref: &mut EntityMut,
+        entity_ref: &mut EntityWorldMut<'_>,
         value: <all_attrs::text_linebreak as ElementAttr<BevyRenderer>>::Value,
     );
     fn set_text_align(
         &self,
-        entity_ref: &mut EntityMut,
+        entity_ref: &mut EntityWorldMut<'_>,
         value: <all_attrs::text_align as ElementAttr<BevyRenderer>>::Value,
     );
 }

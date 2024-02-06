@@ -6,26 +6,27 @@ use bevy_reflect::Reflect;
 use bevy_text::Text;
 use bevy_ui::prelude::TextBundle;
 
-use rxy_core::{ElementAttrUntyped, ElementType, RendererNodeId, RendererWorld};
+use rxy_core::{ElementAttr, ElementAttrUntyped, ElementType, ElementTypeUnTyped, RendererNodeId, RendererWorld};
 
-use crate::{BevyRenderer, BevyWorldExt};
-use crate::all_attrs::CommonAttrs;
+use crate::{
+    all_attrs, BevyRenderer, BevyWorldExt, ReflectTextStyledElementType, TextStyledElementType,
+};
 
 use super::*;
 
-// use crate::all_attrs;
-// use crate::text_styled_element::TextStyledElementType;
-
-#[derive(Reflect, Debug, Clone, Copy)]
-// #[reflect(TextStyledElementType)]
+#[derive(Reflect, Debug, Default, Clone, Copy)]
+#[reflect(TextStyledElementType)]
 pub struct element_span;
 
 impl ElementType<BevyRenderer> for element_span {
     const TAG_NAME: &'static str = "span";
 
-    const ATTRS: &'static [&'static [&'static dyn ElementAttrUntyped<BevyRenderer>]] = &[
-        <element_div as CommonAttrs>::ATTRS,
-    ];
+    const ATTRS: &'static [&'static [&'static dyn ElementAttrUntyped<BevyRenderer>]] =
+        &[VIEW_ATTRS];
+
+    fn get() -> &'static dyn ElementTypeUnTyped<BevyRenderer> {
+        &element_span
+    }
 
     fn spawn(
         world: &mut RendererWorld<BevyRenderer>,
@@ -37,70 +38,75 @@ impl ElementType<BevyRenderer> for element_span {
         entity_world_mut.id()
     }
 }
-//
-// impl TextStyledElementType for text {
-//     fn set_font(&self, entity_ref: &mut EntityMut, value: <all_attrs::font as ElementAttr>::Value) {
-//         let Some(mut t) = entity_ref.get_mut::<Text>() else {
-//             return;
-//         };
-//         for section in t.sections.iter_mut() {
-//             section.style.font = value.clone();
-//         }
-//     }
-//
-//     fn set_font_size(
-//         &self,
-//         entity_ref: &mut EntityMut,
-//         value: <all_attrs::font_size as ElementAttr>::Value,
-//     ) {
-//         let Some(mut t) = entity_ref.get_mut::<Text>() else {
-//             return;
-//         };
-//         for section in t.sections.iter_mut() {
-//             section.style.font_size = value;
-//         }
-//     }
-//
-//     fn set_text_color(
-//         &self,
-//         entity_ref: &mut EntityMut,
-//         value: <all_attrs::text_color as ElementAttr>::Value,
-//     ) {
-//         let Some(mut t) = entity_ref.get_mut::<Text>() else {
-//             return;
-//         };
-//         for section in t.sections.iter_mut() {
-//             section.style.color = value;
-//         }
-//     }
-//
-//     fn set_text_linebreak(
-//         &self,
-//         entity_ref: &mut EntityMut,
-//         value: <all_attrs::text_linebreak as ElementAttr>::Value,
-//     ) {
-//         let Some(mut t) = entity_ref.get_mut::<Text>() else {
-//             return;
-//         };
-//         t.linebreak_behavior = value;
-//     }
-//
-//     fn set_text_align(
-//         &self,
-//         entity_ref: &mut EntityMut,
-//         value: <all_attrs::text_align as ElementAttr>::Value,
-//     ) {
-//         let Some(mut t) = entity_ref.get_mut::<Text>() else {
-//             return;
-//         };
-//         t.alignment = value;
-//     }
-// }
+
+impl TextStyledElementType for element_span {
+    fn set_font(
+        &self,
+        entity_ref: &mut EntityWorldMut<'_>,
+        value: <all_attrs::font as ElementAttr<BevyRenderer>>::Value,
+    ) {
+        let Some(mut t) = entity_ref.get_mut::<Text>() else {
+            return;
+        };
+        for section in t.sections.iter_mut() {
+            section.style.font = value.clone();
+        }
+    }
+
+    fn set_font_size(
+        &self,
+        entity_ref: &mut EntityWorldMut<'_>,
+        value: <all_attrs::font_size as ElementAttr<BevyRenderer>>::Value,
+    ) {
+        let Some(mut t) = entity_ref.get_mut::<Text>() else {
+            return;
+        };
+        for section in t.sections.iter_mut() {
+            section.style.font_size = value;
+        }
+    }
+
+    fn set_text_color(
+        &self,
+        entity_ref: &mut EntityWorldMut<'_>,
+        value: <all_attrs::text_color as ElementAttr<BevyRenderer>>::Value,
+    ) {
+        let Some(mut t) = entity_ref.get_mut::<Text>() else {
+            return;
+        };
+        for section in t.sections.iter_mut() {
+            section.style.color = value;
+        }
+    }
+
+    fn set_text_linebreak(
+        &self,
+        entity_ref: &mut EntityWorldMut<'_>,
+        value: <all_attrs::text_linebreak as ElementAttr<BevyRenderer>>::Value,
+    ) {
+        let Some(mut t) = entity_ref.get_mut::<Text>() else {
+            return;
+        };
+        t.linebreak_behavior = value;
+    }
+
+    fn set_text_align(
+        &self,
+        entity_ref: &mut EntityWorldMut<'_>,
+        value: <all_attrs::text_align as ElementAttr<BevyRenderer>>::Value,
+    ) {
+        let Some(mut t) = entity_ref.get_mut::<Text>() else {
+            return;
+        };
+        t.alignment = value;
+    }
+}
 
 pub mod span_attrs {
     use bevy_text::TextStyle;
+    use std::borrow::Cow;
 
-    use rxy_core::{AttrIndex, ElementAttr};
+    use rxy_core::ElementAttr;
 
     use super::*;
 
@@ -134,7 +140,7 @@ pub mod span_attrs {
     pub struct content;
 
     impl ElementAttr<BevyRenderer> for content {
-        type Value = String;
+        type Value = Cow<'static, str>;
 
         const NAME: &'static str = stringify!(content);
 
@@ -143,18 +149,16 @@ pub mod span_attrs {
             node_id: RendererNodeId<BevyRenderer>,
             value: impl Into<Self::Value>,
         ) {
+            let value = value.into().to_string();
             let Some(mut t) = world.get_mut::<Text>(node_id) else {
                 return;
             };
             if t.sections.is_empty() {
-                t.sections = vec![bevy_text::TextSection::new(
-                    value.into(),
-                    TextStyle::default(),
-                )];
+                t.sections = vec![bevy_text::TextSection::new(value, TextStyle::default())];
             } else if t.sections.len() == 1 {
-                t.sections[0].value = value.into();
+                t.sections[0].value = value;
             } else {
-                t.sections[0].value = value.into();
+                t.sections[0].value = value;
                 unsafe {
                     t.sections.set_len(1);
                 }

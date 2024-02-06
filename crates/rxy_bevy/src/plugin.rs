@@ -8,9 +8,7 @@ use bevy_ui::widget::TextFlags;
 use bevy_ui::Style;
 
 use crate::{handle_schedule_event, CommandChannelPlugin, FocusablePlugin, ScheduleSystemAdds};
-
-// use rxy_bevy_element::attr_values::BevyAppAttrValueRegistryExt;
-// use rxy_bevy_element::RxyBevyAppExt;
+use crate::elements::ElementTypeRegisterAppExt;
 
 #[derive(Resource)]
 pub struct RxyContainerEntity {
@@ -63,7 +61,7 @@ impl Plugin for RxyPlugin {
             .init_resource::<ScheduleSystemAdds>()
             // todo:
             // .register_attr_values()
-            // .register_elements_type()
+            .register_element_types()
             .add_systems(
                 First,
                 handle_schedule_event

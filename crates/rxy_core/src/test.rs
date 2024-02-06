@@ -1,4 +1,4 @@
-use crate::RendererWorld;
+use crate::{AttrIndex, ElementAttr, RendererWorld};
 use crate::{
     DeferredNodeTreeScoped, NodeTree, Renderer, RendererNodeId, ViewMember, ViewMemberCtx,
     ViewMemberIndex,
@@ -25,6 +25,37 @@ pub struct TestNodeTree;
 
 #[allow(unused_variables)]
 impl NodeTree<TestRenderer> for TestNodeTree {
+    fn prepare_set_attr_and_get_is_init(
+        &mut self,
+        node_id: &RendererNodeId<TestRenderer>,
+        attr_index: AttrIndex,
+    ) -> bool {
+        unsafe { unreachable_unchecked() }
+    }
+
+    fn build_attr<A: ElementAttr<TestRenderer>>(
+        &mut self,
+        node_id: RendererNodeId<TestRenderer>,
+        value: A::Value,
+    ) {
+        unsafe { unreachable_unchecked() }
+    }
+
+    fn rebuild_attr<A: ElementAttr<TestRenderer>>(
+        &mut self,
+        node_id: RendererNodeId<TestRenderer>,
+        value: A::Value,
+    ) {
+        unsafe { unreachable_unchecked() }
+    }
+
+    fn unbuild_attr<A: ElementAttr<TestRenderer>>(
+        &mut self,
+        node_id: RendererNodeId<TestRenderer>,
+    ) {
+        unsafe { unreachable_unchecked() }
+    }
+
     fn deferred_world_scoped(&mut self) -> impl DeferredNodeTreeScoped<TestRenderer> {
         TestRenderer
     }
@@ -125,7 +156,7 @@ impl Renderer for TestRenderer {
     type NodeTree = TestNodeTree;
     type Task<T: MaybeSend + 'static> = ();
 
-    fn spawn<T: MaybeSend + 'static>(
+    fn spawn_task<T: MaybeSend + 'static>(
         future: impl Future<Output = T> + MaybeSend + 'static,
     ) -> Self::Task<T> {
         unsafe { unreachable_unchecked() }

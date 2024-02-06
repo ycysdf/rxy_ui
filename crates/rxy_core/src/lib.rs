@@ -8,7 +8,6 @@ pub use paste::paste;
 
 pub use either::*;
 pub use element::*;
-pub use element_type::*;
 pub use element_view::*;
 pub use into_view::*;
 pub use into_view_member::*;
@@ -24,7 +23,6 @@ pub use view::*;
 pub use view_member::*;
 
 mod either;
-mod element_type;
 mod r#impl;
 mod into_view;
 mod into_view_member;
@@ -67,9 +65,11 @@ mod schema;
 // mod styled;
 pub mod build_info;
 pub use build_info::ViewMemberBuildExt;
+#[cfg(feature = "common_renderer")]
+pub mod common_renderer;
 pub mod diff;
 mod element;
 mod member_owner;
+mod renderers;
 mod r#static;
 pub mod utils;
-mod renderers;

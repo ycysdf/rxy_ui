@@ -1,13 +1,9 @@
 use crate::all_attrs::{
     border_bottom, border_left, border_right, border_top, margin_bottom, margin_left, margin_right,
-    margin_top, padding_bottom, padding_left, padding_right, padding_top, rotation, scale,
-    translation,
+    margin_top, padding_bottom, padding_left, padding_right, padding_top,
 };
-use crate::{BevyRenderer, BevyWrapper};
-use bevy_transform::components::Transform;
-use bevy_ui::Val;
-use rxy_core::{
-    ElementAttr, ElementAttrMember, IntoViewMember, IntoViewMemberWrapper, MemberOwner,
+use crate::BevyRenderer;
+use rxy_core::{ElementAttrMember, IntoViewMember, IntoViewMemberWrapper, MemberOwner,
 };
 
 pub trait CompositeAttrs: MemberOwner<BevyRenderer> + Sized {

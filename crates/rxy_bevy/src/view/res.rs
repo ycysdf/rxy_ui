@@ -28,7 +28,7 @@ fn x_res_view_build<T, F, IV>(
 {
     let world_scoped = ctx.world.deferred_world_scoped();
 
-    let task = BevyRenderer::spawn({
+    let task = BevyRenderer::spawn_task({
         let res_change_receiver = ctx.world.get_res_change_receiver::<T>();
         let parent = ctx.parent;
         let f = res.f;
@@ -130,7 +130,7 @@ where
 {
     let world_scoped = ctx.world.deferred_world_scoped();
 
-    let task = BevyRenderer::spawn({
+    let task = BevyRenderer::spawn_task({
         let ctx = ViewMemberCtx::<BevyRenderer> {
             index: ctx.index,
             world: &mut *ctx.world,

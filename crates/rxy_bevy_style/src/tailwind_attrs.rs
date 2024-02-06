@@ -1,6 +1,6 @@
 use bevy_render::prelude::Visibility;
 use bevy_text::{BreakLineOn, TextAlignment};
-use bevy_ui::{AlignItems, Display, FlexDirection, FlexWrap, JustifyContent, OverflowAxis, PositionType, Val};
+use bevy_ui::{AlignItems, Display, FlexDirection, FlexWrap, JustifyContent, PositionType, Val};
 use rxy_bevy::all_attrs::{
     align_items, column_gap, display, flex_direction, flex_grow, flex_shrink, flex_wrap, height,
     justify_content, margin_bottom, margin_left, margin_right, margin_top, max_height, max_width,
@@ -10,7 +10,7 @@ use rxy_bevy::all_attrs::{
 };
 use rxy_bevy::BevyRenderer;
 use rxy_core::{
-    ElementAttr, ElementAttrMember, ElementAttrViewMember, IntoViewMember, IntoViewMemberWrapper,
+    ElementAttrMember, ElementAttrViewMember, IntoViewMember, IntoViewMemberWrapper,
     MemberOwner,
 };
 

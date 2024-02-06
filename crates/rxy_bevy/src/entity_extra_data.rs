@@ -1,30 +1,27 @@
 use bevy_ecs::prelude::Component;
 
-use rxy_core::AttrIndex;
+use rxy_core::{AttrIndex, ElementTypeUnTyped};
+use crate::BevyRenderer;
 
 pub type AttrSetBits = u64;
 pub type AttrInitBits = u64;
 
-pub fn get_all_prop_indices() -> impl Iterator<Item = AttrIndex> {
-    let bit_count = (std::mem::size_of::<AttrSetBits>() * 8) as AttrIndex;
-    0..bit_count
-}
-
 #[derive(Component, Clone)]
 pub struct ElementEntityExtraData {
-    pub element_name: &'static str,
+    pub element_type: &'static dyn ElementTypeUnTyped<BevyRenderer>,
     pub attr_is_set: AttrSetBits,
     pub attr_is_init: AttrSetBits,
 }
 
 impl ElementEntityExtraData {
-    pub fn new(element_name: &'static str) -> Self {
+    pub fn new(element_type: &'static dyn ElementTypeUnTyped<BevyRenderer>) -> Self {
         Self {
-            element_name,
+            element_type,
             attr_is_set: 0,
             attr_is_init: 0,
         }
     }
+
     pub fn set_attr(&mut self, attr_index: AttrIndex, is_set: bool) {
         if attr_index == 0 {
             return;

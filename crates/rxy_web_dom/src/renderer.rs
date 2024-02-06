@@ -174,7 +174,7 @@ impl Renderer for WebRenderer {
     type NodeTree = WebDomNodeStates;
     type Task<T: MaybeSend + 'static> = ();
 
-    fn spawn<T>(future: impl Future<Output = T> + MaybeSend + 'static) -> Self::Task<T>
+    fn spawn_task<T>(future: impl Future<Output = T> + MaybeSend + 'static) -> Self::Task<T>
     where
         T: MaybeSend + 'static,
     {
