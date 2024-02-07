@@ -56,9 +56,13 @@ fn signal_sample() -> impl IntoView<BevyRenderer> {
 }
 
 fn btn(is_show: RwSignal<bool>) -> impl IntoView<BevyRenderer> {
-    div().children("Btn").padding(20).bg_color(Color::GRAY).on_pointer_click(move || {
-        is_show.update(|x| *x = !*x);
-    })
+    div()
+        .children("Btn")
+        .padding(20)
+        .bg_color(Color::GRAY)
+        .on_pointer_click(move || {
+            is_show.update(|x| *x = !*x);
+        })
 }
 
 fn sample_option_view() -> impl IntoView<BevyRenderer> {
@@ -66,7 +70,12 @@ fn sample_option_view() -> impl IntoView<BevyRenderer> {
     (
         btn(is_show),
         rx(move || {
-            let view = div().padding(10).bg_color(Color::BLUE).flex().center().children("Show");
+            let view = div()
+                .padding(10)
+                .bg_color(Color::BLUE)
+                .flex()
+                .center()
+                .children("Show");
             if is_show.get() {
                 Some(view)
             } else {
@@ -82,18 +91,25 @@ fn sample_option_view_member() -> impl IntoView<BevyRenderer> {
     let is_show = use_rw_signal(false);
     (
         btn(is_show),
-        div().padding(10).flex().center().children("Show").member(rx(move || {
-            is_show
-                .get()
-                .then_some(().bg_color(Color::BLUE).outline_color(Color::RED).outline_width(2))
-        })), // 下面写法与上面写法是等价的
-             // .rx_member(move || {
-             //     is_show.get().then_some(
-             //         ().bg_color(Color::BLUE)
-             //             .outline_color(Color::RED)
-             //             .outline_width(2),
-             //     )
-             // }),
+        div()
+            .padding(10)
+            .flex()
+            .center()
+            .children("Show")
+            .member(rx(move || {
+                is_show.get().then_some(
+                    ().bg_color(Color::BLUE)
+                        .outline_color(Color::RED)
+                        .outline_width(2),
+                )
+            })), // 下面写法与上面写法是等价的
+                 // .rx_member(move || {
+                 //     is_show.get().then_some(
+                 //         ().bg_color(Color::BLUE)
+                 //             .outline_color(Color::RED)
+                 //             .outline_width(2),
+                 //     )
+                 // }),
     )
 }
 
@@ -118,15 +134,20 @@ fn sample_either_view_member() -> impl IntoView<BevyRenderer> {
 
     (
         btn(is_show),
-        div().padding(10).flex().center().children("Show").member(rx(move || {
-            let left_vm = ().bg_color(Color::BLUE);
-            let right_vm = ().outline_color(Color::RED).outline_width(2);
-            if is_show.get() {
-                left_vm.either_left() // 这等同于 Either::Left(left_view)
-            } else {
-                right_vm.either_right() // 这等同于 Either::Right(right_view)
-            }
-        })),
+        div()
+            .padding(10)
+            .flex()
+            .center()
+            .children("Show")
+            .member(rx(move || {
+                let left_vm = ().bg_color(Color::BLUE);
+                let right_vm = ().outline_color(Color::RED).outline_width(2);
+                if is_show.get() {
+                    left_vm.either_left() // 这等同于 Either::Left(left_view)
+                } else {
+                    right_vm.either_right() // 这等同于 Either::Right(right_view)
+                }
+            })),
     )
 }
 
@@ -167,9 +188,13 @@ fn sample_future() -> impl IntoView<BevyRenderer> {
 fn sample_x_if() -> impl IntoView<BevyRenderer> {
     let is_show = use_rw_signal(false);
     (
-        div().children("Btn").padding(20).bg_color(Color::GRAY).on_pointer_click(move || {
-            is_show.update(|x| *x = !*x);
-        }),
+        div()
+            .children("Btn")
+            .padding(20)
+            .bg_color(Color::GRAY)
+            .on_pointer_click(move || {
+                is_show.update(|x| *x = !*x);
+            }),
         x_if(is_show, span("Show1").padding(10).text_color(Color::RED)),
         x_if(
             is_show,
@@ -179,35 +204,48 @@ fn sample_x_if() -> impl IntoView<BevyRenderer> {
 }
 
 fn sample_x_iter() -> impl IntoView<BevyRenderer> {
-    div().flex_col().gap(8).children(x_iter((0..10).map(|n| format!("Item: {}", n))))
+    div()
+        .flex_col()
+        .gap(8)
+        .children(x_iter((0..10).map(|n| format!("Item: {}", n))))
 }
 
 fn sample_x_iter_keyed() -> impl IntoView<BevyRenderer> {
-    div().flex_col().gap(1).children(x_iter_keyed((0..25).map(|n| {
-        Keyed(
-            n,
-            span(format!("Item: {}", n)).padding(10).text_color(Color::rgb_u8(n * 10, 255, 255)),
-        )
-    })))
+    div()
+        .flex_col()
+        .gap(1)
+        .children(x_iter_keyed((0..25).map(|n| {
+            Keyed(
+                n,
+                span(format!("Item: {}", n))
+                    .padding(10)
+                    .text_color(Color::rgb_u8(n * 10, 255, 255)),
+            )
+        })))
 }
 
 fn sample_x_iter_keyed_rx() -> impl IntoView<BevyRenderer> {
     let signal = use_rw_signal(3);
     (
-        div().padding(10).bg_color(Color::BLUE).children("Add").on_pointer_click(move || {
-            signal.update(|x| *x += 1);
-        }),
+        div()
+            .padding(10)
+            .bg_color(Color::BLUE)
+            .children("Add")
+            .on_pointer_click(move || {
+                signal.update(|x| *x += 1);
+            }),
         rx(move || {
-            div().flex_col().gap(1).children(x_iter_keyed((0..signal.get()).map(|n| {
-                Keyed(
-                    n,
-                    span(format!("Item: {}", n)).padding(10).text_color(Color::rgb_u8(
-                        n * 2,
-                        255,
-                        255,
-                    )),
-                )
-            })))
+            div()
+                .flex_col()
+                .gap(1)
+                .children(x_iter_keyed((0..signal.get()).map(|n| {
+                    Keyed(
+                        n,
+                        span(format!("Item: {}", n))
+                            .padding(10)
+                            .text_color(Color::rgb_u8(n * 2, 255, 255)),
+                    )
+                })))
         }),
     )
 }
@@ -231,7 +269,9 @@ fn sample_dynamic_style_sheet() -> impl IntoView<BevyRenderer> {
         })
         .style(Some((x().bg_color(Color::GRAY).height(100.).width(100.),)))
         .style_rx(move || {
-            signal.get().then_some((x().bg_color(Color::RED), x_hover().bg_color(Color::WHITE)))
+            signal
+                .get()
+                .then_some((x().bg_color(Color::RED), x_hover().bg_color(Color::WHITE)))
         })
 }
 
@@ -240,13 +280,19 @@ fn sample_shared_typed_style_sheet() -> impl IntoView<BevyRenderer> {
     struct MenuBtnStyle;
     (
         MenuBtnStyle::def((
-            x().width(160).py(8).flex().center().bg_color(Color::DARK_GRAY),
+            x().width(160)
+                .py(8)
+                .flex()
+                .center()
+                .bg_color(Color::DARK_GRAY),
             x_hover().bg_color(Color::GRAY),
             x_active().outline_color(Color::GREEN).outline_width(2),
         )),
         div().padding(50).gap(10).flex_col().children((
             div().style(MenuBtnStyle).children("Button 1"),
-            div().style((MenuBtnStyle, x().bg_color(Color::RED))).children("Button 2"),
+            div()
+                .style((MenuBtnStyle, x().bg_color(Color::RED)))
+                .children("Button 2"),
             div().style(MenuBtnStyle).children("Button 3"),
         )),
     )
@@ -266,7 +312,10 @@ pub fn schema_checkbox(
     ctx.default_typed_style(CheckboxStyle, || {
         let size = 20;
         (
-            x().center().size(size).border(1).border_color(Color::DARK_GRAY),
+            x().center()
+                .size(size)
+                .border(1)
+                .border_color(Color::DARK_GRAY),
             x_hover().bg_color(Color::DARK_GRAY),
         )
     });
@@ -310,7 +359,9 @@ fn schema_sample(head: Slot, foot: Slot) -> impl IntoView<BevyRenderer> {
 }
 
 fn sample_schema_sample() -> impl IntoView<BevyRenderer> {
-    sample().slot_head(div().children("Head")).slot_foot(div().children("Foot"))
+    sample()
+        .slot_head(div().children("Head"))
+        .slot_foot(div().children("Foot"))
 }
 
 #[schema]
@@ -351,10 +402,15 @@ fn sample_dynamic() -> impl IntoView<BevyRenderer> {
             }),
         rx(move || match signal.get() {
             SampleState::Init => span("Init").margin(30).into_dynamic(),
-            SampleState::Loading => {
-                div().padding(30).bg_color(Color::RED).children("Loading").into_dynamic()
-            }
-            SampleState::Loaded => span("Loaded").margin(30).text_color(Color::BLUE).into_dynamic(),
+            SampleState::Loading => div()
+                .padding(30)
+                .bg_color(Color::RED)
+                .children("Loading")
+                .into_dynamic(),
+            SampleState::Loaded => span("Loaded")
+                .margin(30)
+                .text_color(Color::BLUE)
+                .into_dynamic(),
         }),
     )
 }
@@ -363,7 +419,9 @@ fn sample_system_once() -> impl IntoView<BevyRenderer> {
     system_once(|entities: &Entities, cmd_sender: Res<CmdSender>| {
         let cmd_sender = cmd_sender.clone();
         (
-            div().font_size(30).children(format!("Entites Count: {}", entities.len())),
+            div()
+                .font_size(30)
+                .children(format!("Entites Count: {}", entities.len())),
             div()
                 .children("Spawn 2d Material")
                 .style((
@@ -395,7 +453,9 @@ fn sample_x_res() -> impl IntoView<BevyRenderer> {
     div().gap(10).p(20).flex_col().children((
         // x_res(|time: &Time| span(format!("Time: {:.1}", time.elapsed_seconds())).p(20).font_size(30)),
         x_res(|frame_count: &FrameCount| {
-            span(format!("FrameCount: {:?}", frame_count.0)).p(20).font_size(30)
+            span(format!("FrameCount: {:?}", frame_count.0))
+                .p(20)
+                .font_size(30)
         }),
         div().p(30).member(x_res(|time: &Time| {
             let t = time.elapsed_seconds();
@@ -420,16 +480,23 @@ struct MyContext {
 
 #[schema]
 fn schema_context_sample(Context(my_context): Context<MyContext>) -> impl IntoView<BevyRenderer> {
-    div().children("Set Signal To True").style(BtnStyle).on_pointer_click(move || {
-        my_context.signal.set(true);
-    })
+    div()
+        .children("Set Signal To True")
+        .style(BtnStyle)
+        .on_pointer_click(move || {
+            my_context.signal.set(true);
+        })
 }
 
 fn sample_context() -> impl IntoView<BevyRenderer> {
     let signal = use_rw_signal(false);
     (
         BtnStyle::def((
-            x().width(160).py(8).flex().center().bg_color(Color::DARK_GRAY),
+            x().width(160)
+                .py(8)
+                .flex()
+                .center()
+                .bg_color(Color::DARK_GRAY),
             x_hover().bg_color(Color::GRAY),
             x_active().outline_color(Color::GREEN).outline_width(2),
         )),
@@ -441,9 +508,12 @@ fn sample_context() -> impl IntoView<BevyRenderer> {
                     rx(move || format!("Signal: {}", my_context.signal.get()))
                 }),
                 x_if(signal, "Signal Is True"),
-                div().children("Set Signal To False").style(BtnStyle).on_pointer_click(move || {
-                    signal.set(false);
-                }),
+                div()
+                    .children("Set Signal To False")
+                    .style(BtnStyle)
+                    .on_pointer_click(move || {
+                        signal.set(false);
+                    }),
                 context_sample(),
             )),
         ),

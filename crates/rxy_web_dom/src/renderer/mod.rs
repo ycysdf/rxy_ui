@@ -1,3 +1,8 @@
+mod common_renderer;
+pub use common_renderer::*;
+pub mod attrs;
+pub mod elements;
+
 use std::any::{Any, TypeId};
 use std::borrow::BorrowMut;
 use std::borrow::Cow;
@@ -8,13 +13,16 @@ use std::ops::{Deref, DerefMut};
 
 use hashbrown::HashMap;
 use slotmap::{Key, KeyData, SlotMap};
-use web_sys::{Document, HtmlElement, Node, Window};
 use web_sys::wasm_bindgen::JsCast;
+use web_sys::{Document, HtmlElement, Node, Window};
 
-use rxy_core::{DeferredNodeTreeScoped, IntoView, MaybeSend, MaybeSync, NodeTree, Renderer, RendererElementType, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey};
-use crate::WebWrapper;
+use rxy_core::{
+    AttrIndex, DeferredNodeTreeScoped, ElementAttr, IntoView, MaybeSend, MaybeSync, NodeTree,
+    Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey,
+};
 
 pub struct WebTask;
+
 #[derive(Default)]
 pub struct NodeStates(HashMap<TypeId, Option<Box<dyn Any>>>);
 
@@ -123,13 +131,6 @@ where
     })
 }
 
-// static NODE_ID: AtomicU32 = AtomicU32::new(0);
-//
-// fn next_node_id() -> NodeStateId {
-//     let mut id = NODE_ID.fetch_add(1, Ordering::Relaxed);
-//     id
-// }
-
 pub trait DomNodeExt {
     fn get_state_id(&self) -> Option<NodeStateId>;
     fn set_state_id(&self, id: NodeStateId);
@@ -210,6 +211,43 @@ impl DeferredNodeTreeScoped<WebRenderer> for WebDomScoped {
 }
 
 impl NodeTree<WebRenderer> for WebDomNodeStates {
+    fn prepare_set_attr_and_get_is_init(
+        &mut self,
+        node_id: &RendererNodeId<WebRenderer>,
+        attr_index: AttrIndex,
+    ) -> bool {
+        false
+    }
+
+    fn build_attr<A: ElementAttr<WebRenderer>>(
+        &mut self,
+        node_id: RendererNodeId<WebRenderer>,
+        value: A::Value,
+    ) {
+        if let Some(element) = node_id.dyn_ref::<web_sys::Element>() {
+            let name = A::NAME;
+            // element.set_attribute(name, &value).unwrap();
+        } else {
+            println!("build_attr: {:?}", node_id);
+        }
+    }
+
+    fn rebuild_attr<A: ElementAttr<WebRenderer>>(
+        &mut self,
+        node_id: RendererNodeId<WebRenderer>,
+        value: A::Value,
+    ) {
+        self.build_attr(node_id, value);
+    }
+
+    fn unbuild_attr<A: ElementAttr<WebRenderer>>(&mut self, node_id: RendererNodeId<WebRenderer>) {
+        if let Some(element) = node_id.dyn_ref::<web_sys::Element>() {
+            let _ = element.remove_attribute(A::NAME);
+        } else {
+            println!("unbuild_attr: {:?}", node_id);
+        }
+    }
+
     fn deferred_world_scoped(&mut self) -> impl DeferredNodeTreeScoped<WebRenderer> {
         WebDomScoped
     }
