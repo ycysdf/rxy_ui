@@ -16,7 +16,7 @@ impl CommonRenderer for BevyRenderer {
         BevyElement<element_div, (XBundle<(FocusPolicy, Interaction, Button, Focusable)>,)>;
     type SpanContentEA = all_attrs::content;
 
-    fn crate_span<T>(str: impl IntoViewMember<Self, T>) -> Self::SpanView<T>
+    fn crate_span<T>(str: impl IntoViewMember<Self, Member=T>) -> Self::SpanView<T>
     where
         T: ElementAttrMember<Self, EA = Self::SpanContentEA>,
     {

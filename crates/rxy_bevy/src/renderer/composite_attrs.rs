@@ -3,13 +3,12 @@ use crate::all_attrs::{
     margin_top, padding_bottom, padding_left, padding_right, padding_top,
 };
 use crate::BevyRenderer;
-use rxy_core::{ElementAttrMember, IntoViewMember, IntoViewMemberWrapper, MemberOwner,
-};
+use rxy_core::{ElementAttrMember, IntoViewMember, IntoViewMemberWrapper, MemberOwner};
 
 pub trait CompositeAttrs: MemberOwner<BevyRenderer> + Sized {
     fn border_x<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<(T::Attr<border_left>, T::Attr<border_right>)>
     where
         T: ElementAttrMember<BevyRenderer, EA = border_left> + Clone,
@@ -23,7 +22,7 @@ pub trait CompositeAttrs: MemberOwner<BevyRenderer> + Sized {
 
     fn border_y<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<(T::Attr<border_top>, T::Attr<border_bottom>)>
     where
         T: ElementAttrMember<BevyRenderer, EA = border_top> + Clone,
@@ -37,7 +36,7 @@ pub trait CompositeAttrs: MemberOwner<BevyRenderer> + Sized {
 
     fn border<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<(
         T::Attr<border_left>,
         T::Attr<border_right>,
@@ -58,7 +57,7 @@ pub trait CompositeAttrs: MemberOwner<BevyRenderer> + Sized {
 
     fn margin_horizontal<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<(T::Attr<margin_left>, T::Attr<margin_right>)>
     where
         T: ElementAttrMember<BevyRenderer, EA = margin_left> + Clone,
@@ -72,7 +71,7 @@ pub trait CompositeAttrs: MemberOwner<BevyRenderer> + Sized {
 
     fn margin_vertical<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<(T::Attr<margin_top>, T::Attr<margin_bottom>)>
     where
         T: ElementAttrMember<BevyRenderer, EA = margin_top> + Clone,
@@ -86,7 +85,7 @@ pub trait CompositeAttrs: MemberOwner<BevyRenderer> + Sized {
 
     fn margin<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<(
         T::Attr<margin_left>,
         T::Attr<margin_right>,
@@ -107,7 +106,7 @@ pub trait CompositeAttrs: MemberOwner<BevyRenderer> + Sized {
 
     fn padding_horizontal<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<(T::Attr<padding_left>, T::Attr<padding_right>)>
     where
         T: ElementAttrMember<BevyRenderer, EA = padding_left> + Clone,
@@ -121,7 +120,7 @@ pub trait CompositeAttrs: MemberOwner<BevyRenderer> + Sized {
 
     fn padding_vertical<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<(T::Attr<padding_top>, T::Attr<padding_bottom>)>
     where
         T: ElementAttrMember<BevyRenderer, EA = padding_top> + Clone,
@@ -135,7 +134,7 @@ pub trait CompositeAttrs: MemberOwner<BevyRenderer> + Sized {
 
     fn padding<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<(
         T::Attr<padding_left>,
         T::Attr<padding_right>,

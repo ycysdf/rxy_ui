@@ -175,7 +175,7 @@ where
     R: Renderer,
     TO: Future + MaybeSend + 'static,
     VM: ViewMemberOrigin<R>,
-    TO::Output: IntoViewMember<R, VM> + MaybeSend + 'static,
+    TO::Output: IntoViewMember<R, Member = VM> + MaybeSend + 'static,
 {
     type Origin = VM::Origin;
 }
@@ -185,9 +185,8 @@ where
     R: Renderer,
     TO: Future + MaybeSend + 'static,
     VM: ViewMember<R>,
-    TO::Output: IntoViewMember<R, VM> + MaybeSend + 'static,
+    TO::Output: IntoViewMember<R, Member = VM> + MaybeSend + 'static,
 {
-
     fn count() -> ViewMemberIndex {
         VM::count()
     }
@@ -207,13 +206,15 @@ where
     }
 }
 
-impl<R, TO, VM> IntoViewMember<R, InnerIvmToVm<Self, VM>> for XFuture<TO>
+impl<R, TO, VM> IntoViewMember<R> for XFuture<TO>
 where
     R: Renderer,
     TO: Future + MaybeSend + 'static,
     VM: ViewMember<R>,
-    TO::Output: IntoViewMember<R, VM> + MaybeSend + 'static,
+    TO::Output: IntoViewMember<R, Member = VM> + MaybeSend + 'static,
 {
+    type Member = InnerIvmToVm<Self, VM>;
+
     fn into_member(self) -> InnerIvmToVm<Self, VM> {
         InnerIvmToVm::new(self)
     }
@@ -234,7 +235,6 @@ where
     T: Future + MaybeSend + 'static,
     T::Output: ViewMember<R> + MaybeSend + 'static,
 {
-
     fn count() -> ViewMemberIndex {
         T::Output::count()
     }
@@ -251,12 +251,13 @@ where
         self.build(ctx, true);
     }
 }
-impl<R, T, T2> IntoViewMember<R, futures_lite::future::Boxed<T2>> for futures_lite::future::Boxed<T>
+impl<R, T, T2> IntoViewMember<R> for futures_lite::future::Boxed<T>
 where
     R: Renderer,
     T2: ViewMember<R>,
-    T: IntoViewMember<R, T2> + MaybeSend + 'static,
+    T: IntoViewMember<R, Member = T2> + MaybeSend + 'static,
 {
+    type Member = futures_lite::future::Boxed<T2>;
 
     fn into_member(self) -> futures_lite::future::Boxed<T2> {
         async move { self.await.into_member() }.boxed()

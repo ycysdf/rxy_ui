@@ -87,14 +87,16 @@ where
     }
 }
 
-impl<R, F, IVM, VM> IntoViewMember<R, InnerIvmToVm<Self, VM>> for Builder<R, F>
+impl<R, F, IVM, VM> IntoViewMember<R> for Builder<R, F>
 where
     F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> IVM + MaybeSend + 'static,
     R: Renderer,
     VM: ViewMember<R>,
-    IVM: IntoViewMember<R, VM>,
+    IVM: IntoViewMember<R, Member = VM>,
 {
-    fn into_member(self) -> InnerIvmToVm<Self, VM> {
+    type Member = InnerIvmToVm<Self, VM>;
+
+    fn into_member(self) -> Self::Member {
         InnerIvmToVm::new(self)
     }
 }
@@ -103,7 +105,7 @@ impl<R, F, VM, IVM> ViewMemberOrigin<R> for InnerIvmToVm<Builder<R, F>, VM>
 where
     F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> IVM + MaybeSend + 'static,
     R: Renderer,
-    IVM: IntoViewMember<R, VM>,
+    IVM: IntoViewMember<R, Member=VM>,
     VM: ViewMemberOrigin<R>,
 {
     type Origin = VM::Origin;
@@ -113,7 +115,7 @@ impl<R, F, VM, IVM> ViewMember<R> for InnerIvmToVm<Builder<R, F>, VM>
 where
     F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> IVM + MaybeSend + 'static,
     R: Renderer,
-    IVM: IntoViewMember<R, VM>,
+    IVM: IntoViewMember<R, Member=VM>,
     VM: ViewMember<R>,
 {
     fn count() -> ViewMemberIndex {

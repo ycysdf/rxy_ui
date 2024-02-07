@@ -120,4 +120,4 @@ macro_rules! impl_schema_prop_value_wrapper_into_for_tuple {
     };
 }
 
-all_tuples!(impl_schema_prop_value_wrapper_into_for_tuple, 0, 6, T);
+all_tuples!(impl_schema_prop_value_wrapper_into_for_tuple, 0, 4, T);

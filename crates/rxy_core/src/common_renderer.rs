@@ -10,7 +10,7 @@ pub trait CommonRenderer: Renderer {
     type ButtonView: ElementSoloView<Self>;
     type SpanContentEA: ElementAttr<Self, Value = Cow<'static, str>>;
 
-    fn crate_span<T>(str: impl IntoViewMember<Self, T>) -> Self::SpanView<T>
+    fn crate_span<T>(str: impl IntoViewMember<Self,Member= T>) -> Self::SpanView<T>
     where
         T: ElementAttrMember<Self, EA = Self::SpanContentEA>;
     fn crate_div() -> Self::DivView;
@@ -21,7 +21,7 @@ pub trait CommonRenderer: Renderer {
 macro_rules! define_common_view_fns {
     ($renderer:ident) => {
         #[inline(always)]
-        pub fn span<T>(str: impl IntoViewMember<$renderer, T>) -> <$renderer as CommonRenderer>::SpanView<T>
+        pub fn span<T>(str: impl IntoViewMember<$renderer, Member=T>) -> <$renderer as CommonRenderer>::SpanView<T>
         where
             T: ElementAttrMember<$renderer, EA = <$renderer as CommonRenderer>::SpanContentEA>,
         {

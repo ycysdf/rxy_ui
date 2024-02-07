@@ -187,7 +187,7 @@ impl<R, VM, U, P, M> MemberOwner<R> for ElementSchemaView<R, U, VM, P, M>
     type SetMembers<Members: ViewMember<R> + MemberOwner<R>> =
     ElementSchemaView<R, U, Members, P, M>;
 
-    fn member<T>(self, member: impl IntoViewMember<R,T>) -> Self::AddMember<T>
+    fn member<T>(self, member: impl IntoViewMember<R,Member=T>) -> Self::AddMember<T>
         where
             (VM, T): ViewMember<R>, T: ViewMember<R>
     {
@@ -197,7 +197,7 @@ impl<R, VM, U, P, M> MemberOwner<R> for ElementSchemaView<R, U, VM, P, M>
         }
     }
 
-    fn members<T>(self, members: impl IntoViewMember<R,T>) -> Self::SetMembers<(T, )>
+    fn members<T>(self, members: impl IntoViewMember<R,Member=T>) -> Self::SetMembers<(T, )>
         where
             T: ViewMember<R>,
     {

@@ -1,5 +1,6 @@
-use crate::element::{ElementAttr, ElementAttrMember};
-use crate::{AttrValue, IntoViewMember, NodeTree, Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin};
+use crate::element::{ElementAttr};
+use crate::{AttrValue, ElementAttrMember, IntoViewMember, NodeTree, Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin};
+use std::marker::PhantomData;
 
 #[derive(Clone, Debug)]
 pub struct ElementAttrViewMember<R, EA>(pub EA::Value)
@@ -40,11 +41,13 @@ where
     }
 }
 
-impl<R, EA> IntoViewMember<R, Self> for ElementAttrViewMember<R, EA>
+impl<R, EA> IntoViewMember<R> for ElementAttrViewMember<R, EA>
 where
     R: Renderer,
     EA: ElementAttr<R>,
 {
+    type Member = Self;
+
     fn into_member(self) -> Self {
         self
     }
@@ -63,7 +66,6 @@ where
     R: Renderer,
     EA: ElementAttr<R>,
 {
-
     fn count() -> ViewMemberIndex {
         1
     }
@@ -84,16 +86,20 @@ where
     }
 }
 
+pub struct WW<T, M>(pub T, PhantomData<M>);
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AttrValueWrapper<T>(pub T);
 
-impl<EA, R, T> IntoViewMember<R, ElementAttrViewMember<R, EA>> for T
+impl<EA, R, T> IntoViewMember<R> for WW<T, EA>
 where
     R: Renderer,
     EA: ElementAttr<R>,
     T: Into<AttrValueWrapper<EA::Value>>,
 {
+    type Member = ElementAttrViewMember<R, EA>;
+
     fn into_member(self) -> ElementAttrViewMember<R, EA> {
-        ElementAttrViewMember(self.into().0)
+        ElementAttrViewMember(self.0.into().0)
     }
 }

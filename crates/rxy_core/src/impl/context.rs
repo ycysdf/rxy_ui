@@ -163,7 +163,7 @@ where
     type AddMember<VM: ViewMember<R>> = ProvideContext<R, T, V::AddMember<VM>>;
     type SetMembers<VM: ViewMember<R> + MemberOwner<R>> = ProvideContext<R, T, V::SetMembers<VM>>;
 
-    fn member<VM>(self, member: impl IntoViewMember<R,VM>) -> Self::AddMember<VM>
+    fn member<VM>(self, member: impl IntoViewMember<R,Member=VM>) -> Self::AddMember<VM>
     where
         (Self::VM, VM): ViewMember<R>,
         VM: ViewMember<R>,
@@ -175,7 +175,7 @@ where
         }
     }
 
-    fn members<VM: ViewMember<R>>(self, members: impl IntoViewMember<R,VM>) -> Self::SetMembers<(VM,)>
+    fn members<VM: ViewMember<R>>(self, members: impl IntoViewMember<R,Member=VM>) -> Self::SetMembers<(VM,)>
     where
         VM: ViewMember<R>,
     {

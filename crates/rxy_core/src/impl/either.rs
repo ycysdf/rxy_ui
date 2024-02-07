@@ -142,15 +142,15 @@ where
     }
 }
 
-impl<R, LVM, RVM, LVMO, RVMO> IntoViewMember<R, Either<LVM, RVM>> for Either<LVMO, RVMO>
+impl<R, LVM, RVM, LVMO, RVMO> IntoViewMember<R> for Either<LVMO, RVMO>
 where
     R: Renderer,
     LVM: ViewMember<R>,
     RVM: ViewMember<R>,
-    LVMO: IntoViewMember<R, LVM>,
-    RVMO: IntoViewMember<R, RVM>,
+    LVMO: IntoViewMember<R, Member=LVM>,
+    RVMO: IntoViewMember<R, Member=RVM>,
 {
-    // type Origin = Either<LVMO::Origin, RVMO::Origin>;
+    type Member = Either<LVM, RVM>;
 
     fn into_member(self) -> Either<LVM, RVM> {
         match self {
@@ -163,7 +163,7 @@ where
 impl<R, LVM, RVM> ViewMemberOrigin<R> for Either<LVM, RVM>
     where
         R: Renderer,
-        LVM: ViewMember<R> + ViewMemberOrigin<R>,
+        LVM: ViewMemberOrigin<R>,
         RVM: ViewMember<R> + ViewMemberOrigin<R, Origin=LVM::Origin>,
 {
     type Origin = LVM::Origin;

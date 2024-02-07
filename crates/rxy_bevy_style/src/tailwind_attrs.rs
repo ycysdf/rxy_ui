@@ -10,8 +10,7 @@ use rxy_bevy::all_attrs::{
 };
 use rxy_bevy::BevyRenderer;
 use rxy_core::{
-    ElementAttrMember, ElementAttrViewMember, IntoViewMember, IntoViewMemberWrapper,
-    MemberOwner,
+    ElementAttrMember, ElementAttrViewMember, IntoViewMember, IntoViewMemberWrapper, MemberOwner,
 };
 
 pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
@@ -78,17 +77,23 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
     fn justify_between(
         self,
     ) -> Self::AddMember<ElementAttrViewMember<BevyRenderer, justify_content>> {
-        self.member(ElementAttrViewMember::new(JustifyContent::SpaceBetween.into()))
+        self.member(ElementAttrViewMember::new(
+            JustifyContent::SpaceBetween.into(),
+        ))
     }
     fn justify_around(
         self,
     ) -> Self::AddMember<ElementAttrViewMember<BevyRenderer, justify_content>> {
-        self.member(ElementAttrViewMember::new(JustifyContent::SpaceAround.into()))
+        self.member(ElementAttrViewMember::new(
+            JustifyContent::SpaceAround.into(),
+        ))
     }
     fn justify_evenly(
         self,
     ) -> Self::AddMember<ElementAttrViewMember<BevyRenderer, justify_content>> {
-        self.member(ElementAttrViewMember::new(JustifyContent::SpaceEvenly.into()))
+        self.member(ElementAttrViewMember::new(
+            JustifyContent::SpaceEvenly.into(),
+        ))
     }
     fn items_start(self) -> Self::AddMember<ElementAttrViewMember<BevyRenderer, align_items>> {
         self.member(ElementAttrViewMember::new(AlignItems::FlexStart.into()))
@@ -108,7 +113,7 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
 
     fn gap<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<(T::Attr<column_gap>, T::Attr<row_gap>)>
     where
         T: ElementAttrMember<BevyRenderer, EA = column_gap> + Clone,
@@ -122,7 +127,7 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
 
     fn gap_x<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<T::Attr<column_gap>>
     where
         T: ElementAttrMember<BevyRenderer, EA = column_gap>,
@@ -132,7 +137,7 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
 
     fn gap_y<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<T::Attr<row_gap>>
     where
         T: ElementAttrMember<BevyRenderer, EA = row_gap>,
@@ -160,41 +165,41 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
         self.member(ElementAttrViewMember::new(FlexWrap::NoWrap.into()))
     }
 
-    fn w<T>(self, value: impl IntoViewMember<BevyRenderer, T>) -> Self::AddMember<T>
+    fn w<T>(self, value: impl IntoViewMember<BevyRenderer, Member = T>) -> Self::AddMember<T>
     where
         T: ElementAttrMember<BevyRenderer, EA = width>,
     {
         self.width(value)
     }
 
-    fn h<T>(self, value: impl IntoViewMember<BevyRenderer, T>) -> Self::AddMember<T>
+    fn h<T>(self, value: impl IntoViewMember<BevyRenderer, Member = T>) -> Self::AddMember<T>
     where
         T: ElementAttrMember<BevyRenderer, EA = height>,
     {
         self.height(value)
     }
 
-    fn min_w<T>(self, value: impl IntoViewMember<BevyRenderer, T>) -> Self::AddMember<T>
+    fn min_w<T>(self, value: impl IntoViewMember<BevyRenderer, Member = T>) -> Self::AddMember<T>
     where
         T: ElementAttrMember<BevyRenderer, EA = min_width>,
     {
         self.min_width(value)
     }
 
-    fn max_w<T>(self, value: impl IntoViewMember<BevyRenderer, T>) -> Self::AddMember<T>
+    fn max_w<T>(self, value: impl IntoViewMember<BevyRenderer, Member = T>) -> Self::AddMember<T>
     where
         T: ElementAttrMember<BevyRenderer, EA = max_width>,
     {
         self.max_width(value)
     }
 
-    fn min_h<T>(self, value: impl IntoViewMember<BevyRenderer, T>) -> Self::AddMember<T>
+    fn min_h<T>(self, value: impl IntoViewMember<BevyRenderer, Member = T>) -> Self::AddMember<T>
     where
         T: ElementAttrMember<BevyRenderer, EA = min_height>,
     {
         self.min_height(value)
     }
-    fn max_h<T>(self, value: impl IntoViewMember<BevyRenderer, T>) -> Self::AddMember<T>
+    fn max_h<T>(self, value: impl IntoViewMember<BevyRenderer, Member = T>) -> Self::AddMember<T>
     where
         T: ElementAttrMember<BevyRenderer, EA = max_height>,
     {
@@ -242,7 +247,7 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
 
     fn size<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<(T::Attr<width>, T::Attr<height>)>
     where
         T: ElementAttrMember<BevyRenderer, EA = width> + Clone,
@@ -268,7 +273,7 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
 
     fn overflow<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<(T::Attr<overflow_x>, T::Attr<overflow_y>)>
     where
         T: ElementAttrMember<BevyRenderer, EA = overflow_x> + Clone,
@@ -280,28 +285,28 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
         )))
     }
 
-    fn pt<T>(self, value: impl IntoViewMember<BevyRenderer, T>) -> Self::AddMember<T>
+    fn pt<T>(self, value: impl IntoViewMember<BevyRenderer, Member = T>) -> Self::AddMember<T>
     where
         T: ElementAttrMember<BevyRenderer, EA = padding_top>,
     {
         self.padding_top(value)
     }
 
-    fn pb<T>(self, value: impl IntoViewMember<BevyRenderer, T>) -> Self::AddMember<T>
+    fn pb<T>(self, value: impl IntoViewMember<BevyRenderer, Member = T>) -> Self::AddMember<T>
     where
         T: ElementAttrMember<BevyRenderer, EA = padding_bottom>,
     {
         self.padding_bottom(value)
     }
 
-    fn pl<T>(self, value: impl IntoViewMember<BevyRenderer, T>) -> Self::AddMember<T>
+    fn pl<T>(self, value: impl IntoViewMember<BevyRenderer, Member = T>) -> Self::AddMember<T>
     where
         T: ElementAttrMember<BevyRenderer, EA = padding_left>,
     {
         self.padding_left(value)
     }
 
-    fn pr<T>(self, value: impl IntoViewMember<BevyRenderer, T>) -> Self::AddMember<T>
+    fn pr<T>(self, value: impl IntoViewMember<BevyRenderer, Member = T>) -> Self::AddMember<T>
     where
         T: ElementAttrMember<BevyRenderer, EA = padding_right>,
     {
@@ -310,7 +315,7 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
 
     fn px<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<(T::Attr<padding_left>, T::Attr<padding_right>)>
     where
         T: ElementAttrMember<BevyRenderer, EA = padding_left> + Clone,
@@ -323,7 +328,7 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
     }
     fn py<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<(T::Attr<padding_top>, T::Attr<padding_bottom>)>
     where
         T: ElementAttrMember<BevyRenderer, EA = padding_top> + Clone,
@@ -337,7 +342,7 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
 
     fn p<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<(
         T::Attr<padding_left>,
         T::Attr<padding_right>,
@@ -356,28 +361,28 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
         )))
     }
 
-    fn mt<T>(self, value: impl IntoViewMember<BevyRenderer, T>) -> Self::AddMember<T>
+    fn mt<T>(self, value: impl IntoViewMember<BevyRenderer, Member = T>) -> Self::AddMember<T>
     where
         T: ElementAttrMember<BevyRenderer, EA = margin_top>,
     {
         self.margin_top(value)
     }
 
-    fn mb<T>(self, value: impl IntoViewMember<BevyRenderer, T>) -> Self::AddMember<T>
+    fn mb<T>(self, value: impl IntoViewMember<BevyRenderer, Member = T>) -> Self::AddMember<T>
     where
         T: ElementAttrMember<BevyRenderer, EA = margin_bottom>,
     {
         self.margin_bottom(value)
     }
 
-    fn ml<T>(self, value: impl IntoViewMember<BevyRenderer, T>) -> Self::AddMember<T>
+    fn ml<T>(self, value: impl IntoViewMember<BevyRenderer, Member = T>) -> Self::AddMember<T>
     where
         T: ElementAttrMember<BevyRenderer, EA = margin_left>,
     {
         self.margin_left(value)
     }
 
-    fn mr<T>(self, value: impl IntoViewMember<BevyRenderer, T>) -> Self::AddMember<T>
+    fn mr<T>(self, value: impl IntoViewMember<BevyRenderer, Member = T>) -> Self::AddMember<T>
     where
         T: ElementAttrMember<BevyRenderer, EA = margin_right>,
     {
@@ -386,7 +391,7 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
 
     fn mx<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<(T::Attr<margin_left>, T::Attr<margin_right>)>
     where
         T: ElementAttrMember<BevyRenderer, EA = margin_left> + Clone,
@@ -400,7 +405,7 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
 
     fn my<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<(T::Attr<margin_top>, T::Attr<margin_bottom>)>
     where
         T: ElementAttrMember<BevyRenderer, EA = margin_top> + Clone,
@@ -414,7 +419,7 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
 
     fn m<T>(
         self,
-        value: impl IntoViewMember<BevyRenderer, T>,
+        value: impl IntoViewMember<BevyRenderer, Member = T>,
     ) -> Self::AddMember<(
         T::Attr<margin_left>,
         T::Attr<margin_right>,
@@ -433,7 +438,7 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
         )))
     }
 
-    fn z<T>(self, value: impl IntoViewMember<BevyRenderer, T>) -> Self::AddMember<T>
+    fn z<T>(self, value: impl IntoViewMember<BevyRenderer, Member = T>) -> Self::AddMember<T>
     where
         T: ElementAttrMember<BevyRenderer, EA = z_index>,
     {

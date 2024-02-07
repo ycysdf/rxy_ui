@@ -62,13 +62,14 @@ fn stream_vm_rebuild<R, S, VM>(
     })));
 }
 
-impl<R, IVM, VM> IntoViewMember<R, futures_lite::stream::Boxed<VM>>
-    for futures_lite::stream::Boxed<IVM>
+impl<R, IVM, VM> IntoViewMember<R> for futures_lite::stream::Boxed<IVM>
 where
     R: Renderer,
     VM: ViewMember<R>,
-    IVM: IntoViewMember<R, VM> + 'static,
+    IVM: IntoViewMember<R, Member = VM> + 'static,
 {
+    type Member = futures_lite::stream::Boxed<VM>;
+
     // type Origin = VM::Origin;
     fn into_member(self) -> futures_lite::stream::Boxed<VM> {
         self.map(|n| n.into_member()).boxed()
@@ -354,7 +355,7 @@ impl<R, S, IVM, VM> ViewMemberOrigin<R> for InnerIvmToVm<XStream<S>, VM>
 where
     R: Renderer,
     S: Stream<Item = IVM> + MaybeSend + 'static,
-    IVM: IntoViewMember<R, VM> + MaybeSend + 'static,
+    IVM: IntoViewMember<R, Member = VM> + MaybeSend + 'static,
     VM: ViewMemberOrigin<R>,
 {
     type Origin = VM::Origin;
@@ -364,7 +365,7 @@ impl<R, S, IVM, VM> ViewMember<R> for InnerIvmToVm<XStream<S>, VM>
 where
     R: Renderer,
     S: Stream<Item = IVM> + MaybeSend + 'static,
-    IVM: IntoViewMember<R, VM> + MaybeSend + 'static,
+    IVM: IntoViewMember<R, Member = VM> + MaybeSend + 'static,
     VM: ViewMember<R>,
 {
     fn count() -> ViewMemberIndex {
@@ -384,13 +385,15 @@ where
     }
 }
 
-impl<R, S, IVM, VM> IntoViewMember<R, InnerIvmToVm<Self, VM>> for XStream<S>
+impl<R, S, IVM, VM> IntoViewMember<R> for XStream<S>
 where
     R: Renderer,
     S: Stream<Item = IVM> + MaybeSend + 'static,
-    IVM: IntoViewMember<R, VM> + MaybeSend + 'static,
+    IVM: IntoViewMember<R, Member = VM> + MaybeSend + 'static,
     VM: ViewMember<R>,
 {
+    type Member = InnerIvmToVm<Self, VM>;
+
     fn into_member(self) -> InnerIvmToVm<Self, VM> {
         InnerIvmToVm::new(self)
     }

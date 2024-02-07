@@ -21,12 +21,14 @@ pub struct EventViewMember<T, S, M> {
     _marker: PhantomData<M>,
 }
 
-impl<T, S, M> IntoViewMember<BevyRenderer, Self> for EventViewMember<T, S, M>
+impl<T, S, M> IntoViewMember<BevyRenderer> for EventViewMember<T, S, M>
 where
     T: ElementEventIds,
     S: IntoSystem<(), (), M> + Send + 'static,
     M: Send + 'static,
 {
+    type Member = Self;
+
     fn into_member(self) -> Self {
         self
     }

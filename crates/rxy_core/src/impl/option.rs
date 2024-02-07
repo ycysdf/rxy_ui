@@ -109,12 +109,14 @@ where
     }
 }
 
-impl<R, VM, T> IntoViewMember<R, Option<VM>> for Option<T>
+impl<R, VM, T> IntoViewMember<R> for Option<T>
 where
     R: Renderer,
-    T: IntoViewMember<R, VM>,
+    T: IntoViewMember<R, Member = VM>,
     VM: ViewMember<R>,
 {
+    type Member = Option<VM>;
+
     fn into_member(self) -> Option<VM> {
         self.map(|n| n.into_member())
     }
@@ -133,7 +135,6 @@ where
     R: Renderer,
     VM: ViewMember<R>,
 {
-
     fn count() -> ViewMemberIndex {
         VM::count()
     }

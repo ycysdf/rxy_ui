@@ -1,10 +1,10 @@
 use crate::utils::all_tuples;
 use crate::{MaybeSend, Renderer, ViewMemberCtx, ViewMemberIndex};
-pub trait ViewMemberOrigin<R>: ViewMember<R>
+pub trait ViewMemberOrigin<R>: MaybeSend + 'static
 where
     R: Renderer,
 {
-    type Origin: ViewMember<R>;
+    type Origin;
 }
 
 pub trait ViewMember<R>: MaybeSend + 'static

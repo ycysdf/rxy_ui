@@ -102,7 +102,7 @@ macro_rules! impl_split {
     () => {};
 }
 
-all_tuples!(impl_split, 1, 8, U);
+// all_tuples!(impl_split, 1, 8, U);
 
 // pub struct EachMapWrapper<T, M>(T, PhantomData<M>);
 // // impl Fn(T) -> (U1, U2) + Clone + MaybeSend + 'static
@@ -256,12 +256,14 @@ where
     }
 }
 
-impl<R, VM, IVM> IntoViewMember<R, RebuildFnReceiver<R, VM>> for RebuildFnReceiver<R, IVM>
+impl<R, VM, IVM> IntoViewMember<R> for RebuildFnReceiver<R, IVM>
 where
     R: Renderer,
     VM: ViewMember<R>,
-    IVM: IntoViewMember<R, VM>,
+    IVM: IntoViewMember<R, Member=VM>,
 {
+    type Member = RebuildFnReceiver<R, VM>;
+
     fn into_member(self) -> RebuildFnReceiver<R, VM> {
         self.map(|n| n.into_member())
     }

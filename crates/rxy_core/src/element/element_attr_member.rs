@@ -336,7 +336,7 @@ const _: () = {
     where
         R: Renderer,
         F: Fn() -> IVM + MaybeSend + 'static,
-        IVM: IntoViewMember<R, VM> + MaybeSend + MaybeSync + Clone + 'static,
+        IVM: IntoViewMember<R, Member = VM> + MaybeSend + MaybeSync + Clone + 'static,
         VM: ElementAttrMember<R>,
     {
         type EA = VM::EA;
@@ -356,7 +356,7 @@ const _: () = {
     where
         R: Renderer,
         T: SignalGet<Value = IVM> + MaybeSend + 'static,
-        IVM: IntoViewMember<R, VM> + MaybeSync + Clone + 'static,
+        IVM: IntoViewMember<R, Member = VM> + MaybeSync + Clone + 'static,
         VM: ElementAttrMember<R>,
     {
         type EA = VM::EA;

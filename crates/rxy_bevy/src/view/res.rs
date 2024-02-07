@@ -161,8 +161,8 @@ impl<T, F, VM, IVM> ViewMemberOrigin<BevyRenderer> for InnerIvmToVm<XRes<T, F, I
 where
     T: Resource,
     F: Fn(&T) -> IVM + Clone + Send + Sync + 'static,
-    VM: ViewMemberOrigin<BevyRenderer>,
-    IVM: IntoViewMember<BevyRenderer, VM> + Send + 'static,
+    VM: ViewMember<BevyRenderer> + ViewMemberOrigin<BevyRenderer>,
+    IVM: IntoViewMember<BevyRenderer,Member= VM> + Send + 'static,
 {
     type Origin = VM::Origin;
 }
@@ -172,7 +172,7 @@ where
     T: Resource,
     F: Fn(&T) -> IVM + Clone + Send + Sync + 'static,
     VM: ViewMember<BevyRenderer>,
-    IVM: IntoViewMember<BevyRenderer, VM> + Send + 'static,
+    IVM: IntoViewMember<BevyRenderer, Member=VM> + Send + 'static,
 {
     fn count() -> ViewMemberIndex {
         VM::count()
@@ -197,7 +197,7 @@ impl<T, F, VM> ViewMemberOrigin<BevyRenderer> for XRes<T, F, VM>
     where
         T: Resource,
         F: Fn(&T) -> VM + Clone + Send + Sync + 'static,
-        VM: ViewMemberOrigin<BevyRenderer>,
+        VM: ViewMember<BevyRenderer> + ViewMemberOrigin<BevyRenderer>,
 {
     type Origin = VM::Origin;
 }

@@ -64,46 +64,50 @@ pub fn create_effect_with_init<T: Clone + 'static, I: 'static>(
     }
 }
 
-impl<R, VM, IVM> IntoViewMember<R, InnerIvmToVm<Self, VM>> for Memo<IVM>
+impl<R, VM, IVM> IntoViewMember<R> for Memo<IVM>
 where
     R: Renderer,
     VM: ViewMember<R> + MaybeSync + Clone + PartialEq,
-    IVM: IntoViewMember<R, VM> + MaybeSend + MaybeSync + Clone + 'static,
+    IVM: IntoViewMember<R, Member = VM> + MaybeSend + MaybeSync + Clone + 'static,
 {
+    type Member = InnerIvmToVm<Self, VM>;
     fn into_member(self) -> InnerIvmToVm<Self, VM> {
         InnerIvmToVm::new(self)
     }
 }
 
-impl<R, VM, IVM> IntoViewMember<R, InnerIvmToVm<Self, VM>> for ReadSignal<IVM>
+impl<R, VM, IVM> IntoViewMember<R> for ReadSignal<IVM>
 where
     R: Renderer,
     VM: ViewMember<R> + MaybeSync + Clone + PartialEq,
-    IVM: IntoViewMember<R, VM> + MaybeSend + MaybeSync + Clone + 'static,
+    IVM: IntoViewMember<R, Member = VM> + MaybeSend + MaybeSync + Clone + 'static,
 {
+    type Member = InnerIvmToVm<Self, VM>;
     fn into_member(self) -> InnerIvmToVm<Self, VM> {
         InnerIvmToVm::new(self)
     }
 }
 
-impl<R, VM, IVM> IntoViewMember<R, InnerIvmToVm<Self, VM>> for RwSignal<IVM>
+impl<R, VM, IVM> IntoViewMember<R> for RwSignal<IVM>
 where
     R: Renderer,
     VM: ViewMember<R> + MaybeSync + Clone + PartialEq,
-    IVM: IntoViewMember<R, VM> + MaybeSend + MaybeSync + Clone + 'static,
+    IVM: IntoViewMember<R, Member = VM> + MaybeSend + MaybeSync + Clone + 'static,
 {
+    type Member = InnerIvmToVm<Self, VM>;
     fn into_member(self) -> InnerIvmToVm<Self, VM> {
         InnerIvmToVm::new(self)
     }
 }
 
-impl<R, F, VM, IVM> IntoViewMember<R, InnerIvmToVm<Self, VM>> for Reactive<F, IVM>
+impl<R, F, VM, IVM> IntoViewMember<R> for Reactive<F, IVM>
 where
     R: Renderer,
     F: Fn() -> IVM + MaybeSend + 'static,
-    IVM: IntoViewMember<R, VM> + MaybeSend + 'static,
+    IVM: IntoViewMember<R, Member = VM> + MaybeSend + 'static,
     VM: ViewMember<R>,
 {
+    type Member = InnerIvmToVm<Self, VM>;
     fn into_member(self) -> InnerIvmToVm<Self, VM> {
         InnerIvmToVm::new(self)
     }
@@ -113,7 +117,7 @@ impl<R, F, VM> ViewMemberOrigin<R> for Reactive<F, VM>
 where
     R: Renderer,
     F: Fn() -> VM + MaybeSend + 'static,
-    VM: ViewMemberOrigin<R> + MaybeSend,
+    VM: ViewMemberOrigin<R>,
 {
     type Origin = VM::Origin;
 }
@@ -196,7 +200,7 @@ impl<R, F, IVM, VM> ViewMemberOrigin<R> for InnerIvmToVm<Reactive<F, IVM>, VM>
 where
     R: Renderer,
     F: Fn() -> IVM + MaybeSend + 'static,
-    IVM: IntoViewMember<R, VM> + MaybeSend + 'static,
+    IVM: IntoViewMember<R, Member = VM> + MaybeSend + 'static,
     VM: ViewMemberOrigin<R>,
 {
     type Origin = VM::Origin;
@@ -206,7 +210,7 @@ impl<R, F, IVM, VM> ViewMember<R> for InnerIvmToVm<Reactive<F, IVM>, VM>
 where
     R: Renderer,
     F: Fn() -> IVM + MaybeSend + 'static,
-    IVM: IntoViewMember<R, VM> + MaybeSend + 'static,
+    IVM: IntoViewMember<R, Member = VM> + MaybeSend + 'static,
     VM: ViewMember<R>,
 {
     fn count() -> ViewMemberIndex {
@@ -230,7 +234,7 @@ impl<R, T, VM, IVM> ViewMemberOrigin<R> for InnerIvmToVm<T, VM>
 where
     R: Renderer,
     T: SignalGet<Value = IVM> + MaybeSend + 'static,
-    IVM: IntoViewMember<R, VM> + MaybeSync + Clone + 'static,
+    IVM: IntoViewMember<R, Member = VM> + MaybeSync + Clone + 'static,
     VM: ViewMemberOrigin<R>,
 {
     type Origin = VM::Origin;
@@ -240,7 +244,7 @@ impl<R, T, VM, IVM> ViewMember<R> for InnerIvmToVm<T, VM>
 where
     R: Renderer,
     T: SignalGet<Value = IVM> + MaybeSend + 'static,
-    IVM: IntoViewMember<R, VM> + MaybeSync + Clone + 'static,
+    IVM: IntoViewMember<R, Member = VM> + MaybeSync + Clone + 'static,
     VM: ViewMember<R>,
 {
     fn count() -> ViewMemberIndex {
@@ -275,7 +279,6 @@ macro_rules! impl_view_member_for_signal_get {
             R: Renderer,
             VM: ViewMember<R> + MaybeSync + Clone,
         {
-
             fn count() -> ViewMemberIndex {
                 VM::count()
             }
@@ -500,7 +503,7 @@ where
     where
         Self: Sized,
         VM: ViewMember<R>,
-        T: IntoViewMember<R, VM>,
+        T: IntoViewMember<R, Member = VM>,
     {
         self.member(IntoViewMemberWrapper(rx(move || f().into_member())))
     }

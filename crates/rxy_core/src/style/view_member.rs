@@ -40,11 +40,13 @@ impl ApplyStyleSheetsMemberState {
     }
 }
 
-impl<R, T> IntoViewMember<R, Self> for ApplyStyleSheets<T>
+impl<R, T> IntoViewMember<R> for ApplyStyleSheets<T>
 where
     R: Renderer,
     T: StyleSheets<R>,
 {
+    type Member = Self;
+
     fn into_member(self) -> Self {
         self
     }

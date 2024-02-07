@@ -41,7 +41,7 @@ macro_rules! common_attrs_fn_define {
             pub trait [<$name ViewBuilder>]: rxy_core::MemberOwner<$crate::BevyRenderer> + Sized {
 
                 $(
-                    fn $attr<T>(self, value: impl rxy_core::IntoViewMember<$crate::BevyRenderer, T>) -> Self::AddMember<T>
+                    fn $attr<T>(self, value: impl rxy_core::IntoViewMember<$crate::BevyRenderer, Member=T>) -> Self::AddMember<T>
                     where
                         T: rxy_core::ElementAttrMember<$crate::BevyRenderer, EA = $crate::all_attrs::$attr>,
                         (Self::VM, T): rxy_core::ViewMember<$crate::BevyRenderer>
@@ -78,7 +78,7 @@ macro_rules! element_attrs_fn_define {
             pub trait [<$name ViewBuilder>]: rxy_core::MemberOwner<$crate::BevyRenderer> + Sized
             {
                 $(
-                    fn $attr<T>(self, value: impl rxy_core::IntoViewMember<$crate::BevyRenderer, T>) -> Self::AddMember<T>
+                    fn $attr<T>(self, value: impl rxy_core::IntoViewMember<$crate::BevyRenderer, Member=T>) -> Self::AddMember<T>
                     where
                         T: rxy_core::ElementAttrMember<$crate::BevyRenderer, EA = $crate::all_attrs::$attr>,
                         (Self::VM, T): rxy_core::ViewMember<$crate::BevyRenderer>

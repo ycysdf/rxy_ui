@@ -12,10 +12,12 @@ pub fn x_bundle<T: Bundle>(bundle: T) -> XBundle<T> {
     XBundle(bundle)
 }
 
-impl<T> IntoViewMember<BevyRenderer, Self> for XBundle<T>
+impl<T> IntoViewMember<BevyRenderer> for XBundle<T>
 where
     T: Bundle,
 {
+    type Member = Self;
+
     fn into_member(self) -> Self {
         self
     }

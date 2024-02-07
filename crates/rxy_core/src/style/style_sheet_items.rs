@@ -51,4 +51,4 @@ macro_rules! impl_style_sheet_items_for_tuple {
         }
     };
 }
-all_tuples!(impl_style_sheet_items_for_tuple, 0, 12, T);
+all_tuples!(impl_style_sheet_items_for_tuple, 0, 2, T);

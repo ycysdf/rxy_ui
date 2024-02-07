@@ -69,7 +69,7 @@ where
     type AddMember<T: ViewMember<R>> = Element<R, E, (VM, T)>;
     type SetMembers<T: ViewMember<R> + MemberOwner<R>> = Element<R, E, T>;
 
-    fn member<T>(self, member: impl IntoViewMember<R, T>) -> Self::AddMember<T>
+    fn member<T>(self, member: impl IntoViewMember<R, Member=T>) -> Self::AddMember<T>
     where
         (VM, T): ViewMember<R>,
         T: ViewMember<R>,
@@ -80,7 +80,7 @@ where
         }
     }
 
-    fn members<T>(self, members: impl IntoViewMember<R, T>) -> Self::SetMembers<(T,)>
+    fn members<T>(self, members: impl IntoViewMember<R, Member= T>) -> Self::SetMembers<(T,)>
     where
         T: ViewMember<R>,
     {

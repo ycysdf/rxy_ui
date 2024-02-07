@@ -6,7 +6,7 @@ mod view_member;
 use crate::utils::all_tuples;
 use crate::{
     AttrIndex, AttrValue, Either, EitherExt, IntoViewMember, MemberOwner, Renderer, RendererNodeId,
-    RendererWorld, SmallBox, ViewMember, S1,
+    RendererWorld, SmallBox, ViewMember, ViewMemberOrigin, S1,
 };
 pub use attr_style_owner::*;
 use bevy_utils::HashMap;
@@ -132,7 +132,7 @@ where
     type AddMember<VM: ViewMember<R>> = StyleSheetOwner<T::AddMember<VM>>;
     type SetMembers<VM: ViewMember<R> + MemberOwner<R>> = StyleSheetOwner<T::SetMembers<VM>>;
 
-    fn member<VM>(self, member: impl IntoViewMember<R, VM>) -> Self::AddMember<VM>
+    fn member<VM>(self, member: impl IntoViewMember<R, Member = VM>) -> Self::AddMember<VM>
     where
         (Self::VM, VM): ViewMember<R>,
         VM: ViewMember<R>,
@@ -142,7 +142,7 @@ where
 
     fn members<VM: ViewMember<R>>(
         self,
-        members: impl IntoViewMember<R, VM>,
+        members: impl IntoViewMember<R, Member = VM>,
     ) -> Self::SetMembers<(VM,)>
     where
         VM: ViewMember<R>,
@@ -394,15 +394,52 @@ impl<T> IterExt for T where T: Iterator + Sized {}
 
 pub struct ApplyStyleSheets<T>(pub T);
 
-impl<R, T> IntoViewMember<R, ApplyStyleSheets<T>> for T
-where
-    R: Renderer,
-    T: StyleSheets<R>,
-{
-    fn into_member(self) -> ApplyStyleSheets<T> {
-        ApplyStyleSheets(self)
-    }
-}
+// pub trait IntoStyleViewMember<R> {
+//     type Member: ViewMemberOrigin<R, Origin = ApplyStyleSheets<Self::StyleSheets>>;
+//     type StyleSheets: StyleSheets<R>;
+//     fn into_style_view_member(self) -> Self::Member;
+// }
+//
+// impl<R, VM, T, SS> IntoStyleViewMember<R> for T
+// where
+//     R: Renderer,
+//     T: IntoViewMember<R, Member = VM>,
+//     VM: ViewMember<R> + ViewMemberOrigin<R, Origin = ApplyStyleSheets<SS>>,
+//     SS: StyleSheets<R>,
+// {
+//     type Member = VM;
+//     type StyleSheets = SS;
+//
+//     fn into_style_view_member(self) -> Self::Member {
+//         self.into_member()
+//     }
+// }
+
+// impl<R, T> IntoStyleViewMember<R> for T
+// where
+//     R: Renderer,
+//     T: StyleSheets<R>,
+// {
+//     type Member = ApplyStyleSheets<T>;
+//     type StyleSheets = T;
+//
+//     fn into_style_view_member(self) -> ApplyStyleSheets<T> {
+//         ApplyStyleSheets(self)
+//     }
+// }
+
+// impl<R, T> IntoStyleViewMember<R> for ApplyStyleSheets<T>
+// where
+//     R: Renderer,
+//     T: StyleSheets<R>,
+// {
+//     type Member = ApplyStyleSheets<T>;
+//     type StyleSheets = T;
+//
+//     fn into_style_view_member(self) -> Self::Member {
+//         self
+//     }
+// }
 
 #[derive(Debug, Clone)]
 pub struct StyleItemValue {
@@ -632,4 +669,4 @@ macro_rules! impl_style_sheets_for_tuple {
         }
     };
 }
-all_tuples!(impl_style_sheets_for_tuple, 0, 12, T);
+all_tuples!(impl_style_sheets_for_tuple, 0, 6, T);
