@@ -25,7 +25,7 @@ where
     fn rebuild(self, _ctx: ViewMemberCtx<R>) {}
 }
 
-impl<R, T, F> ViewMember<R> for F
+/*impl<R, T, F> ViewMember<R> for F
 where
     F: Fn() -> T + MaybeSend + 'static,
     R: Renderer,
@@ -46,7 +46,7 @@ where
     fn rebuild(self, ctx: ViewMemberCtx<R>) {
         self().rebuild(ctx)
     }
-}
+}*/
 
 macro_rules! impl_view_member_for_tuples {
     ($first:ident) => {
@@ -128,4 +128,4 @@ macro_rules! impl_view_member_for_tuples {
     }
 }
 
-all_tuples!(impl_view_member_for_tuples, 1, 12, M);
+all_tuples!(impl_view_member_for_tuples, 1, 4, M);

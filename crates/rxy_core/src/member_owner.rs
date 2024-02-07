@@ -106,6 +106,6 @@ impl<R, > MemberOwner<R> for ()
     }
 }
 
-all_tuples!(impl_member_owner_for_tuple, 1, 12, M);
+all_tuples!(impl_member_owner_for_tuple, 1, 4, M);
 
 

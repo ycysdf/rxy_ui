@@ -22,8 +22,6 @@ mod event;
 mod focusable;
 pub mod navigation;
 mod plugin;
-#[cfg(feature = "xy_reactive")]
-mod reactive;
 mod renderer;
 mod res_change_observe;
 mod view;
