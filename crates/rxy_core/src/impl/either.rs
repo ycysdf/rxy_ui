@@ -3,8 +3,9 @@ use crate::mutable_view::{MutableView, MutableViewKey};
 use crate::{
     to_mutable, virtual_container, IntoView, IntoViewMember, Renderer, RendererNodeId,
     RendererWorld, ToMutableWrapper, View, ViewCtx, ViewMember, ViewMemberCtx, ViewMemberIndex,
-    VirtualContainer,
+    ViewMemberOrigin, VirtualContainer,
 };
+use futures_lite::future::Or;
 
 impl<R, LV, RV> MutableView<R> for Either<LV, RV>
 where
@@ -141,15 +142,31 @@ where
     }
 }
 
-impl<R, LVM, RVM> IntoViewMember<R, Self> for Either<LVM, RVM>
+impl<R, LVM, RVM, LVMO, RVMO> IntoViewMember<R, Either<LVM, RVM>> for Either<LVMO, RVMO>
 where
     R: Renderer,
     LVM: ViewMember<R>,
     RVM: ViewMember<R>,
+    LVMO: IntoViewMember<R, LVM>,
+    RVMO: IntoViewMember<R, RVM>,
 {
-    fn into_member(self) -> Self {
-        self
+    // type Origin = Either<LVMO::Origin, RVMO::Origin>;
+
+    fn into_member(self) -> Either<LVM, RVM> {
+        match self {
+            Either::Left(n) => Either::Left(n.into_member()),
+            Either::Right(n) => Either::Right(n.into_member()),
+        }
     }
+}
+
+impl<R, LVM, RVM> ViewMemberOrigin<R> for Either<LVM, RVM>
+    where
+        R: Renderer,
+        LVM: ViewMember<R> + ViewMemberOrigin<R>,
+        RVM: ViewMember<R> + ViewMemberOrigin<R, Origin=LVM::Origin>,
+{
+    type Origin = LVM::Origin;
 }
 
 impl<R, LVM, RVM> ViewMember<R> for Either<LVM, RVM>
@@ -158,6 +175,7 @@ where
     LVM: ViewMember<R>,
     RVM: ViewMember<R>,
 {
+
     fn count() -> ViewMemberIndex {
         LVM::count() + LVM::count()
     }

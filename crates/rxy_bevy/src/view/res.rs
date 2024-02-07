@@ -5,7 +5,8 @@ use bevy_ecs::system::Resource;
 
 use rxy_core::{
     prelude::{ViewMember, ViewMemberCtx},
-    DeferredNodeTreeScoped, NodeTree, Renderer, View, ViewCtx, ViewKey, ViewMemberIndex,
+    DeferredNodeTreeScoped, InnerIvmToVm, NodeTree, Renderer, View, ViewCtx, ViewKey,
+    ViewMemberIndex, ViewMemberOrigin,
 };
 use rxy_core::{IntoView, IntoViewMember};
 
@@ -98,7 +99,7 @@ where
     }
 }
 
-impl<T, F, IV> rxy_core::IntoView<BevyRenderer> for XRes<T, F, IV>
+impl<T, F, IV> IntoView<BevyRenderer> for XRes<T, F, IV>
 where
     T: Resource,
     F: Fn(&T) -> IV + Clone + Send + Sync + 'static,
@@ -156,15 +157,49 @@ where
     ctx.set_indexed_view_member_state(TaskState::new(task));
 }
 
-impl<T, F, VM> IntoViewMember<BevyRenderer, Self> for XRes<T, F, VM>
+impl<T, F, VM, IVM> ViewMemberOrigin<BevyRenderer> for InnerIvmToVm<XRes<T, F, IVM>, VM>
 where
     T: Resource,
-    F: Fn(&T) -> VM + Clone + Send + Sync + 'static,
-    VM: ViewMember<BevyRenderer>,
+    F: Fn(&T) -> IVM + Clone + Send + Sync + 'static,
+    VM: ViewMemberOrigin<BevyRenderer>,
+    IVM: IntoViewMember<BevyRenderer, VM> + Send + 'static,
 {
-    fn into_member(self) -> Self {
-        self
+    type Origin = VM::Origin;
+}
+
+impl<T, F, VM, IVM> ViewMember<BevyRenderer> for InnerIvmToVm<XRes<T, F, IVM>, VM>
+where
+    T: Resource,
+    F: Fn(&T) -> IVM + Clone + Send + Sync + 'static,
+    VM: ViewMember<BevyRenderer>,
+    IVM: IntoViewMember<BevyRenderer, VM> + Send + 'static,
+{
+    fn count() -> ViewMemberIndex {
+        VM::count()
     }
+
+    fn unbuild(ctx: ViewMemberCtx<BevyRenderer>, view_removed: bool) {
+        VM::unbuild(ctx, view_removed)
+    }
+
+    fn build(self, ctx: ViewMemberCtx<BevyRenderer>, will_rebuild: bool) {
+        let f = move |resource: &T| (self.0.f)(resource).into_member();
+        ViewMember::build(x_res(f), ctx, will_rebuild);
+    }
+
+    fn rebuild(self, mut ctx: ViewMemberCtx<BevyRenderer>) {
+        let f = move |resource: &T| (self.0.f)(resource).into_member();
+        ViewMember::rebuild(x_res(f), ctx);
+    }
+}
+
+impl<T, F, VM> ViewMemberOrigin<BevyRenderer> for XRes<T, F, VM>
+    where
+        T: Resource,
+        F: Fn(&T) -> VM + Clone + Send + Sync + 'static,
+        VM: ViewMemberOrigin<BevyRenderer>,
+{
+    type Origin = VM::Origin;
 }
 
 impl<T, F, VM> ViewMember<BevyRenderer> for XRes<T, F, VM>
@@ -173,6 +208,7 @@ where
     F: Fn(&T) -> VM + Clone + Send + Sync + 'static,
     VM: ViewMember<BevyRenderer>,
 {
+
     fn count() -> ViewMemberIndex {
         VM::count()
     }

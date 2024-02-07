@@ -15,6 +15,7 @@ use rxy_bevy::{
     EntityWorldMutExt, RendererState,
 };
 use rxy_core::{IntoViewMember, ViewMember, ViewMemberCtx, ViewMemberIndex};
+use rxy_core::style::ApplyStyleSheets;
 use rxy_style::{
     NodeInterStyleAttrInfos, NodeStyleAttrInfos, NodeStyleSheetId, StyleAttrId, StyleSheetCtx,
     StyleSheetIndex, StyleSheetLocation,
@@ -47,9 +48,6 @@ impl ApplyStyleSheetsMemberState {
         }
     }
 }
-
-pub struct ApplyStyleSheets<T>(pub T);
-
 impl<T> IntoViewMember<BevyRenderer, Self> for ApplyStyleSheets<T>
 where
     T: StyleSheets<BevyRenderer>,
@@ -63,6 +61,7 @@ impl<T> ViewMember<BevyRenderer> for ApplyStyleSheets<T>
 where
     T: StyleSheets<BevyRenderer>,
 {
+    type Origin = Self;
     fn count() -> ViewMemberIndex {
         1
     }

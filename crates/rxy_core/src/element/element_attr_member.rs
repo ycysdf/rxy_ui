@@ -1,6 +1,7 @@
 use crate::element::ElementAttr;
 use crate::{
-    x_future, Either, MaybeSend, Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, XFuture,
+    x_future, Either, InnerIvmToVm, MaybeSend, Renderer, ViewMember, ViewMemberCtx,
+    ViewMemberIndex, ViewMemberOrigin, XFuture,
 };
 use core::future::Future;
 use core::marker::PhantomData;
@@ -95,6 +96,17 @@ where
     }
 }
 
+impl<R, TO, VM, OEA, EA> ViewMemberOrigin<R> for ElementAttrMemberWrapper<XFuture<TO>, OEA>
+where
+    OEA: ElementAttr<R, Value = EA::Value>,
+    EA: ElementAttr<R>,
+    R: Renderer,
+    TO: Future<Output = VM> + MaybeSend + 'static,
+    VM: ElementAttrMember<R, EA = EA> + ViewMemberOrigin<R>,
+{
+    type Origin = VM::Origin;
+}
+
 impl<R, TO, VM, OEA, EA> ViewMember<R> for ElementAttrMemberWrapper<XFuture<TO>, OEA>
 where
     OEA: ElementAttr<R, Value = EA::Value>,
@@ -162,6 +174,17 @@ const _: () = {
     use xy_reactive::prelude::RwSignal;
     use xy_reactive::prelude::SignalGet;
 
+    impl<R, T, EA, OEA, VM> ViewMemberOrigin<R> for ElementAttrMemberWrapper<T, OEA>
+    where
+        R: Renderer,
+        T: SignalGet<Value = VM> + MaybeSend + 'static,
+        VM: ElementAttrMember<R, EA = EA> + MaybeSync + Clone + ViewMemberOrigin<R>,
+        EA: ElementAttr<R>,
+        OEA: ElementAttr<R, Value = EA::Value>,
+    {
+        type Origin = VM::Origin;
+    }
+
     impl<R, T, EA, OEA, VM> ViewMember<R> for ElementAttrMemberWrapper<T, OEA>
     where
         R: Renderer,
@@ -169,7 +192,6 @@ const _: () = {
         VM: ElementAttrMember<R, EA = EA> + MaybeSync + Clone,
         EA: ElementAttr<R>,
         OEA: ElementAttr<R, Value = EA::Value>,
-        OEA: ElementAttr<R>,
     {
         fn count() -> ViewMemberIndex {
             VM::count()
@@ -190,6 +212,17 @@ const _: () = {
         }
     }
 
+    impl<R, F, EA, OEA, VM> ViewMemberOrigin<R> for ElementAttrMemberWrapper<Reactive<F, VM>, OEA>
+    where
+        R: Renderer,
+        F: Fn() -> VM + MaybeSend + 'static,
+        VM: ElementAttrMember<R, EA = EA> + MaybeSend + ViewMemberOrigin<R>,
+        EA: ElementAttr<R>,
+        OEA: ElementAttr<R, Value = EA::Value>,
+    {
+        type Origin = VM::Origin;
+    }
+
     impl<R, F, EA, OEA, VM> ViewMember<R> for ElementAttrMemberWrapper<Reactive<F, VM>, OEA>
     where
         R: Renderer,
@@ -197,7 +230,6 @@ const _: () = {
         VM: ElementAttrMember<R, EA = EA> + MaybeSend,
         EA: ElementAttr<R>,
         OEA: ElementAttr<R, Value = EA::Value>,
-        OEA: ElementAttr<R>,
     {
         fn count() -> ViewMemberIndex {
             VM::count()
@@ -300,7 +332,7 @@ const _: () = {
     impl_element_view_member_for_signal_get!(ReadSignal);
     impl_element_view_member_for_signal_get!(RwSignal);
 
-    impl<R, F, IVM, VM> ElementAttrMember<R> for crate::InnerIvmToVmWrapper<Reactive<F, IVM>, VM>
+    impl<R, F, IVM, VM> ElementAttrMember<R> for InnerIvmToVm<Reactive<F, IVM>, VM>
     where
         R: Renderer,
         F: Fn() -> IVM + MaybeSend + 'static,
@@ -320,7 +352,7 @@ const _: () = {
         }
     }
 
-    impl<R, T, VM, IVM> ElementAttrMember<R> for crate::InnerIvmToVmWrapper<T, VM>
+    impl<R, T, VM, IVM> ElementAttrMember<R> for InnerIvmToVm<T, VM>
     where
         R: Renderer,
         T: SignalGet<Value = IVM> + MaybeSend + 'static,

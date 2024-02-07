@@ -2,22 +2,19 @@ use core::iter;
 
 use crate::interaction_style::AttrSetBitsIterExt;
 use crate::node_style_state::NodeStyleSheetsState;
-use crate::{
-    interaction_to_style_interaction, EntityAttrSyncer, StyleEntityRefExt, StyleItemValue,
-    StyleSheetDefinition,
-};
+use crate::{interaction_to_style_interaction, EntityAttrSyncer, StyleEntityRefExt, StyleError};
 use crate::{EntityWorldRef, Result};
 use bevy_ecs::prelude::{Entity, Query};
 use bevy_ecs::query::ReadOnlyWorldQuery;
 use bevy_ecs::world::{EntityRef, EntityWorldMut, World};
 use bevy_ui::Interaction;
-use rxy_bevy::{AttrSetBits, ElementEntityExtraData, ElementEntityWorldMutExt, FocusedEntity, RendererState};
-use rxy_core::prelude::EitherExt;
-use rxy_style::NodeStyleAttrInfos;
-use rxy_style::{
-    IterExt, NodeInterStyleAttrInfos, NodeStyleAttrInfo, NodeStyleItemId, NodeStyleSheetId, PipeOp,
-    StyleAttrId, StyleError, StyleInteraction, StyleSheetLocation,
+use bevy_utils::petgraph::visit::Walker;
+use rxy_bevy::{
+    AttrSetBits, ElementEntityExtraData, ElementEntityWorldMutExt, FocusedEntity, RendererState,
 };
+use rxy_core::AttrIndex;
+use rxy_core::prelude::EitherExt;
+use rxy_core::style::{IterExt, NodeInterStyleAttrInfos, NodeStyleAttrInfo, NodeStyleAttrInfos, NodeStyleItemId, NodeStyleSheetId, PipeOp, StyleInteraction, StyleItemValue, StyleSheetDefinition, StyleSheetLocation};
 
 pub(crate) trait StateOwner<'a, 's>: Sized {
     fn get_style_sheets_state(&'s self, entity: Entity) -> Result<&'a NodeStyleSheetsState>;
@@ -26,7 +23,7 @@ pub(crate) trait StateOwner<'a, 's>: Sized {
         &'s self,
         entity: Entity,
         style_item_id: impl Into<NodeStyleItemId>,
-    ) -> Result<StyleAttrId> {
+    ) -> Result<AttrIndex> {
         let style_item_id: NodeStyleItemId = style_item_id.into();
         self.get_style_sheet_definition(entity, style_item_id)
             .and_then(|n| {
@@ -84,7 +81,7 @@ pub(crate) trait StateOwnerWithNodeId<'a, 's>: StateOwner<'a, 's> {
     fn get_current_style_item_attr_id(
         &'s self,
         style_item_id: impl Into<NodeStyleItemId>,
-    ) -> Result<StyleAttrId> {
+    ) -> Result<AttrIndex> {
         self.get_style_item_attr_id(self.get_current_entity(), style_item_id)
     }
 
@@ -210,7 +207,7 @@ impl<'a, 'world, 'state, F: ReadOnlyWorldQuery> StateOwnerWithNodeId<'a, 'a>
 pub struct EntityStyleAttrInfoIterArgs<'a> {
     pub iter_normal_style_sheet: bool,
     pub iter_inter_style_sheet: bool,
-    pub limit_attr_ids: Option<&'a [StyleAttrId]>,
+    pub limit_attr_ids: Option<&'a [AttrIndex]>,
 }
 
 impl<'a> EntityStyleAttrInfoIterArgs<'a> {
@@ -268,7 +265,7 @@ impl<'a> EntityStyleAttrInfoIterArgs<'a> {
         entity_ref: EntityRef<'a>,
         focused_entity: Option<Entity>,
         strict_match: bool,
-    ) -> impl Iterator<Item = (StyleAttrId, &NodeStyleAttrInfo)> {
+    ) -> impl Iterator<Item = (AttrIndex, &NodeStyleAttrInfo)> {
         let limit_attr_bits = entity_ref
             .get::<ElementEntityExtraData>()
             .map(|n| n.attr_is_set);
@@ -339,8 +336,8 @@ impl<'a> EntityStyleAttrInfoIterArgs<'a> {
     //     self,
     //     node_style_state: &NodeStyleAttrInfos,
     //     node_inter_style_state: Option<&NodeInterStyleState>,
-    //     node_style_map: impl Fn(Option<&[StyleAttrId]>)->U,
-    //     node_inter_style_map: &[StyleAttrId],
+    //     node_style_map: impl Fn(Option<&[AttrIndex]>)->U,
+    //     node_inter_style_map: &[AttrIndex],
     // ) -> SyncerWrapper<impl Iterator<Item = EntityStyleAttrInfoIterItem<'a>>> {
     //     let r = iter::empty();
     //
@@ -374,7 +371,7 @@ impl<'a> EntityStyleAttrInfoIterArgs<'a> {
     //         r.option_op(
     //             node_inter_style_state,
     //             |_, entity_inter_style_state| {
-    //                 let hashmps :&[HashMap<StyleAttrId, NodeStyleAttrInfo>] = dd;
+    //                 let hashmps :&[HashMap<AttrIndex, NodeStyleAttrInfo>] = dd;
     //                 match self.limit_attr_ids {
     //                     Some(n) => n
     //                         .iter()

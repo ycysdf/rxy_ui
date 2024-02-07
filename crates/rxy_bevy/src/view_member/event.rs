@@ -6,7 +6,7 @@ use bevy_ecs::system::SystemId;
 use bevy_input::prelude::KeyCode;
 use bevy_utils::tracing::error;
 
-use rxy_core::{IntoViewMember, MemberOwner, ViewMember, ViewMemberCtx};
+use rxy_core::{IntoViewMember, MemberOwner, ViewMember, ViewMemberCtx, ViewMemberOrigin};
 
 use crate::event::*;
 use crate::prelude::FocusInputEventIterator;
@@ -32,12 +32,22 @@ where
     }
 }
 
+// impl<T, S, M> ViewMemberOrigin<BevyRenderer> for EventViewMember<T, S, M>
+// where
+//     T: ElementEventIds,
+//     S: IntoSystem<(), (), M> + Send + 'static,
+//     M: Send + 'static,
+// {
+//     type Origin = Self;
+// }
+
 impl<T, S, M> ViewMember<BevyRenderer> for EventViewMember<T, S, M>
 where
     T: ElementEventIds,
     S: IntoSystem<(), (), M> + Send + 'static,
     M: Send + 'static,
 {
+
     fn count() -> rxy_core::ViewMemberIndex {
         1
     }

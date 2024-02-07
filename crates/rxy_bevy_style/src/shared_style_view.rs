@@ -1,16 +1,17 @@
 use crate::node_style_state::NodeStyleSheetsState;
 use crate::plugin::RxySharedStyleContainer;
-use crate::{SharedStyleState, StyleSheets, StyleWorldExt};
+use crate::{SharedStyleState, StyleWorldExt};
 use bevy_ecs::entity::Entity;
 use bevy_ecs::world::World;
 use bevy_hierarchy::BuildWorldChildren;
 use core::any::Any;
 use rxy_bevy::SchemaCtx;
-use rxy_bevy_macro::BevyIntoView;
 use rxy_bevy::{BevyRenderer, RendererState};
+use rxy_bevy_macro::BevyIntoView;
 use rxy_core::{RendererNodeId, View, ViewCtx};
-use rxy_style::StyleSheetCtx;
+
 use std::any::TypeId;
+use rxy_core::style::{StyleSheetCtx, StyleSheets};
 
 pub trait SchemaCtxExt {
     fn default_typed_style<SS>(

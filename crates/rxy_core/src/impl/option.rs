@@ -2,7 +2,7 @@ use crate::into_view_member::IntoViewMember;
 use crate::{
     to_mutable, virtual_container, IntoView, MaybeSend, MutableView, MutableViewKey, Renderer,
     RendererNodeId, RendererWorld, ToMutableWrapper, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
-    ViewMemberIndex, VirtualContainer,
+    ViewMemberIndex, ViewMemberOrigin, VirtualContainer,
 };
 
 impl<R, V> MutableView<R> for Option<V>
@@ -110,14 +110,22 @@ where
 }
 
 impl<R, VM, T> IntoViewMember<R, Option<VM>> for Option<T>
-    where
-        R: Renderer,
-        T: IntoViewMember<R, VM>,
-        VM: ViewMember<R>,
+where
+    R: Renderer,
+    T: IntoViewMember<R, VM>,
+    VM: ViewMember<R>,
 {
     fn into_member(self) -> Option<VM> {
         self.map(|n| n.into_member())
     }
+}
+
+impl<R, VM> ViewMemberOrigin<R> for Option<VM>
+where
+    R: Renderer,
+    VM: ViewMemberOrigin<R>,
+{
+    type Origin = VM::Origin;
 }
 
 impl<R, VM> ViewMember<R> for Option<VM>
@@ -125,6 +133,7 @@ where
     R: Renderer,
     VM: ViewMember<R>,
 {
+
     fn count() -> ViewMemberIndex {
         VM::count()
     }

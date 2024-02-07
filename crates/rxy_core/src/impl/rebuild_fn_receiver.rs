@@ -4,7 +4,7 @@ use crate::utils::all_tuples;
 
 use crate::{
     target_rebuild_fn_channel, IntoView, IntoViewMember, MaybeSend, Renderer, RendererNodeId, View,
-    ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
+    ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin,
 };
 
 #[cfg(feature = "send_sync")]
@@ -267,11 +267,20 @@ where
     }
 }
 
+impl<R, VM> ViewMemberOrigin<R> for RebuildFnReceiver<R, VM>
+where
+    R: Renderer,
+    VM: ViewMemberOrigin<R>,
+{
+    type Origin = VM::Origin;
+}
+
 impl<R, VM> ViewMember<R> for RebuildFnReceiver<R, VM>
 where
     R: Renderer,
     VM: ViewMember<R>,
 {
+
     fn count() -> ViewMemberIndex {
         VM::count()
     }

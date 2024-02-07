@@ -7,7 +7,7 @@ version = "0.1.0"
 
 [dependencies]
 rxy_bevy.workspace = true
-rxy_core.workspace = true
+rxy_core = { workspace = true, default-features = false, features = ["style"] }
 rxy_style.workspace = true
 rxy_bevy_macro.workspace = true
 rxy_style_macro.workspace = true

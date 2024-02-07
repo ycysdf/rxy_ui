@@ -6,7 +6,7 @@ use bevy_ecs::entity::Entity;
 use bevy_ecs::prelude::{Query, Res};
 use bevy_ecs::system::{Commands, ResMut};
 use rxy_bevy::{ElementEntityExtraData, FocusedEntity, RendererState};
-use rxy_style::{NodeInterStyleAttrInfos, NodeStyleAttrInfos, StyleInteraction};
+use rxy_core::style::{NodeInterStyleAttrInfos, NodeStyleAttrInfos, StyleInteraction};
 
 pub fn update_focus_style(
     mut commands: Commands,

@@ -1,7 +1,7 @@
 use bevy_ecs::world::EntityWorldMut;
 use rxy_bevy::view_element_type;
 use rxy_core::prelude::Either;
-use rxy_style::{NodeInterStyleItemId, NodeStyleAttrInfo, NodeStyleItemId};
+use rxy_core::style::{NodeInterStyleItemId, NodeStyleAttrInfo, NodeStyleItemId};
 
 use crate::{Result, StateOwner};
 

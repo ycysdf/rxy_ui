@@ -1,10 +1,10 @@
-use crate::{Result, StyleSheetsInfo};
+use crate::{Result, StyleError};
 use bevy_ecs::prelude::Entity;
 use rxy_bevy::BevyRenderer;
-use rxy_style::{NodeStyleSheetId, StyleError, StyleSheetId, StyleSheetIndex, StyleSheetLocation,
+use rxy_core::style::{
+    AppliedStyleSheet, ApplyStyleSheetsMemberState, NodeStyleSheetId, StyleSheetDefinition,
+    StyleSheetId, StyleSheetIndex, StyleSheetLocation, StyleSheetsInfo,
 };
-
-use crate::{AppliedStyleSheet, ApplyStyleSheetsMemberState, StyleSheetDefinition};
 
 #[derive(Default, Clone, Debug)]
 pub struct NodeStyleSheetsState {
@@ -12,8 +12,8 @@ pub struct NodeStyleSheetsState {
     pub shared_style_sheet_ids: Vec<Option<StyleSheetId<BevyRenderer>>>,
 }
 
-impl FromIterator<AppliedStyleSheet> for NodeStyleSheetsState {
-    fn from_iter<T: IntoIterator<Item = AppliedStyleSheet>>(iter: T) -> Self {
+impl FromIterator<AppliedStyleSheet<BevyRenderer>> for NodeStyleSheetsState {
+    fn from_iter<T: IntoIterator<Item = AppliedStyleSheet<BevyRenderer>>>(iter: T) -> Self {
         let mut r = NodeStyleSheetsState::default();
         for item in iter.into_iter() {
             match item {
@@ -35,7 +35,7 @@ impl NodeStyleSheetsState {
         &self,
         entity: Entity,
         index: StyleSheetIndex,
-    ) -> impl Iterator<Item = AppliedStyleSheet> + Send + 'static {
+    ) -> impl Iterator<Item = AppliedStyleSheet<BevyRenderer>> + Send + 'static {
         let shared_style_sheet_ids = self.shared_style_sheet_ids.clone();
         let inline_style_sheet_len = self.inline_style_sheet.len();
         (0..inline_style_sheet_len)
@@ -123,7 +123,10 @@ impl NodeStyleSheetsState {
             StyleSheetLocation::Shared => self.shared_style_sheet_ids.len(),
         }) as _
     }
-    pub fn push_applied_style_sheet(&mut self, applied_style_sheet: AppliedStyleSheet) {
+    pub fn push_applied_style_sheet(
+        &mut self,
+        applied_style_sheet: AppliedStyleSheet<BevyRenderer>,
+    ) {
         match applied_style_sheet {
             AppliedStyleSheet::None => {}
             AppliedStyleSheet::Inline(style_sheet) => {
@@ -137,7 +140,7 @@ impl NodeStyleSheetsState {
     pub fn set_applied_style_sheet(
         &mut self,
         style_sheet_index: StyleSheetIndex,
-        applied_style_sheet: AppliedStyleSheet,
+        applied_style_sheet: AppliedStyleSheet<BevyRenderer>,
     ) {
         match applied_style_sheet {
             AppliedStyleSheet::None => {

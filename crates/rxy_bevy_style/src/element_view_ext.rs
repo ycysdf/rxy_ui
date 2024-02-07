@@ -1,87 +1,88 @@
-use crate::into_view_member::ViewMemberWithOriginWrapper;
-use crate::style_sheets::StyleSheets;
-use crate::{into_view_member::ViewMemberWithOrigin, ApplyStyleSheets};
-use futures_lite::StreamExt;
 use rxy_bevy::BevyRenderer;
+use rxy_core::style::{ApplyStyleSheets, StyleSheets};
 use rxy_core::{
-    rx, style_builder, x_future, x_stream, BuildFlags, Builder, ElementView, IntoViewMemberWrapper,
-    MaybeSend, Reactive, ViewMember, ViewMemberCtx, XFuture, XStream,
+    rx, style_builder, x_future, x_stream, BuildFlags, Builder, ElementView, InnerIvmToVm,
+    IntoViewMember, MaybeSend, Reactive, ViewMember, ViewMemberCtx, ViewMemberOrigin, XFuture,
+    XStream,
 };
 use std::future::Future;
+use std::marker::PhantomData;
+
+pub trait IntoStyleViewMember<VM> {}
+
+impl<T, VM, SS> IntoStyleViewMember<VM> for T
+where
+    T: IntoViewMember<BevyRenderer, VM>,
+    VM: ViewMemberOrigin<BevyRenderer, Origin = ApplyStyleSheets<SS>>,
+    SS: StyleSheets<BevyRenderer>,
+{
+}
 
 pub trait ElementStyleExt: ElementView<BevyRenderer> {
+    // fn style<VM>(self, style_sheets: impl IntoStyleViewMember<VM>) -> Self::AddMember<VM>
+    // where
+    //     VM: ViewMemberOrigin<BevyRenderer>,
+    // {
+    //     self.member(style_sheets)
+    // }
     fn style<VM, SS>(
         self,
-        style_sheets: impl ViewMemberWithOrigin<BevyRenderer, VM, Origin = ApplyStyleSheets<SS>>,
+        style_sheets: impl IntoViewMember<BevyRenderer, VM>,
     ) -> Self::AddMember<VM>
     where
-        VM: ViewMember<BevyRenderer>,
+        VM: ViewMemberOrigin<BevyRenderer, Origin = ApplyStyleSheets<SS>>,
         SS: StyleSheets<BevyRenderer>,
     {
-        self.member(IntoViewMemberWrapper(style_sheets.into_view_member()))
+        self.member(style_sheets)
     }
 
-    fn style_rx<VMO, VM, SS, F>(
+    fn style_rx<IVM, VM, SS, F>(self, f: F) -> Self::AddMember<InnerIvmToVm<Reactive<F, IVM>, VM>>
+    where
+        F: Fn() -> IVM + MaybeSend + 'static,
+        VM: ViewMemberOrigin<BevyRenderer, Origin = ApplyStyleSheets<SS>>,
+        IVM: IntoViewMember<BevyRenderer, VM> + MaybeSend + 'static,
+        SS: StyleSheets<BevyRenderer>,
+    {
+        self.member(rx(f))
+    }
+
+    fn style_builder<F, VM, IVM, SS>(
         self,
         f: F,
-    ) -> Self::AddMember<ViewMemberWithOriginWrapper<Reactive<F, VMO>, VM>>
+    ) -> Self::AddMember<InnerIvmToVm<Builder<BevyRenderer, F>, VM>>
     where
-        F: Fn() -> VMO + MaybeSend + 'static,
-        VM: ViewMember<BevyRenderer>,
-        VMO: ViewMemberWithOrigin<BevyRenderer, VM, Origin = ApplyStyleSheets<SS>> + MaybeSend,
+        F: FnOnce(ViewMemberCtx<BevyRenderer>, BuildFlags) -> IVM + MaybeSend + 'static,
+        VM: ViewMemberOrigin<BevyRenderer, Origin = ApplyStyleSheets<SS>>,
+        IVM: IntoViewMember<BevyRenderer, VM>,
         SS: StyleSheets<BevyRenderer>,
     {
-        self.member(IntoViewMemberWrapper(ViewMemberWithOriginWrapper::new(rx(
-            f,
-        ))))
+        self.member(style_builder(f))
     }
 
-    fn style_builder<VM, VMO, SS>(
-        self,
-        f: impl FnOnce(ViewMemberCtx<BevyRenderer>, BuildFlags) -> VMO + MaybeSend + 'static,
-    ) -> Self::AddMember<
-        Builder<
-            BevyRenderer,
-            impl FnOnce(ViewMemberCtx<BevyRenderer>, BuildFlags) -> VM + MaybeSend + 'static,
-        >,
-    >
-    where
-        VM: ViewMember<BevyRenderer>,
-        VMO: ViewMemberWithOrigin<BevyRenderer, VM, Origin = ApplyStyleSheets<SS>>,
-        SS: StyleSheets<BevyRenderer>,
-    {
-        self.member(IntoViewMemberWrapper(style_builder(|ctx, flags| f(ctx, flags).into_view_member())))
-    }
-
-    fn style_future<TO, VM, VMO, SS>(
+    fn style_future<TO, VM, IVM, SS>(
         self,
         future: TO,
-    ) -> Self::AddMember<ViewMemberWithOriginWrapper<XFuture<TO>, VM>>
+    ) -> Self::AddMember<InnerIvmToVm<XFuture<TO>, VM>>
     where
         TO: Future + MaybeSend + 'static,
-        VM: ViewMember<BevyRenderer>,
-        TO::Output: ViewMemberWithOrigin<BevyRenderer, VM, Origin = ApplyStyleSheets<SS>>
-            + MaybeSend
-            + 'static,
+        VM: ViewMemberOrigin<BevyRenderer, Origin = ApplyStyleSheets<SS>>,
+        TO::Output: IntoViewMember<BevyRenderer, VM> + MaybeSend + 'static,
         SS: StyleSheets<BevyRenderer> + MaybeSend + 'static,
     {
-        self.member(IntoViewMemberWrapper(ViewMemberWithOriginWrapper::new(
-            x_future(future),
-        )))
+        self.member(x_future(future))
     }
 
-    fn style_stream<VM, VMO, SS>(
+    fn style_stream<S, VM, IVM, SS>(
         self,
-        stream: impl futures_lite::stream::Stream<Item = VMO> + Unpin + MaybeSend + 'static,
-    ) -> Self::AddMember<
-        XStream<impl futures_lite::stream::Stream<Item = VM> + Unpin + MaybeSend + 'static>,
-    >
+        stream: S,
+    ) -> Self::AddMember<InnerIvmToVm<XStream<S>, VM>>
     where
-        VM: ViewMember<BevyRenderer>,
-        VMO: ViewMemberWithOrigin<BevyRenderer, VM, Origin = ApplyStyleSheets<SS>>,
+        S: futures_lite::stream::Stream<Item = IVM> + Unpin + MaybeSend + 'static,
+        VM: ViewMemberOrigin<BevyRenderer, Origin = ApplyStyleSheets<SS>>,
+        IVM: IntoViewMember<BevyRenderer, VM> + MaybeSend + 'static,
         SS: StyleSheets<BevyRenderer>,
     {
-        self.member(x_stream(stream.map(|n| n.into_view_member())))
+        self.member(x_stream(stream))
     }
 }
 

@@ -2,8 +2,9 @@ use alloc::boxed::Box;
 use core::marker::PhantomData;
 
 use crate::{
-    IntoElementView, IntoView, IntoViewMember, MaybeSend, MutableView, Renderer, RendererNodeId,
-    SoloView, View, ViewCtx, ViewMember, ViewMemberCtx, ViewMemberIndex,
+    InnerIvmToVm, IntoElementView, IntoView, IntoViewMember, MaybeSend, MutableView, Renderer,
+    RendererNodeId, SoloView, View, ViewCtx, ViewMember, ViewMemberCtx, ViewMemberIndex,
+    ViewMemberOrigin,
 };
 
 #[derive(Clone)]
@@ -22,7 +23,6 @@ pub fn member_builder<R, T, F>(f: F) -> Builder<R, F>
 where
     R: Renderer,
     F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> T + MaybeSend + 'static,
-    T: ViewMember<R>,
 {
     Builder(f, Default::default())
 }
@@ -31,7 +31,6 @@ pub fn style_builder<R, VM, F>(f: F) -> Builder<R, F>
 where
     R: Renderer,
     F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> VM + MaybeSend + 'static,
-    VM: ViewMember<R>,
 {
     Builder(f, Default::default())
 }
@@ -88,23 +87,59 @@ where
     }
 }
 
-impl<R, F, IVM, VM>
-    IntoViewMember<
-        R,
-        Builder<R, Box<dyn FnOnce(ViewMemberCtx<R>, BuildFlags) -> VM + MaybeSend + 'static>>,
-    > for Builder<R, F>
+impl<R, F, IVM, VM> IntoViewMember<R, InnerIvmToVm<Self, VM>> for Builder<R, F>
 where
     F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> IVM + MaybeSend + 'static,
     R: Renderer,
     VM: ViewMember<R>,
     IVM: IntoViewMember<R, VM>,
 {
-    fn into_member(self) -> Builder<R, Box<dyn FnOnce(ViewMemberCtx<R>, BuildFlags) -> VM + MaybeSend + 'static>> {
-        Builder(
-            Box::new(move |ctx, flags| self.0(ctx, flags).into_member()),
-            Default::default(),
-        )
+    fn into_member(self) -> InnerIvmToVm<Self, VM> {
+        InnerIvmToVm::new(self)
     }
+}
+
+impl<R, F, VM, IVM> ViewMemberOrigin<R> for InnerIvmToVm<Builder<R, F>, VM>
+where
+    F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> IVM + MaybeSend + 'static,
+    R: Renderer,
+    IVM: IntoViewMember<R, VM>,
+    VM: ViewMemberOrigin<R>,
+{
+    type Origin = VM::Origin;
+}
+
+impl<R, F, VM, IVM> ViewMember<R> for InnerIvmToVm<Builder<R, F>, VM>
+where
+    F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> IVM + MaybeSend + 'static,
+    R: Renderer,
+    IVM: IntoViewMember<R, VM>,
+    VM: ViewMember<R>,
+{
+    fn count() -> ViewMemberIndex {
+        1
+    }
+
+    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
+        VM::unbuild(ctx, view_removed)
+    }
+
+    fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
+        member_builder(|ctx, flags| self.0 .0(ctx, flags).into_member()).build(ctx, will_rebuild)
+    }
+
+    fn rebuild(self, ctx: ViewMemberCtx<R>) {
+        member_builder(|ctx, flags| self.0 .0(ctx, flags).into_member()).rebuild(ctx)
+    }
+}
+
+impl<R, F, VM> ViewMemberOrigin<R> for Builder<R, F>
+where
+    F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> VM + MaybeSend + 'static,
+    R: Renderer,
+    VM: ViewMemberOrigin<R>,
+{
+    type Origin = VM::Origin;
 }
 
 impl<R, F, VM> ViewMember<R> for Builder<R, F>

@@ -16,16 +16,24 @@ where
     }
 }
 
-impl<R, T, E> IntoViewMember<R, Self> for Result<T, E>
+impl<R, LVM, RVM, LVMO, RVMO> IntoViewMember<R, Either<LVM, RVM>> for Result<LVMO, RVMO>
 where
     R: Renderer,
-    T: ViewMember<R>,
-    E: ViewMember<R>,
+    LVM: ViewMember<R>,
+    RVM: ViewMember<R>,
+    LVMO: IntoViewMember<R, LVM>,
+    RVMO: IntoViewMember<R, RVM>,
 {
-    fn into_member(self) -> Self {
-        self
+
+    fn into_member(self) -> Either<LVM, RVM> {
+        match self {
+            Ok(n) => Either::Left(n.into_member()),
+            Err(n) => Either::Right(n.into_member()),
+        }
     }
 }
+
+/*
 
 impl<R, T, E> ViewMember<R> for Result<T, E>
 where
@@ -33,6 +41,8 @@ where
     T: ViewMember<R>,
     E: ViewMember<R>,
 {
+    type Origin = ();
+
     fn count() -> ViewMemberIndex {
         T::count() + E::count()
     }
@@ -66,3 +76,4 @@ where
         either.rebuild(ctx);
     }
 }
+*/

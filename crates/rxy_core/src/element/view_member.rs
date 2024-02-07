@@ -1,7 +1,5 @@
 use crate::element::{ElementAttr, ElementAttrMember};
-use crate::{
-    AttrValue, IntoViewMember, NodeTree, Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex,
-};
+use crate::{AttrValue, IntoViewMember, NodeTree, Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin};
 
 #[derive(Clone, Debug)]
 pub struct ElementAttrViewMember<R, EA>(pub EA::Value)
@@ -52,11 +50,20 @@ where
     }
 }
 
+// impl<R, EA> ViewMemberOrigin<R> for ElementAttrViewMember<R, EA>
+// where
+//     R: Renderer,
+//     EA: ElementAttr<R>,
+// {
+//     type Origin = Self;
+// }
+
 impl<R, EA> ViewMember<R> for ElementAttrViewMember<R, EA>
 where
     R: Renderer,
     EA: ElementAttr<R>,
 {
+
     fn count() -> ViewMemberIndex {
         1
     }
@@ -77,7 +84,7 @@ where
     }
 }
 
-#[derive(Clone, Debug, PartialEq,Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AttrValueWrapper<T>(pub T);
 
 impl<EA, R, T> IntoViewMember<R, ElementAttrViewMember<R, EA>> for T

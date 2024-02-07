@@ -7,9 +7,9 @@ use xy_reactive::prelude::{create_render_effect, use_memo, Memo, ReadSignal, RwS
 use xy_reactive::render_effect::RenderEffect;
 
 use crate::{
-    DeferredNodeTreeScoped, IntoView, IntoViewMember, IntoViewMemberWrapper, MaybeSend, MaybeSync,
-    MemberOwner, NodeTree, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey,
-    ViewMember, ViewMemberCtx, ViewMemberIndex,
+    DeferredNodeTreeScoped, InnerIvmToVm, IntoView, IntoViewMember, IntoViewMemberWrapper,
+    MaybeSend, MaybeSync, MemberOwner, NodeTree, Renderer, RendererNodeId, RendererWorld, View,
+    ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin,
 };
 
 struct FnOnceCell<'a, I, T> {
@@ -64,49 +64,58 @@ pub fn create_effect_with_init<T: Clone + 'static, I: 'static>(
     }
 }
 
-impl<R, VM, IVM> IntoViewMember<R, InnerIvmToVmWrapper<Self, VM>> for Memo<IVM>
+impl<R, VM, IVM> IntoViewMember<R, InnerIvmToVm<Self, VM>> for Memo<IVM>
 where
     R: Renderer,
     VM: ViewMember<R> + MaybeSync + Clone + PartialEq,
     IVM: IntoViewMember<R, VM> + MaybeSend + MaybeSync + Clone + 'static,
 {
-    fn into_member(self) -> InnerIvmToVmWrapper<Self, VM> {
-        InnerIvmToVmWrapper::new(self)
+    fn into_member(self) -> InnerIvmToVm<Self, VM> {
+        InnerIvmToVm::new(self)
     }
 }
 
-impl<R, VM, IVM> IntoViewMember<R, InnerIvmToVmWrapper<Self, VM>> for ReadSignal<IVM>
+impl<R, VM, IVM> IntoViewMember<R, InnerIvmToVm<Self, VM>> for ReadSignal<IVM>
 where
     R: Renderer,
     VM: ViewMember<R> + MaybeSync + Clone + PartialEq,
     IVM: IntoViewMember<R, VM> + MaybeSend + MaybeSync + Clone + 'static,
 {
-    fn into_member(self) -> InnerIvmToVmWrapper<Self, VM> {
-        InnerIvmToVmWrapper::new(self)
+    fn into_member(self) -> InnerIvmToVm<Self, VM> {
+        InnerIvmToVm::new(self)
     }
 }
 
-impl<R, VM, IVM> IntoViewMember<R, InnerIvmToVmWrapper<Self, VM>> for RwSignal<IVM>
+impl<R, VM, IVM> IntoViewMember<R, InnerIvmToVm<Self, VM>> for RwSignal<IVM>
 where
     R: Renderer,
     VM: ViewMember<R> + MaybeSync + Clone + PartialEq,
     IVM: IntoViewMember<R, VM> + MaybeSend + MaybeSync + Clone + 'static,
 {
-    fn into_member(self) -> InnerIvmToVmWrapper<Self, VM> {
-        InnerIvmToVmWrapper::new(self)
+    fn into_member(self) -> InnerIvmToVm<Self, VM> {
+        InnerIvmToVm::new(self)
     }
 }
 
-impl<R, F, VM, IVM> IntoViewMember<R, InnerIvmToVmWrapper<Self, VM>> for Reactive<F, IVM>
+impl<R, F, VM, IVM> IntoViewMember<R, InnerIvmToVm<Self, VM>> for Reactive<F, IVM>
 where
     R: Renderer,
     F: Fn() -> IVM + MaybeSend + 'static,
-    IVM: IntoViewMember<R, VM> + MaybeSend + MaybeSync + Clone + 'static,
+    IVM: IntoViewMember<R, VM> + MaybeSend + 'static,
     VM: ViewMember<R>,
 {
-    fn into_member(self) -> InnerIvmToVmWrapper<Self, VM> {
-        InnerIvmToVmWrapper::new(self)
+    fn into_member(self) -> InnerIvmToVm<Self, VM> {
+        InnerIvmToVm::new(self)
     }
+}
+
+impl<R, F, VM> ViewMemberOrigin<R> for Reactive<F, VM>
+where
+    R: Renderer,
+    F: Fn() -> VM + MaybeSend + 'static,
+    VM: ViewMemberOrigin<R> + MaybeSend,
+{
+    type Origin = VM::Origin;
 }
 
 impl<R, F, VM> ViewMember<R> for Reactive<F, VM>
@@ -183,21 +192,21 @@ where
         ctx.set_indexed_view_member_state(ReactiveDisposerState(_effect.erase()))
     }
 }
-
-#[derive(Clone, Debug, PartialEq,Eq)]
-pub struct InnerIvmToVmWrapper<T, M>(pub(crate) T, PhantomData<M>);
-
-impl<T, M> InnerIvmToVmWrapper<T, M> {
-    pub fn new(t: T) -> Self {
-        Self(t, Default::default())
-    }
-}
-
-impl<R, F, IVM, VM> ViewMember<R> for InnerIvmToVmWrapper<Reactive<F, IVM>, VM>
+impl<R, F, IVM, VM> ViewMemberOrigin<R> for InnerIvmToVm<Reactive<F, IVM>, VM>
 where
     R: Renderer,
     F: Fn() -> IVM + MaybeSend + 'static,
-    IVM: IntoViewMember<R, VM> + MaybeSend + MaybeSync + Clone + 'static,
+    IVM: IntoViewMember<R, VM> + MaybeSend + 'static,
+    VM: ViewMemberOrigin<R>,
+{
+    type Origin = VM::Origin;
+}
+
+impl<R, F, IVM, VM> ViewMember<R> for InnerIvmToVm<Reactive<F, IVM>, VM>
+where
+    R: Renderer,
+    F: Fn() -> IVM + MaybeSend + 'static,
+    IVM: IntoViewMember<R, VM> + MaybeSend + 'static,
     VM: ViewMember<R>,
 {
     fn count() -> ViewMemberIndex {
@@ -217,7 +226,17 @@ where
     }
 }
 
-impl<R, T, VM, IVM> ViewMember<R> for InnerIvmToVmWrapper<T, VM>
+impl<R, T, VM, IVM> ViewMemberOrigin<R> for InnerIvmToVm<T, VM>
+where
+    R: Renderer,
+    T: SignalGet<Value = IVM> + MaybeSend + 'static,
+    IVM: IntoViewMember<R, VM> + MaybeSync + Clone + 'static,
+    VM: ViewMemberOrigin<R>,
+{
+    type Origin = VM::Origin;
+}
+
+impl<R, T, VM, IVM> ViewMember<R> for InnerIvmToVm<T, VM>
 where
     R: Renderer,
     T: SignalGet<Value = IVM> + MaybeSend + 'static,
@@ -243,11 +262,20 @@ where
 
 macro_rules! impl_view_member_for_signal_get {
     ($ident:ident) => {
+        impl<R, VM> ViewMemberOrigin<R> for $ident<VM>
+        where
+            R: Renderer,
+            VM: ViewMemberOrigin<R> + MaybeSync + Clone,
+        {
+            type Origin = VM::Origin;
+        }
+
         impl<R, VM> ViewMember<R> for $ident<VM>
         where
             R: Renderer,
             VM: ViewMember<R> + MaybeSync + Clone,
         {
+
             fn count() -> ViewMemberIndex {
                 VM::count()
             }

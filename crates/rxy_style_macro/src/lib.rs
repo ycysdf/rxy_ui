@@ -23,7 +23,7 @@ pub fn typed_style(input: TokenStream) -> TokenStream {
                 self,
                 ctx: rxy_ui::style::StyleSheetCtx<#render>,
             ) -> (
-                impl Iterator<Item = rxy_ui::style::AppliedStyleSheet> + Send + 'static,
+                impl Iterator<Item = rxy_ui::style::AppliedStyleSheet<#render>> + Send + 'static,
                 rxy_ui::style::StyleSheetsInfo,
             ) {
                 rxy_ui::style::typed_shared_style_sheets(core::any::TypeId::of::<Self>(), ctx)

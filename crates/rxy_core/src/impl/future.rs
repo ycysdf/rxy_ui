@@ -1,12 +1,13 @@
 use core::future::{Future, IntoFuture};
+use std::marker::PhantomData;
 
 use futures_lite::{FutureExt, StreamExt};
 
 use crate::build_info::{node_build_status, node_build_times_increment};
 use crate::renderer::DeferredNodeTreeScoped;
 use crate::{
-    IntoView, IntoViewMember, MaybeSend, NodeTree, Renderer, TaskState, View, ViewCtx, ViewKey,
-    ViewMember, ViewMemberCtx, ViewMemberIndex,
+    InnerIvmToVm, IntoView, IntoViewMember, MaybeSend, NodeTree, Renderer, TaskState, View,
+    ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin,
 };
 
 pub struct XFuture<T>(pub T);
@@ -169,15 +170,62 @@ where
     ctx.set_indexed_view_member_state(TaskState::<R>::new(task));
 }
 
-impl<R, T> IntoViewMember<R, Self> for XFuture<T>
+impl<R, TO, VM> ViewMemberOrigin<R> for InnerIvmToVm<XFuture<TO>, VM>
+where
+    R: Renderer,
+    TO: Future + MaybeSend + 'static,
+    VM: ViewMemberOrigin<R>,
+    TO::Output: IntoViewMember<R, VM> + MaybeSend + 'static,
+{
+    type Origin = VM::Origin;
+}
+
+impl<R, TO, VM> ViewMember<R> for InnerIvmToVm<XFuture<TO>, VM>
+where
+    R: Renderer,
+    TO: Future + MaybeSend + 'static,
+    VM: ViewMember<R>,
+    TO::Output: IntoViewMember<R, VM> + MaybeSend + 'static,
+{
+
+    fn count() -> ViewMemberIndex {
+        VM::count()
+    }
+
+    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
+        VM::unbuild(ctx, view_removed)
+    }
+
+    fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
+        let reactive = x_future(async move { self.0 .0.await.into_member() });
+        reactive.build(ctx, will_rebuild)
+    }
+
+    fn rebuild(self, ctx: ViewMemberCtx<R>) {
+        let reactive = x_future(async move { self.0 .0.await.into_member() });
+        reactive.rebuild(ctx)
+    }
+}
+
+impl<R, TO, VM> IntoViewMember<R, InnerIvmToVm<Self, VM>> for XFuture<TO>
+where
+    R: Renderer,
+    TO: Future + MaybeSend + 'static,
+    VM: ViewMember<R>,
+    TO::Output: IntoViewMember<R, VM> + MaybeSend + 'static,
+{
+    fn into_member(self) -> InnerIvmToVm<Self, VM> {
+        InnerIvmToVm::new(self)
+    }
+}
+
+impl<R, T> ViewMemberOrigin<R> for XFuture<T>
 where
     R: Renderer,
     T: Future + MaybeSend + 'static,
-    T::Output: ViewMember<R> + MaybeSend + 'static,
+    T::Output: ViewMemberOrigin<R> + MaybeSend + 'static,
 {
-    fn into_member(self) -> Self {
-        self
-    }
+    type Origin = <T::Output as ViewMemberOrigin<R>>::Origin;
 }
 
 impl<R, T> ViewMember<R> for XFuture<T>
@@ -186,6 +234,7 @@ where
     T: Future + MaybeSend + 'static,
     T::Output: ViewMember<R> + MaybeSend + 'static,
 {
+
     fn count() -> ViewMemberIndex {
         T::Output::count()
     }
@@ -208,10 +257,20 @@ where
     T2: ViewMember<R>,
     T: IntoViewMember<R, T2> + MaybeSend + 'static,
 {
+
     fn into_member(self) -> futures_lite::future::Boxed<T2> {
         async move { self.await.into_member() }.boxed()
     }
 }
+
+impl<R, T> ViewMemberOrigin<R> for futures_lite::future::Boxed<T>
+where
+    R: Renderer,
+    T: ViewMember<R> + ViewMemberOrigin<R>,
+{
+    type Origin = T::Origin;
+}
+
 impl<R, T> ViewMember<R> for futures_lite::future::Boxed<T>
 where
     R: Renderer,

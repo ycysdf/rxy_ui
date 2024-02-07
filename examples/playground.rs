@@ -267,7 +267,7 @@ fn sample_dynamic_style_sheet() -> impl IntoView<BevyRenderer> {
         .on_pointer_click(move || {
             signal.update(|n| *n = !*n);
         })
-        .style(Some((x().bg_color(Color::GRAY).height(100.).width(100.),)))
+        .style((x().bg_color(Color::GRAY).height(100.).width(100.),))
         .style_rx(move || {
             signal
                 .get()

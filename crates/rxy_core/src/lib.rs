@@ -57,6 +57,10 @@ pub mod prelude {
     #[cfg(feature = "x_iter_source")]
     pub use crate::{use_list, x_iter_source};
     pub use crate::{ElementAttr, ElementAttrUntyped, ElementType, ElementTypeUnTyped};
+
+
+    #[cfg(feature = "style")]
+    pub use crate::style::prelude::*;
 }
 
 mod element_view;
@@ -73,3 +77,5 @@ mod member_owner;
 mod renderers;
 mod r#static;
 pub mod utils;
+#[cfg(feature = "style")]
+pub mod style;

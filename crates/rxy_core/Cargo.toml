@@ -30,9 +30,10 @@ futures-lite.workspace = true
 indexmap.workspace = true
 once_cell.workspace = true
 oneshot.workspace = true
+bitflags = { workspace = true, optional = true }
 # serde.workspace = true
 
-
+derive_more.workspace = true
 count-macro.workspace = true
 paste.workspace = true
 
@@ -49,6 +50,7 @@ bevy = [
     #bevy_transform
     "dep:bevy_render",
 ]
+style = ["dep:bitflags"]
 view_erasure = []
 xy_reactive = ["dep:xy_reactive", "std", "send_sync"]
 bevy_reflect = ["dep:bevy_reflect", "std", "send_sync"]

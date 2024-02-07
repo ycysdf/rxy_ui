@@ -1,7 +1,6 @@
 use crate::attr_iter::{EntityStyleWorldQuery, StateOwnerWithNodeId};
 use crate::node_style_state::NodeStyleSheetsState;
-use crate::plugin::StyleAttrValue;
-use crate::{Previous, StyleItemValue};
+use crate::{Previous};
 use bevy_ecs::entity::Entity;
 use bevy_ecs::prelude::{Changed, Commands, Query, With, World};
 use bevy_ecs::system::{Command, ResMut};
@@ -12,7 +11,7 @@ use rxy_bevy::{
     view_element_type, AttrSetBits, ElementEntityExtraData, FocusedEntity, RendererState,
 };
 use rxy_core::AttrIndex;
-use rxy_style::{NodeInterStyleAttrInfos, NodeStyleAttrInfos, StyleInteraction};
+use rxy_core::style::{NodeInterStyleAttrInfos, NodeStyleAttrInfos, StyleAttrValue, StyleInteraction, StyleItemValue};
 
 #[derive(Default, DerefMut, Deref, Debug)]
 pub struct SetAttrValuesCommand(EntityHashMap<Entity, Vec<(AttrIndex, Option<StyleAttrValue>)>>);

@@ -1,6 +1,8 @@
 use bevy_ecs::bundle::Bundle;
 
-use rxy_core::{IntoViewMember, MemberOwner, ViewMember, ViewMemberCtx, ViewMemberIndex};
+use rxy_core::{
+    IntoViewMember, MemberOwner, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin,
+};
 
 use crate::BevyRenderer;
 
@@ -18,6 +20,13 @@ where
         self
     }
 }
+
+// impl<T> ViewMemberOrigin<BevyRenderer> for XBundle<T>
+// where
+//     T: Bundle,
+// {
+//     type Origin = Self;
+// }
 
 impl<T> ViewMember<BevyRenderer> for XBundle<T>
 where

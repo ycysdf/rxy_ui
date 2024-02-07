@@ -7,9 +7,9 @@ use futures_lite::{Stream, StreamExt};
 
 use crate::{
     build_info::{node_build_status, node_build_times_increment},
-    into_view, mutable_view_rebuild, Either, IntoView, IntoViewMember, MaybeSend, MutableView,
-    NodeTree, Renderer, RendererNodeId, TaskState, ToIntoView, View, ViewCtx, ViewKey, ViewMember,
-    ViewMemberBuildExt, ViewMemberCtx, ViewMemberIndex,
+    into_view, mutable_view_rebuild, Either, InnerIvmToVm, IntoView, IntoViewMember, MaybeSend,
+    MutableView, NodeTree, Renderer, RendererNodeId, TaskState, ToIntoView, View, ViewCtx, ViewKey,
+    ViewMember, ViewMemberBuildExt, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin,
 };
 
 fn stream_vm_rebuild<R, S, VM>(
@@ -69,9 +69,18 @@ where
     VM: ViewMember<R>,
     IVM: IntoViewMember<R, VM> + 'static,
 {
+    // type Origin = VM::Origin;
     fn into_member(self) -> futures_lite::stream::Boxed<VM> {
         self.map(|n| n.into_member()).boxed()
     }
+}
+
+impl<R, VM> ViewMemberOrigin<R> for futures_lite::stream::Boxed<VM>
+where
+    R: Renderer,
+    VM: ViewMemberOrigin<R>,
+{
+    type Origin = VM::Origin;
 }
 
 impl<R, VM> ViewMember<R> for futures_lite::stream::Boxed<VM>
@@ -269,6 +278,17 @@ impl<T> XStream<T>
 where
     T: Stream,
 {
+    pub fn map<F, U>(self, mut f: F) -> XStream<futures_lite::stream::Map<T, F>>
+    where
+        F: FnMut(T::Item) -> U + MaybeSend + 'static,
+    {
+        let value = self.value.map(&mut f);
+        XStream {
+            stream: self.stream.map(f),
+            value,
+            already_end: self.already_end,
+        }
+    }
     pub fn with_value(self, value: T::Item) -> Self {
         Self {
             stream: self.stream,
@@ -330,15 +350,58 @@ where
     }
 }
 
-impl<R, S> IntoViewMember<R, Self> for XStream<S>
+impl<R, S, IVM, VM> ViewMemberOrigin<R> for InnerIvmToVm<XStream<S>, VM>
+where
+    R: Renderer,
+    S: Stream<Item = IVM> + MaybeSend + 'static,
+    IVM: IntoViewMember<R, VM> + MaybeSend + 'static,
+    VM: ViewMemberOrigin<R>,
+{
+    type Origin = VM::Origin;
+}
+
+impl<R, S, IVM, VM> ViewMember<R> for InnerIvmToVm<XStream<S>, VM>
+where
+    R: Renderer,
+    S: Stream<Item = IVM> + MaybeSend + 'static,
+    IVM: IntoViewMember<R, VM> + MaybeSend + 'static,
+    VM: ViewMember<R>,
+{
+    fn count() -> ViewMemberIndex {
+        VM::count()
+    }
+
+    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
+        VM::unbuild(ctx, view_removed)
+    }
+
+    fn build(self, ctx: ViewMemberCtx<R>, _will_rebuild: bool) {
+        stream_vm_rebuild(self.0.map(|n| n.into_member()), ctx, true);
+    }
+
+    fn rebuild(self, ctx: ViewMemberCtx<R>) {
+        stream_vm_rebuild(self.0.map(|n| n.into_member()), ctx, false);
+    }
+}
+
+impl<R, S, IVM, VM> IntoViewMember<R, InnerIvmToVm<Self, VM>> for XStream<S>
+where
+    R: Renderer,
+    S: Stream<Item = IVM> + MaybeSend + 'static,
+    IVM: IntoViewMember<R, VM> + MaybeSend + 'static,
+    VM: ViewMember<R>,
+{
+    fn into_member(self) -> InnerIvmToVm<Self, VM> {
+        InnerIvmToVm::new(self)
+    }
+}
+impl<R, S> ViewMemberOrigin<R> for XStream<S>
 where
     R: Renderer,
     S: Stream + MaybeSend + 'static,
-    S::Item: ViewMember<R>,
+    S::Item: ViewMemberOrigin<R>,
 {
-    fn into_member(self) -> Self {
-        self
-    }
+    type Origin = <S::Item as ViewMemberOrigin<R>>::Origin;
 }
 
 impl<R, S> ViewMember<R> for XStream<S>
