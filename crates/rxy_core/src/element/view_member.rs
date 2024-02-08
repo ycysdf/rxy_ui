@@ -1,5 +1,8 @@
-use crate::element::{ElementAttr};
-use crate::{AttrValue, ElementAttrMember, IntoViewMember, NodeTree, Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin};
+use crate::element::ElementAttr;
+use crate::{
+    AttrValue, ElementAttrMember, IntoViewMember, NodeTree, Renderer, ViewMember, ViewMemberCtx,
+    ViewMemberIndex, ViewMemberOrigin,
+};
 use std::marker::PhantomData;
 
 #[derive(Clone, Debug)]
@@ -101,5 +104,16 @@ where
 
     fn into_member(self) -> ElementAttrViewMember<R, EA> {
         ElementAttrViewMember(self.0.into().0)
+    }
+}
+impl<R, T> IntoViewMember<R> for T
+where
+    R: Renderer,
+    T: Into<AttrValueWrapper<T>>,
+{
+    type Member = AttrValueWrapper<T>;
+
+    fn into_member(self) -> AttrValueWrapper<T> {
+        self.into()
     }
 }

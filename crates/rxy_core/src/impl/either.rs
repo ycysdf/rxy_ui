@@ -145,8 +145,6 @@ where
 impl<R, LVM, RVM, LVMO, RVMO> IntoViewMember<R> for Either<LVMO, RVMO>
 where
     R: Renderer,
-    LVM: ViewMember<R>,
-    RVM: ViewMember<R>,
     LVMO: IntoViewMember<R, Member=LVM>,
     RVMO: IntoViewMember<R, Member=RVM>,
 {

@@ -113,7 +113,6 @@ impl<R, VM, T> IntoViewMember<R> for Option<T>
 where
     R: Renderer,
     T: IntoViewMember<R, Member = VM>,
-    VM: ViewMember<R>,
 {
     type Member = Option<VM>;
 

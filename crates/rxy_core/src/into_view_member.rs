@@ -12,22 +12,32 @@ impl<T, M> InnerIvmToVm<T, M> {
     }
 }
 
+pub trait Mapper<T, U> {
+    fn map(self, t: T) -> U;
+}
+
 pub trait IntoViewMember<R>
 where
     R: Renderer,
 {
     type Member;
+    // type InnerMap<U>;
+
     fn into_member(self) -> Self::Member;
+
+    fn map_inner<U>(self, f: impl FnOnce(Self::Member) -> U) -> InnerIvmToVm<Self, U> {
+        InnerIvmToVm::new(self).map_inner(f)
+    }
 }
 
-impl<R> IntoViewMember<R> for ()
-where
-    R: Renderer,
-{
-    type Member = Self;
-
-    fn into_member(self) -> Self {}
-}
+// impl<R> IntoViewMember<R> for ()
+// where
+//     R: Renderer,
+// {
+//     type Member = Self;
+//
+//     fn into_member(self) -> Self {}
+// }
 
 macro_rules! impl_into_view_member_for_tuples {
     ($(($ty:ident,$vm:ident)),*$(,)?) => {

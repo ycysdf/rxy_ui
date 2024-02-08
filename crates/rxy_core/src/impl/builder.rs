@@ -91,7 +91,6 @@ impl<R, F, IVM, VM> IntoViewMember<R> for Builder<R, F>
 where
     F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> IVM + MaybeSend + 'static,
     R: Renderer,
-    VM: ViewMember<R>,
     IVM: IntoViewMember<R, Member = VM>,
 {
     type Member = InnerIvmToVm<Self, VM>;
@@ -99,6 +98,7 @@ where
     fn into_member(self) -> Self::Member {
         InnerIvmToVm::new(self)
     }
+
 }
 
 impl<R, F, VM, IVM> ViewMemberOrigin<R> for InnerIvmToVm<Builder<R, F>, VM>
