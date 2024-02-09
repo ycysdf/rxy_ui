@@ -1,7 +1,8 @@
-mod common_renderer;
+pub mod common_renderer;
 pub use common_renderer::*;
 pub mod attrs;
 pub mod elements;
+mod attr_values;
 
 use std::any::{Any, TypeId};
 use std::borrow::BorrowMut;
@@ -16,10 +17,24 @@ use slotmap::{Key, KeyData, SlotMap};
 use web_sys::wasm_bindgen::JsCast;
 use web_sys::{Document, HtmlElement, Node, Window};
 
+use crate::elements::{ElementTypeDiv, WebRendererElementType};
 use rxy_core::{
-    AttrIndex, DeferredNodeTreeScoped, ElementAttr, IntoView, MaybeSend, MaybeSync, NodeTree,
-    Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey,
+    AttrIndex, DeferredNodeTreeScoped, Element, ElementAttr, ElementAttrViewMember,
+    ElementTypeUnTyped, ElementViewChildren, IntoView, MaybeSend, MaybeSync, NodeTree, Renderer,
+    RendererNodeId, RendererWorld, View, ViewCtx, ViewKey,
 };
+
+#[inline(always)]
+pub fn view_element_type() -> &'static dyn ElementTypeUnTyped<WebRenderer> {
+    &WebRendererElementType::<0>
+}
+
+pub type WebElement<E, VM> = Element<WebRenderer, E, VM>;
+
+pub type WebElementViewChildren<CV, E, VM> =
+    ElementViewChildren<WebRenderer, Element<WebRenderer, E, VM>, CV>;
+
+pub type WebElementAttrMember<EA> = ElementAttrViewMember<WebRenderer, EA>;
 
 pub struct WebTask;
 
@@ -225,11 +240,11 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
         value: A::Value,
     ) {
         if let Some(element) = node_id.dyn_ref::<web_sys::Element>() {
-            let name = A::NAME;
-            // element.set_attribute(name, &value).unwrap();
+            A::first_set_value(self, node_id, value);
         } else {
             println!("build_attr: {:?}", node_id);
         }
+        // todo: already init
     }
 
     fn rebuild_attr<A: ElementAttr<WebRenderer>>(
@@ -237,7 +252,8 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
         node_id: RendererNodeId<WebRenderer>,
         value: A::Value,
     ) {
-        self.build_attr(node_id, value);
+        A::update_value(self, node_id, value);
+
     }
 
     fn unbuild_attr<A: ElementAttr<WebRenderer>>(&mut self, node_id: RendererNodeId<WebRenderer>) {

@@ -41,12 +41,13 @@ macro_rules! common_attrs_fn_define {
             pub trait [<$name ViewBuilder>]: rxy_core::MemberOwner<$crate::BevyRenderer> + Sized {
 
                 $(
-                    fn $attr<T>(self, value: impl rxy_core::IntoViewMember<$crate::BevyRenderer, Member=T>) -> Self::AddMember<T>
+                    fn $attr<T>(self, value: impl rxy_core::XNest<$crate::BevyRenderer, MapMember<rxy_core::MapToAttrMarker<$crate::all_attrs::$attr>> = T>) -> Self::AddMember<T>
                     where
-                        T: rxy_core::ElementAttrMember<$crate::BevyRenderer, EA = $crate::all_attrs::$attr>,
+                        T: rxy_core::ViewMember<$crate::BevyRenderer>
+                        + rxy_core::ViewMemberOrigin<$crate::BevyRenderer, Origin = rxy_core::ElementAttrViewMember<$crate::BevyRenderer, $crate::all_attrs::$attr>>,
                         (Self::VM, T): rxy_core::ViewMember<$crate::BevyRenderer>
                     {
-                        self.member(value)
+                        self.member(value.map_inner::<rxy_core::MapToAttrMarker<$crate::all_attrs::$attr>>())
                     }
                 )*
             }
@@ -77,15 +78,15 @@ macro_rules! element_attrs_fn_define {
         paste::paste!{
             pub trait [<$name ViewBuilder>]: rxy_core::MemberOwner<$crate::BevyRenderer> + Sized
             {
-                $(
-                    fn $attr<T>(self, value: impl rxy_core::IntoViewMember<$crate::BevyRenderer, Member=T>) -> Self::AddMember<T>
-                    where
-                        T: rxy_core::ElementAttrMember<$crate::BevyRenderer, EA = $crate::all_attrs::$attr>,
-                        (Self::VM, T): rxy_core::ViewMember<$crate::BevyRenderer>
-                    {
-                        self.member(value)
-                    }
-                )*
+                // $(
+                //     fn $attr<T>(self, value: impl rxy_core::XNest<$crate::BevyRenderer, MapMember<rxy_core::VmMapper<$crate::BevyRenderer>> = T>) -> Self::AddMember<T>
+                //     where T: rxy_core::ViewMember<$crate::BevyRenderer>
+                //         + rxy_core::ViewMemberOrigin<$crate::BevyRenderer, Origin = rxy_core::ElementAttrViewMember<$crate::BevyRenderer, $crate::all_attrs::$attr>>,
+                //         (Self::VM, T): rxy_core::ViewMember<$crate::BevyRenderer>
+                //     {
+                //         self.member(value)
+                //     }
+                // )*
             }
 
             impl<T: rxy_core::MemberOwner<$crate::BevyRenderer,E=$element>> [<$name ViewBuilder>] for T {}

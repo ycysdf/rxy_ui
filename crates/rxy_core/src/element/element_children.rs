@@ -1,9 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::{
-    BoxedErasureView, ElementView, IntoView, IntoViewErasureExt, IntoViewMember,
-    MemberOwner, NodeTree, Renderer, RendererNodeId, SoloView, View, ViewCtx, ViewMember,
-};
+use crate::{BoxedErasureView, ElementView, VmMapper, IntoView, IntoViewErasureExt, XNest, MemberOwner, NodeTree, Renderer, RendererNodeId, SoloView, View, ViewCtx, ViewMember};
 
 pub fn view_children<R, V, CV>(view: V, children: CV) -> ElementViewChildren<R, V, CV::View>
 where
@@ -173,7 +170,7 @@ where
     type AddMember<T: ViewMember<R>> = ElementViewChildren<R, V::AddMember<T>, CV>;
     type SetMembers<T: ViewMember<R> + MemberOwner<R>> =
         ElementViewChildren<R, V::SetMembers<T>, CV>;
-    fn member<T>(self, member: impl IntoViewMember<R, Member=T>) -> Self::AddMember<T>
+    fn member<T>(self, member: T) -> Self::AddMember<T>
     where
         (VM, T): ViewMember<R>,
         T: ViewMember<R>,
@@ -181,7 +178,7 @@ where
         ElementViewChildren::new(self.view.member(member), self.children)
     }
 
-    fn members<T>(self, members: impl IntoViewMember<R,Member= T>) -> Self::SetMembers<(T,)>
+    fn members<T>(self, members:  T) -> Self::SetMembers<(T,)>
     where
         T: ViewMember<R>,
     {

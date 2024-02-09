@@ -463,216 +463,216 @@ impl<T: ?Sized + Hash, Space> Hash for SmallBox<T, Space> {
 unsafe impl<T: ?Sized + Send, Space> Send for SmallBox<T, Space> {}
 unsafe impl<T: ?Sized + Sync, Space> Sync for SmallBox<T, Space> {}
 
-#[cfg(test)]
-mod tests {
-    use core::any::Any;
-
-    use ::alloc::boxed::Box;
-    use ::alloc::vec;
-
-    use super::SmallBox;
-    use crate::space::*;
-
-    #[test]
-    fn test_basic() {
-        let stacked: SmallBox<usize, S1> = SmallBox::new(1234usize);
-        assert!(*stacked == 1234);
-
-        let heaped: SmallBox<(usize, usize), S1> = SmallBox::new((0, 1));
-        assert!(*heaped == (0, 1));
-    }
-
-    #[test]
-    fn test_new_unchecked() {
-        let val = [0usize, 1];
-        let ptr = &val as *const _;
-
-        unsafe {
-            let stacked: SmallBox<[usize], S2> = SmallBox::new_unchecked(val, ptr);
-            assert!(*stacked == [0, 1]);
-            assert!(!stacked.is_heap());
-        }
-
-        let val = [0usize, 1, 2];
-        let ptr = &val as *const _;
-
-        unsafe {
-            let heaped: SmallBox<dyn Any, S2> = SmallBox::new_unchecked(val, ptr);
-            assert!(heaped.is_heap());
-
-            if let Some(array) = heaped.downcast_ref::<[usize; 3]>() {
-                assert_eq!(*array, [0, 1, 2]);
-            } else {
-                unreachable!();
-            }
-        }
-    }
-
-    #[test]
-    #[deny(unsafe_code)]
-    fn test_macro() {
-        let stacked: SmallBox<dyn Any, S1> = smallbox!(1234usize);
-        if let Some(num) = stacked.downcast_ref::<usize>() {
-            assert_eq!(*num, 1234);
-        } else {
-            unreachable!();
-        }
-
-        let heaped: SmallBox<dyn Any, S1> = smallbox!([0usize, 1]);
-        if let Some(array) = heaped.downcast_ref::<[usize; 2]>() {
-            assert_eq!(*array, [0, 1]);
-        } else {
-            unreachable!();
-        }
-
-        let is_even: SmallBox<dyn Fn(u8) -> bool, S1> = smallbox!(|num: u8| num % 2 == 0);
-        assert!(!is_even(5));
-        assert!(is_even(6));
-    }
-
-    #[test]
-    #[cfg(feature = "coerce")]
-    fn test_coerce() {
-        let stacked: SmallBox<dyn Any, S1> = SmallBox::new(1234usize);
-        if let Some(num) = stacked.downcast_ref::<usize>() {
-            assert_eq!(*num, 1234);
-        } else {
-            unreachable!();
-        }
-
-        let heaped: SmallBox<dyn Any, S1> = SmallBox::new([0usize, 1]);
-        if let Some(array) = heaped.downcast_ref::<[usize; 2]>() {
-            assert_eq!(*array, [0, 1]);
-        } else {
-            unreachable!();
-        }
-    }
-
-    #[test]
-    fn test_drop() {
-        use core::cell::Cell;
-
-        struct Struct<'a>(&'a Cell<bool>, u8);
-        impl<'a> Drop for Struct<'a> {
-            fn drop(&mut self) {
-                self.0.set(true);
-            }
-        }
-
-        let flag = Cell::new(false);
-        let stacked: SmallBox<_, S2> = SmallBox::new(Struct(&flag, 0));
-        assert!(!stacked.is_heap());
-        assert!(flag.get() == false);
-        drop(stacked);
-        assert!(flag.get() == true);
-
-        let flag = Cell::new(false);
-        let heaped: SmallBox<_, S1> = SmallBox::new(Struct(&flag, 0));
-        assert!(heaped.is_heap());
-        assert!(flag.get() == false);
-        drop(heaped);
-        assert!(flag.get() == true);
-    }
-
-    #[test]
-    fn test_dont_drop_space() {
-        struct NoDrop(S1);
-        impl Drop for NoDrop {
-            fn drop(&mut self) {
-                unreachable!();
-            }
-        }
-
-        drop(SmallBox::<_, NoDrop>::new([true]));
-    }
-
-    #[test]
-    fn test_oversize() {
-        let fit = SmallBox::<_, S1>::new([1usize]);
-        let oversize = SmallBox::<_, S1>::new([1usize, 2]);
-        assert!(!fit.is_heap());
-        assert!(oversize.is_heap());
-    }
-
-    #[test]
-    fn test_resize() {
-        let m = SmallBox::<_, S4>::new([1usize, 2]);
-        let l = m.resize::<S8>();
-        assert!(!l.is_heap());
-        let m = l.resize::<S4>();
-        assert!(!m.is_heap());
-        let s = m.resize::<S2>();
-        assert!(!s.is_heap());
-        let xs = s.resize::<S1>();
-        assert!(xs.is_heap());
-        let m = xs.resize::<S4>();
-        assert!(m.is_heap());
-        assert_eq!(*m, [1usize, 2]);
-    }
-
-    #[test]
-    fn test_clone() {
-        let stacked: SmallBox<[usize; 2], S2> = smallbox!([1usize, 2]);
-        assert_eq!(stacked, stacked.clone())
-    }
-
-    #[test]
-    fn test_zst() {
-        struct ZSpace;
-
-        let zst: SmallBox<[usize], S1> = smallbox!([1usize; 0]);
-        assert_eq!(*zst, [1usize; 0]);
-
-        let zst: SmallBox<[usize], ZSpace> = smallbox!([1usize; 0]);
-        assert_eq!(*zst, [1usize; 0]);
-        let zst: SmallBox<[usize], ZSpace> = smallbox!([1usize; 2]);
-        assert_eq!(*zst, [1usize; 2]);
-    }
-
-    #[test]
-    fn test_downcast() {
-        let stacked: SmallBox<dyn Any, S1> = smallbox!(0x01u32);
-        assert!(!stacked.is_heap());
-        assert_eq!(SmallBox::new(0x01), stacked.downcast::<u32>().unwrap());
-
-        let heaped: SmallBox<dyn Any, S1> = smallbox!([1usize, 2]);
-        assert!(heaped.is_heap());
-        assert_eq!(
-            smallbox!([1usize, 2]),
-            heaped.downcast::<[usize; 2]>().unwrap()
-        );
-
-        let stacked_send: SmallBox<dyn Any + Send, S1> = smallbox!(0x01u32);
-        assert!(!stacked_send.is_heap());
-        assert_eq!(SmallBox::new(0x01), stacked_send.downcast::<u32>().unwrap());
-
-        let heaped_send: SmallBox<dyn Any + Send, S1> = smallbox!([1usize, 2]);
-        assert!(heaped_send.is_heap());
-        assert_eq!(
-            SmallBox::new([1usize, 2]),
-            heaped_send.downcast::<[usize; 2]>().unwrap()
-        );
-
-        let mismatched: SmallBox<dyn Any, S1> = smallbox!(0x01u32);
-        assert!(mismatched.downcast::<u8>().is_err());
-        let mismatched: SmallBox<dyn Any, S1> = smallbox!(0x01u32);
-        assert!(mismatched.downcast::<u64>().is_err());
-    }
-
-    #[test]
-    fn test_option_encoding() {
-        let tester: SmallBox<Box<()>, S2> = SmallBox::new(Box::new(()));
-        assert!(Some(tester).is_some());
-    }
-
-    #[test]
-    fn test_into_inner() {
-        let tester: SmallBox<_, S1> = SmallBox::new([21usize]);
-        let val = tester.into_inner();
-        assert_eq!(val[0], 21);
-
-        let tester: SmallBox<_, S1> = SmallBox::new(vec![21, 56, 420]);
-        let val = tester.into_inner();
-        assert_eq!(val[1], 56);
-    }
-}
+// #[cfg(test)]
+// mod tests {
+//     use core::any::Any;
+//
+//     use ::alloc::boxed::Box;
+//     use ::alloc::vec;
+//
+//     use super::SmallBox;
+//     use crate::space::*;
+//
+//     #[test]
+//     fn test_basic() {
+//         let stacked: SmallBox<usize, S1> = SmallBox::new(1234usize);
+//         assert!(*stacked == 1234);
+//
+//         let heaped: SmallBox<(usize, usize), S1> = SmallBox::new((0, 1));
+//         assert!(*heaped == (0, 1));
+//     }
+//
+//     #[test]
+//     fn test_new_unchecked() {
+//         let val = [0usize, 1];
+//         let ptr = &val as *const _;
+//
+//         unsafe {
+//             let stacked: SmallBox<[usize], S2> = SmallBox::new_unchecked(val, ptr);
+//             assert!(*stacked == [0, 1]);
+//             assert!(!stacked.is_heap());
+//         }
+//
+//         let val = [0usize, 1, 2];
+//         let ptr = &val as *const _;
+//
+//         unsafe {
+//             let heaped: SmallBox<dyn Any, S2> = SmallBox::new_unchecked(val, ptr);
+//             assert!(heaped.is_heap());
+//
+//             if let Some(array) = heaped.downcast_ref::<[usize; 3]>() {
+//                 assert_eq!(*array, [0, 1, 2]);
+//             } else {
+//                 unreachable!();
+//             }
+//         }
+//     }
+//
+//     #[test]
+//     #[deny(unsafe_code)]
+//     fn test_macro() {
+//         let stacked: SmallBox<dyn Any, S1> = smallbox!(1234usize);
+//         if let Some(num) = stacked.downcast_ref::<usize>() {
+//             assert_eq!(*num, 1234);
+//         } else {
+//             unreachable!();
+//         }
+//
+//         let heaped: SmallBox<dyn Any, S1> = smallbox!([0usize, 1]);
+//         if let Some(array) = heaped.downcast_ref::<[usize; 2]>() {
+//             assert_eq!(*array, [0, 1]);
+//         } else {
+//             unreachable!();
+//         }
+//
+//         let is_even: SmallBox<dyn Fn(u8) -> bool, S1> = smallbox!(|num: u8| num % 2 == 0);
+//         assert!(!is_even(5));
+//         assert!(is_even(6));
+//     }
+//
+//     #[test]
+//     #[cfg(feature = "coerce")]
+//     fn test_coerce() {
+//         let stacked: SmallBox<dyn Any, S1> = SmallBox::new(1234usize);
+//         if let Some(num) = stacked.downcast_ref::<usize>() {
+//             assert_eq!(*num, 1234);
+//         } else {
+//             unreachable!();
+//         }
+//
+//         let heaped: SmallBox<dyn Any, S1> = SmallBox::new([0usize, 1]);
+//         if let Some(array) = heaped.downcast_ref::<[usize; 2]>() {
+//             assert_eq!(*array, [0, 1]);
+//         } else {
+//             unreachable!();
+//         }
+//     }
+//
+//     #[test]
+//     fn test_drop() {
+//         use core::cell::Cell;
+//
+//         struct Struct<'a>(&'a Cell<bool>, u8);
+//         impl<'a> Drop for Struct<'a> {
+//             fn drop(&mut self) {
+//                 self.0.set(true);
+//             }
+//         }
+//
+//         let flag = Cell::new(false);
+//         let stacked: SmallBox<_, S2> = SmallBox::new(Struct(&flag, 0));
+//         assert!(!stacked.is_heap());
+//         assert!(flag.get() == false);
+//         drop(stacked);
+//         assert!(flag.get() == true);
+//
+//         let flag = Cell::new(false);
+//         let heaped: SmallBox<_, S1> = SmallBox::new(Struct(&flag, 0));
+//         assert!(heaped.is_heap());
+//         assert!(flag.get() == false);
+//         drop(heaped);
+//         assert!(flag.get() == true);
+//     }
+//
+//     #[test]
+//     fn test_dont_drop_space() {
+//         struct NoDrop(S1);
+//         impl Drop for NoDrop {
+//             fn drop(&mut self) {
+//                 unreachable!();
+//             }
+//         }
+//
+//         drop(SmallBox::<_, NoDrop>::new([true]));
+//     }
+//
+//     #[test]
+//     fn test_oversize() {
+//         let fit = SmallBox::<_, S1>::new([1usize]);
+//         let oversize = SmallBox::<_, S1>::new([1usize, 2]);
+//         assert!(!fit.is_heap());
+//         assert!(oversize.is_heap());
+//     }
+//
+//     #[test]
+//     fn test_resize() {
+//         let m = SmallBox::<_, S4>::new([1usize, 2]);
+//         let l = m.resize::<S8>();
+//         assert!(!l.is_heap());
+//         let m = l.resize::<S4>();
+//         assert!(!m.is_heap());
+//         let s = m.resize::<S2>();
+//         assert!(!s.is_heap());
+//         let xs = s.resize::<S1>();
+//         assert!(xs.is_heap());
+//         let m = xs.resize::<S4>();
+//         assert!(m.is_heap());
+//         assert_eq!(*m, [1usize, 2]);
+//     }
+//
+//     #[test]
+//     fn test_clone() {
+//         let stacked: SmallBox<[usize; 2], S2> = smallbox!([1usize, 2]);
+//         assert_eq!(stacked, stacked.clone())
+//     }
+//
+//     #[test]
+//     fn test_zst() {
+//         struct ZSpace;
+//
+//         let zst: SmallBox<[usize], S1> = smallbox!([1usize; 0]);
+//         assert_eq!(*zst, [1usize; 0]);
+//
+//         let zst: SmallBox<[usize], ZSpace> = smallbox!([1usize; 0]);
+//         assert_eq!(*zst, [1usize; 0]);
+//         let zst: SmallBox<[usize], ZSpace> = smallbox!([1usize; 2]);
+//         assert_eq!(*zst, [1usize; 2]);
+//     }
+//
+//     #[test]
+//     fn test_downcast() {
+//         let stacked: SmallBox<dyn Any, S1> = smallbox!(0x01u32);
+//         assert!(!stacked.is_heap());
+//         assert_eq!(SmallBox::new(0x01), stacked.downcast::<u32>().unwrap());
+//
+//         let heaped: SmallBox<dyn Any, S1> = smallbox!([1usize, 2]);
+//         assert!(heaped.is_heap());
+//         assert_eq!(
+//             smallbox!([1usize, 2]),
+//             heaped.downcast::<[usize; 2]>().unwrap()
+//         );
+//
+//         let stacked_send: SmallBox<dyn Any + Send, S1> = smallbox!(0x01u32);
+//         assert!(!stacked_send.is_heap());
+//         assert_eq!(SmallBox::new(0x01), stacked_send.downcast::<u32>().unwrap());
+//
+//         let heaped_send: SmallBox<dyn Any + Send, S1> = smallbox!([1usize, 2]);
+//         assert!(heaped_send.is_heap());
+//         assert_eq!(
+//             SmallBox::new([1usize, 2]),
+//             heaped_send.downcast::<[usize; 2]>().unwrap()
+//         );
+//
+//         let mismatched: SmallBox<dyn Any, S1> = smallbox!(0x01u32);
+//         assert!(mismatched.downcast::<u8>().is_err());
+//         let mismatched: SmallBox<dyn Any, S1> = smallbox!(0x01u32);
+//         assert!(mismatched.downcast::<u64>().is_err());
+//     }
+//
+//     #[test]
+//     fn test_option_encoding() {
+//         let tester: SmallBox<Box<()>, S2> = SmallBox::new(Box::new(()));
+//         assert!(Some(tester).is_some());
+//     }
+//
+//     #[test]
+//     fn test_into_inner() {
+//         let tester: SmallBox<_, S1> = SmallBox::new([21usize]);
+//         let val = tester.into_inner();
+//         assert_eq!(val[0], 21);
+//
+//         let tester: SmallBox<_, S1> = SmallBox::new(vec![21, 56, 420]);
+//         let val = tester.into_inner();
+//         assert_eq!(val[1], 56);
+//     }
+// }

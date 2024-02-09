@@ -3,7 +3,7 @@ use alloc::boxed::Box;
 use crate::utils::all_tuples;
 
 use crate::{
-    target_rebuild_fn_channel, IntoView, IntoViewMember, MaybeSend, Renderer, RendererNodeId, View,
+    target_rebuild_fn_channel, IntoView, XNest, MaybeSend, Renderer, RendererNodeId, View,
     ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin,
 };
 
@@ -256,26 +256,27 @@ where
     }
 }
 
-impl<R, VM, IVM> IntoViewMember<R> for RebuildFnReceiver<R, IVM>
-where
-    R: Renderer,
-    VM: ViewMember<R>,
-    IVM: IntoViewMember<R, Member=VM>,
-{
-    type Member = RebuildFnReceiver<R, VM>;
+// todo:
+// impl<R, VM, IVM> XNest<R> for RebuildFnReceiver<R, IVM>
+// where
+//     R: Renderer,
+//     VM: ViewMember<R>,
+//     IVM: XNest<R, MapMember=VM>,
+// {
+//     type MapMember = RebuildFnReceiver<R, VM>;
+//
+//     fn into_member(self) -> RebuildFnReceiver<R, VM> {
+//         self.map(|n| n.into_member())
+//     }
+// }
 
-    fn into_member(self) -> RebuildFnReceiver<R, VM> {
-        self.map(|n| n.into_member())
-    }
-}
-
-impl<R, VM> ViewMemberOrigin<R> for RebuildFnReceiver<R, VM>
-where
-    R: Renderer,
-    VM: ViewMemberOrigin<R>,
-{
-    type Origin = VM::Origin;
-}
+// impl<R, VM> ViewMemberOrigin<R> for RebuildFnReceiver<R, VM>
+// where
+//     R: Renderer,
+//     VM: ViewMemberOrigin<R>,
+// {
+//     type Origin = VM::Origin;
+// }
 
 impl<R, VM> ViewMember<R> for RebuildFnReceiver<R, VM>
 where

@@ -3,9 +3,8 @@ use core::marker::PhantomData;
 
 use crate::element::{view_children, ElementType, ElementViewChildren};
 use crate::{
-    ElementView, IntoView, IntoViewMember, MemberOwner, NodeTree, Renderer,
-    RendererNodeId, SoloView, View, ViewCtx, ViewKey, ViewMember,
-    ViewMemberCtx,
+    ElementView, IntoView, MemberOwner, NodeTree, Renderer, RendererNodeId, SoloView, View,
+    ViewCtx, ViewKey, ViewMember, ViewMemberCtx, VmMapper, XNest,
 };
 
 #[derive(Clone)]
@@ -15,12 +14,11 @@ pub struct Element<R, E, VM> {
 }
 
 impl<R, E, VM> Element<R, E, VM>
-    where
-        R: Renderer,
-        E: ElementType<R>,
-        VM: ViewMember<R>,
+where
+    R: Renderer,
+    E: ElementType<R>,
+    VM: ViewMember<R>,
 {
-
     pub fn new(members: VM) -> Self {
         Self {
             members,
@@ -30,16 +28,19 @@ impl<R, E, VM> Element<R, E, VM>
 
     #[cfg(not(feature = "view_erasure"))]
     pub fn children<CV>(self, children: CV) -> ElementViewChildren<R, Element<R, E, VM>, CV::View>
-        where
-            CV: IntoView<R>,
+    where
+        CV: IntoView<R>,
     {
         view_children(self, children)
     }
 
     #[cfg(feature = "view_erasure")]
-    pub fn children<CV>(self, children: CV) -> ElementViewChildren<R, Element<R, E, VM>, crate::BoxedErasureView<R>>
-        where
-            CV: IntoView<R>,
+    pub fn children<CV>(
+        self,
+        children: CV,
+    ) -> ElementViewChildren<R, Element<R, E, VM>, crate::BoxedErasureView<R>>
+    where
+        CV: IntoView<R>,
     {
         use crate::IntoViewErasureExt;
         view_children(self, unsafe { children.into_erasure_view() })
@@ -69,23 +70,23 @@ where
     type AddMember<T: ViewMember<R>> = Element<R, E, (VM, T)>;
     type SetMembers<T: ViewMember<R> + MemberOwner<R>> = Element<R, E, T>;
 
-    fn member<T>(self, member: impl IntoViewMember<R, Member=T>) -> Self::AddMember<T>
+    fn member<T>(self, member: T) -> Self::AddMember<T>
     where
         (VM, T): ViewMember<R>,
         T: ViewMember<R>,
     {
         Element {
-            members: (self.members, member.into_member()),
+            members: (self.members, member),
             _marker: self._marker,
         }
     }
 
-    fn members<T>(self, members: impl IntoViewMember<R, Member= T>) -> Self::SetMembers<(T,)>
+    fn members<T>(self, members: T) -> Self::SetMembers<(T,)>
     where
         T: ViewMember<R>,
     {
         Element {
-            members: (members.into_member(),),
+            members: (members,),
             _marker: self._marker,
         }
     }

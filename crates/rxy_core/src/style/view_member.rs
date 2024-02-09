@@ -1,7 +1,9 @@
 #![allow(clippy::blocks_in_conditions)]
 
 use crate::style::{ApplyStyleSheets, StyleSheets};
-use crate::{IntoViewMember, Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin};
+use crate::{
+    Mapper, Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, XNest,
+};
 
 pub type StyleItemIndex = u8;
 pub type StyleSheetIndex = u8;
@@ -40,17 +42,6 @@ impl ApplyStyleSheetsMemberState {
     }
 }
 
-impl<R, T> IntoViewMember<R> for ApplyStyleSheets<T>
-where
-    R: Renderer,
-    T: StyleSheets<R>,
-{
-    type Member = Self;
-
-    fn into_member(self) -> Self {
-        self
-    }
-}
 impl<R, T> ViewMemberOrigin<R> for ApplyStyleSheets<T>
 where
     R: Renderer,
@@ -58,6 +49,7 @@ where
 {
     type Origin = Self;
 }
+
 impl<R, T> ViewMember<R> for ApplyStyleSheets<T>
 where
     R: Renderer,

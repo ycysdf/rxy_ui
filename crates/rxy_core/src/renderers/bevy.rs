@@ -1,9 +1,6 @@
 use std::borrow::Cow;
 
-use crate::{
-    impl_attr_value, impl_attr_value_and_wrapper, impl_into_attr_value_wrappers, smallbox,
-    AttrValue, AttrValueWrapper, SmallBox, S1,
-};
+use crate::{impl_attr_value, impl_attr_value_and_wrapper, impl_x_value_wrappers, smallbox, AttrValue, SmallBox, S1, XValueWrapper};
 use bevy_asset::Handle;
 use bevy_render::prelude::Color;
 
@@ -30,60 +27,54 @@ impl_attr_value_and_wrapper! {
     bevy_ui::OverflowAxis
 }
 
-impl Into<AttrValueWrapper<bevy_ui::ZIndex>> for i32 {
-    fn into(self) -> AttrValueWrapper<bevy_ui::ZIndex> {
-        AttrValueWrapper(bevy_ui::ZIndex::Global(self))
+impl Into<XValueWrapper<bevy_ui::ZIndex>> for i32 {
+    fn into(self) -> XValueWrapper<bevy_ui::ZIndex> {
+        XValueWrapper(bevy_ui::ZIndex::Global(self))
     }
 }
 
-impl Into<AttrValueWrapper<bevy_ui::Val>> for i32 {
-    fn into(self) -> AttrValueWrapper<bevy_ui::Val> {
-        AttrValueWrapper(bevy_ui::Val::Px(self as _))
+impl Into<XValueWrapper<bevy_ui::Val>> for i32 {
+    fn into(self) -> XValueWrapper<bevy_ui::Val> {
+        XValueWrapper(bevy_ui::Val::Px(self as _))
     }
 }
 
-impl Into<AttrValueWrapper<bevy_ui::Val>> for f32 {
-    fn into(self) -> AttrValueWrapper<bevy_ui::Val> {
-        AttrValueWrapper(bevy_ui::Val::Px(self))
+impl Into<XValueWrapper<bevy_ui::Val>> for f32 {
+    fn into(self) -> XValueWrapper<bevy_ui::Val> {
+        XValueWrapper(bevy_ui::Val::Px(self))
     }
 }
 
-impl Into<AttrValueWrapper<i32>> for f32 {
-    fn into(self) -> AttrValueWrapper<i32> {
-        AttrValueWrapper(self as _)
+impl Into<XValueWrapper<i32>> for f32 {
+    fn into(self) -> XValueWrapper<i32> {
+        XValueWrapper(self as _)
     }
 }
 
-impl Into<AttrValueWrapper<f32>> for i32 {
-    fn into(self) -> AttrValueWrapper<f32> {
-        AttrValueWrapper(self as _)
+impl Into<XValueWrapper<f32>> for i32 {
+    fn into(self) -> XValueWrapper<f32> {
+        XValueWrapper(self as _)
     }
 }
 
-impl Into<AttrValueWrapper<bevy_render::prelude::Visibility>> for bool {
-    fn into(self) -> AttrValueWrapper<bevy_render::prelude::Visibility> {
-        AttrValueWrapper(
+impl Into<XValueWrapper<bevy_render::prelude::Visibility>> for bool {
+    fn into(self) -> XValueWrapper<bevy_render::prelude::Visibility> {
+        XValueWrapper(
             self.then(|| bevy_render::prelude::Visibility::Visible)
                 .unwrap_or(bevy_render::prelude::Visibility::Hidden),
         )
     }
 }
 
-impl Into<AttrValueWrapper<Cow<'static, str>>> for &'static str {
-    fn into(self) -> AttrValueWrapper<Cow<'static, str>> {
-        AttrValueWrapper(self.into())
+impl Into<XValueWrapper<glam::Quat>> for f32 {
+    fn into(self) -> XValueWrapper<glam::Quat> {
+        XValueWrapper(glam::Quat::from_rotation_z(self))
     }
 }
 
-impl Into<AttrValueWrapper<glam::Quat>> for f32 {
-    fn into(self) -> AttrValueWrapper<glam::Quat> {
-        AttrValueWrapper(glam::Quat::from_rotation_z(self))
-    }
-}
-
-impl Into<AttrValueWrapper<glam::Vec3>> for f32 {
-    fn into(self) -> AttrValueWrapper<glam::Vec3> {
-        AttrValueWrapper(glam::Vec3::new(self, self, self))
+impl Into<XValueWrapper<glam::Vec3>> for f32 {
+    fn into(self) -> XValueWrapper<glam::Vec3> {
+        XValueWrapper(glam::Vec3::new(self, self, self))
     }
 }
 
@@ -130,11 +121,11 @@ where
     }
 }
 
-impl<T> Into<AttrValueWrapper<Handle<T>>> for Handle<T>
+impl<T> Into<XValueWrapper<Handle<T>>> for Handle<T>
 where
     T: bevy_asset::Asset,
 {
-    fn into(self) -> AttrValueWrapper<Handle<T>> {
-        AttrValueWrapper(self)
+    fn into(self) -> XValueWrapper<Handle<T>> {
+        XValueWrapper(self)
     }
 }

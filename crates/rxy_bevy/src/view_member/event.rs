@@ -6,7 +6,7 @@ use bevy_ecs::system::SystemId;
 use bevy_input::prelude::KeyCode;
 use bevy_utils::tracing::error;
 
-use rxy_core::{IntoViewMember, MemberOwner, ViewMember, ViewMemberCtx, ViewMemberOrigin};
+use rxy_core::{XNest, Mapper, MemberOwner, ViewMember, ViewMemberCtx, ViewMemberOrigin};
 
 use crate::event::*;
 use crate::prelude::FocusInputEventIterator;
@@ -21,27 +21,30 @@ pub struct EventViewMember<T, S, M> {
     _marker: PhantomData<M>,
 }
 
-impl<T, S, M> IntoViewMember<BevyRenderer> for EventViewMember<T, S, M>
+
+
+impl<T, S, TM> XNest<BevyRenderer> for EventViewMember<T, S, TM>
+where
+    T: ElementEventIds,
+    S: IntoSystem<(), (), TM> + Send + 'static,
+    TM: Send + 'static,
+{
+    type InnerMember = Self;
+    type MapMember<M> = Self;
+
+    fn map_inner<U>(self) -> Self::MapMember<U> {
+        self
+    }
+}
+
+impl<T, S, M> ViewMemberOrigin<BevyRenderer> for EventViewMember<T, S, M>
 where
     T: ElementEventIds,
     S: IntoSystem<(), (), M> + Send + 'static,
     M: Send + 'static,
 {
-    type Member = Self;
-
-    fn into_member(self) -> Self {
-        self
-    }
+    type Origin = Self;
 }
-
-// impl<T, S, M> ViewMemberOrigin<BevyRenderer> for EventViewMember<T, S, M>
-// where
-//     T: ElementEventIds,
-//     S: IntoSystem<(), (), M> + Send + 'static,
-//     M: Send + 'static,
-// {
-//     type Origin = Self;
-// }
 
 impl<T, S, M> ViewMember<BevyRenderer> for EventViewMember<T, S, M>
 where

@@ -5,8 +5,8 @@ mod view_member;
 
 use crate::utils::all_tuples;
 use crate::{
-    AttrIndex, AttrValue, Either, EitherExt, IntoViewMember, MemberOwner, Renderer, RendererNodeId,
-    RendererWorld, SmallBox, ViewMember, ViewMemberOrigin, S1,
+    AttrIndex, AttrValue, Either, EitherExt, MemberOwner, Renderer, RendererNodeId, RendererWorld,
+    SmallBox, ViewMember, ViewMemberOrigin, VmMapper, XNest, XValueWrapper, S1,
 };
 pub use attr_style_owner::*;
 use bevy_utils::HashMap;
@@ -132,7 +132,7 @@ where
     type AddMember<VM: ViewMember<R>> = StyleSheetOwner<T::AddMember<VM>>;
     type SetMembers<VM: ViewMember<R> + MemberOwner<R>> = StyleSheetOwner<T::SetMembers<VM>>;
 
-    fn member<VM>(self, member: impl IntoViewMember<R, Member = VM>) -> Self::AddMember<VM>
+    fn member<VM>(self, member: VM) -> Self::AddMember<VM>
     where
         (Self::VM, VM): ViewMember<R>,
         VM: ViewMember<R>,
@@ -140,10 +140,7 @@ where
         StyleSheetOwner(self.0, self.1.member(member))
     }
 
-    fn members<VM: ViewMember<R>>(
-        self,
-        members: impl IntoViewMember<R, Member = VM>,
-    ) -> Self::SetMembers<(VM,)>
+    fn members<VM: ViewMember<R>>(self, members: VM) -> Self::SetMembers<(VM,)>
     where
         VM: ViewMember<R>,
     {
@@ -403,7 +400,7 @@ pub struct ApplyStyleSheets<T>(pub T);
 // impl<R, VM, T, SS> IntoStyleViewMember<R> for T
 // where
 //     R: Renderer,
-//     T: IntoViewMember<R, Member = VM>,
+//     T: XNest<R, Member = VM>,
 //     VM: ViewMember<R> + ViewMemberOrigin<R, Origin = ApplyStyleSheets<SS>>,
 //     SS: StyleSheets<R>,
 // {
@@ -412,19 +409,6 @@ pub struct ApplyStyleSheets<T>(pub T);
 //
 //     fn into_style_view_member(self) -> Self::Member {
 //         self.into_member()
-//     }
-// }
-
-// impl<R, T> IntoStyleViewMember<R> for T
-// where
-//     R: Renderer,
-//     T: StyleSheets<R>,
-// {
-//     type Member = ApplyStyleSheets<T>;
-//     type StyleSheets = T;
-//
-//     fn into_style_view_member(self) -> ApplyStyleSheets<T> {
-//         ApplyStyleSheets(self)
 //     }
 // }
 
@@ -552,6 +536,13 @@ where
     );
 }
 
+impl<T> Into<XValueWrapper<Self>> for StyleSheetOwner<T>
+{
+    fn into(self) -> XValueWrapper<Self> {
+        XValueWrapper(self)
+    }
+}
+
 impl<R, T> StyleSheets<R> for StyleSheetOwner<T>
 where
     R: Renderer,
@@ -636,6 +627,7 @@ where
 
 macro_rules! impl_style_sheets_for_tuple {
     ($($t:ident),*) => {
+
         #[allow(non_snake_case)]
         impl<R, $($t),*> StyleSheets<R> for ($($t,)*)
         where

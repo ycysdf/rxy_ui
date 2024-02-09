@@ -240,7 +240,7 @@ bevy = { version = "0.12.1", features = [
     "multi-threaded", #    "png",  #    "hdr",  #    "vorbis",  #    "x11",  #    "bevy_gizmos",  #    "android_shared_stdcxx",  #    "tonemapping_luts",
     "default_font", #    "webgl2",
 ] }
-rxy_ui = { path = ".", features = ["bevy"] }
+rxy_ui = { path = ".", default-features = false }
 oneshot.workspace = true
 ahash.workspace = true
 async-channel.workspace = true
@@ -294,4 +294,4 @@ path = "examples/playground.rs"
 doc-scrape-examples = true
 name = "web_playground"
 path = "examples/web_playground"
-required-features = ["web"]
+#required-features = ["web"]

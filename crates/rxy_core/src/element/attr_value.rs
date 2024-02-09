@@ -1,5 +1,6 @@
+use crate::alloc::string::ToString;
 use crate::smallbox::{SmallBox, S1};
-use crate::AttrValueWrapper;
+use crate::{impl_x_value_wrappers, XValueWrapper};
 use crate::{smallbox, MaybeFromReflect, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath};
 use alloc::borrow::Cow;
 use alloc::string::String;
@@ -31,25 +32,11 @@ impl Clone for SmallBox<dyn AttrValue, S1> {
 }
 
 #[macro_export]
-macro_rules! impl_into_attr_value_wrappers {
-    ($($ty:ty),*) => {
-        $(
-            impl Into<AttrValueWrapper<Self>> for $ty
-            {
-                fn into(self) -> AttrValueWrapper<Self> {
-                    AttrValueWrapper(self)
-                }
-            }
-        )*
-    };
-}
-
-#[macro_export]
 macro_rules! impl_attr_value_and_wrapper {
     ($($ty:ty $(=> $value:expr)?),*) => {
         $(
             impl_attr_value!($ty $(=> $value)?);
-            impl_into_attr_value_wrappers!($ty);
+            impl_x_value_wrappers!($ty);
         )*
     };
 }
@@ -107,11 +94,30 @@ impl_attr_value_and_wrapper! {
     Cow<'static, str>
 }
 
-impl_into_attr_value_wrappers!(&'static str);
+impl_x_value_wrappers!(&'static str);
 
-impl Into<AttrValueWrapper<Cow<'static, str>>> for String {
-    fn into(self) -> AttrValueWrapper<Cow<'static, str>> {
-        AttrValueWrapper(self.into())
+impl Into<XValueWrapper<Cow<'static, str>>> for String {
+    fn into(self) -> XValueWrapper<Cow<'static, str>> {
+        XValueWrapper(self.into())
+    }
+}
+
+impl Into<XValueWrapper<Cow<'static, str>>> for &'static str {
+    fn into(self) -> XValueWrapper<Cow<'static, str>> {
+        XValueWrapper(self.into())
+    }
+}
+
+// todo: ? feature
+impl Into<XValueWrapper<Cow<'static, str>>> for i32 {
+    fn into(self) -> XValueWrapper<Cow<'static, str>> {
+        XValueWrapper(self.to_string().into())
+    }
+}
+
+impl Into<XValueWrapper<Cow<'static, str>>> for f32 {
+    fn into(self) -> XValueWrapper<Cow<'static, str>> {
+        XValueWrapper(self.to_string().into())
     }
 }
 

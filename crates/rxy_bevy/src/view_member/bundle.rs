@@ -1,7 +1,8 @@
 use bevy_ecs::bundle::Bundle;
 
 use rxy_core::{
-    IntoViewMember, MemberOwner, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin,
+    XNest, Mapper, MemberOwner, ViewMember, ViewMemberCtx, ViewMemberIndex,
+    ViewMemberOrigin,
 };
 
 use crate::BevyRenderer;
@@ -12,23 +13,25 @@ pub fn x_bundle<T: Bundle>(bundle: T) -> XBundle<T> {
     XBundle(bundle)
 }
 
-impl<T> IntoViewMember<BevyRenderer> for XBundle<T>
+impl<T> XNest<BevyRenderer> for XBundle<T>
 where
     T: Bundle,
 {
-    type Member = Self;
+    type InnerMember = Self;
+    type MapMember<M> = Self;
 
-    fn into_member(self) -> Self {
+    fn map_inner<M>(self) -> Self::MapMember<M>
+    {
         self
     }
 }
 
-// impl<T> ViewMemberOrigin<BevyRenderer> for XBundle<T>
-// where
-//     T: Bundle,
-// {
-//     type Origin = Self;
-// }
+impl<T> ViewMemberOrigin<BevyRenderer> for XBundle<T>
+where
+    T: Bundle,
+{
+    type Origin = Self;
+}
 
 impl<T> ViewMember<BevyRenderer> for XBundle<T>
 where

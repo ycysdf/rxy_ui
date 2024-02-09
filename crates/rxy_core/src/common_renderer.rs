@@ -1,18 +1,18 @@
-use crate::{
-    ElementAttr, ElementAttrMember, ElementSoloView,
-    IntoViewMember, Renderer,
-};
+use crate::{ElementAttr, ElementAttrMember, ElementAttrViewMember, ElementSoloView, XNest, Renderer, ViewMember, ViewMemberOrigin, VmMapper, MapToAttrMarker};
 use alloc::borrow::Cow;
 
 pub trait CommonRenderer: Renderer {
     type DivView: ElementSoloView<Self>;
-    type SpanView<T: ElementAttrMember<Self, EA = Self::SpanContentEA>>: ElementSoloView<Self>;
+    type SpanView<T: ViewMember<Self>+ViewMemberOrigin<Self, Origin = ElementAttrViewMember<Self, Self::SpanContentEA>>>: ElementSoloView<Self>;
     type ButtonView: ElementSoloView<Self>;
     type SpanContentEA: ElementAttr<Self, Value = Cow<'static, str>>;
 
-    fn crate_span<T>(str: impl IntoViewMember<Self,Member= T>) -> Self::SpanView<T>
+    fn crate_span<T>(
+        str: impl XNest<Self, MapMember<MapToAttrMarker<Self::SpanContentEA>> = T>,
+    ) -> Self::SpanView<T>
     where
-        T: ElementAttrMember<Self, EA = Self::SpanContentEA>;
+        T: ViewMember<Self>
+            + ViewMemberOrigin<Self, Origin = ElementAttrViewMember<Self, Self::SpanContentEA>>;
     fn crate_div() -> Self::DivView;
     fn crate_button() -> Self::ButtonView;
 }
@@ -21,45 +21,49 @@ pub trait CommonRenderer: Renderer {
 macro_rules! define_common_view_fns {
     ($renderer:ident) => {
         #[inline(always)]
-        pub fn span<T>(str: impl IntoViewMember<$renderer, Member=T>) -> <$renderer as CommonRenderer>::SpanView<T>
-        where
-            T: ElementAttrMember<$renderer, EA = <$renderer as CommonRenderer>::SpanContentEA>,
+        pub fn span<T>(
+            str: impl XNest<$renderer, MapMember<MapToAttrMarker<<$renderer as CommonRenderer>::SpanContentEA>> = T>,
+        ) -> <$renderer as CommonRenderer>::SpanView<T>
+        where T: ViewMember<$renderer>
+            + ViewMemberOrigin<$renderer, Origin = ElementAttrViewMember<$renderer, <$renderer as CommonRenderer>::SpanContentEA>>,
         {
             <$renderer as CommonRenderer>::crate_span(str)
         }
 
         #[inline(always)]
-        pub fn div() -> <$renderer as CommonRenderer>::DivView
-        {
+        pub fn div() -> <$renderer as CommonRenderer>::DivView {
             <$renderer as CommonRenderer>::crate_div()
         }
 
         #[inline(always)]
-        pub fn button() -> <$renderer as CommonRenderer>::ButtonView
-        {
+        pub fn button() -> <$renderer as CommonRenderer>::ButtonView {
             <$renderer as CommonRenderer>::crate_button()
         }
 
+        use rxy_core::ElementAttrViewMember;
         use rxy_core::IntoView;
         use std::borrow::Cow;
-        use rxy_core::ElementAttrViewMember;
 
-        impl IntoView<$renderer> for Cow<'static, str>
-        {
-            type View = <$renderer as CommonRenderer>::SpanView<ElementAttrViewMember<$renderer, <$renderer as CommonRenderer>::SpanContentEA>>;
+        impl IntoView<$renderer> for Cow<'static, str> {
+            type View = <$renderer as CommonRenderer>::SpanView<
+                ElementAttrViewMember<$renderer, <$renderer as CommonRenderer>::SpanContentEA>,
+            >;
 
             #[inline(always)]
             fn into_view(self) -> Self::View {
-                <$renderer as CommonRenderer>::crate_span::<ElementAttrViewMember<$renderer, <$renderer as CommonRenderer>::SpanContentEA>>(ElementAttrViewMember::<
+                <$renderer as CommonRenderer>::crate_span::<
+                    ElementAttrViewMember<$renderer, <$renderer as CommonRenderer>::SpanContentEA>,
+                >(ElementAttrViewMember::<
                     $renderer,
                     <$renderer as CommonRenderer>::SpanContentEA,
                 >::new(self))
             }
         }
 
-        impl IntoView<$renderer> for &'static str
-        {
-            type View = <$renderer as CommonRenderer>::SpanView<ElementAttrViewMember<$renderer, <$renderer as CommonRenderer>::SpanContentEA>>;
+        impl IntoView<$renderer> for &'static str {
+            type View = <$renderer as CommonRenderer>::SpanView<
+                ElementAttrViewMember<$renderer, <$renderer as CommonRenderer>::SpanContentEA>,
+            >;
 
             #[inline(always)]
             fn into_view(self) -> Self::View {
@@ -68,9 +72,10 @@ macro_rules! define_common_view_fns {
             }
         }
 
-        impl IntoView<$renderer> for String
-        {
-            type View = <$renderer as CommonRenderer>::SpanView<ElementAttrViewMember<$renderer, <$renderer as CommonRenderer>::SpanContentEA>>;
+        impl IntoView<$renderer> for String {
+            type View = <$renderer as CommonRenderer>::SpanView<
+                ElementAttrViewMember<$renderer, <$renderer as CommonRenderer>::SpanContentEA>,
+            >;
 
             #[inline(always)]
             fn into_view(self) -> Self::View {
@@ -78,6 +83,5 @@ macro_rules! define_common_view_fns {
                 IntoView::<$renderer>::into_view(cow)
             }
         }
-
     };
 }

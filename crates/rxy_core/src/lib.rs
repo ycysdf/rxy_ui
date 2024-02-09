@@ -10,7 +10,7 @@ pub use either::*;
 pub use element::*;
 pub use element_view::*;
 pub use into_view::*;
-pub use into_view_member::*;
+pub use nest::*;
 pub use maybe_traits::*;
 pub use member_owner::*;
 pub use mutable_view::*;
@@ -25,7 +25,7 @@ pub use view_member::*;
 mod either;
 mod r#impl;
 mod into_view;
-mod into_view_member;
+mod nest;
 mod mutable_view;
 mod rebuild;
 mod renderer;
@@ -33,6 +33,7 @@ mod smallbox;
 mod view;
 mod view_member;
 pub use smallbox::*;
+pub use nest::*;
 
 #[cfg(test)]
 pub mod test;

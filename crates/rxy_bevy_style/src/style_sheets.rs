@@ -2,10 +2,8 @@ use bevy_ecs::system::Resource;
 use bevy_ecs::world::FromWorld;
 use core::marker::PhantomData;
 use rxy_bevy::BevyRenderer;
-use rxy_core::style::{
-    AppliedStyleSheet, StyleSheetCtx, StyleSheets,
-    StyleSheetsInfo,
-};
+use rxy_core::style::{AppliedStyleSheet, StyleSheetCtx, StyleSheets, StyleSheetsInfo};
+use rxy_core::XValueWrapper;
 
 pub struct XRes<T, M>(T, PhantomData<M>);
 
@@ -16,6 +14,13 @@ where
     T: StyleSheets<BevyRenderer>,
 {
     XRes(f, Default::default())
+}
+
+impl<F, Res> Into<XValueWrapper<Self>> for XRes<F, Res>
+{
+    fn into(self) -> XValueWrapper<Self> {
+        XValueWrapper(self)
+    }
 }
 
 impl<F, Res, T> StyleSheets<BevyRenderer> for XRes<F, Res>

@@ -1,5 +1,5 @@
 use crate::{
-    Either, IntoView, IntoViewMember, Renderer, View, ViewMember, ViewMemberCtx, ViewMemberIndex,
+    Either, IntoView, XNest, Renderer, View, ViewMember, ViewMemberCtx, ViewMemberIndex,
 };
 
 impl<R, T, E> IntoView<R> for Result<T, E>
@@ -16,22 +16,23 @@ where
     }
 }
 
-impl<R, LVM, RVM, LVMO, RVMO> IntoViewMember<R> for Result<LVMO, RVMO>
-where
-    R: Renderer,
-    LVM: ViewMember<R>,
-    RVM: ViewMember<R>,
-    LVMO: IntoViewMember<R, Member=LVM>,
-    RVMO: IntoViewMember<R, Member=RVM>,
-{
-    type Member = Either<LVM, RVM>;
-    fn into_member(self) -> Either<LVM, RVM> {
-        match self {
-            Ok(n) => Either::Left(n.into_member()),
-            Err(n) => Either::Right(n.into_member()),
-        }
-    }
-}
+// todo:
+// impl<R, LVM, RVM, LVMO, RVMO> XNest<R> for Result<LVMO, RVMO>
+// where
+//     R: Renderer,
+//     LVM: ViewMember<R>,
+//     RVM: ViewMember<R>,
+//     LVMO: XNest<R, MapMember=LVM>,
+//     RVMO: XNest<R, MapMember=RVM>,
+// {
+//     type MapMember = Either<LVM, RVM>;
+//     fn into_member(self) -> Either<LVM, RVM> {
+//         match self {
+//             Ok(n) => Either::Left(n.into_member()),
+//             Err(n) => Either::Right(n.into_member()),
+//         }
+//     }
+// }
 
 /*
 

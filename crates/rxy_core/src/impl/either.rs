@@ -1,7 +1,7 @@
 use crate::either::{Either, EitherExt};
 use crate::mutable_view::{MutableView, MutableViewKey};
 use crate::{
-    to_mutable, virtual_container, IntoView, IntoViewMember, Renderer, RendererNodeId,
+    to_mutable, virtual_container, IntoView, XNest, Mapper, Renderer, RendererNodeId,
     RendererWorld, ToMutableWrapper, View, ViewCtx, ViewMember, ViewMemberCtx, ViewMemberIndex,
     ViewMemberOrigin, VirtualContainer,
 };
@@ -142,30 +142,32 @@ where
     }
 }
 
-impl<R, LVM, RVM, LVMO, RVMO> IntoViewMember<R> for Either<LVMO, RVMO>
-where
-    R: Renderer,
-    LVMO: IntoViewMember<R, Member=LVM>,
-    RVMO: IntoViewMember<R, Member=RVM>,
-{
-    type Member = Either<LVM, RVM>;
+// todo:
+// impl<R, LVMO, RVMO> XNest<R> for Either<LVMO, RVMO>
+// where
+//     R: Renderer,
+//     LVMO: XNest<R>,
+//     RVMO: XNest<R>,
+// {
+//     type InnerMember = Either<LVMO::InnerMember, RVMO::InnerMember>;
+//     type MapMember<M: Mapper<Self>> = Either<LVMO::MapMember<M>, RVMO::MapMember<M>>;
+//
+//     fn map_inner<U: Mapper<Self>>(self) -> Self::MapMember<U> {
+//         match self {
+//             Either::Left(n) => Either::Left(U::map(n)),
+//             Either::Right(n) => Either::Right(U::map(n)),
+//         }
+//     }
+// }
 
-    fn into_member(self) -> Either<LVM, RVM> {
-        match self {
-            Either::Left(n) => Either::Left(n.into_member()),
-            Either::Right(n) => Either::Right(n.into_member()),
-        }
-    }
-}
-
-impl<R, LVM, RVM> ViewMemberOrigin<R> for Either<LVM, RVM>
-    where
-        R: Renderer,
-        LVM: ViewMemberOrigin<R>,
-        RVM: ViewMember<R> + ViewMemberOrigin<R, Origin=LVM::Origin>,
-{
-    type Origin = LVM::Origin;
-}
+// impl<R, LVM, RVM> ViewMemberOrigin<R> for Either<LVM, RVM>
+// where
+//     R: Renderer,
+//     LVM: ViewMemberOrigin<R>,
+//     RVM: ViewMember<R> + ViewMemberOrigin<R, Origin = LVM::Origin>,
+// {
+//     type Origin = LVM::Origin;
+// }
 
 impl<R, LVM, RVM> ViewMember<R> for Either<LVM, RVM>
 where
@@ -173,7 +175,6 @@ where
     LVM: ViewMember<R>,
     RVM: ViewMember<R>,
 {
-
     fn count() -> ViewMemberIndex {
         LVM::count() + LVM::count()
     }

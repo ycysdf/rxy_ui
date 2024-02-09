@@ -7,9 +7,9 @@ use xy_reactive::prelude::{create_render_effect, use_memo, Memo, ReadSignal, RwS
 use xy_reactive::render_effect::RenderEffect;
 
 use crate::{
-    DeferredNodeTreeScoped, InnerIvmToVm, IntoView, IntoViewMember, IntoViewMemberWrapper,
+    DeferredNodeTreeScoped, InnerIvmToVm, IntoView, XNest, Mapper,
     MaybeSend, MaybeSync, MemberOwner, NodeTree, Renderer, RendererNodeId, RendererWorld, View,
-    ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin,
+    ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, VmMapper,
 };
 
 struct FnOnceCell<'a, I, T> {
@@ -61,55 +61,6 @@ pub fn create_effect_with_init<T: Clone + 'static, I: 'static>(
                 init.call(input())
             }
         })
-    }
-}
-
-impl<R, VM, IVM> IntoViewMember<R> for Memo<IVM>
-where
-    R: Renderer,
-    VM: ViewMember<R> + MaybeSync + Clone + PartialEq,
-    IVM: IntoViewMember<R, Member = VM> + MaybeSend + MaybeSync + Clone + 'static,
-{
-    type Member = InnerIvmToVm<Self, VM>;
-    fn into_member(self) -> InnerIvmToVm<Self, VM> {
-        InnerIvmToVm::new(self)
-    }
-}
-
-impl<R, VM, IVM> IntoViewMember<R> for ReadSignal<IVM>
-where
-    R: Renderer,
-    VM: ViewMember<R> + MaybeSync + Clone + PartialEq,
-    IVM: IntoViewMember<R, Member = VM> + MaybeSend + MaybeSync + Clone + 'static,
-{
-    type Member = InnerIvmToVm<Self, VM>;
-    fn into_member(self) -> InnerIvmToVm<Self, VM> {
-        InnerIvmToVm::new(self)
-    }
-}
-
-impl<R, VM, IVM> IntoViewMember<R> for RwSignal<IVM>
-where
-    R: Renderer,
-    VM: ViewMember<R> + MaybeSync + Clone + PartialEq,
-    IVM: IntoViewMember<R, Member = VM> + MaybeSend + MaybeSync + Clone + 'static,
-{
-    type Member = InnerIvmToVm<Self, VM>;
-    fn into_member(self) -> InnerIvmToVm<Self, VM> {
-        InnerIvmToVm::new(self)
-    }
-}
-
-impl<R, F, VM, IVM> IntoViewMember<R> for Reactive<F, IVM>
-where
-    R: Renderer,
-    F: Fn() -> IVM + MaybeSend + 'static,
-    IVM: IntoViewMember<R, Member = VM> + MaybeSend + 'static,
-    VM: ViewMember<R>,
-{
-    type Member = InnerIvmToVm<Self, VM>;
-    fn into_member(self) -> InnerIvmToVm<Self, VM> {
-        InnerIvmToVm::new(self)
     }
 }
 
@@ -194,73 +145,6 @@ where
         });
 
         ctx.set_indexed_view_member_state(ReactiveDisposerState(_effect.erase()))
-    }
-}
-impl<R, F, IVM, VM> ViewMemberOrigin<R> for InnerIvmToVm<Reactive<F, IVM>, VM>
-where
-    R: Renderer,
-    F: Fn() -> IVM + MaybeSend + 'static,
-    IVM: IntoViewMember<R, Member = VM> + MaybeSend + 'static,
-    VM: ViewMemberOrigin<R>,
-{
-    type Origin = VM::Origin;
-}
-
-impl<R, F, IVM, VM> ViewMember<R> for InnerIvmToVm<Reactive<F, IVM>, VM>
-where
-    R: Renderer,
-    F: Fn() -> IVM + MaybeSend + 'static,
-    IVM: IntoViewMember<R, Member = VM> + MaybeSend + 'static,
-    VM: ViewMember<R>,
-{
-    fn count() -> ViewMemberIndex {
-        VM::count()
-    }
-
-    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
-        VM::unbuild(ctx, view_removed);
-    }
-
-    fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
-        rx(move || self.0 .0().into_member()).build(ctx, will_rebuild);
-    }
-
-    fn rebuild(self, ctx: ViewMemberCtx<R>) {
-        rx(move || self.0 .0().into_member()).rebuild(ctx);
-    }
-}
-
-impl<R, T, VM, IVM> ViewMemberOrigin<R> for InnerIvmToVm<T, VM>
-where
-    R: Renderer,
-    T: SignalGet<Value = IVM> + MaybeSend + 'static,
-    IVM: IntoViewMember<R, Member = VM> + MaybeSync + Clone + 'static,
-    VM: ViewMemberOrigin<R>,
-{
-    type Origin = VM::Origin;
-}
-
-impl<R, T, VM, IVM> ViewMember<R> for InnerIvmToVm<T, VM>
-where
-    R: Renderer,
-    T: SignalGet<Value = IVM> + MaybeSend + 'static,
-    IVM: IntoViewMember<R, Member = VM> + MaybeSync + Clone + 'static,
-    VM: ViewMember<R>,
-{
-    fn count() -> ViewMemberIndex {
-        VM::count()
-    }
-
-    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
-        VM::unbuild(ctx, view_removed);
-    }
-
-    fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
-        rx(move || self.0.get().into_member()).build(ctx, will_rebuild);
-    }
-
-    fn rebuild(self, ctx: ViewMemberCtx<R>) {
-        rx(move || self.0.get().into_member()).rebuild(ctx);
     }
 }
 
@@ -491,22 +375,26 @@ where
     }
 }
 
+// tod: ivm
 pub trait MemberOwnerRxExt<R>: MemberOwner<R>
 where
     R: Renderer,
 {
-    #[inline(always)]
-    fn rx_member<T, VM>(
-        self,
-        f: impl Fn() -> T + MaybeSend + 'static,
-    ) -> Self::AddMember<Reactive<impl Fn() -> VM + MaybeSend + 'static, VM>>
-    where
-        Self: Sized,
-        VM: ViewMember<R>,
-        T: IntoViewMember<R, Member = VM>,
-    {
-        self.member(IntoViewMemberWrapper(rx(move || f().into_member())))
-    }
+//     #[inline(always)]
+//     fn rx_member<T, VM>(
+//         self,
+//         f: impl Fn() -> T + MaybeSend + 'static,
+//     ) -> Self::AddMember<Reactive<impl Fn() -> VM + MaybeSend + 'static, VM>>
+//     where
+//         Self: Sized,
+//         VM: ViewMember<R>,
+//         T: XNest<R, MapMember<VmMapper<R>> = VM>,
+//     {
+//         //  todo:
+//         todo!()
+//         // self.member(XNestWrapper(rx(move || f().map_inner::<FlatMapper<R>>())))
+//         // self.member(rx(move || f()))
+//     }
 }
 
 impl<R, T> MemberOwnerRxExt<R> for T

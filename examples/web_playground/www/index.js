@@ -1,3 +1,3 @@
 import * as wasm from "web_playground";
 
-wasm.greet();
+wasm.test_ui();

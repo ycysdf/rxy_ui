@@ -14,7 +14,7 @@ use rxy_bevy::{
     view_element_type, BevyRenderer, ElementEntityExtraData, ElementEntityWorldMutExt,
     EntityWorldMutExt, RendererState,
 };
-use rxy_core::{IntoViewMember, ViewMember, ViewMemberCtx, ViewMemberIndex};
+use rxy_core::{XNest, ViewMember, ViewMemberCtx, ViewMemberIndex};
 use rxy_core::style::ApplyStyleSheets;
 use rxy_style::{
     NodeInterStyleAttrInfos, NodeStyleAttrInfos, NodeStyleSheetId, StyleAttrId, StyleSheetCtx,
@@ -48,7 +48,7 @@ impl ApplyStyleSheetsMemberState {
         }
     }
 }
-impl<T> IntoViewMember<BevyRenderer, Self> for ApplyStyleSheets<T>
+impl<T> XNest<BevyRenderer, Self> for ApplyStyleSheets<T>
 where
     T: StyleSheets<BevyRenderer>,
 {

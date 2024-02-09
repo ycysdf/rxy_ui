@@ -49,18 +49,18 @@
 //
 // mod xx {
 //     use crate::renderer::WebRenderer;
-//     use rxy_core::{IntoViewMember, Renderer, RendererWorld};
+//     use rxy_core::{XNest, Renderer, RendererWorld};
 //     use rxy_element::into_attr::{test_attr, test_attr2, AttrValueWrapper, ElementAttrViewMember};
 //     use rxy_element::{ElementAttr, ElementAttrMember};
 //
-//     pub fn testt<T>(a: impl IntoViewMember<WebRenderer, T>)
+//     pub fn testt<T>(a: impl XNest<WebRenderer, T>)
 //     where
 //         T: ElementAttrMember<WebRenderer, EA = test_attr2>,
 //     {
 //         let _ = a.into_member();
 //     }
-//     // Into<IntoViewMemberWrapper<ElementAttrViewMember<R, test_attr>>>
-//     pub fn testt2<T>(a: impl IntoViewMember<WebRenderer, T>)
+//     // Into<XNestWrapper<ElementAttrViewMember<R, test_attr>>>
+//     pub fn testt2<T>(a: impl XNest<WebRenderer, T>)
 //     where
 //         T: ElementAttrMember<WebRenderer>,
 //         <T::EA as ElementAttr<WebRenderer>>::Value:
@@ -93,5 +93,17 @@
 //         // testt2(Some(Some(1221)));
 //     }
 // }
-pub mod renderer;
-pub mod prelude {}
+
+
+
+mod renderer;
+
+pub use renderer::*;
+pub mod prelude {
+    pub use crate::renderer::WebElement;
+    pub use crate::renderer::common_renderer::*;
+
+    pub use super::{
+        attrs::CommonAttrsViewBuilder
+    };
+}
