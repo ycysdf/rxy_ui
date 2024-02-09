@@ -7,7 +7,7 @@ use futures_lite::{Stream, StreamExt};
 
 use crate::{
     build_info::{node_build_status, node_build_times_increment},
-    into_view, mutable_view_rebuild, Either, InnerIvmToVm, IntoView, XNest, Mapper,
+    into_view, mutable_view_rebuild, Either, InnerIvmToVm, IntoView, XNest,
     MaybeSend, MutableView, NodeTree, Renderer, RendererNodeId, TaskState, ToIntoView, View,
     ViewCtx, ViewKey, ViewMember, ViewMemberBuildExt, ViewMemberCtx, ViewMemberIndex,
     ViewMemberOrigin,
@@ -63,27 +63,14 @@ fn stream_vm_rebuild<R, S, VM>(
     })));
 }
 
-// todo: ivm
-// impl<R, IVM> XNest<R> for futures_lite::stream::Boxed<IVM>
-// where
-//     R: Renderer,
-//     IVM: XNest<R> + 'static,
-// {
-//     type InnerMember = IVM::InnerMember;
-//     type MapMember<M: Mapper<Self>> = futures_lite::stream::Boxed<IVM::MapMember<M>>;
-//
-//     fn map_inner<M: Mapper<Self>>(self) -> Self::MapMember<M> {
-//         self.map(|n| n.map_inner::<M>()).boxed()
-//     }
-// }
 
-// impl<R, VM> ViewMemberOrigin<R> for futures_lite::stream::Boxed<VM>
-// where
-//     R: Renderer,
-//     VM: ViewMemberOrigin<R>,
-// {
-//     type Origin = VM::Origin;
-// }
+impl<R, VM> ViewMemberOrigin<R> for futures_lite::stream::Boxed<VM>
+where
+    R: Renderer,
+    VM: ViewMemberOrigin<R>,
+{
+    type Origin = VM::Origin;
+}
 
 impl<R, VM> ViewMember<R> for futures_lite::stream::Boxed<VM>
 where
@@ -352,63 +339,14 @@ where
     }
 }
 
-// impl<R, S, IVM, VM> ViewMemberOrigin<R> for InnerIvmToVm<XStream<S>, VM>
-// where
-//     R: Renderer,
-//     S: Stream<Item = IVM> + MaybeSend + 'static,
-//     IVM: XNest<R, MapMember = VM> + MaybeSend + 'static,
-//     VM: ViewMemberOrigin<R>,
-// {
-//     type Origin = VM::Origin;
-// }
-
-// todo: ivm
-// impl<R, S, M, IVM, VM> ViewMember<R> for InnerIvmToVm<XStream<S>, M>
-// where
-//     R: Renderer,
-//     S: Stream<Item = IVM> + MaybeSend + 'static,
-//     IVM: XNest<R, MapMember<M> = VM> + MaybeSend + 'static,
-//     VM: ViewMember<R>,
-//     M: Mapper<IVM::InnerMember>,
-// {
-//     fn count() -> ViewMemberIndex {
-//         VM::count()
-//     }
-//
-//     fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
-//         VM::unbuild(ctx, view_removed)
-//     }
-//
-//     fn build(self, ctx: ViewMemberCtx<R>, _will_rebuild: bool) {
-//         stream_vm_rebuild(self.0.map(|n| n.into_member()), ctx, true);
-//     }
-//
-//     fn rebuild(self, ctx: ViewMemberCtx<R>) {
-//         stream_vm_rebuild(self.0.map(|n| n.into_member()), ctx, false);
-//     }
-// }
-// todo: ivm
-// impl<R, S, IVM> XNest<R> for XStream<S>
-// where
-//     R: Renderer,
-//     S: Stream<Item = IVM> + MaybeSend + 'static,
-//     IVM: XNest<R> + MaybeSend + 'static
-// {
-//     type InnerMember = IVM::InnerMember;
-//     type MapMember<M: Mapper<Self>> = InnerIvmToVm<Self, M>;
-//
-//     fn map_inner<M: Mapper<Self>>(self) -> Self::MapMember<M> {
-//         InnerIvmToVm::new(self)
-//     }
-// }
-// impl<R, S> ViewMemberOrigin<R> for XStream<S>
-// where
-//     R: Renderer,
-//     S: Stream + MaybeSend + 'static,
-//     S::Item: ViewMemberOrigin<R>,
-// {
-//     type Origin = <S::Item as ViewMemberOrigin<R>>::Origin;
-// }
+impl<R, S> ViewMemberOrigin<R> for XStream<S>
+    where
+        R: Renderer,
+        S: Stream + MaybeSend + 'static,
+        S::Item: ViewMemberOrigin<R>,
+{
+    type Origin = <S::Item as ViewMemberOrigin<R>>::Origin;
+}
 
 impl<R, S> ViewMember<R> for XStream<S>
 where

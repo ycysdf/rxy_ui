@@ -1,5 +1,5 @@
 use crate::element::ElementAttr;
-use crate::{x_future, Either, InnerIvmToVm, MaybeSend, Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, XFuture, Mapper};
+use crate::{x_future, Either, InnerIvmToVm, MaybeSend, Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, XFuture};
 use core::future::Future;
 use core::marker::PhantomData;
 use futures_lite::FutureExt;

@@ -1,7 +1,7 @@
 use bevy_ecs::bundle::Bundle;
 
 use rxy_core::{
-    XNest, Mapper, MemberOwner, ViewMember, ViewMemberCtx, ViewMemberIndex,
+    XNest, MemberOwner, ViewMember, ViewMemberCtx, ViewMemberIndex,
     ViewMemberOrigin,
 };
 
@@ -17,12 +17,21 @@ impl<T> XNest<BevyRenderer> for XBundle<T>
 where
     T: Bundle,
 {
-    type InnerMember = Self;
-    type MapMember<M> = Self;
+    type Inner = Self;
+    type MapInner<M> = Self;
+    type MapInnerTo<U:'static> = U;
 
-    fn map_inner<M>(self) -> Self::MapMember<M>
+    fn map_inner<M>(self) -> Self::MapInner<M>
     {
         self
+    }
+
+    fn map_inner_to<U:'static>(self, f: impl FnOnce(Self::Inner) -> U) -> Self::MapInnerTo<U> {
+        f(self)
+    }
+
+    fn is_static() -> bool {
+        true
     }
 }
 

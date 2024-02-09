@@ -14,7 +14,7 @@ impl CommonRenderer for WebRenderer {
     type SpanContentEA = ElementAttrZIndex;
 
     fn crate_span<T>(
-        str: impl XNest<Self, MapMember<MapToAttrMarker<Self::SpanContentEA>> = T>,
+        str: impl XNest<Self, MapInner<MapToAttrMarker<Self::SpanContentEA>> = T>,
     ) -> Self::SpanView<T>
     where
         T: ViewMember<Self>

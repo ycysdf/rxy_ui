@@ -1,7 +1,7 @@
 use rxy_bevy::BevyRenderer;
 use rxy_core::style::{ApplyStyleSheets, StyleSheets};
 use rxy_core::{
-    rx, style_builder, x_future, x_stream, BuildFlags, Builder, ElementView, InnerIvmToVm,
+    rx, style_builder, x_future, x_stream, BuildFlags, XBuilder, ElementView, InnerIvmToVm,
     MapToStyleSheetsMarker, MaybeSend, Reactive, ViewMember, ViewMemberCtx, ViewMemberOrigin,
     XFuture, XNest, XStream,
 };
@@ -10,7 +10,7 @@ use std::future::Future;
 pub trait ElementStyleExt: ElementView<BevyRenderer> {
     fn style<VM, SS>(
         self,
-        style_sheets: impl XNest<BevyRenderer, MapMember<MapToStyleSheetsMarker<SS>> = VM>,
+        style_sheets: impl XNest<BevyRenderer, MapInner<MapToStyleSheetsMarker<SS>> = VM>,
     ) -> Self::AddMember<VM>
     where
         VM: ViewMember<BevyRenderer>

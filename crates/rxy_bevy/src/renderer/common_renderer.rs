@@ -5,7 +5,7 @@ use bevy_ui::{FocusPolicy, Interaction};
 use rxy_core::common_renderer::CommonRenderer;
 use rxy_core::{
     define_common_view_fns, MapToAttrMarker, ElementAttrMember, MemberOwner, ViewMember,
-    ViewMemberOrigin, VmMapper, XNest,
+    ViewMemberOrigin, XNest,
 };
 
 define_common_view_fns!(BevyRenderer);
@@ -21,7 +21,7 @@ impl CommonRenderer for BevyRenderer {
     type SpanContentEA = all_attrs::content;
 
     fn crate_span<T>(
-        str: impl XNest<Self, MapMember<MapToAttrMarker<Self::SpanContentEA>> = T>,
+        str: impl XNest<Self, MapInner<MapToAttrMarker<Self::SpanContentEA>> = T>,
     ) -> Self::SpanView<T>
     where
         T: ViewMember<Self>

@@ -4,7 +4,7 @@ use core::marker::PhantomData;
 use crate::element::{view_children, ElementType, ElementViewChildren};
 use crate::{
     ElementView, IntoView, MemberOwner, NodeTree, Renderer, RendererNodeId, SoloView, View,
-    ViewCtx, ViewKey, ViewMember, ViewMemberCtx, VmMapper, XNest,
+    ViewCtx, ViewKey, ViewMember, ViewMemberCtx, XNest,
 };
 
 #[derive(Clone)]
@@ -34,16 +34,26 @@ where
         view_children(self, children)
     }
 
+    // #[cfg(feature = "view_erasure")]
+    // pub fn children<CV>(
+    //     self,
+    //     children: CV,
+    // ) -> ElementViewChildren<R, Element<R, E, VM>, crate::BoxedErasureView<R>>
+    // where
+    //     CV: IntoView<R>,
+    // {
+    //     use crate::IntoViewErasureExt;
+    //     view_children(self, unsafe { children.into_erasure_view() })
+    // }
+
     #[cfg(feature = "view_erasure")]
-    pub fn children<CV>(
+    pub fn children(
         self,
-        children: CV,
-    ) -> ElementViewChildren<R, Element<R, E, VM>, crate::BoxedErasureView<R>>
-    where
-        CV: IntoView<R>,
+        children: impl IntoView<R>,
+    ) -> ElementViewChildren<R, Element<R, E, VM>, impl View<R>>
     {
         use crate::IntoViewErasureExt;
-        view_children(self, unsafe { children.into_erasure_view() })
+        view_children(self, children)
     }
 }
 

@@ -7,9 +7,9 @@ use xy_reactive::prelude::{create_render_effect, use_memo, Memo, ReadSignal, RwS
 use xy_reactive::render_effect::RenderEffect;
 
 use crate::{
-    DeferredNodeTreeScoped, InnerIvmToVm, IntoView, XNest, Mapper,
+    DeferredNodeTreeScoped, InnerIvmToVm, IntoView, XNest,
     MaybeSend, MaybeSync, MemberOwner, NodeTree, Renderer, RendererNodeId, RendererWorld, View,
-    ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, VmMapper,
+    ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin,
 };
 
 struct FnOnceCell<'a, I, T> {

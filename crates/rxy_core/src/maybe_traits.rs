@@ -1,6 +1,9 @@
 use alloc::boxed::Box;
 use core::any::Any;
-
+use futures_lite::FutureExt;
+use std::future::Future;
+use std::pin::Pin;
+use futures_lite::StreamExt;
 pub use reflect::*;
 pub use send_sync::*;
 
@@ -64,3 +67,41 @@ pub type MaybeSendSyncAnyBox = Box<dyn Any + MaybeSend + MaybeSync + 'static>;
 
 #[cfg(not(feature = "send_sync"))]
 pub type MaybeSendSyncAnyBox = Box<dyn Any + 'static>;
+
+pub trait MaybeSendSyncFutureExit<T>: Future<Output = T> {
+    #[cfg(feature = "send_sync")]
+    fn boxed_maybe_local<'a>(self) -> Pin<Box<dyn Future<Output = Self::Output> + Send + 'a>>
+    where
+        Self: Sized + Send + 'a,
+    {
+        self.boxed::<'a>()
+    }
+    #[cfg(not(feature = "send_sync"))]
+    fn boxed_maybe_local<'a>(self) -> Pin<Box<dyn Future<Output = Self::Output> + 'a>>
+    where
+        Self: Sized + 'a,
+    {
+        self.boxed_local::<'a>()
+    }
+}
+
+impl<T, F> MaybeSendSyncFutureExit<T> for F where F: Future<Output = T> {}
+
+pub trait MaybeSendSyncStreamExt<T>: futures_lite::Stream<Item = T> {
+    #[cfg(feature = "send_sync")]
+    fn boxed_maybe_local<'a>(self) -> Pin<Box<dyn futures_lite::Stream<Item = T> + Send + 'a>>
+    where
+        Self: Sized + Send + 'a,
+    {
+        self.boxed::<'a>()
+    }
+    #[cfg(not(feature = "send_sync"))]
+    fn boxed_maybe_local<'a>(self) -> Pin<Box<dyn futures_lite::Stream<Item = T> + 'a>>
+    where
+        Self: Sized + 'a,
+    {
+        self.boxed_local::<'a>()
+    }
+}
+
+impl<T, S> MaybeSendSyncStreamExt<T> for S where S: futures_lite::Stream<Item = T> {}

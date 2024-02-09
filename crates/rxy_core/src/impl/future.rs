@@ -6,8 +6,8 @@ use futures_lite::{FutureExt, StreamExt};
 use crate::build_info::{node_build_status, node_build_times_increment};
 use crate::renderer::DeferredNodeTreeScoped;
 use crate::{
-    InnerIvmToVm, IntoView, XNest, Mapper, MaybeSend, NodeTree, Renderer, TaskState, View,
-    ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin,
+    InnerIvmToVm, IntoView, MaybeSend, NodeTree, Renderer, TaskState, View, ViewCtx, ViewKey,
+    ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, XNest,
 };
 
 pub struct XFuture<T>(pub T);
@@ -170,68 +170,14 @@ where
     ctx.set_indexed_view_member_state(TaskState::<R>::new(task));
 }
 
-// impl<R, TO, VM> ViewMemberOrigin<R> for InnerIvmToVm<XFuture<TO>, VM>
-// where
-//     R: Renderer,
-//     TO: Future + MaybeSend + 'static,
-//     VM: ViewMemberOrigin<R>,
-//     TO::Output: XNest<R, MapMember = VM> + MaybeSend + 'static,
-// {
-//     type Origin = VM::Origin;
-// }
-
-// todo: ivm
-// impl<R, TO, VM, M> ViewMember<R> for InnerIvmToVm<XFuture<TO>, M>
-// where
-//     R: Renderer,
-//     TO: Future + MaybeSend + 'static,
-//     VM: ViewMember<R>,
-//     TO::Output: XNest<R, MapMember<M> = VM> + MaybeSend + 'static,
-//     M: Mapper<R>,
-// {
-//     fn count() -> ViewMemberIndex {
-//         VM::count()
-//     }
-//
-//     fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
-//         VM::unbuild(ctx, view_removed)
-//     }
-//
-//     fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
-//         let reactive = x_future(async move { self.0 .0.await.into_member() });
-//         reactive.build(ctx, will_rebuild)
-//     }
-//
-//     fn rebuild(self, ctx: ViewMemberCtx<R>) {
-//         let reactive = x_future(async move { self.0 .0.await.into_member() });
-//         reactive.rebuild(ctx)
-//     }
-// }
-
-// todo: ivm
-// impl<R, TO> XNest<R> for XFuture<TO>
-// where
-//     R: Renderer,
-//     TO: Future + MaybeSend + 'static,
-//     TO::Output: XNest<R> + MaybeSend + 'static,
-// {
-//     type InnerMember = <TO::Output as XNest<R>>::InnerMember;
-//     type MapMember<M: Mapper<Self>> =
-//         InnerIvmToVm<Self, <TO::Output as XNest<R>>::MapMember<M>>;
-//
-//     fn map_inner<U: Mapper<Self>>(self) -> Self::MapMember<U> {
-//         InnerIvmToVm::new(self)
-//     }
-// }
-
-// impl<R, T> ViewMemberOrigin<R> for XFuture<T>
-// where
-//     R: Renderer,
-//     T: Future + MaybeSend + 'static,
-//     T::Output: ViewMemberOrigin<R> + MaybeSend + 'static,
-// {
-//     type Origin = <T::Output as ViewMemberOrigin<R>>::Origin;
-// }
+impl<R, T> ViewMemberOrigin<R> for XFuture<T>
+where
+    R: Renderer,
+    T: Future + MaybeSend + 'static,
+    T::Output: ViewMemberOrigin<R> + MaybeSend + 'static,
+{
+    type Origin = <T::Output as ViewMemberOrigin<R>>::Origin;
+}
 
 impl<R, T> ViewMember<R> for XFuture<T>
 where
@@ -256,27 +202,13 @@ where
     }
 }
 
-// todo: ivm
-// impl<R, T> XNest<R> for futures_lite::future::Boxed<T>
-// where
-//     R: Renderer,
-//     T: XNest<R> + MaybeSend + 'static,
-// {
-//     type InnerMember = T::InnerMember;
-//     type MapMember<M: Mapper<Self>> = futures_lite::future::Boxed<T::MapMember<M>>;
-//
-//     fn map_inner<U: Mapper<Self>>(self) -> Self::MapMember<U> {
-//         async move { U::map(self.await) }.boxed()
-//     }
-// }
-
-// impl<R, T> ViewMemberOrigin<R> for futures_lite::future::Boxed<T>
-// where
-//     R: Renderer,
-//     T: ViewMember<R> + ViewMemberOrigin<R>,
-// {
-//     type Origin = T::Origin;
-// }
+impl<R, T> ViewMemberOrigin<R> for futures_lite::future::Boxed<T>
+where
+    R: Renderer,
+    T: ViewMember<R> + ViewMemberOrigin<R>,
+{
+    type Origin = T::Origin;
+}
 
 impl<R, T> ViewMember<R> for futures_lite::future::Boxed<T>
 where

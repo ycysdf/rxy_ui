@@ -6,7 +6,7 @@ use bevy_ecs::system::SystemId;
 use bevy_input::prelude::KeyCode;
 use bevy_utils::tracing::error;
 
-use rxy_core::{XNest, Mapper, MemberOwner, ViewMember, ViewMemberCtx, ViewMemberOrigin};
+use rxy_core::{MemberOwner, ViewMember, ViewMemberCtx, ViewMemberOrigin, XNest};
 
 use crate::event::*;
 use crate::prelude::FocusInputEventIterator;
@@ -21,19 +21,26 @@ pub struct EventViewMember<T, S, M> {
     _marker: PhantomData<M>,
 }
 
-
-
 impl<T, S, TM> XNest<BevyRenderer> for EventViewMember<T, S, TM>
 where
     T: ElementEventIds,
     S: IntoSystem<(), (), TM> + Send + 'static,
     TM: Send + 'static,
 {
-    type InnerMember = Self;
-    type MapMember<M> = Self;
+    type Inner = Self;
+    type MapInner<M> = Self;
+    type MapInnerTo<U:'static> = U;
 
-    fn map_inner<U>(self) -> Self::MapMember<U> {
+    fn map_inner<U>(self) -> Self::MapInner<U> {
         self
+    }
+
+    fn map_inner_to<U:'static>(self, f: impl FnOnce(Self::Inner) -> U) -> Self::MapInnerTo<U> {
+        f(self)
+    }
+
+    fn is_static() -> bool {
+        true
     }
 }
 
@@ -52,7 +59,6 @@ where
     S: IntoSystem<(), (), M> + Send + 'static,
     M: Send + 'static,
 {
-
     fn count() -> rxy_core::ViewMemberIndex {
         1
     }

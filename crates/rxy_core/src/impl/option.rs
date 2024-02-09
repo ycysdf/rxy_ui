@@ -1,8 +1,8 @@
 use crate::nest::XNest;
 use crate::{
-    to_mutable, virtual_container, IntoView, Mapper, MaybeSend, MutableView, MutableViewKey,
-    Renderer, RendererNodeId, RendererWorld, ToMutableWrapper, ViewCtx, ViewKey, ViewMember,
-    ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, VirtualContainer,
+    to_mutable, virtual_container, IntoView, MaybeSend, MutableView, MutableViewKey, Renderer,
+    RendererNodeId, RendererWorld, ToMutableWrapper, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
+    ViewMemberIndex, ViewMemberOrigin, VirtualContainer,
 };
 
 impl<R, V> MutableView<R> for Option<V>
@@ -106,20 +106,6 @@ where
             self.map(|n| to_mutable(n.into_view())),
             "[Option Placeholder]",
         )
-    }
-}
-
-impl<R, T> XNest<R> for Option<T>
-where
-    R: Renderer,
-    T: XNest<R>,
-{
-    type InnerMember = T::InnerMember;
-    type MapMember<M> = Option<T::MapMember<M>>;
-
-    fn map_inner<M>(self) -> Self::MapMember<M>
-    {
-        self.map(|n| n.map_inner::<M>())
     }
 }
 
