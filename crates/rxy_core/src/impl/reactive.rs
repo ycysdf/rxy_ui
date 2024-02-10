@@ -380,21 +380,18 @@ pub trait MemberOwnerRxExt<R>: MemberOwner<R>
 where
     R: Renderer,
 {
-//     #[inline(always)]
-//     fn rx_member<T, VM>(
-//         self,
-//         f: impl Fn() -> T + MaybeSend + 'static,
-//     ) -> Self::AddMember<Reactive<impl Fn() -> VM + MaybeSend + 'static, VM>>
-//     where
-//         Self: Sized,
-//         VM: ViewMember<R>,
-//         T: XNest<R, MapMember<VmMapper<R>> = VM>,
-//     {
-//         //  todo:
-//         todo!()
-//         // self.member(XNestWrapper(rx(move || f().map_inner::<FlatMapper<R>>())))
-//         // self.member(rx(move || f()))
-//     }
+    #[inline]
+    fn rx_member<T,VM>(
+        self,
+        f: T,
+    ) -> Self::AddMember<Reactive<T,VM>>
+    where
+        Self: Sized,
+        T:Fn() -> VM + MaybeSend + 'static,
+        VM: ViewMember<R>,
+    {
+        self.member(rx(f))
+    }
 }
 
 impl<R, T> MemberOwnerRxExt<R> for T

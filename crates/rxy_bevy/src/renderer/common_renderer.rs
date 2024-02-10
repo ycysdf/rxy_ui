@@ -4,7 +4,7 @@ use bevy_ui::prelude::Button;
 use bevy_ui::{FocusPolicy, Interaction};
 use rxy_core::common_renderer::CommonRenderer;
 use rxy_core::{
-    define_common_view_fns, MapToAttrMarker, ElementAttrMember, MemberOwner, ViewMember,
+    define_common_view_fns, ElementAttrMember, MapToAttrMarker, MemberOwner, ViewMember,
     ViewMemberOrigin, XNest,
 };
 
@@ -12,21 +12,17 @@ define_common_view_fns!(BevyRenderer);
 
 impl CommonRenderer for BevyRenderer {
     type DivView = BevyElement<element_div, ()>;
-    type SpanView<
-        T: ViewMember<Self>
-            + ViewMemberOrigin<Self, Origin = ElementAttrViewMember<Self, Self::SpanContentEA>>,
-    > = BevyElement<element_span, (T,)>;
+    type SpanView<T: ElementAttrMember<Self, Self::SpanContentEA>> =
+        BevyElement<element_span, (T,)>;
     type ButtonView =
         BevyElement<element_div, (XBundle<(FocusPolicy, Interaction, Button, Focusable)>,)>;
     type SpanContentEA = all_attrs::content;
 
     fn crate_span<T>(
-        str: impl XNest< MapInner<MapToAttrMarker<Self::SpanContentEA>> = T>,
+        str: impl XNest<MapInner<MapToAttrMarker<Self::SpanContentEA>> = T>,
     ) -> Self::SpanView<T>
     where
-        T: ViewMember<Self>
-            + ViewMemberOrigin<Self, Origin = ElementAttrViewMember<Self, Self::SpanContentEA>>,
-        // T: ElementAttrMember<Self, EA = Self::SpanContentEA>,
+        T: ElementAttrMember<Self, Self::SpanContentEA>,
     {
         BevyElement::default().members(str.map_inner::<MapToAttrMarker<Self::SpanContentEA>>())
     }

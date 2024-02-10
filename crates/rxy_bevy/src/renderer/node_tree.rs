@@ -12,7 +12,7 @@ use bevy_ui::Display;
 use bevy_ui::Style;
 
 use rxy_core::{
-    AttrIndex, DeferredNodeTreeScoped, ElementAttr, ElementType, NodeTree, RendererNodeId,
+    AttrIndex, DeferredNodeTreeScoped, ElementAttrType, ElementType, NodeTree, RendererNodeId,
 };
 
 use crate::{
@@ -35,7 +35,7 @@ impl NodeTree<BevyRenderer> for World {
         is_init
     }
 
-    fn build_attr<A: ElementAttr<BevyRenderer>>(
+    fn build_attr<A: ElementAttrType<BevyRenderer>>(
         &mut self,
         entity: RendererNodeId<BevyRenderer>,
         value: A::Value,
@@ -50,7 +50,7 @@ impl NodeTree<BevyRenderer> for World {
             .unwrap() // todo: error handle
             .set_attr(A::INDEX, true);
     }
-    fn rebuild_attr<A: ElementAttr<BevyRenderer>>(
+    fn rebuild_attr<A: ElementAttrType<BevyRenderer>>(
         &mut self,
         entity: RendererNodeId<BevyRenderer>,
         value: A::Value,
@@ -66,7 +66,7 @@ impl NodeTree<BevyRenderer> for World {
             .set_attr(A::INDEX, true);
     }
 
-    fn unbuild_attr<A: ElementAttr<BevyRenderer>>(&mut self, entity: RendererNodeId<BevyRenderer>) {
+    fn unbuild_attr<A: ElementAttrType<BevyRenderer>>(&mut self, entity: RendererNodeId<BevyRenderer>) {
         A::set_value(self, entity, None::<A::Value>);
         let Some(mut entity_world_mut) = self.get_entity_mut(entity) else {
             return;

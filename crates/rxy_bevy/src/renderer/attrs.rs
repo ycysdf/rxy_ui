@@ -16,7 +16,7 @@ use bevy_ui::{
 use bevy_utils::tracing::warn;
 use glam::{Quat, Vec3};
 use crate::elements::element_span;
-use rxy_core::{AttrIndex, ElementAttr, HasIndex, RendererNodeId, RendererWorld};
+use rxy_core::{AttrIndex, ElementAttrType, HasIndex, RendererNodeId, RendererWorld};
 
 #[macro_export]
 macro_rules! common_attrs_fn_define {
@@ -41,10 +41,9 @@ macro_rules! common_attrs_fn_define {
             pub trait [<$name ViewBuilder>]: rxy_core::MemberOwner<$crate::BevyRenderer> + Sized {
 
                 $(
-                    fn $attr<T>(self, value: impl rxy_core::XNest<$crate::BevyRenderer, MapMember<rxy_core::MapToAttrMarker<$crate::all_attrs::$attr>> = T>) -> Self::AddMember<T>
+                    fn $attr<T>(self, value: impl rxy_core::XNest<MapInner<rxy_core::MapToAttrMarker<$crate::all_attrs::$attr>> = T>) -> Self::AddMember<T>
                     where
-                        T: rxy_core::ViewMember<$crate::BevyRenderer>
-                        + rxy_core::ViewMemberOrigin<$crate::BevyRenderer, Origin = rxy_core::ElementAttrViewMember<$crate::BevyRenderer, $crate::all_attrs::$attr>>,
+                        T: rxy_core::ElementAttrMember<$crate::BevyRenderer, $crate::all_attrs::$attr>,
                         (Self::VM, T): rxy_core::ViewMember<$crate::BevyRenderer>
                     {
                         self.member(value.map_inner::<rxy_core::MapToAttrMarker<$crate::all_attrs::$attr>>())
@@ -79,9 +78,8 @@ macro_rules! element_attrs_fn_define {
             pub trait [<$name ViewBuilder>]: rxy_core::MemberOwner<$crate::BevyRenderer> + Sized
             {
                 // $(
-                //     fn $attr<T>(self, value: impl rxy_core::XNest<$crate::BevyRenderer, MapMember<rxy_core::VmMapper<$crate::BevyRenderer>> = T>) -> Self::AddMember<T>
-                //     where T: rxy_core::ViewMember<$crate::BevyRenderer>
-                //         + rxy_core::ViewMemberOrigin<$crate::BevyRenderer, Origin = rxy_core::ElementAttrViewMember<$crate::BevyRenderer, $crate::all_attrs::$attr>>,
+                //     fn $attr<T>(self, value: impl rxy_core::XNest<MapInner<rxy_core::MapToAttrMarker<$crate::BevyRenderer>> = T>) -> Self::AddMember<T>
+                //     where T: rxy_core::ElementAttrMember<$crate::BevyRenderer, $crate::all_attrs::$attr>,
                 //         (Self::VM, T): rxy_core::ViewMember<$crate::BevyRenderer>
                 //     {
                 //         self.member(value)
@@ -168,7 +166,7 @@ element_attrs_fn_define!(TextAttrs;element_span;COMMON_ATTRS_COUNT - 1;
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct class;
 
-impl ElementAttr<BevyRenderer> for class {
+impl ElementAttrType<BevyRenderer> for class {
     type Value = Cow<'static, str>;
 
     const NAME: &'static str = stringify!(class);
@@ -192,7 +190,7 @@ impl ElementAttr<BevyRenderer> for class {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct name;
 
-impl ElementAttr<BevyRenderer> for name {
+impl ElementAttrType<BevyRenderer> for name {
     type Value = Cow<'static, str>;
 
     const NAME: &'static str = stringify!(name);
@@ -220,7 +218,7 @@ impl ElementAttr<BevyRenderer> for name {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct z_index;
 
-impl ElementAttr<BevyRenderer> for z_index {
+impl ElementAttrType<BevyRenderer> for z_index {
     type Value = ZIndex;
 
     const NAME: &'static str = stringify!(z_index);
@@ -248,7 +246,7 @@ impl ElementAttr<BevyRenderer> for z_index {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct bg_color;
 
-impl ElementAttr<BevyRenderer> for bg_color {
+impl ElementAttrType<BevyRenderer> for bg_color {
     type Value = Color;
 
     const NAME: &'static str = stringify!(bg_color);
@@ -328,7 +326,7 @@ impl ElementAttr<BevyRenderer> for bg_color {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct border_left;
 
-impl ElementAttr<BevyRenderer> for border_left {
+impl ElementAttrType<BevyRenderer> for border_left {
     type Value = Val;
 
     const NAME: &'static str = stringify!(border_left);
@@ -348,7 +346,7 @@ impl ElementAttr<BevyRenderer> for border_left {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct border_right;
 
-impl ElementAttr<BevyRenderer> for border_right {
+impl ElementAttrType<BevyRenderer> for border_right {
     type Value = Val;
 
     const NAME: &'static str = stringify!(border_right);
@@ -368,7 +366,7 @@ impl ElementAttr<BevyRenderer> for border_right {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct border_top;
 
-impl ElementAttr<BevyRenderer> for border_top {
+impl ElementAttrType<BevyRenderer> for border_top {
     type Value = Val;
 
     const NAME: &'static str = stringify!(border_top);
@@ -388,7 +386,7 @@ impl ElementAttr<BevyRenderer> for border_top {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct border_bottom;
 
-impl ElementAttr<BevyRenderer> for border_bottom {
+impl ElementAttrType<BevyRenderer> for border_bottom {
     type Value = Val;
 
     const NAME: &'static str = stringify!(border_bottom);
@@ -408,7 +406,7 @@ impl ElementAttr<BevyRenderer> for border_bottom {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct border_color;
 
-impl ElementAttr<BevyRenderer> for border_color {
+impl ElementAttrType<BevyRenderer> for border_color {
     type Value = Color;
 
     const NAME: &'static str = stringify!(border_color);
@@ -437,7 +435,7 @@ impl ElementAttr<BevyRenderer> for border_color {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct display;
 
-impl ElementAttr<BevyRenderer> for display {
+impl ElementAttrType<BevyRenderer> for display {
     type Value = bevy_ui::Display;
 
     const NAME: &'static str = stringify!(display);
@@ -456,7 +454,7 @@ impl ElementAttr<BevyRenderer> for display {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct position_type;
 
-impl ElementAttr<BevyRenderer> for position_type {
+impl ElementAttrType<BevyRenderer> for position_type {
     type Value = PositionType;
 
     const NAME: &'static str = stringify!(position_type);
@@ -474,7 +472,7 @@ impl ElementAttr<BevyRenderer> for position_type {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct overflow_x;
 
-impl ElementAttr<BevyRenderer> for overflow_x {
+impl ElementAttrType<BevyRenderer> for overflow_x {
     type Value = OverflowAxis;
 
     const NAME: &'static str = stringify!(overflow_x);
@@ -493,7 +491,7 @@ impl ElementAttr<BevyRenderer> for overflow_x {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct overflow_y;
 
-impl ElementAttr<BevyRenderer> for overflow_y {
+impl ElementAttrType<BevyRenderer> for overflow_y {
     type Value = OverflowAxis;
 
     const NAME: &'static str = stringify!(overflow_y);
@@ -512,7 +510,7 @@ impl ElementAttr<BevyRenderer> for overflow_y {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct direction;
 
-impl ElementAttr<BevyRenderer> for direction {
+impl ElementAttrType<BevyRenderer> for direction {
     type Value = Direction;
 
     const NAME: &'static str = stringify!(direction);
@@ -530,7 +528,7 @@ impl ElementAttr<BevyRenderer> for direction {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct left;
 
-impl ElementAttr<BevyRenderer> for left {
+impl ElementAttrType<BevyRenderer> for left {
     type Value = Val;
 
     const NAME: &'static str = stringify!(left);
@@ -549,7 +547,7 @@ impl ElementAttr<BevyRenderer> for left {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct right;
 
-impl ElementAttr<BevyRenderer> for right {
+impl ElementAttrType<BevyRenderer> for right {
     type Value = Val;
 
     const NAME: &'static str = stringify!(right);
@@ -567,7 +565,7 @@ impl ElementAttr<BevyRenderer> for right {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct top;
 
-impl ElementAttr<BevyRenderer> for top {
+impl ElementAttrType<BevyRenderer> for top {
     type Value = Val;
 
     const NAME: &'static str = stringify!(top);
@@ -585,7 +583,7 @@ impl ElementAttr<BevyRenderer> for top {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct bottom;
 
-impl ElementAttr<BevyRenderer> for bottom {
+impl ElementAttrType<BevyRenderer> for bottom {
     type Value = Val;
 
     const NAME: &'static str = stringify!(bottom);
@@ -603,7 +601,7 @@ impl ElementAttr<BevyRenderer> for bottom {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct width;
 
-impl ElementAttr<BevyRenderer> for width {
+impl ElementAttrType<BevyRenderer> for width {
     type Value = Val;
 
     const NAME: &'static str = stringify!(width);
@@ -621,7 +619,7 @@ impl ElementAttr<BevyRenderer> for width {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct height;
 
-impl ElementAttr<BevyRenderer> for height {
+impl ElementAttrType<BevyRenderer> for height {
     type Value = Val;
 
     const NAME: &'static str = stringify!(height);
@@ -639,7 +637,7 @@ impl ElementAttr<BevyRenderer> for height {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct min_width;
 
-impl ElementAttr<BevyRenderer> for min_width {
+impl ElementAttrType<BevyRenderer> for min_width {
     type Value = Val;
 
     const NAME: &'static str = stringify!(min_width);
@@ -657,7 +655,7 @@ impl ElementAttr<BevyRenderer> for min_width {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct min_height;
 
-impl ElementAttr<BevyRenderer> for min_height {
+impl ElementAttrType<BevyRenderer> for min_height {
     type Value = Val;
 
     const NAME: &'static str = stringify!(min_height);
@@ -675,7 +673,7 @@ impl ElementAttr<BevyRenderer> for min_height {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct max_width;
 
-impl ElementAttr<BevyRenderer> for max_width {
+impl ElementAttrType<BevyRenderer> for max_width {
     type Value = Val;
 
     const NAME: &'static str = stringify!(max_width);
@@ -693,7 +691,7 @@ impl ElementAttr<BevyRenderer> for max_width {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct max_height;
 
-impl ElementAttr<BevyRenderer> for max_height {
+impl ElementAttrType<BevyRenderer> for max_height {
     type Value = Val;
 
     const NAME: &'static str = stringify!(max_height);
@@ -711,7 +709,7 @@ impl ElementAttr<BevyRenderer> for max_height {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct margin_left;
 
-impl ElementAttr<BevyRenderer> for margin_left {
+impl ElementAttrType<BevyRenderer> for margin_left {
     type Value = Val;
 
     const NAME: &'static str = stringify!(margin_left);
@@ -730,7 +728,7 @@ impl ElementAttr<BevyRenderer> for margin_left {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct margin_right;
 
-impl ElementAttr<BevyRenderer> for margin_right {
+impl ElementAttrType<BevyRenderer> for margin_right {
     type Value = Val;
 
     const NAME: &'static str = stringify!(margin_right);
@@ -749,7 +747,7 @@ impl ElementAttr<BevyRenderer> for margin_right {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct margin_top;
 
-impl ElementAttr<BevyRenderer> for margin_top {
+impl ElementAttrType<BevyRenderer> for margin_top {
     type Value = Val;
 
     const NAME: &'static str = stringify!(margin_top);
@@ -768,7 +766,7 @@ impl ElementAttr<BevyRenderer> for margin_top {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct margin_bottom;
 
-impl ElementAttr<BevyRenderer> for margin_bottom {
+impl ElementAttrType<BevyRenderer> for margin_bottom {
     type Value = Val;
 
     const NAME: &'static str = stringify!(margin_bottom);
@@ -787,7 +785,7 @@ impl ElementAttr<BevyRenderer> for margin_bottom {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct padding_left;
 
-impl ElementAttr<BevyRenderer> for padding_left {
+impl ElementAttrType<BevyRenderer> for padding_left {
     type Value = Val;
 
     const NAME: &'static str = stringify!(padding_left);
@@ -806,7 +804,7 @@ impl ElementAttr<BevyRenderer> for padding_left {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct padding_right;
 
-impl ElementAttr<BevyRenderer> for padding_right {
+impl ElementAttrType<BevyRenderer> for padding_right {
     type Value = Val;
 
     const NAME: &'static str = stringify!(padding_right);
@@ -825,7 +823,7 @@ impl ElementAttr<BevyRenderer> for padding_right {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct padding_top;
 
-impl ElementAttr<BevyRenderer> for padding_top {
+impl ElementAttrType<BevyRenderer> for padding_top {
     type Value = Val;
 
     const NAME: &'static str = stringify!(padding_top);
@@ -844,7 +842,7 @@ impl ElementAttr<BevyRenderer> for padding_top {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct padding_bottom;
 
-impl ElementAttr<BevyRenderer> for padding_bottom {
+impl ElementAttrType<BevyRenderer> for padding_bottom {
     type Value = Val;
 
     const NAME: &'static str = stringify!(padding_bottom);
@@ -863,7 +861,7 @@ impl ElementAttr<BevyRenderer> for padding_bottom {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct aspect_ratio;
 
-impl ElementAttr<BevyRenderer> for aspect_ratio {
+impl ElementAttrType<BevyRenderer> for aspect_ratio {
     type Value = Option<f32>;
 
     const NAME: &'static str = stringify!(aspect_ratio);
@@ -881,7 +879,7 @@ impl ElementAttr<BevyRenderer> for aspect_ratio {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct align_items;
 
-impl ElementAttr<BevyRenderer> for align_items {
+impl ElementAttrType<BevyRenderer> for align_items {
     type Value = AlignItems;
 
     const NAME: &'static str = stringify!(align_items);
@@ -899,7 +897,7 @@ impl ElementAttr<BevyRenderer> for align_items {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct justify_items;
 
-impl ElementAttr<BevyRenderer> for justify_items {
+impl ElementAttrType<BevyRenderer> for justify_items {
     type Value = JustifyItems;
 
     const NAME: &'static str = stringify!(justify_items);
@@ -917,7 +915,7 @@ impl ElementAttr<BevyRenderer> for justify_items {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct align_self;
 
-impl ElementAttr<BevyRenderer> for align_self {
+impl ElementAttrType<BevyRenderer> for align_self {
     type Value = AlignSelf;
 
     const NAME: &'static str = stringify!(align_self);
@@ -935,7 +933,7 @@ impl ElementAttr<BevyRenderer> for align_self {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct justify_self;
 
-impl ElementAttr<BevyRenderer> for justify_self {
+impl ElementAttrType<BevyRenderer> for justify_self {
     type Value = JustifySelf;
 
     const NAME: &'static str = stringify!(justify_self);
@@ -953,7 +951,7 @@ impl ElementAttr<BevyRenderer> for justify_self {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct align_content;
 
-impl ElementAttr<BevyRenderer> for align_content {
+impl ElementAttrType<BevyRenderer> for align_content {
     type Value = AlignContent;
 
     const NAME: &'static str = stringify!(align_content);
@@ -971,7 +969,7 @@ impl ElementAttr<BevyRenderer> for align_content {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct justify_content;
 
-impl ElementAttr<BevyRenderer> for justify_content {
+impl ElementAttrType<BevyRenderer> for justify_content {
     type Value = JustifyContent;
 
     const NAME: &'static str = stringify!(justify_content);
@@ -989,7 +987,7 @@ impl ElementAttr<BevyRenderer> for justify_content {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct flex_direction;
 
-impl ElementAttr<BevyRenderer> for flex_direction {
+impl ElementAttrType<BevyRenderer> for flex_direction {
     type Value = FlexDirection;
 
     const NAME: &'static str = stringify!(flex_direction);
@@ -1007,7 +1005,7 @@ impl ElementAttr<BevyRenderer> for flex_direction {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct flex_wrap;
 
-impl ElementAttr<BevyRenderer> for flex_wrap {
+impl ElementAttrType<BevyRenderer> for flex_wrap {
     type Value = FlexWrap;
 
     const NAME: &'static str = stringify!(flex_wrap);
@@ -1025,7 +1023,7 @@ impl ElementAttr<BevyRenderer> for flex_wrap {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct flex_grow;
 
-impl ElementAttr<BevyRenderer> for flex_grow {
+impl ElementAttrType<BevyRenderer> for flex_grow {
     type Value = f32;
 
     const NAME: &'static str = stringify!(flex_grow);
@@ -1043,7 +1041,7 @@ impl ElementAttr<BevyRenderer> for flex_grow {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct flex_shrink;
 
-impl ElementAttr<BevyRenderer> for flex_shrink {
+impl ElementAttrType<BevyRenderer> for flex_shrink {
     type Value = f32;
 
     const NAME: &'static str = stringify!(flex_shrink);
@@ -1061,7 +1059,7 @@ impl ElementAttr<BevyRenderer> for flex_shrink {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct flex_basis;
 
-impl ElementAttr<BevyRenderer> for flex_basis {
+impl ElementAttrType<BevyRenderer> for flex_basis {
     type Value = Val;
 
     const NAME: &'static str = stringify!(flex_basis);
@@ -1079,7 +1077,7 @@ impl ElementAttr<BevyRenderer> for flex_basis {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct column_gap;
 
-impl ElementAttr<BevyRenderer> for column_gap {
+impl ElementAttrType<BevyRenderer> for column_gap {
     type Value = Val;
 
     const NAME: &'static str = stringify!(column_gap);
@@ -1097,7 +1095,7 @@ impl ElementAttr<BevyRenderer> for column_gap {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct row_gap;
 
-impl ElementAttr<BevyRenderer> for row_gap {
+impl ElementAttrType<BevyRenderer> for row_gap {
     type Value = Val;
 
     const NAME: &'static str = stringify!(row_gap);
@@ -1115,7 +1113,7 @@ impl ElementAttr<BevyRenderer> for row_gap {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct visibility;
 
-impl ElementAttr<BevyRenderer> for visibility {
+impl ElementAttrType<BevyRenderer> for visibility {
     type Value = Visibility;
 
     const NAME: &'static str = stringify!(visibility);
@@ -1133,7 +1131,7 @@ impl ElementAttr<BevyRenderer> for visibility {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct translation;
 
-impl ElementAttr<BevyRenderer> for translation {
+impl ElementAttrType<BevyRenderer> for translation {
     type Value = Vec3;
 
     const NAME: &'static str = stringify!(translation);
@@ -1154,7 +1152,7 @@ impl ElementAttr<BevyRenderer> for translation {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct rotation;
 
-impl ElementAttr<BevyRenderer> for rotation {
+impl ElementAttrType<BevyRenderer> for rotation {
     type Value = Quat;
 
     const NAME: &'static str = stringify!(rotation);
@@ -1175,7 +1173,7 @@ impl ElementAttr<BevyRenderer> for rotation {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct scale;
 
-impl ElementAttr<BevyRenderer> for scale {
+impl ElementAttrType<BevyRenderer> for scale {
     type Value = Vec3;
 
     const NAME: &'static str = stringify!(scale);
@@ -1196,7 +1194,7 @@ impl ElementAttr<BevyRenderer> for scale {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct text_color;
 
-impl ElementAttr<BevyRenderer> for text_color {
+impl ElementAttrType<BevyRenderer> for text_color {
     type Value = Color;
 
     const NAME: &'static str = stringify!(text_color);
@@ -1217,7 +1215,7 @@ impl ElementAttr<BevyRenderer> for text_color {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct font_size;
 
-impl ElementAttr<BevyRenderer> for font_size {
+impl ElementAttrType<BevyRenderer> for font_size {
     type Value = f32;
 
     const NAME: &'static str = stringify!(font_size);
@@ -1238,7 +1236,7 @@ impl ElementAttr<BevyRenderer> for font_size {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct text_linebreak;
 
-impl ElementAttr<BevyRenderer> for text_linebreak {
+impl ElementAttrType<BevyRenderer> for text_linebreak {
     type Value = BreakLineOn;
 
     const NAME: &'static str = stringify!(text_linebreak);
@@ -1259,7 +1257,7 @@ impl ElementAttr<BevyRenderer> for text_linebreak {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct text_align;
 
-impl ElementAttr<BevyRenderer> for text_align {
+impl ElementAttrType<BevyRenderer> for text_align {
     type Value = TextAlignment;
 
     const NAME: &'static str = stringify!(text_align);
@@ -1280,7 +1278,7 @@ impl ElementAttr<BevyRenderer> for text_align {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct font;
 
-impl ElementAttr<BevyRenderer> for font {
+impl ElementAttrType<BevyRenderer> for font {
     type Value = Handle<Font>;
 
     const NAME: &'static str = stringify!(font);
@@ -1300,7 +1298,7 @@ impl ElementAttr<BevyRenderer> for font {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct outline_width;
 
-impl ElementAttr<BevyRenderer> for outline_width {
+impl ElementAttrType<BevyRenderer> for outline_width {
     type Value = Val;
 
     const NAME: &'static str = stringify!(outline_width);
@@ -1338,7 +1336,7 @@ impl ElementAttr<BevyRenderer> for outline_width {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct outline_offset;
 
-impl ElementAttr<BevyRenderer> for outline_offset {
+impl ElementAttrType<BevyRenderer> for outline_offset {
     type Value = Val;
     fn first_set_value(
         world: &mut RendererWorld<BevyRenderer>,
@@ -1374,7 +1372,7 @@ impl ElementAttr<BevyRenderer> for outline_offset {
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct outline_color;
 
-impl ElementAttr<BevyRenderer> for outline_color {
+impl ElementAttrType<BevyRenderer> for outline_color {
     type Value = Color;
 
     fn first_set_value(

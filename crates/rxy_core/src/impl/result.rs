@@ -22,10 +22,10 @@ where
 //     R: Renderer,
 //     LVM: ViewMember<R>,
 //     RVM: ViewMember<R>,
-//     LVMO: XNest<R, MapMember=LVM>,
-//     RVMO: XNest<R, MapMember=RVM>,
+//     LVMO: XNest<R, MapInner=LVM>,
+//     RVMO: XNest<R, MapInner=RVM>,
 // {
-//     type MapMember = Either<LVM, RVM>;
+//     type MapInner = Either<LVM, RVM>;
 //     fn into_member(self) -> Either<LVM, RVM> {
 //         match self {
 //             Ok(n) => Either::Left(n.into_member()),

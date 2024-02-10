@@ -1,7 +1,7 @@
 use crate::{all_attrs, BevyRenderer, ElementStyleEntityExt};
 use bevy_ecs::prelude::*;
 use bevy_reflect::prelude::*;
-use rxy_core::ElementAttr;
+use rxy_core::ElementAttrType;
 
 pub trait TextStyledElementEntityWorldMutExt {
     fn scoped_text_styled_element_type(
@@ -33,27 +33,27 @@ pub trait TextStyledElementType {
     fn set_font(
         &self,
         entity_ref: &mut EntityWorldMut<'_>,
-        value: <all_attrs::font as ElementAttr<BevyRenderer>>::Value,
+        value: <all_attrs::font as ElementAttrType<BevyRenderer>>::Value,
     );
     fn set_font_size(
         &self,
         entity_ref: &mut EntityWorldMut<'_>,
-        value: <all_attrs::font_size as ElementAttr<BevyRenderer>>::Value,
+        value: <all_attrs::font_size as ElementAttrType<BevyRenderer>>::Value,
     );
     fn set_text_color(
         &self,
         entity_ref: &mut EntityWorldMut<'_>,
-        value: <all_attrs::text_color as ElementAttr<BevyRenderer>>::Value,
+        value: <all_attrs::text_color as ElementAttrType<BevyRenderer>>::Value,
     );
     fn set_text_linebreak(
         &self,
         entity_ref: &mut EntityWorldMut<'_>,
-        value: <all_attrs::text_linebreak as ElementAttr<BevyRenderer>>::Value,
+        value: <all_attrs::text_linebreak as ElementAttrType<BevyRenderer>>::Value,
     );
     fn set_text_align(
         &self,
         entity_ref: &mut EntityWorldMut<'_>,
-        value: <all_attrs::text_align as ElementAttr<BevyRenderer>>::Value,
+        value: <all_attrs::text_align as ElementAttrType<BevyRenderer>>::Value,
     );
 }
 //

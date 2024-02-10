@@ -6,7 +6,7 @@ use bevy_reflect::Reflect;
 use bevy_text::Text;
 use bevy_ui::prelude::TextBundle;
 
-use rxy_core::{ElementAttr, ElementAttrUntyped, ElementType, ElementTypeUnTyped, RendererNodeId, RendererWorld};
+use rxy_core::{ElementAttrType, ElementAttrUntyped, ElementType, ElementTypeUnTyped, RendererNodeId, RendererWorld};
 
 use crate::{
     all_attrs, BevyRenderer, BevyWorldExt, ReflectTextStyledElementType, TextStyledElementType,
@@ -43,7 +43,7 @@ impl TextStyledElementType for element_span {
     fn set_font(
         &self,
         entity_ref: &mut EntityWorldMut<'_>,
-        value: <all_attrs::font as ElementAttr<BevyRenderer>>::Value,
+        value: <all_attrs::font as ElementAttrType<BevyRenderer>>::Value,
     ) {
         let Some(mut t) = entity_ref.get_mut::<Text>() else {
             return;
@@ -56,7 +56,7 @@ impl TextStyledElementType for element_span {
     fn set_font_size(
         &self,
         entity_ref: &mut EntityWorldMut<'_>,
-        value: <all_attrs::font_size as ElementAttr<BevyRenderer>>::Value,
+        value: <all_attrs::font_size as ElementAttrType<BevyRenderer>>::Value,
     ) {
         let Some(mut t) = entity_ref.get_mut::<Text>() else {
             return;
@@ -69,7 +69,7 @@ impl TextStyledElementType for element_span {
     fn set_text_color(
         &self,
         entity_ref: &mut EntityWorldMut<'_>,
-        value: <all_attrs::text_color as ElementAttr<BevyRenderer>>::Value,
+        value: <all_attrs::text_color as ElementAttrType<BevyRenderer>>::Value,
     ) {
         let Some(mut t) = entity_ref.get_mut::<Text>() else {
             return;
@@ -82,7 +82,7 @@ impl TextStyledElementType for element_span {
     fn set_text_linebreak(
         &self,
         entity_ref: &mut EntityWorldMut<'_>,
-        value: <all_attrs::text_linebreak as ElementAttr<BevyRenderer>>::Value,
+        value: <all_attrs::text_linebreak as ElementAttrType<BevyRenderer>>::Value,
     ) {
         let Some(mut t) = entity_ref.get_mut::<Text>() else {
             return;
@@ -93,7 +93,7 @@ impl TextStyledElementType for element_span {
     fn set_text_align(
         &self,
         entity_ref: &mut EntityWorldMut<'_>,
-        value: <all_attrs::text_align as ElementAttr<BevyRenderer>>::Value,
+        value: <all_attrs::text_align as ElementAttrType<BevyRenderer>>::Value,
     ) {
         let Some(mut t) = entity_ref.get_mut::<Text>() else {
             return;
@@ -106,7 +106,7 @@ pub mod span_attrs {
     use bevy_text::TextStyle;
     use std::borrow::Cow;
 
-    use rxy_core::ElementAttr;
+    use rxy_core::ElementAttrType;
 
     use super::*;
 
@@ -139,7 +139,7 @@ pub mod span_attrs {
     #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
     pub struct content;
 
-    impl ElementAttr<BevyRenderer> for content {
+    impl ElementAttrType<BevyRenderer> for content {
         type Value = Cow<'static, str>;
 
         const NAME: &'static str = stringify!(content);

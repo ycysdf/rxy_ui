@@ -9,7 +9,7 @@ use bevy_tasks::Task;
 
 pub use composite_attrs::*;
 use rxy_core::{
-    DeferredNodeTreeScoped, Element, ElementAttrViewMember, ElementTypeUnTyped,
+    DeferredNodeTreeScoped, Element, ElementAttr, ElementTypeUnTyped,
     ElementViewChildren, Renderer, RendererWorld,
 };
 pub use text_styled_element::*;
@@ -35,7 +35,7 @@ pub type BevyElement<E, VM> = Element<BevyRenderer, E, VM>;
 pub type BevyElementViewChildren<CV, E, VM> =
     ElementViewChildren<BevyRenderer, Element<BevyRenderer, E, VM>, CV>;
 
-pub type BevyElementAttrMember<EA> = ElementAttrViewMember<BevyRenderer, EA>;
+pub type BevyElementAttrMember<EA> = ElementAttr<BevyRenderer, EA>;
 
 pub type TaskState = rxy_core::TaskState<BevyRenderer>;
 

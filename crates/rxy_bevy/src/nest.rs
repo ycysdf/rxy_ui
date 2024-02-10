@@ -21,6 +21,7 @@ where
 
 impl<T, U> XNestMapper<U> for XBundle<T>
 where
+    U: 'static,
     T: Bundle,
 {
     type MapInnerTo = U;
@@ -53,6 +54,7 @@ where
 
 impl<T, S, TM, U> XNestMapper<U> for EventViewMember<T, S, TM>
 where
+    U: 'static,
     T: ElementEventIds,
     S: IntoSystem<(), (), TM> + Send + 'static,
     TM: Send + 'static,

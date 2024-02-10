@@ -1,6 +1,6 @@
 use crate::style::{StyleItemValue, StyleSheetCtx};
 use crate::utils::all_tuples;
-use crate::{smallbox, ElementAttr, ElementAttrViewMember, Renderer};
+use crate::{smallbox, ElementAttrType, ElementAttr, Renderer};
 use std::iter::once;
 
 pub trait StyleSheetItems<R>: Send + 'static
@@ -10,10 +10,10 @@ where
     fn iter(self, ctx: StyleSheetCtx<R>) -> impl Iterator<Item = StyleItemValue> + 'static;
 }
 
-impl<R, EA> StyleSheetItems<R> for ElementAttrViewMember<R, EA>
+impl<R, EA> StyleSheetItems<R> for ElementAttr<R, EA>
 where
     R: Renderer,
-    EA: ElementAttr<R>,
+    EA: ElementAttrType<R>,
 {
     #[inline(always)]
     fn iter(self, _ctx: StyleSheetCtx<R>) -> impl Iterator<Item = StyleItemValue> + 'static {
@@ -51,4 +51,4 @@ macro_rules! impl_style_sheet_items_for_tuple {
         }
     };
 }
-all_tuples!(impl_style_sheet_items_for_tuple, 0, 2, T);
+all_tuples!(impl_style_sheet_items_for_tuple, 0, 4, T);

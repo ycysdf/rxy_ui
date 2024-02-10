@@ -3,7 +3,7 @@ use alloc::borrow::Cow;
 use core::fmt::Debug;
 use core::future::Future;
 
-use crate::element::{AttrIndex, ElementAttr};
+use crate::element::{AttrIndex, ElementAttrType};
 use crate::{ElementType, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, ViewKey};
 
 pub type RendererNodeId<R> = <R as Renderer>::NodeId;
@@ -80,9 +80,9 @@ where
         attr_index: AttrIndex,
     ) -> bool;
 
-    fn build_attr<A: ElementAttr<R>>(&mut self, node_id: RendererNodeId<R>, value: A::Value);
-    fn rebuild_attr<A: ElementAttr<R>>(&mut self, node_id: RendererNodeId<R>, value: A::Value);
-    fn unbuild_attr<A: ElementAttr<R>>(&mut self, node_id: RendererNodeId<R>);
+    fn build_attr<A: ElementAttrType<R>>(&mut self, node_id: RendererNodeId<R>, value: A::Value);
+    fn rebuild_attr<A: ElementAttrType<R>>(&mut self, node_id: RendererNodeId<R>, value: A::Value);
+    fn unbuild_attr<A: ElementAttrType<R>>(&mut self, node_id: RendererNodeId<R>);
 
     fn deferred_world_scoped(&mut self) -> impl DeferredNodeTreeScoped<R>;
     fn get_node_state_mut<S: MaybeSend + MaybeSync + 'static>(

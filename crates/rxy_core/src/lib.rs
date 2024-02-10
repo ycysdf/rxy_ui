@@ -57,7 +57,7 @@ pub mod prelude {
     pub use crate::{rx, MemberOwnerRxExt};
     #[cfg(feature = "x_iter_source")]
     pub use crate::{use_list, x_iter_source};
-    pub use crate::{ElementAttr, ElementAttrUntyped, ElementType, ElementTypeUnTyped};
+    pub use crate::{ElementAttrType, ElementAttrUntyped, ElementType, ElementTypeUnTyped};
 
 
     #[cfg(feature = "style")]

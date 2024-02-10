@@ -3,7 +3,7 @@ use std::fmt::Debug;
 
 use bevy::prelude::*;
 use bevy::render::color::Color;
-use rxy_core::{ElementAttrViewMember, fn_schema_view, XNest};
+use rxy_core::{ElementAttr, fn_schema_view, XNest};
 
 use rxy_ui::prelude::*;
 

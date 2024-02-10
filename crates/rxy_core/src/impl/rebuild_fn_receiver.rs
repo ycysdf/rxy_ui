@@ -261,9 +261,9 @@ where
 // where
 //     R: Renderer,
 //     VM: ViewMember<R>,
-//     IVM: XNest<R, MapMember=VM>,
+//     IVM: XNest<R, MapInner=VM>,
 // {
-//     type MapMember = RebuildFnReceiver<R, VM>;
+//     type MapInner = RebuildFnReceiver<R, VM>;
 //
 //     fn into_member(self) -> RebuildFnReceiver<R, VM> {
 //         self.map(|n| n.into_member())

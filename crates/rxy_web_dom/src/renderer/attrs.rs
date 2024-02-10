@@ -1,7 +1,7 @@
 #![allow(non_camel_case_types)]
 
 use crate::renderer::WebRenderer;
-use rxy_core::{AttrIndex, ElementAttr, HasIndex, RendererNodeId, RendererWorld,count_macro};
+use rxy_core::{AttrIndex, ElementAttrType, HasIndex, RendererNodeId, RendererWorld, count_macro};
 use std::borrow::Cow;
 use web_sys::wasm_bindgen::JsCast;
 use web_sys::{Element, HtmlElement};
@@ -59,13 +59,12 @@ macro_rules! common_attrs_fn_define {
         rxy_core::paste!{
             pub trait [<$name ViewBuilder>]: rxy_core::MemberOwner<$crate::WebRenderer> + Sized {
                 $(
-                    fn $ty<T>(self, value: impl rxy_core::XNest<$crate::WebRenderer, MapMember<rxy_core::MapToAttrMarker<WebRendererElementAttr<_int_a_>>> = T>) -> Self::AddMember<T>
+                    fn $ty<T>(self, value: impl rxy_core::XNest<$crate::WebRenderer, MapInner<rxy_core::MapToAttrMarker<WebRendererElementAttr<_int_a_>>> = T>) -> Self::AddMember<T>
                     where
-                        T: rxy_core::ViewMember<$crate::WebRenderer>
-                        + rxy_core::ViewMemberOrigin<$crate::WebRenderer, Origin = rxy_core::ElementAttrViewMember<$crate::WebRenderer, WebRendererElementAttr<_int_b_>>>,
+                        T: rxy_core::ElementAttrMember<$crate::WebRenderer, WebRendererElementAttr<_int_b_>>,
                         (Self::VM, T): rxy_core::ViewMember<$crate::WebRenderer>
                     {
-                        self.member(value.map_inner::<rxy_core::MapToAttrMarker<WebRendererElementAttr<_int_c_>>>())
+                        self.member(value.map_inner::<rxy_core::MapToAttrMarker<WebRendererElementAttr<_int_a_>>>())
                     }
                 )*
             }

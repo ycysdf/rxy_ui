@@ -28,7 +28,7 @@ pub trait ElementStyleExt: ElementView<BevyRenderer> {
     //     F: Fn() -> IVM + MaybeSend + 'static,
     //     VM: ViewMember<BevyRenderer>
     //         + ViewMemberOrigin<BevyRenderer, Origin = ApplyStyleSheets<SS>>,
-    //     IVM: XNest<BevyRenderer, MapMember<MapToStyleSheetsMarker<SS>> = VM> + MaybeSend + 'static,
+    //     IVM: XNest<MapInner<MapToStyleSheetsMarker<SS>> = VM> + MaybeSend + 'static,
     //     SS: StyleSheets<BevyRenderer>,
     // {
     //     self.member(InnerIvmToVm::new(rx(f)))
@@ -42,7 +42,7 @@ pub trait ElementStyleExt: ElementView<BevyRenderer> {
     // where
     //     F: FnOnce(ViewMemberCtx<BevyRenderer>, BuildFlags) -> IVM + MaybeSend + 'static,
     //     VM: ViewMember<BevyRenderer> + ViewMemberOrigin<BevyRenderer, Origin = ApplyStyleSheets<SS>>,
-    //     IVM: XNest<BevyRenderer, MapMember= VM>,
+    //     IVM: XNest<MapInner= VM>,
     //     SS: StyleSheets<BevyRenderer>,
     // {
     //     self.member(style_builder(f))
@@ -55,7 +55,7 @@ pub trait ElementStyleExt: ElementView<BevyRenderer> {
     // where
     //     TO: Future + MaybeSend + 'static,
     //     VM: ViewMember<BevyRenderer> + ViewMemberOrigin<BevyRenderer, Origin = ApplyStyleSheets<SS>>,
-    //     TO::Output: XNest<BevyRenderer, MapMember= VM> + MaybeSend + 'static,
+    //     TO::Output: XNest<MapInner= VM> + MaybeSend + 'static,
     //     SS: StyleSheets<BevyRenderer> + MaybeSend + 'static,
     // {
     //     self.member(x_future(future))
@@ -68,7 +68,7 @@ pub trait ElementStyleExt: ElementView<BevyRenderer> {
     // where
     //     S: futures_lite::stream::Stream<Item = IVM> + Unpin + MaybeSend + 'static,
     //     VM: ViewMember<BevyRenderer> + ViewMemberOrigin<BevyRenderer, Origin = ApplyStyleSheets<SS>>,
-    //     IVM: XNest<BevyRenderer, MapMember= VM> + MaybeSend + 'static,
+    //     IVM: XNest<MapInner= VM> + MaybeSend + 'static,
     //     SS: StyleSheets<BevyRenderer>,
     // {
     //     self.member(x_stream(stream))

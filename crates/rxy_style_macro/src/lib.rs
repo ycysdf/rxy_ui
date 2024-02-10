@@ -18,8 +18,8 @@ pub fn typed_style(input: TokenStream) -> TokenStream {
 
         impl rxy_ui::style::TypedStyleLabel for #ident {}
 
-        impl rxy_ui::XValueWrapper<Self> for #ident {
-            fn into_x_value_wrapper(self) -> rxy_ui::XValueWrapper<Self> {
+        impl Into<rxy_ui::XValueWrapper<Self>> for #ident {
+            fn into(self) -> rxy_ui::XValueWrapper<Self> {
                 rxy_ui::XValueWrapper(self)
             }
         }

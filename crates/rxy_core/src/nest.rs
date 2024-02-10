@@ -62,6 +62,7 @@ macro_rules! impl_x_value_wrappers_for_tuple {
 
 all_tuples!(impl_x_value_wrappers_for_tuple, 1, 6, T);
 
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MapValueWrapper<T, M>(pub T, PhantomData<M>);
 
 impl<T> XNest for T
@@ -95,27 +96,26 @@ where
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MapToAttrMarker<EA>(PhantomData<EA>);
 
+pub use impl_attr::*;
 pub mod impl_attr {
     use crate::{
-        ElementAttr, ElementAttrViewMember, MapToAttrMarker, MapValueWrapper, MaybeSend,
-        Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, XNest, XNestMapper,
+        ElementAttrType, ElementAttr, MapToAttrMarker, MapValueWrapper, MaybeSend, Renderer,
+        ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, XNest, XNestMapper,
         XValueWrapper,
     };
 
-    impl<R, EA> XNest for ElementAttrViewMember<R, EA>
+    impl<R, EA> XNest for ElementAttr<R, EA>
     where
         R: Renderer,
-        EA: ElementAttr<R>,
+        EA: ElementAttrType<R>,
     {
         type Inner = Self;
         type MapInner<M> = Self;
 
-        fn map_inner<M>(self) -> Self::MapInner<M>
-        where
-            Self::MapInner<M>: ViewMember<R>,
-        {
+        fn map_inner<M>(self) -> Self::MapInner<M> {
             self
         }
 
@@ -124,11 +124,11 @@ pub mod impl_attr {
         }
     }
 
-    impl<R, EA, U> XNestMapper<U> for ElementAttrViewMember<R, EA>
+    impl<R, EA, U> XNestMapper<U> for ElementAttr<R, EA>
     where
         U: 'static,
         R: Renderer,
-        EA: ElementAttr<R>,
+        EA: ElementAttrType<R>,
     {
         type MapInnerTo = U;
 
@@ -145,9 +145,9 @@ pub mod impl_attr {
         R: Renderer,
         T: MaybeSend + 'static,
         T: Into<XValueWrapper<EA::Value>>,
-        EA: ElementAttr<R>,
+        EA: ElementAttrType<R>,
     {
-        type Origin = ElementAttrViewMember<R, EA>;
+        type Origin = ElementAttr<R, EA>;
     }
 
     impl<R, T, EA> ViewMember<R> for MapValueWrapper<T, MapToAttrMarker<EA>>
@@ -155,26 +155,26 @@ pub mod impl_attr {
         R: Renderer,
         T: MaybeSend + 'static,
         T: Into<XValueWrapper<EA::Value>>,
-        EA: ElementAttr<R>,
+        EA: ElementAttrType<R>,
     {
         #[inline]
         fn count() -> ViewMemberIndex {
-            ElementAttrViewMember::<R, EA>::count()
+            ElementAttr::<R, EA>::count()
         }
 
         #[inline]
         fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
-            ElementAttrViewMember::<R, EA>::unbuild(ctx, view_removed);
+            ElementAttr::<R, EA>::unbuild(ctx, view_removed);
         }
 
         #[inline]
         fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
-            ElementAttrViewMember::<R, EA>::new(self.0.into().0).build(ctx, will_rebuild);
+            ElementAttr::<R, EA>::new(self.0.into().0).build(ctx, will_rebuild);
         }
 
         #[inline]
         fn rebuild(self, ctx: ViewMemberCtx<R>) {
-            ElementAttrViewMember::<R, EA>::new(self.0.into().0).rebuild(ctx);
+            ElementAttr::<R, EA>::new(self.0.into().0).rebuild(ctx);
         }
     }
 }
@@ -187,9 +187,9 @@ pub mod impl_style {
     use crate::style::{ApplyStyleSheets, StyleSheets};
     use crate::style::{StyleItemValue, StyleSheetCtx, StyleSheetItems};
     use crate::{
-        ElementAttr, ElementAttrViewMember, MapToAttrMarker, MapToStyleSheetsMarker,
-        MapValueWrapper, MaybeSend, Renderer, ViewMember, ViewMemberCtx,
-        ViewMemberIndex, ViewMemberOrigin, XNest, XNestMapper, XValueWrapper,
+        ElementAttrType, ElementAttr, MapToAttrMarker, MapToStyleSheetsMarker,
+        MapValueWrapper, MaybeSend, Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex,
+        ViewMemberOrigin, XNest, XNestMapper, XValueWrapper,
     };
 
     impl<T> XNest for ApplyStyleSheets<T>
@@ -262,11 +262,11 @@ pub mod impl_style {
         R: Renderer,
         T: MaybeSend + 'static,
         T: Into<XValueWrapper<EA::Value>>,
-        EA: ElementAttr<R>,
+        EA: ElementAttrType<R>,
     {
         #[inline]
         fn iter(self, ctx: StyleSheetCtx<R>) -> impl Iterator<Item = StyleItemValue> + 'static {
-            ElementAttrViewMember::<R, EA>::new(self.0.into().0).iter(ctx)
+            ElementAttr::<R, EA>::new(self.0.into().0).iter(ctx)
         }
     }
 }
@@ -302,7 +302,8 @@ pub mod impl_reactive {
                 X: XNestMapper<U> + MaybeSend + MaybeSync + Clone + 'static,
                 U: 'static,
             {
-                type MapInnerTo = Reactive<Box<dyn Fn() -> X::MapInnerTo + MaybeSend + 'static>, X::MapInnerTo>;
+                type MapInnerTo =
+                    Reactive<Box<dyn Fn() -> X::MapInnerTo + MaybeSend + 'static>, X::MapInnerTo>;
 
                 fn map_inner_to(
                     self,
@@ -341,7 +342,8 @@ pub mod impl_reactive {
         X: XNestMapper<U> + MaybeSend + 'static,
         U: 'static,
     {
-        type MapInnerTo = Reactive<Box<dyn Fn() -> X::MapInnerTo + MaybeSend + 'static>, X::MapInnerTo>;
+        type MapInnerTo =
+            Reactive<Box<dyn Fn() -> X::MapInnerTo + MaybeSend + 'static>, X::MapInnerTo>;
 
         fn map_inner_to(
             self,
@@ -427,9 +429,9 @@ pub mod impl_reactive {
 pub mod core_impls {
     use crate::maybe_traits::{MaybeSendSyncFutureExit, MaybeSendSyncStreamExt};
     use crate::{
-        x_future, BoxedFutureMaybeLocal, BoxedStreamMaybeLocal, InnerIvmToVm, MaybeSend,
-        Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, XFuture, XNest,
-        XNestMapper, XStream,
+        x_future, BoxedFutureMaybeLocal, BoxedStreamMaybeLocal, InnerIvmToVm, MaybeSend, Renderer,
+        ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, XFuture, XNest, XNestMapper,
+        XStream,
     };
     use core::future::Future;
     use futures_lite::stream::StreamExt;
@@ -679,8 +681,8 @@ pub mod core_impls {
 
 pub mod builder {
     use crate::{
-        member_builder, BuildFlags, InnerIvmToVm, MaybeSend, Renderer, ViewMember,
-        ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, XBuilder, XNest, XNestMapper,
+        member_builder, BuildFlags, InnerIvmToVm, MaybeSend, Renderer, ViewMember, ViewMemberCtx,
+        ViewMemberIndex, ViewMemberOrigin, XBuilder, XNest, XNestMapper,
     };
     use alloc::boxed::Box;
 

@@ -150,9 +150,9 @@ where
 //     RVMO: XNest<R>,
 // {
 //     type InnerMember = Either<LVMO::InnerMember, RVMO::InnerMember>;
-//     type MapMember<M: Mapper<Self>> = Either<LVMO::MapMember<M>, RVMO::MapMember<M>>;
+//     type MapInner<M: Mapper<Self>> = Either<LVMO::MapInner<M>, RVMO::MapInner<M>>;
 //
-//     fn map_inner<U: Mapper<Self>>(self) -> Self::MapMember<U> {
+//     fn map_inner<U: Mapper<Self>>(self) -> Self::MapInner<U> {
 //         match self {
 //             Either::Left(n) => Either::Left(U::map(n)),
 //             Either::Right(n) => Either::Right(U::map(n)),

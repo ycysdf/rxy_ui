@@ -157,23 +157,23 @@ where
     ctx.set_indexed_view_member_state(TaskState::new(task));
 }
 
-impl<T, F, VM, IVM, M> ViewMemberOrigin<BevyRenderer> for InnerIvmToVm<XRes<T, F, IVM>, M>
+impl<T, F, VM, X, M> ViewMemberOrigin<BevyRenderer> for InnerIvmToVm<XRes<T, F, X>, M>
 where
     T: Resource,
-    F: Fn(&T) -> IVM + Clone + Send + Sync + 'static,
+    F: Fn(&T) -> X + Clone + Send + Sync + 'static,
     VM: ViewMember<BevyRenderer> + ViewMemberOrigin<BevyRenderer>,
-    IVM: XNest<BevyRenderer, MapInner<M> = VM> + Send + 'static,
+    X: XNest<MapInner<M> = VM> + Send + 'static,
     M: MaybeSend + 'static,
 {
     type Origin = VM::Origin;
 }
 
-impl<T, F, VM, IVM, M> ViewMember<BevyRenderer> for InnerIvmToVm<XRes<T, F, IVM>, M>
+impl<T, F, VM, X, M> ViewMember<BevyRenderer> for InnerIvmToVm<XRes<T, F, X>, M>
 where
     T: Resource,
-    F: Fn(&T) -> IVM + Clone + Send + Sync + 'static,
+    F: Fn(&T) -> X + Clone + Send + Sync + 'static,
     VM: ViewMember<BevyRenderer>,
-    IVM: XNest<BevyRenderer, MapInner<M> = VM> + Send + 'static,
+    X: XNest<MapInner<M> = VM> + Send + 'static,
     M: MaybeSend + 'static,
 {
     fn count() -> ViewMemberIndex {
@@ -185,12 +185,12 @@ where
     }
 
     fn build(self, ctx: ViewMemberCtx<BevyRenderer>, will_rebuild: bool) {
-        let f = move |resource: &T| (self.0.f)(resource).into_member();
+        let f = move |resource: &T| (self.0.f)(resource).map_inner::<M>();
         ViewMember::build(x_res(f), ctx, will_rebuild);
     }
 
     fn rebuild(self, mut ctx: ViewMemberCtx<BevyRenderer>) {
-        let f = move |resource: &T| (self.0.f)(resource).into_member();
+        let f = move |resource: &T| (self.0.f)(resource).map_inner::<M>();
         ViewMember::rebuild(x_res(f), ctx);
     }
 }

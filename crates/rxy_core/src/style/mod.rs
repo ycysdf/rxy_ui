@@ -104,6 +104,7 @@ impl Deref for NodeAttrStyleItemId {
 
 pub type SharedStyleSheetId = TypeId;
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct StyleSheetOwner<T>(pub Option<StyleInteraction>, pub T);
 
 pub fn x() -> StyleSheetOwner<()> {

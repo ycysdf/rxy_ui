@@ -48,7 +48,7 @@ impl ApplyStyleSheetsMemberState {
         }
     }
 }
-impl<T> XNest<BevyRenderer, Self> for ApplyStyleSheets<T>
+impl<T> XNest<Self> for ApplyStyleSheets<T>
 where
     T: StyleSheets<BevyRenderer>,
 {

@@ -11,7 +11,7 @@ pub trait HasIndex {
     const INDEX: AttrIndex;
 }
 
-pub trait ElementAttr<R>: HasIndex + MaybeSend + MaybeSync + 'static
+pub trait ElementAttrType<R>: HasIndex + MaybeSend + MaybeSync + 'static
 where
     R: Renderer,
 {
@@ -88,7 +88,7 @@ where
 impl<R, T> ElementAttrUntyped<R> for T
 where
     R: Renderer,
-    T: ElementAttr<R>,
+    T: ElementAttrType<R>,
 {
     #[inline]
     fn attr_name(&self) -> &'static str {

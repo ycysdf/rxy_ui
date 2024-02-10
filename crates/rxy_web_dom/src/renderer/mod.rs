@@ -19,7 +19,7 @@ use web_sys::{Document, HtmlElement, Node, Window};
 
 use crate::elements::{ElementTypeDiv, WebRendererElementType};
 use rxy_core::{
-    AttrIndex, DeferredNodeTreeScoped, Element, ElementAttr, ElementAttrViewMember,
+    AttrIndex, DeferredNodeTreeScoped, Element, ElementAttrType, ElementAttr,
     ElementTypeUnTyped, ElementViewChildren, IntoView, MaybeSend, MaybeSync, NodeTree, Renderer,
     RendererNodeId, RendererWorld, View, ViewCtx, ViewKey,
 };
@@ -34,7 +34,7 @@ pub type WebElement<E, VM> = Element<WebRenderer, E, VM>;
 pub type WebElementViewChildren<CV, E, VM> =
     ElementViewChildren<WebRenderer, Element<WebRenderer, E, VM>, CV>;
 
-pub type WebElementAttrMember<EA> = ElementAttrViewMember<WebRenderer, EA>;
+pub type WebElementAttrMember<EA> = ElementAttr<WebRenderer, EA>;
 
 pub struct WebTask;
 
@@ -234,7 +234,7 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
         false
     }
 
-    fn build_attr<A: ElementAttr<WebRenderer>>(
+    fn build_attr<A: ElementAttrType<WebRenderer>>(
         &mut self,
         node_id: RendererNodeId<WebRenderer>,
         value: A::Value,
@@ -247,7 +247,7 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
         // todo: already init
     }
 
-    fn rebuild_attr<A: ElementAttr<WebRenderer>>(
+    fn rebuild_attr<A: ElementAttrType<WebRenderer>>(
         &mut self,
         node_id: RendererNodeId<WebRenderer>,
         value: A::Value,
@@ -256,7 +256,7 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
 
     }
 
-    fn unbuild_attr<A: ElementAttr<WebRenderer>>(&mut self, node_id: RendererNodeId<WebRenderer>) {
+    fn unbuild_attr<A: ElementAttrType<WebRenderer>>(&mut self, node_id: RendererNodeId<WebRenderer>) {
         if let Some(element) = node_id.dyn_ref::<web_sys::Element>() {
             let _ = element.remove_attribute(A::NAME);
         } else {
