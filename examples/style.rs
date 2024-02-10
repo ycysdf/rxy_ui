@@ -91,7 +91,7 @@ fn ui() -> impl IntoView<BevyRenderer> {
                 x().bg_color(Color::BLUE).height(100.).width(100.),
                 // hover().bg_color(Color::WHITE),
             )))
-            .style_rx(move || {
+            .rx_style(move || {
                 signal
                     .get()
                     .then_some((x().bg_color(Color::RED), x_hover().bg_color(Color::WHITE)))

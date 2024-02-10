@@ -1,13 +1,13 @@
 use bevy_render::prelude::Visibility;
 use bevy_text::{BreakLineOn, TextAlignment};
 use bevy_ui::{AlignItems, Display, FlexDirection, FlexWrap, JustifyContent, PositionType, Val};
-use rxy_bevy::all_attrs::{
+use crate::all_attrs::{
     align_items, column_gap, display, flex_direction, flex_grow, flex_shrink, flex_wrap, height,
     justify_content, margin_bottom, margin_left, margin_right, margin_top, max_height, max_width,
     min_height, min_width, overflow_x, overflow_y, padding_bottom, padding_left, padding_right,
     padding_top, position_type, row_gap, text_align, text_linebreak, visibility, width, z_index,
 };
-use rxy_bevy::BevyRenderer;
+use crate::BevyRenderer;
 use rxy_core::{
     ElementAttr, ElementAttrMember, ElementAttrType, MapToAttrMarker, MemberOwner, Renderer,
     ViewMember, ViewMemberOrigin, XNest,

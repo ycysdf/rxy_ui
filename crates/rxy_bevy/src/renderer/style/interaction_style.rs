@@ -1,13 +1,13 @@
-use crate::attr_iter::{EntityStyleWorldQuery, StateOwnerWithNodeId};
-use crate::node_style_state::NodeStyleSheetsState;
-use crate::{Previous};
+use bevy_derive::{Deref, DerefMut};
+use super::attr_iter::{EntityStyleWorldQuery, StateOwnerWithNodeId};
+use super::node_style_state::NodeStyleSheetsState;
+use super::{Previous};
 use bevy_ecs::entity::Entity;
 use bevy_ecs::prelude::{Changed, Commands, Query, With, World};
 use bevy_ecs::system::{Command, ResMut};
 use bevy_ui::Interaction;
 use bevy_utils::EntityHashMap;
-use derive_more::{Deref, DerefMut};
-use rxy_bevy::{
+use super::rxy_bevy_crate::{
     view_element_type, AttrSetBits, ElementEntityExtraData, FocusedEntity, RendererState,
 };
 use rxy_core::AttrIndex;

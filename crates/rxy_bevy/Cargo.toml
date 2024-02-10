@@ -46,5 +46,7 @@ futures-lite.workspace = true
 oneshot.workspace = true
 
 [features]
-default = ["view_erasure", "xy_reactive"]
+default = ["view_erasure", "xy_reactive", "tailwind_aliases"]
 view_erasure = ["rxy_core/view_erasure"]
+tailwind_aliases = []
+style = ["rxy_core/style"]

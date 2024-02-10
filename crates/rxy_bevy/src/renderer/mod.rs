@@ -9,8 +9,8 @@ use bevy_tasks::Task;
 
 pub use composite_attrs::*;
 use rxy_core::{
-    DeferredNodeTreeScoped, Element, ElementAttr, ElementTypeUnTyped,
-    ElementViewChildren, Renderer, RendererWorld,
+    DeferredNodeTreeScoped, Element, ElementAttr, ElementTypeUnTyped, ElementViewChildren,
+    Renderer, RendererWorld,
 };
 pub use text_styled_element::*;
 
@@ -18,12 +18,20 @@ use crate::elements::element_div;
 use crate::CmdSender;
 
 pub mod attrs;
+pub mod common_renderer;
 mod composite_attrs;
 pub mod elements;
 mod node_tree;
 mod text_styled_element;
 mod view_key;
-pub mod common_renderer;
+
+#[cfg(feature = "style")]
+pub mod style;
+#[cfg(feature = "tailwind_aliases")]
+mod tailwind_attrs;
+
+#[cfg(feature = "tailwind_aliases")]
+pub use tailwind_attrs::TailwindAttrs;
 
 #[inline(always)]
 pub fn view_element_type() -> &'static dyn ElementTypeUnTyped<BevyRenderer> {

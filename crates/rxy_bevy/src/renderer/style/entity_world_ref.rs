@@ -1,5 +1,5 @@
 use core::ops::Deref;
-use rxy_bevy::EntityWorldMutExt;
+use super::rxy_bevy_crate::EntityWorldMutExt;
 use std::any::TypeId;
 
 use bevy_ecs::component::Component;
@@ -8,16 +8,16 @@ use bevy_ecs::{
     world::{EntityMut, EntityRef, EntityWorldMut, World},
 };
 use bevy_hierarchy::DespawnRecursiveExt;
-use rxy_bevy::{BevyRenderer, RendererState};
+use super::rxy_bevy_crate::{BevyRenderer, RendererState};
 use rxy_core::style::{
     NodeInterStyleAttrInfos, NodeStyleAttrInfos, StyleSheetDefinition, StyleSheetId,
     StyleSheetLocation,
 };
 
-use crate::attr_iter::StateOwnerWithNodeId;
-use crate::node_style_state::NodeStyleSheetsState;
-use crate::plugin::TypedEntities;
-use crate::{Result, SharedStyleState, StyleError};
+use super::attr_iter::StateOwnerWithNodeId;
+use super::node_style_state::NodeStyleSheetsState;
+use super::plugin::TypedEntities;
+use super::{Result, SharedStyleState, StyleError};
 
 #[derive(Copy, Clone)]
 pub struct EntityWorldRef<'a> {

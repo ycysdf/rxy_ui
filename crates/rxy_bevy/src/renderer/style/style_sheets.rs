@@ -1,7 +1,7 @@
 use bevy_ecs::system::Resource;
 use bevy_ecs::world::FromWorld;
 use core::marker::PhantomData;
-use rxy_bevy::BevyRenderer;
+use super::rxy_bevy_crate::BevyRenderer;
 use rxy_core::style::{AppliedStyleSheet, StyleSheetCtx, StyleSheets, StyleSheetsInfo};
 use rxy_core::XValueWrapper;
 

@@ -1,15 +1,15 @@
 use core::iter;
 
-use crate::interaction_style::AttrSetBitsIterExt;
-use crate::node_style_state::NodeStyleSheetsState;
-use crate::{interaction_to_style_interaction, EntityAttrSyncer, StyleEntityRefExt, StyleError};
-use crate::{EntityWorldRef, Result};
+use super::interaction_style::AttrSetBitsIterExt;
+use super::node_style_state::NodeStyleSheetsState;
+use super::{interaction_to_style_interaction, EntityAttrSyncer, StyleEntityRefExt, StyleError};
+use super::{EntityWorldRef, Result};
 use bevy_ecs::prelude::{Entity, Query};
 use bevy_ecs::query::ReadOnlyWorldQuery;
 use bevy_ecs::world::{EntityRef, EntityWorldMut, World};
 use bevy_ui::Interaction;
 use bevy_utils::petgraph::visit::Walker;
-use rxy_bevy::{
+use super::rxy_bevy_crate::{
     AttrSetBits, ElementEntityExtraData, ElementEntityWorldMutExt, FocusedEntity, RendererState,
 };
 use rxy_core::AttrIndex;
@@ -137,52 +137,6 @@ pub struct EntityStyleWorldQuery<'a, 'world, 'state, F: ReadOnlyWorldQuery> {
     pub query: Query<'world, 'state, &'a RendererState<NodeStyleSheetsState>, F>,
     pub current_entity: Entity,
 }
-
-// impl<'a, F: ReadOnlyWorldQuery> EntityStyleWorldQuery<'a, F> {
-//     fn get_style_sheets_state(&self, entity: Entity) -> Result<&NodeStyleSheetsState> {
-//         self.query
-//             .get(entity)
-//             .map(|n| &n.0)
-//             .map_err(move |_| StyleError::NoFoundStyleSheetsState { node_id: entity })
-//     }
-//
-//     fn get_style_sheet_definition(
-//         &self,
-//         entity: Entity,
-//         style_sheet_id: impl Into<NodeStyleSheetId>,
-//     ) -> Result<&StyleSheetDefinition> {
-//         let style_sheet_id: NodeStyleSheetId = style_sheet_id.into();
-//         let style_sheets_state = self.get_style_sheets_state(entity)?;
-//         match style_sheet_id.location {
-//             StyleSheetLocation::Inline => {
-//                 style_sheets_state.get_inline_style_sheet(style_sheet_id.index)
-//             }
-//             StyleSheetLocation::Shared => {
-//                 let style_sheet_id =
-//                     style_sheets_state.get_shared_style_sheet_id(style_sheet_id.index)?;
-//
-//                 let node_id = style_sheet_id.node_id;
-//                 self.get_style_sheet_definition(node_id, style_sheet_id)
-//             }
-//         }
-//     }
-//
-//     #[inline(always)]
-//     fn get_current_style_item_value(
-//         &self,
-//         style_item_id: impl Into<NodeStyleItemId>,
-//     ) -> Result<&StyleItemValue> {
-//         let style_item_id: NodeStyleItemId = style_item_id.into();
-//         self.get_style_sheet_definition(self.current_entity, style_item_id)
-//             .and_then(|n| {
-//                 n.items.get(style_item_id.item_index as usize).ok_or(
-//                     StyleError::NoFoundStyleItemId {
-//                         item_id: style_item_id,
-//                     },
-//                 )
-//             })
-//     }
-// }
 
 impl<'a, 'world, 'state, F: ReadOnlyWorldQuery> StateOwner<'a, 'a>
     for EntityStyleWorldQuery<'world, 'state, 'a, F>
@@ -332,70 +286,4 @@ impl<'a> EntityStyleAttrInfoIterArgs<'a> {
                 n.filter_attr_already_set(limit_attr_bits)
             })
     }
-    // pub fn iter2<U>(
-    //     self,
-    //     node_style_state: &NodeStyleAttrInfos,
-    //     node_inter_style_state: Option<&NodeInterStyleState>,
-    //     node_style_map: impl Fn(Option<&[AttrIndex]>)->U,
-    //     node_inter_style_map: &[AttrIndex],
-    // ) -> SyncerWrapper<impl Iterator<Item = EntityStyleAttrInfoIterItem<'a>>> {
-    //     let r = iter::empty();
-    //
-    //     fn op_limit_attr_bits<'a>(
-    //         iter: impl Iterator<Item = EntityStyleAttrInfoIterItem<'a>>,
-    //         limit_attr_bits: Option<AttrSetBits>,
-    //     ) -> impl Iterator<Item = EntityStyleAttrInfoIterItem<'a>> {
-    //         iter.option_op(limit_attr_bits, |n, limit_attr_bits| {
-    //             n.filter(move |(attr_id, _)| {
-    //                 !ElementEntityExtraData::static_is_set_attr(limit_attr_bits, *attr_id)
-    //             })
-    //         })
-    //     }
-    //
-    //     let attr_infos = || {
-    //         match self.limit_attr_ids {
-    //             Some(n) => n
-    //                 .iter()
-    //                 .filter_map(|id| {
-    //                     let attr_info = node_style_state.get(id);
-    //                     attr_info.map(|n| (id, n))
-    //                 })
-    //                 .either_left(),
-    //             None => node_style_state.iter().either_right(),
-    //         }
-    //         .map(|n| (*n.0, n.1.either_left::<&'a NodeInterStyleAttrInfo>()))
-    //     };
-    //
-    //     let inter_attr_infos = || {
-    //         let r = iter::empty();
-    //         r.option_op(
-    //             node_inter_style_state,
-    //             |_, entity_inter_style_state| {
-    //                 let hashmps :&[HashMap<AttrIndex, NodeStyleAttrInfo>] = dd;
-    //                 match self.limit_attr_ids {
-    //                     Some(n) => n
-    //                         .iter()
-    //                         .filter_map(|id| {
-    //                             hashmps.filter_map(|item|item.get(id)).map(|n| n.map(|n| (id, n))
-    //                             // for item in hashmps {
-    //                             //     item.get(id)
-    //                             // }
-    //                             // // hashmps.iter().flat_map(|n|n.iter())
-    //                             // let attr_info = entity_inter_style_state.get(id);
-    //                             // attr_info.map(|n| (id, n))
-    //                         })
-    //                         .either_left(),
-    //                     None => hashmps.iter().flat_map(|n|n.iter()).either_right(),
-    //                 }
-    //                 .map(|n| (*n.0, n.1.either_right::<&'a NodeStyleAttrInfo>()))
-    //             },
-    //         )
-    //     };
-    //
-    //     SyncerWrapper(
-    //         r.chain_option(self.iter_normal_style_sheet.then(attr_infos))
-    //             .chain_option(self.iter_inter_style_sheet.then(inter_attr_infos))
-    //             .pipe(self.limit_attr_bits, op_limit_attr_bits),
-    //     )
-    // }
 }

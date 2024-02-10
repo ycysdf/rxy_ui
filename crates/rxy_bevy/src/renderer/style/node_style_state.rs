@@ -1,6 +1,6 @@
-use crate::{Result, StyleError};
+use super::{Result, StyleError};
 use bevy_ecs::prelude::Entity;
-use rxy_bevy::BevyRenderer;
+use super::rxy_bevy_crate::BevyRenderer;
 use rxy_core::style::{
     AppliedStyleSheet, ApplyStyleSheetsMemberState, NodeStyleSheetId, StyleSheetDefinition,
     StyleSheetId, StyleSheetIndex, StyleSheetLocation, StyleSheetsInfo,

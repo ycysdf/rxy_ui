@@ -1,6 +1,6 @@
 #![allow(clippy::blocks_in_conditions)]
 
-use crate::style::{ApplyStyleSheets, StyleSheets};
+use crate::style::{ApplyStyleSheets, StyleError, StyleSheets, StyledNodeTree};
 use crate::{Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin};
 
 pub type StyleItemIndex = u8;
@@ -51,6 +51,7 @@ where
 impl<R, T> ViewMember<R> for ApplyStyleSheets<T>
 where
     R: Renderer,
+    R::NodeTree: StyledNodeTree<R>,
     T: StyleSheets<R>,
 {
     fn count() -> ViewMemberIndex {
@@ -58,14 +59,41 @@ where
     }
 
     fn unbuild(mut ctx: ViewMemberCtx<R>, view_removed: bool) {
-        todo!()
+        if view_removed {
+            return;
+        }
+        let member_state = ctx
+            .indexed_view_member_state_mut::<ApplyStyleSheetsMemberState>()
+            .cloned()
+            .unwrap();
+
+        ctx.world
+            .unbuild_style_sheet(ctx.node_id.clone(), member_state)
+            .unwrap();
     }
 
     fn build(self, mut ctx: ViewMemberCtx<R>, _will_rebuild: bool) {
-        todo!()
+        let member_state = ctx
+            .indexed_view_member_state_mut::<ApplyStyleSheetsMemberState>()
+            .cloned();
+        let is_first = member_state.is_none();
+        let new_member_state = ctx
+            .world
+            .build_style_sheets(ctx.node_id.clone(), self.0, member_state)
+            .unwrap();
+        if is_first {
+            ctx.set_indexed_view_member_state(new_member_state);
+        }
     }
 
-    fn rebuild(self, ctx: ViewMemberCtx<R>) {
-        todo!()
+    fn rebuild(self, mut ctx: ViewMemberCtx<R>) {
+        let member_state = ctx
+            .indexed_view_member_state_mut::<ApplyStyleSheetsMemberState>()
+            .cloned()
+            .unwrap();
+
+        ctx.world
+            .rebuild_style_sheet(ctx.node_id, self.0, member_state)
+            .unwrap();
     }
 }

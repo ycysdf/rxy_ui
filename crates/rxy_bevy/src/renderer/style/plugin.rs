@@ -1,5 +1,5 @@
-use crate::focus_style::update_focus_style;
-use crate::interaction_style::update_interaction_styles;
+use super::focus_style::update_focus_style;
+use super::interaction_style::update_interaction_styles;
 use bevy_app::{App, Plugin, Update};
 use bevy_ecs::component::Component;
 use bevy_ecs::entity::Entity;
@@ -8,8 +8,8 @@ use bevy_ecs::world::FromWorld;
 use bevy_utils::HashMap;
 use core::any::TypeId;
 use core::fmt::Debug;
-use derive_more::{Deref, DerefMut};
-use rxy_bevy::FocusedEntity;
+use bevy_derive::{Deref, DerefMut};
+use super::rxy_bevy_crate::FocusedEntity;
 
 #[derive(Resource, Default, Deref, DerefMut)]
 pub struct TypedEntities(HashMap<TypeId, Entity>);

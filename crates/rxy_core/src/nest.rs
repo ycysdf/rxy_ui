@@ -99,10 +99,9 @@ where
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MapToAttrMarker<EA>(PhantomData<EA>);
 
-pub use impl_attr::*;
 pub mod impl_attr {
     use crate::{
-        ElementAttrType, ElementAttr, MapToAttrMarker, MapValueWrapper, MaybeSend, Renderer,
+        ElementAttr, ElementAttrType, MapToAttrMarker, MapValueWrapper, MaybeSend, Renderer,
         ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, XNest, XNestMapper,
         XValueWrapper,
     };
@@ -184,12 +183,12 @@ pub struct MapToStyleSheetsMarker<SS>(PhantomData<SS>);
 
 #[cfg(feature = "style")]
 pub mod impl_style {
-    use crate::style::{ApplyStyleSheets, StyleSheets};
+    use crate::style::{ApplyStyleSheets, StyledNodeTree, StyleSheets};
     use crate::style::{StyleItemValue, StyleSheetCtx, StyleSheetItems};
     use crate::{
-        ElementAttrType, ElementAttr, MapToAttrMarker, MapToStyleSheetsMarker,
-        MapValueWrapper, MaybeSend, Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex,
-        ViewMemberOrigin, XNest, XNestMapper, XValueWrapper,
+        ElementAttr, ElementAttrType, MapToAttrMarker, MapToStyleSheetsMarker, MapValueWrapper,
+        MaybeSend, Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, XNest,
+        XNestMapper, XValueWrapper,
     };
 
     impl<T> XNest for ApplyStyleSheets<T>
@@ -234,6 +233,7 @@ pub mod impl_style {
     impl<R, SS> ViewMember<R> for MapValueWrapper<SS, MapToStyleSheetsMarker<SS>>
     where
         R: Renderer,
+        R::NodeTree: StyledNodeTree<R>,
         SS: StyleSheets<R>,
     {
         #[inline]

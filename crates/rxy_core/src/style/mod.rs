@@ -4,10 +4,7 @@ mod style_sheet_items;
 mod view_member;
 
 use crate::utils::all_tuples;
-use crate::{
-    AttrIndex, AttrValue, Either, EitherExt, MemberOwner, Renderer, RendererNodeId, RendererWorld,
-    SmallBox, ViewMember, XValueWrapper, S1,
-};
+use crate::{AttrIndex, AttrValue, Either, EitherExt, MemberOwner, NodeTree, Renderer, RendererNodeId, RendererWorld, SmallBox, ViewMember, XValueWrapper, S1, ViewMemberOrigin};
 pub use attr_style_owner::*;
 use bevy_utils::HashMap;
 use derive_more::{Deref, DerefMut, From, IntoIterator};
@@ -21,11 +18,41 @@ pub use style_sheet_definition::*;
 pub use style_sheet_items::*;
 pub use view_member::*;
 
+pub trait StyledNodeTree<R>: NodeTree<R>
+where
+    R: Renderer<NodeTree = Self>,
+{
+    fn unbuild_style_sheet(
+        &mut self,
+        node_id: RendererNodeId<R>,
+        state: ApplyStyleSheetsMemberState,
+    ) -> Result<R>;
+
+    fn build_style_sheets<T>(
+        &mut self,
+        node_id: RendererNodeId<R>,
+        style_sheets: T,
+        state: Option<ApplyStyleSheetsMemberState>,
+    ) -> Result<R, ApplyStyleSheetsMemberState>
+    where
+        T: StyleSheets<R>;
+
+    fn rebuild_style_sheet<T>(
+        &mut self,
+        node_id: RendererNodeId<R>,
+        style_sheets: T,
+        state: ApplyStyleSheetsMemberState,
+    ) -> Result<R>
+    where
+        T: StyleSheets<R>;
+}
+
 pub type Result<R, T = ()> = core::result::Result<T, StyleError<R>>;
 pub type StyleAttrValue = SmallBox<dyn AttrValue, S1>;
 
 pub mod prelude {
     pub use super::{x, x_active, x_focus, x_hover};
+    pub use rxy_macro::TypedStyle;
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
@@ -392,39 +419,21 @@ impl<T> IterExt for T where T: Iterator + Sized {}
 
 pub struct ApplyStyleSheets<T>(pub T);
 
-// pub trait IntoStyleViewMember<R> {
-//     type Member: ViewMemberOrigin<R, Origin = ApplyStyleSheets<Self::StyleSheets>>;
-//     type StyleSheets: StyleSheets<R>;
-//     fn into_style_view_member(self) -> Self::Member;
-// }
-//
-// impl<R, VM, T, SS> IntoStyleViewMember<R> for T
-// where
-//     R: Renderer,
-//     T: XNest<R, Member = VM>,
-//     VM: ViewMember<R> + ViewMemberOrigin<R, Origin = ApplyStyleSheets<SS>>,
-//     SS: StyleSheets<R>,
-// {
-//     type Member = VM;
-//     type StyleSheets = SS;
-//
-//     fn into_style_view_member(self) -> Self::Member {
-//         self.into_member()
-//     }
-// }
+pub trait ElementStyleMember<R, SS>:
+    ViewMember<R> + ViewMemberOrigin<R, Origin = ApplyStyleSheets<SS>>
+where
+    R: Renderer,
+    SS: StyleSheets<R>,
+{
+}
 
-// impl<R, T> IntoStyleViewMember<R> for ApplyStyleSheets<T>
-// where
-//     R: Renderer,
-//     T: StyleSheets<R>,
-// {
-//     type Member = ApplyStyleSheets<T>;
-//     type StyleSheets = T;
-//
-//     fn into_style_view_member(self) -> Self::Member {
-//         self
-//     }
-// }
+impl<T, R, SS> ElementStyleMember<R, SS> for T
+where
+    T: ViewMember<R> + ViewMemberOrigin<R, Origin = ApplyStyleSheets<SS>>,
+    R: Renderer,
+    SS: StyleSheets<R>,
+{
+}
 
 #[derive(Debug, Clone)]
 pub struct StyleItemValue {
@@ -481,46 +490,6 @@ where
             AppliedStyleSheet::Inline(_) => Some(StyleSheetLocation::Inline),
             AppliedStyleSheet::Shared(_) => Some(StyleSheetLocation::Shared),
         }
-    } /*
-
-      pub fn get_style_sheet_definition<'a>(
-          &'a self,
-          mut query: impl StateOwnerWithNodeId<'a,'_>,
-      ) -> Result<Option<&'a StyleSheetDefinition>> {
-          Ok(match self {
-              AppliedStyleSheet::None => None,
-              AppliedStyleSheet::Inline(style_sheet) => Some(style_sheet),
-              AppliedStyleSheet::Shared(style_sheet_id) => {
-                  Some(query.get_current_style_sheet_definition(style_sheet_id.clone())?)
-              }
-          })
-      }*/
-
-    pub fn scoped_style_sheet_definition<'a, U>(
-        &'a self,
-        entity_world_mut: &'a mut RendererWorld<R>,
-        node_id: RendererNodeId<R>,
-        f: impl FnOnce(&'a mut RendererWorld<R>, RendererNodeId<R>, Option<&StyleSheetDefinition>) -> U,
-    ) -> Result<R, U> {
-        todo!()
-        // let entity = entity_world_mut.id();
-        // match self {
-        //     AppliedStyleSheet::None => Ok(f(entity_world_mut, None)),
-        //     AppliedStyleSheet::Inline(style_sheet_definition) => {
-        //         Ok(f(entity_world_mut, Some(style_sheet_definition)))
-        //     }
-        //     AppliedStyleSheet::Shared(style_sheet_id) => entity_world_mut.world_scope(|world| {
-        //         world.scoped_style_sheet_definition(
-        //             style_sheet_id.clone(),
-        //             |entity_world_mut, style_sheet_definition| {
-        //                 entity_world_mut.world_scope(|world| {
-        //                     let mut entity_world_mut = world.entity_mut(entity);
-        //                     f(&mut entity_world_mut, Some(&*style_sheet_definition))
-        //                 })
-        //             },
-        //         )
-        //     }),
-        // }
     }
 }
 
@@ -537,8 +506,7 @@ where
     );
 }
 
-impl<T> Into<XValueWrapper<Self>> for StyleSheetOwner<T>
-{
+impl<T> Into<XValueWrapper<Self>> for StyleSheetOwner<T> {
     fn into(self) -> XValueWrapper<Self> {
         XValueWrapper(self)
     }

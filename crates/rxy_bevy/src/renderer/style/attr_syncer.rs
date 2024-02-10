@@ -1,17 +1,14 @@
 use bevy_ecs::world::EntityWorldMut;
-use rxy_bevy::view_element_type;
+use super::rxy_bevy_crate::view_element_type;
 use rxy_core::prelude::Either;
 use rxy_core::style::{NodeInterStyleItemId, NodeStyleAttrInfo, NodeStyleItemId};
 
-use crate::{Result, StateOwner};
+use super::{Result, StateOwner};
 
 pub trait EntityAttrSyncer {
     fn sync_attr_value_to_element(
         self,
         entity_world_mut: &mut EntityWorldMut,
-        // context: &mut SetAttrValueContext,
-        // entity_style_state: &NodeStyleAttrInfos,
-        // shared_style_sheets: &SharedStyleSheets,
     ) -> Result;
 }
 

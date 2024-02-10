@@ -811,7 +811,7 @@ fn sample_style_sheet() -> impl IntoView<BevyRenderer> {
 
 Currently, styles within the style sheet are static and do not allow the use of `rx`, `Future`, `Stream`, `Option`, etc, However, you can call `style` method multiple times to add styles.
 
-There are also convenient methods like `style_rx`, `style_builder`, `style_option`, `style_stream`, etc (it's perferable to use these methods first, using `style_future`)
+There are also convenient methods like `rx_style`, `style_builder`, `style_option`, `style_stream`, etc (it's perferable to use these methods first, using `style_future`)
 
 ```rust
 fn sample_dynamic_style_sheet() -> impl IntoView<BevyRenderer> {
@@ -821,7 +821,7 @@ fn sample_dynamic_style_sheet() -> impl IntoView<BevyRenderer> {
             signal.update(|n| *n = !*n);
         })
         .style(Some((x().bg_color(Color::GRAY).height(100.).width(100.),)))
-        .style_rx(move || {
+        .rx_style(move || {
             signal
                 .get()
                 .then_some((x().bg_color(Color::RED), x_hover().bg_color(Color::WHITE)))

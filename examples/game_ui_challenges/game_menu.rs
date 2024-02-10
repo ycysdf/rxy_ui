@@ -5,7 +5,6 @@
 use bevy::prelude::*;
 use rxy_bevy::navigation::RxyKeyboardNavigationPlugin;
 use rxy_ui::prelude::*;
-
 use bevy::app::AppExit;
 
 use std::fmt::Debug;

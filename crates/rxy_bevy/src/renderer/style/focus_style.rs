@@ -1,11 +1,11 @@
-use crate::attr_iter::{EntityStyleWorldQuery, StateOwnerWithNodeId};
-use crate::interaction_style::{AttrSetBitsIterExt, SetAttrValuesCommand};
-use crate::node_style_state::NodeStyleSheetsState;
-use crate::Previous;
+use super::attr_iter::{EntityStyleWorldQuery, StateOwnerWithNodeId};
+use super::interaction_style::{AttrSetBitsIterExt, SetAttrValuesCommand};
+use super::node_style_state::NodeStyleSheetsState;
+use super::Previous;
 use bevy_ecs::entity::Entity;
 use bevy_ecs::prelude::{Query, Res};
 use bevy_ecs::system::{Commands, ResMut};
-use rxy_bevy::{ElementEntityExtraData, FocusedEntity, RendererState};
+use super::rxy_bevy_crate::{ElementEntityExtraData, FocusedEntity, RendererState};
 use rxy_core::style::{NodeInterStyleAttrInfos, NodeStyleAttrInfos, StyleInteraction};
 
 pub fn update_focus_style(

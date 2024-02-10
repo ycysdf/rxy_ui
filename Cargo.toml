@@ -7,14 +7,11 @@ version = "0.1.0"
 rxy_core.workspace = true
 rxy_macro.workspace = true
 rxy_bevy_macro = { workspace = true, optional = true }
-rxy_style_macro = { workspace = true, optional = true }
 hooked_collection = { workspace = true, optional = true }
 
 xy_reactive = { workspace = true, optional = true }
 
 rxy_bevy = { workspace = true, optional = true }
-rxy_style = { workspace = true, optional = true }
-rxy_bevy_style = { workspace = true, optional = true }
 bevy_mod_picking = { workspace = true, optional = true }
 
 rxy_web_dom = { workspace = true, optional = true }
@@ -31,12 +28,11 @@ std = ["rxy_core/async-channel"]
 hooked_collection = ["dep:hooked_collection"]
 x_iter_source = ["hooked_collection", "rxy_core/x_iter_source"]
 view_erasure = ["rxy_core/view_erasure"]
-tailwind_aliases = ["rxy_bevy_style/tailwind_aliases"]
-# todo: Makes style_sheet independent of bevy
-style_sheet = ["rxy_style", "rxy_style_macro", "rxy_bevy_style"]
+tailwind_aliases = ["rxy_bevy/tailwind_aliases"]
+style = ["rxy_bevy/style", "rxy_core/style"]
 signal = ["xy_reactive", "rxy_core/xy_reactive", "rxy_bevy?/xy_reactive"]
 bevy = [
-    "std", "rxy_bevy", "bevy_mod_picking", "rxy_bevy_macro", "style_sheet", "tailwind_aliases",
+    "std", "rxy_bevy", "bevy_mod_picking", "rxy_bevy_macro", "style", "tailwind_aliases",
     "xy_reactive?/bevy", "rxy_core/bevy"
 ]
 
@@ -47,15 +43,10 @@ members = ["crates/*", "examples/web_playground"]
 hooked_collection = { path = "crates/hooked_collection", default-features = false }
 rxy_bevy = { path = "crates/rxy_bevy", default-features = false }
 rxy_bevy_macro = { path = "crates/rxy_bevy_macro", default-features = false }
-rxy_bevy_style = { path = "crates/rxy_bevy_style", default-features = false }
 rxy_core = { path = "crates/rxy_core", default-features = false }
 rxy_macro = { path = "crates/rxy_macro", default-features = false }
-rxy_style = { path = "crates/rxy_style", default-features = false }
-rxy_style_macro = { path = "crates/rxy_style_macro" }
 xy_reactive = { path = "crates/xy_reactive", default-features = false }
 rxy_web_dom = { path = "crates/rxy_web_dom", default-features = false }
-
-#rxy_web_dom = { path = "crates/rxy_web_dom" }
 
 async-channel = { version = "2.1" }
 glam = "0.24"
@@ -252,46 +243,46 @@ pin-project-lite.workspace = true
 doc-scrape-examples = true
 name = "game_menu"
 path = "examples/game_ui_challenges/game_menu.rs"
-#required-features = ["bevy"]
+required-features = ["bevy"]
 
 [[example]]
 doc-scrape-examples = true
 name = "counter"
 path = "examples/counter.rs"
-#required-features = ["bevy"]
+required-features = ["bevy"]
 
 [[example]]
 doc-scrape-examples = true
 name = "counter_by_channel"
 path = "examples/counter_by_channel.rs"
-#required-features = ["bevy"]
+required-features = ["bevy"]
 
 [[example]]
 doc-scrape-examples = true
 name = "if_else"
 path = "examples/if_else.rs"
-#required-features = ["bevy"]
+required-features = ["bevy"]
 
 [[example]]
 doc-scrape-examples = true
 name = "iter_source"
 path = "examples/iter_source.rs"
-#required-features = ["bevy"]
+required-features = ["bevy"]
 
 [[example]]
 doc-scrape-examples = true
 name = "style"
 path = "examples/style.rs"
-#required-features = ["bevy"]
+required-features = ["bevy"]
 
 [[example]]
 doc-scrape-examples = true
 name = "playground"
 path = "examples/playground.rs"
-#required-features = ["bevy"]
+required-features = ["bevy"]
 
 [[example]]
 doc-scrape-examples = true
 name = "web_playground"
 path = "examples/web_playground"
-#required-features = ["web"]
+required-features = ["web"]

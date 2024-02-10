@@ -8,13 +8,12 @@ pub use rxy_bevy_macro as bevy_macro;
 #[cfg(feature = "web")]
 pub use rxy_web_dom as web_dom;
 
-#[cfg(feature = "style_sheet")]
+#[cfg(feature = "style")]
 pub mod style {
-    pub use rxy_bevy_style::prelude;
-    pub use rxy_bevy_style::prelude::StyleError;
-    pub use rxy_bevy_style::Result;
-    pub use rxy_bevy_style::*;
-    // pub use rxy_style::*;
+    pub use rxy_bevy::style::prelude;
+    pub use rxy_bevy::style::prelude::StyleError;
+    pub use rxy_bevy::style::Result;
+    pub use rxy_bevy::style::*;
     pub use rxy_core::style::*;
 }
 
@@ -32,13 +31,6 @@ pub mod prelude {
 
     #[cfg(feature = "web")]
     pub use rxy_web_dom::prelude::*;
-
-    #[cfg(feature = "style_sheet")]
-    pub use rxy_bevy_style::prelude::StyleError;
-    #[cfg(feature = "style_sheet")]
-    pub use rxy_bevy_style::prelude::*;
-    // #[cfg(feature = "style_sheet")]
-    // pub use rxy_style::prelude::*;
 
     #[cfg(feature = "signal")]
     pub use xy_reactive::prelude::*;

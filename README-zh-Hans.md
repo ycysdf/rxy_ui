@@ -821,7 +821,7 @@ fn sample_style_sheet() -> impl IntoView<BevyRenderer> {
 
 `style` 与其他成员一样可以接受 `Reactive`、`Future`、`Option`、`Stream` 等类型
 
-也有 `style_rx`、`style_builder`、`style_option`、`style_stream` 等便捷方法 ( 最好优先使用这些方法，使用`style_future`
+也有 `rx_style`、`style_builder`、`style_option`、`style_stream` 等便捷方法 ( 最好优先使用这些方法，使用`style_future`
 内部可以避免 `boxed`，性能更好 )
 
 ```rust
@@ -832,7 +832,7 @@ fn sample_dynamic_style_sheet() -> impl IntoView<BevyRenderer> {
             signal.update(|n| *n = !*n);
         })
         .style(Some((x().bg_color(Color::GRAY).height(100.).width(100.),)))
-        .style_rx(move || {
+        .rx_style(move || {
             signal
                 .get()
                 .then_some((x().bg_color(Color::RED), x_hover().bg_color(Color::WHITE)))

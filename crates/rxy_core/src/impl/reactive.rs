@@ -386,7 +386,6 @@ where
         f: T,
     ) -> Self::AddMember<Reactive<T,VM>>
     where
-        Self: Sized,
         T:Fn() -> VM + MaybeSend + 'static,
         VM: ViewMember<R>,
     {

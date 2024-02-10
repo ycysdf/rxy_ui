@@ -57,4 +57,12 @@ pub mod prelude {
         FnSchemaView, Focusable, MemberOwnerBundleExt, ReceiverProp, ResChangeWorldExt, RxyPlugin,
         RxyUiCommandExt, SchemaCtx, Slot,CompositeAttrs
     };
+    #[cfg(feature = "tailwind_aliases")]
+    pub use super::TailwindAttrs;
+
+
+    #[cfg(feature = "style")]
+    pub use super::style::prelude::StyleError;
+    #[cfg(feature = "style")]
+    pub use super::style::prelude::*;
 }

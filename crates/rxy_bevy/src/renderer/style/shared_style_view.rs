@@ -1,12 +1,12 @@
-use crate::node_style_state::NodeStyleSheetsState;
-use crate::plugin::RxySharedStyleContainer;
-use crate::{SharedStyleState, StyleWorldExt};
+use super::node_style_state::NodeStyleSheetsState;
+use super::plugin::RxySharedStyleContainer;
+use super::{SharedStyleState, StyleWorldExt};
 use bevy_ecs::entity::Entity;
 use bevy_ecs::world::World;
 use bevy_hierarchy::BuildWorldChildren;
 use core::any::Any;
-use rxy_bevy::SchemaCtx;
-use rxy_bevy::{BevyRenderer, RendererState};
+use super::rxy_bevy_crate::SchemaCtx;
+use super::rxy_bevy_crate::{BevyRenderer, RendererState};
 use rxy_bevy_macro::BevyIntoView;
 use rxy_core::{RendererNodeId, View, ViewCtx};
 

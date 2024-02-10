@@ -1,8 +1,3 @@
-#![allow(clippy::clone_on_copy)]
-#![allow(clippy::type_complexity)]
-#![allow(clippy::too_many_arguments)]
-extern crate alloc;
-
 mod attr_iter;
 mod attr_syncer;
 mod element_view_ext;
@@ -14,38 +9,32 @@ mod plugin;
 mod shared_style_sheets;
 mod shared_style_view;
 mod style_sheets;
-#[cfg(feature = "tailwind_aliases")]
-mod tailwind_attrs;
-// mod view_member;
+mod node_tree;
 
-#[cfg(feature = "tailwind_aliases")]
-pub use crate::tailwind_attrs::TailwindAttrs;
 use std::any::TypeId;
 
-pub use crate::attr_iter::EntityStyleAttrInfoIterArgs;
-pub(crate) use crate::attr_iter::StateOwner;
-pub use crate::element_view_ext::ElementStyleExt;
-pub use crate::interaction_style::interaction_to_style_interaction;
-pub use crate::plugin::{Previous, RxyStyleSheetPlugin};
-pub use crate::style_sheets::res;
+pub use crate as rxy_bevy_crate;
+use rxy_bevy_crate::BevyRenderer;
+
+pub use attr_iter::EntityStyleAttrInfoIterArgs;
+pub(crate) use attr_iter::StateOwner;
+pub use element_view_ext::ElementStyleExt;
+pub use interaction_style::interaction_to_style_interaction;
+pub use plugin::{Previous, RxyStyleSheetPlugin};
+pub use style_sheets::res;
 pub use attr_syncer::EntityAttrSyncer;
 pub use entity_world_ref::*;
-use rxy_bevy::BevyRenderer;
 use rxy_core::style::{AppliedStyleSheet, StyleSheetCtx, StyleSheetsInfo};
 pub use shared_style_sheets::SharedStyleState;
 pub use shared_style_view::*;
 
-// pub use view_member::{ApplyStyleSheets, ApplyStyleSheetsMemberState};
 
 pub type Result<T = ()> = rxy_core::style::Result<BevyRenderer, T>;
 pub type StyleError = rxy_core::style::StyleError<BevyRenderer>;
-pub use rxy_style_macro;
 
 pub mod prelude {
-    #[cfg(feature = "tailwind_aliases")]
-    pub use super::TailwindAttrs;
     pub use super::{
-        res, rxy_style_macro::TypedStyle, typed_shared_style_sheets, ElementStyleExt,
+        res, typed_shared_style_sheets, ElementStyleExt,
         RxyStyleSheetPlugin, SchemaCtxExt, StyleError, TypedStyleLabel,
     };
 }
