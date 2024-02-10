@@ -21,29 +21,6 @@ pub struct EventViewMember<T, S, M> {
     _marker: PhantomData<M>,
 }
 
-impl<T, S, TM> XNest<BevyRenderer> for EventViewMember<T, S, TM>
-where
-    T: ElementEventIds,
-    S: IntoSystem<(), (), TM> + Send + 'static,
-    TM: Send + 'static,
-{
-    type Inner = Self;
-    type MapInner<M> = Self;
-    type MapInnerTo<U:'static> = U;
-
-    fn map_inner<U>(self) -> Self::MapInner<U> {
-        self
-    }
-
-    fn map_inner_to<U:'static>(self, f: impl FnOnce(Self::Inner) -> U) -> Self::MapInnerTo<U> {
-        f(self)
-    }
-
-    fn is_static() -> bool {
-        true
-    }
-}
-
 impl<T, S, M> ViewMemberOrigin<BevyRenderer> for EventViewMember<T, S, M>
 where
     T: ElementEventIds,

@@ -1,6 +1,6 @@
 use crate::element::ElementAttr;
 use crate::{
-    AttrValue, ElementAttrMember, MaybeSend, NodeTree, Renderer, ViewMember, ViewMemberCtx,
+    AttrValue, ElementAttrMember, NodeTree, Renderer, ViewMember, ViewMemberCtx,
     ViewMemberIndex, ViewMemberOrigin
 };
 

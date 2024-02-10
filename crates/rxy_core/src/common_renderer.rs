@@ -1,4 +1,7 @@
-use crate::{ElementAttr, ElementAttrMember, ElementAttrViewMember, ElementSoloView, XNest, Renderer, ViewMember, ViewMemberOrigin, MapToAttrMarker};
+use crate::{
+    ElementAttr, ElementAttrViewMember, ElementSoloView, MapToAttrMarker,
+    Renderer, ViewMember, ViewMemberOrigin, XNest,
+};
 use alloc::borrow::Cow;
 
 pub trait CommonRenderer: Renderer {
@@ -8,7 +11,7 @@ pub trait CommonRenderer: Renderer {
     type SpanContentEA: ElementAttr<Self, Value = Cow<'static, str>>;
 
     fn crate_span<T>(
-        str: impl XNest<Self, MapInner<MapToAttrMarker<Self::SpanContentEA>> = T>,
+        str: impl XNest<MapInner<MapToAttrMarker<Self::SpanContentEA>> = T>,
     ) -> Self::SpanView<T>
     where
         T: ViewMember<Self>
@@ -22,10 +25,18 @@ macro_rules! define_common_view_fns {
     ($renderer:ident) => {
         #[inline(always)]
         pub fn span<T>(
-            str: impl XNest<$renderer, MapInner<MapToAttrMarker<<$renderer as CommonRenderer>::SpanContentEA>> = T>,
+            str: impl XNest<MapInner<MapToAttrMarker<<$renderer as CommonRenderer>::SpanContentEA>> = T,
+            >,
         ) -> <$renderer as CommonRenderer>::SpanView<T>
-        where T: ViewMember<$renderer>
-            + ViewMemberOrigin<$renderer, Origin = ElementAttrViewMember<$renderer, <$renderer as CommonRenderer>::SpanContentEA>>,
+        where
+            T: ViewMember<$renderer>
+                + ViewMemberOrigin<
+                    $renderer,
+                    Origin = ElementAttrViewMember<
+                        $renderer,
+                        <$renderer as CommonRenderer>::SpanContentEA,
+                    >,
+                >,
         {
             <$renderer as CommonRenderer>::crate_span(str)
         }

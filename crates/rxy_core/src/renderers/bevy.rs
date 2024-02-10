@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 
 use crate::{impl_attr_value, impl_attr_value_and_wrapper, impl_x_value_wrappers, smallbox, AttrValue, SmallBox, S1, XValueWrapper};
 use bevy_asset::Handle;

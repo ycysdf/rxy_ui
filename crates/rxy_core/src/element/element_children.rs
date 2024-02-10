@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::{BoxedErasureView, ElementView, IntoView, IntoViewErasureExt, XNest, MemberOwner, NodeTree, Renderer, RendererNodeId, SoloView, View, ViewCtx, ViewMember};
+use crate::{BoxedErasureView, ElementView, IntoView, IntoViewErasureExt, MemberOwner, NodeTree, Renderer, RendererNodeId, SoloView, View, ViewCtx, ViewMember};
 
 pub fn view_children<R, V, CV>(view: V, children: CV) -> ElementViewChildren<R, V, CV::View>
 where

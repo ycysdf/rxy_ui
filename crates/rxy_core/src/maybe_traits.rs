@@ -1,8 +1,8 @@
 use alloc::boxed::Box;
 use core::any::Any;
 use futures_lite::FutureExt;
-use std::future::Future;
-use std::pin::Pin;
+use core::future::Future;
+use core::pin::Pin;
 use futures_lite::StreamExt;
 pub use reflect::*;
 pub use send_sync::*;
@@ -67,6 +67,17 @@ pub type MaybeSendSyncAnyBox = Box<dyn Any + MaybeSend + MaybeSync + 'static>;
 
 #[cfg(not(feature = "send_sync"))]
 pub type MaybeSendSyncAnyBox = Box<dyn Any + 'static>;
+
+#[cfg(feature = "send_sync")]
+pub type BoxedFutureMaybeLocal<T> = futures_lite::future::Boxed<T>;
+
+#[cfg(not(feature = "send_sync"))]
+pub type BoxedFutureMaybeLocal<T> = futures_lite::future::BoxedLocal<T>;
+#[cfg(feature = "send_sync")]
+pub type BoxedStreamMaybeLocal<T> = futures_lite::stream::Boxed<T>;
+
+#[cfg(not(feature = "send_sync"))]
+pub type BoxedStreamMaybeLocal<T> = futures_lite::stream::BoxedLocal<T>;
 
 pub trait MaybeSendSyncFutureExit<T>: Future<Output = T> {
     #[cfg(feature = "send_sync")]

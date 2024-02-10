@@ -10,7 +10,7 @@ use std::future::Future;
 pub trait ElementStyleExt: ElementView<BevyRenderer> {
     fn style<VM, SS>(
         self,
-        style_sheets: impl XNest<BevyRenderer, MapInner<MapToStyleSheetsMarker<SS>> = VM>,
+        style_sheets: impl XNest<MapInner<MapToStyleSheetsMarker<SS>> = VM>,
     ) -> Self::AddMember<VM>
     where
         VM: ViewMember<BevyRenderer>

@@ -1,8 +1,5 @@
 use crate::utils::all_tuples;
-use crate::{
-    smallbox, ElementAttr, ElementAttrViewMember, MaybeSend, MaybeSync, Renderer, ViewMember,
-    ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin,
-};
+use crate::{MaybeSend, MaybeSync};
 use core::marker::PhantomData;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -15,53 +12,25 @@ impl<T, M> InnerIvmToVm<T, M> {
     }
 }
 
-// pub trait Mapper<T> {
-//     type To;
-//     fn map(self) -> Self::To;
-// }
-//
-// pub struct VmMapper<R>(PhantomData<R>);
-//
-// impl<R, T> Mapper<VmMapper<R>> for T
-// where
-//     R: Renderer,
-//     T: XNest<R>,
-//     T::MapInner<VmMapper<R>>: ViewMember<R>,
-// {
-//     type To = T::MapInner<VmMapper<R>>;
-//
-//     fn map(self) -> Self::To {
-//         self.into_member()
-//     }
-// }
-
-pub trait XNest<R>
+pub trait XNestMapper<U>: XNest
 where
-    R: Renderer,
+    U: 'static,
 {
+    type MapInnerTo: 'static;
+
+    fn map_inner_to(
+        self,
+        f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
+    ) -> Self::MapInnerTo;
+}
+
+pub trait XNest {
     type Inner;
 
     type MapInner<M>;
-    type MapInnerTo<U: 'static>: 'static;
 
     fn map_inner<M>(self) -> Self::MapInner<M>;
-
-    fn map_inner_to<U: 'static>(
-        self,
-        f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
-    ) -> Self::MapInnerTo<U>;
-
     fn is_static() -> bool;
-
-    // fn into_member(self) -> Self::MapInner<VmMapper<R>>
-    // where
-    //     // Self::InnerMember: Mapper<VmMapper<R>>,
-    //     Self::MapInner<VmMapper<R>>: ViewMember<R>,
-    //     Self: Sized,
-    // {
-    //     // self.map()
-    //     self.map_inner::<VmMapper<R>>()
-    // }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -95,24 +64,15 @@ all_tuples!(impl_x_value_wrappers_for_tuple, 1, 6, T);
 
 pub struct MapValueWrapper<T, M>(pub T, PhantomData<M>);
 
-impl<R, T> XNest<R> for T
+impl<T> XNest for T
 where
-    R: Renderer,
     T: Into<XValueWrapper<T>> + MaybeSend + 'static,
 {
     type Inner = T;
     type MapInner<M> = MapValueWrapper<T, M>;
-    type MapInnerTo<U: 'static> = U;
 
     fn map_inner<M>(self) -> Self::MapInner<M> {
         MapValueWrapper::<T, M>(self.into().0, Default::default())
-    }
-
-    fn map_inner_to<U: 'static>(
-        self,
-        f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
-    ) -> Self::MapInnerTo<U> {
-        f(self)
     }
 
     fn is_static() -> bool {
@@ -120,22 +80,37 @@ where
     }
 }
 
+impl<T, U> XNestMapper<U> for T
+where
+    U: 'static,
+    T: Into<XValueWrapper<T>> + MaybeSend + 'static,
+{
+    type MapInnerTo = U;
+
+    fn map_inner_to(
+        self,
+        f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
+    ) -> Self::MapInnerTo {
+        f(self)
+    }
+}
+
 pub struct MapToAttrMarker<EA>(PhantomData<EA>);
 
-const _: () = {
+pub mod impl_attr {
     use crate::{
-        ElementAttr, ElementAttrViewMember, MapValueWrapper, MaybeSend, Renderer, ViewMember,
-        ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, XNest, XValueWrapper,
+        ElementAttr, ElementAttrViewMember, MapToAttrMarker, MapValueWrapper, MaybeSend,
+        Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, XNest, XNestMapper,
+        XValueWrapper,
     };
 
-    impl<R, EA> XNest<R> for ElementAttrViewMember<R, EA>
+    impl<R, EA> XNest for ElementAttrViewMember<R, EA>
     where
         R: Renderer,
         EA: ElementAttr<R>,
     {
         type Inner = Self;
         type MapInner<M> = Self;
-        type MapInnerTo<U: 'static> = U;
 
         fn map_inner<M>(self) -> Self::MapInner<M>
         where
@@ -144,15 +119,24 @@ const _: () = {
             self
         }
 
-        fn map_inner_to<U: 'static>(
-            self,
-            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
-        ) -> Self::MapInnerTo<U> {
-            f(self)
-        }
-
         fn is_static() -> bool {
             true
+        }
+    }
+
+    impl<R, EA, U> XNestMapper<U> for ElementAttrViewMember<R, EA>
+    where
+        U: 'static,
+        R: Renderer,
+        EA: ElementAttr<R>,
+    {
+        type MapInnerTo = U;
+
+        fn map_inner_to(
+            self,
+            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
+        ) -> Self::MapInnerTo {
+            f(self)
         }
     }
 
@@ -193,42 +177,49 @@ const _: () = {
             ElementAttrViewMember::<R, EA>::new(self.0.into().0).rebuild(ctx);
         }
     }
-};
+}
 
 #[cfg(feature = "style")]
 pub struct MapToStyleSheetsMarker<SS>(PhantomData<SS>);
 
 #[cfg(feature = "style")]
-const _: () = {
+pub mod impl_style {
     use crate::style::{ApplyStyleSheets, StyleSheets};
     use crate::style::{StyleItemValue, StyleSheetCtx, StyleSheetItems};
     use crate::{
-        MapValueWrapper, MaybeSend, Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex,
-        ViewMemberOrigin, XNest,
+        ElementAttr, ElementAttrViewMember, MapToAttrMarker, MapToStyleSheetsMarker,
+        MapValueWrapper, MaybeSend, Renderer, ViewMember, ViewMemberCtx,
+        ViewMemberIndex, ViewMemberOrigin, XNest, XNestMapper, XValueWrapper,
     };
 
-    impl<R, T> XNest<R> for ApplyStyleSheets<T>
+    impl<T> XNest for ApplyStyleSheets<T>
     where
-        R: Renderer,
-        T: StyleSheets<R>,
+        T: 'static,
     {
         type Inner = Self;
         type MapInner<M> = Self;
-        type MapInnerTo<U: 'static> = U;
 
         fn map_inner<M>(self) -> Self::MapInner<M> {
             self
         }
 
-        fn map_inner_to<U: 'static>(
-            self,
-            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
-        ) -> Self::MapInnerTo<U> {
-            f(self)
-        }
-
         fn is_static() -> bool {
             true
+        }
+    }
+
+    impl<T, U> XNestMapper<U> for ApplyStyleSheets<T>
+    where
+        U: 'static,
+        T: 'static,
+    {
+        type MapInnerTo = U;
+
+        fn map_inner_to(
+            self,
+            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
+        ) -> Self::MapInnerTo {
+            f(self)
         }
     }
 
@@ -278,110 +269,85 @@ const _: () = {
             ElementAttrViewMember::<R, EA>::new(self.0.into().0).iter(ctx)
         }
     }
-};
+}
 
 #[cfg(feature = "xy_reactive")]
-const _: () = {
-    use crate::{rx, Reactive};
+pub mod impl_reactive {
+    use crate::{
+        rx, InnerIvmToVm, MaybeSend, MaybeSync, Reactive, Renderer, ViewMember, ViewMemberCtx,
+        ViewMemberIndex, ViewMemberOrigin, XNest, XNestMapper,
+    };
     use xy_reactive::prelude::{Memo, ReadSignal, RwSignal, SignalGet};
-    impl<R, X> XNest<R> for Memo<X>
-    where
-        R: Renderer,
-        X: XNest<R> + MaybeSend + MaybeSync + Clone + 'static,
-    {
-        type Inner = X::Inner;
-        type MapInner<M> = InnerIvmToVm<Self, M>;
-        type MapInnerTo<U: 'static> = Memo<U>;
 
-        fn map_inner<M>(self) -> Self::MapInner<M> {
-            InnerIvmToVm::new(self)
-        }
+    macro_rules! impl_x_nest_for_signal {
+        ($ty:ty) => {
+            impl<X> XNest for $ty
+            where
+                X: XNest + MaybeSend + MaybeSync + Clone + 'static,
+            {
+                type Inner = X::Inner;
+                type MapInner<M> = InnerIvmToVm<Self, M>;
 
-        fn map_inner_to<U: 'static>(
-            self,
-            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
-        ) -> Self::MapInnerTo<U> {
-            Memo::new(f(self.get()))
-        }
+                fn map_inner<M>(self) -> Self::MapInner<M> {
+                    InnerIvmToVm::new(self)
+                }
 
-        fn is_static() -> bool {
-            false
-        }
+                fn is_static() -> bool {
+                    false
+                }
+            }
+
+            impl<X, U> XNestMapper<U> for $ty
+            where
+                X: XNestMapper<U> + MaybeSend + MaybeSync + Clone + 'static,
+                U: 'static,
+            {
+                type MapInnerTo = Reactive<Box<dyn Fn() -> X::MapInnerTo + MaybeSend + 'static>, X::MapInnerTo>;
+
+                fn map_inner_to(
+                    self,
+                    f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
+                ) -> Self::MapInnerTo {
+                    rx(Box::new(move || self.get().map_inner_to(f.clone())))
+                }
+            }
+        };
     }
 
-    impl<R, X> XNest<R> for ReadSignal<X>
+    impl_x_nest_for_signal!(Memo<X>);
+    impl_x_nest_for_signal!(ReadSignal<X>);
+    impl_x_nest_for_signal!(RwSignal<X>);
+
+    impl<F, X> XNest for Reactive<F, X>
     where
-        R: Renderer,
-        X: XNest<R> + MaybeSend + MaybeSync + Clone + 'static,
-    {
-        type Inner = X::Inner;
-        type MapInner<M> = InnerIvmToVm<Self, M>;
-        type MapInnerTo<U: 'static> = Memo<U>;
-
-        fn map_inner<M>(self) -> Self::MapInner<M> {
-            InnerIvmToVm::new(self)
-        }
-
-        fn map_inner_to<U: 'static>(
-            self,
-            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
-        ) -> Self::MapInnerTo<U> {
-            Memo::new(f(self.get()))
-        }
-
-        fn is_static() -> bool {
-            false
-        }
-    }
-
-    impl<R, X> XNest<R> for RwSignal<X>
-    where
-        R: Renderer,
-        X: XNest<R> + MaybeSend + MaybeSync + Clone + 'static,
-    {
-        type Inner = X::Inner;
-        type MapInner<M> = InnerIvmToVm<Self, M>;
-        type MapInnerTo<U: 'static> = Memo<U>;
-
-        fn map_inner<M>(self) -> Self::MapInner<M> {
-            InnerIvmToVm::new(self)
-        }
-
-        fn map_inner_to<U: 'static>(
-            self,
-            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
-        ) -> Self::MapInnerTo<U> {
-            Memo::new(f(self.get()))
-        }
-
-        fn is_static() -> bool {
-            false
-        }
-    }
-
-    impl<R, F, X> XNest<R> for Reactive<F, X>
-    where
-        R: Renderer,
         F: Fn() -> X + MaybeSend + 'static,
-        X: XNest<R> + MaybeSend + 'static,
+        X: XNest + MaybeSend + 'static,
     {
         type Inner = X::Inner;
         type MapInner<M> = InnerIvmToVm<Self, M>;
-        type MapInnerTo<U: 'static> = Memo<U>;
 
         fn map_inner<M>(self) -> Self::MapInner<M> {
             InnerIvmToVm::new(self)
         }
 
-        fn map_inner_to<U: 'static>(
-            self,
-            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
-        ) -> Self::MapInnerTo<U> {
-            Memo::new(f(self.0()))
-        }
-
         fn is_static() -> bool {
             false
+        }
+    }
+
+    impl<F, X, U> XNestMapper<U> for Reactive<F, X>
+    where
+        F: Fn() -> X + MaybeSend + 'static,
+        X: XNestMapper<U> + MaybeSend + 'static,
+        U: 'static,
+    {
+        type MapInnerTo = Reactive<Box<dyn Fn() -> X::MapInnerTo + MaybeSend + 'static>, X::MapInnerTo>;
+
+        fn map_inner_to(
+            self,
+            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
+        ) -> Self::MapInnerTo {
+            rx(Box::new(move || self.0().map_inner_to(f.clone())))
         }
     }
 
@@ -389,7 +355,7 @@ const _: () = {
     where
         R: Renderer,
         F: Fn() -> X + MaybeSend + 'static,
-        X: XNest<R, MapInner<M> = VM> + MaybeSend + 'static,
+        X: XNest<MapInner<M> = VM> + MaybeSend + 'static,
         VM: ViewMemberOrigin<R>,
         M: MaybeSend + 'static,
     {
@@ -400,7 +366,7 @@ const _: () = {
     where
         R: Renderer,
         F: Fn() -> X + MaybeSend + 'static,
-        X: XNest<R, MapInner<M> = VM> + MaybeSend + 'static,
+        X: XNest<MapInner<M> = VM> + MaybeSend + 'static,
         VM: ViewMember<R>,
         M: MaybeSend + 'static,
     {
@@ -425,7 +391,7 @@ const _: () = {
     where
         R: Renderer,
         T: SignalGet<Value = X> + MaybeSend + 'static,
-        X: XNest<R, MapInner<M> = VM> + MaybeSync + Clone + 'static,
+        X: XNest<MapInner<M> = VM> + MaybeSync + Clone + 'static,
         VM: ViewMemberOrigin<R>,
         M: MaybeSend + 'static,
     {
@@ -436,7 +402,7 @@ const _: () = {
     where
         R: Renderer,
         T: SignalGet<Value = X> + MaybeSend + 'static,
-        X: XNest<R, MapInner<M> = VM> + MaybeSync + Clone + 'static,
+        X: XNest<MapInner<M> = VM> + MaybeSync + Clone + 'static,
         VM: ViewMember<R>,
         M: MaybeSend + 'static,
     {
@@ -456,62 +422,58 @@ const _: () = {
             rx(move || self.0.get().map_inner::<M>()).rebuild(ctx);
         }
     }
-};
+}
 
-pub mod std_impls {
+pub mod core_impls {
     use crate::maybe_traits::{MaybeSendSyncFutureExit, MaybeSendSyncStreamExt};
     use crate::{
-        x_future, InnerIvmToVm, MaybeSend, Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex,
-        ViewMemberOrigin, XFuture, XNest, XStream,
+        x_future, BoxedFutureMaybeLocal, BoxedStreamMaybeLocal, InnerIvmToVm, MaybeSend,
+        Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, XFuture, XNest,
+        XNestMapper, XStream,
     };
+    use core::future::Future;
     use futures_lite::stream::StreamExt;
     use futures_lite::Stream;
-    use std::future::Future;
 
-    impl<R, T> XNest<R> for Option<T>
+    impl<X> XNest for Option<X>
     where
-        R: Renderer,
-        T: XNest<R>,
+        X: XNest,
     {
-        type Inner = T::Inner;
-        type MapInner<M> = Option<T::MapInner<M>>;
-        type MapInnerTo<U: 'static> = Option<T::MapInnerTo<U>>;
+        type Inner = X::Inner;
+        type MapInner<M> = Option<X::MapInner<M>>;
 
         fn map_inner<M>(self) -> Self::MapInner<M> {
             self.map(|n| n.map_inner::<M>())
         }
 
-        fn map_inner_to<U: 'static>(
-            self,
-            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
-        ) -> Self::MapInnerTo<U> {
-            self.map(|n| n.map_inner_to::<U>(f))
-        }
-
         fn is_static() -> bool {
-            T::is_static()
+            X::is_static()
         }
     }
 
-    impl<R, X> XNest<R> for futures_lite::stream::Boxed<X>
+    impl<X, U> XNestMapper<U> for Option<X>
     where
-        R: Renderer,
-        X: XNest<R> + 'static,
+        U: 'static,
+        X: XNestMapper<U>,
+    {
+        type MapInnerTo = Option<X::MapInnerTo>;
+        fn map_inner_to(
+            self,
+            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
+        ) -> Self::MapInnerTo {
+            self.map(move |n| n.map_inner_to(f))
+        }
+    }
+
+    impl<X> XNest for BoxedStreamMaybeLocal<X>
+    where
+        X: XNest + 'static,
     {
         type Inner = X::Inner;
-        type MapInner<M> = futures_lite::stream::Boxed<X::MapInner<M>>;
-        type MapInnerTo<U: 'static> = futures_lite::stream::Boxed<X::MapInnerTo<U>>;
+        type MapInner<M> = BoxedStreamMaybeLocal<X::MapInner<M>>;
 
         fn map_inner<M>(self) -> Self::MapInner<M> {
             self.map(|n| n.map_inner::<M>()).boxed_maybe_local()
-        }
-
-        fn map_inner_to<U: 'static>(
-            self,
-            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
-        ) -> Self::MapInnerTo<U> {
-            self.map(move |n| n.map_inner_to::<U>(f.clone()))
-                .boxed_maybe_local()
         }
 
         fn is_static() -> bool {
@@ -519,11 +481,26 @@ pub mod std_impls {
         }
     }
 
+    impl<X, U> XNestMapper<U> for BoxedStreamMaybeLocal<X>
+    where
+        U: 'static,
+        X: XNestMapper<U> + 'static,
+    {
+        type MapInnerTo = BoxedStreamMaybeLocal<X::MapInnerTo>;
+        fn map_inner_to(
+            self,
+            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
+        ) -> Self::MapInnerTo {
+            self.map(move |n| n.map_inner_to(f.clone()))
+                .boxed_maybe_local()
+        }
+    }
+
     impl<R, S, X, VM, M> ViewMemberOrigin<R> for InnerIvmToVm<XStream<S>, M>
     where
         R: Renderer,
         S: Stream<Item = X> + MaybeSend + 'static,
-        X: XNest<R, MapInner<M> = VM> + MaybeSend + 'static,
+        X: XNest<MapInner<M> = VM> + MaybeSend + 'static,
         VM: ViewMemberOrigin<R>,
         M: MaybeSend + 'static,
     {
@@ -534,7 +511,7 @@ pub mod std_impls {
     where
         R: Renderer,
         S: Stream<Item = X> + MaybeSend + 'static,
-        X: XNest<R, MapInner<M> = VM> + MaybeSend + 'static,
+        X: XNest<MapInner<M> = VM> + MaybeSend + 'static,
         VM: ViewMember<R>,
         M: MaybeSend + 'static,
     {
@@ -556,27 +533,16 @@ pub mod std_impls {
             stream.rebuild(ctx);
         }
     }
-    impl<R, S, X> XNest<R> for XStream<S>
+    impl<S, X> XNest for XStream<S>
     where
-        R: Renderer,
         S: Stream<Item = X> + MaybeSend + 'static,
-        X: XNest<R> + MaybeSend + 'static,
+        X: XNest + MaybeSend + 'static,
     {
         type Inner = X::Inner;
         type MapInner<M> = InnerIvmToVm<XStream<S>, M>;
-        type MapInnerTo<U: 'static> = futures_lite::stream::Boxed<X::MapInnerTo<U>>;
 
         fn map_inner<M>(self) -> Self::MapInner<M> {
             InnerIvmToVm::new(self)
-        }
-
-        fn map_inner_to<U: 'static>(
-            self,
-            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
-        ) -> Self::MapInnerTo<U> {
-            self.stream
-                .map(move |n| n.map_inner_to::<U>(f.clone()))
-                .boxed_maybe_local()
         }
 
         fn is_static() -> bool {
@@ -584,23 +550,49 @@ pub mod std_impls {
         }
     }
 
-    impl<R, TO, VM, M> ViewMemberOrigin<R> for InnerIvmToVm<XFuture<TO>, M>
+    impl<S, X, U> XNestMapper<U> for XStream<S>
+    where
+        U: 'static,
+        S: Stream<Item = X> + MaybeSend + 'static,
+        X: XNestMapper<U> + MaybeSend + 'static,
+    {
+        type MapInnerTo = XStream<BoxedStreamMaybeLocal<X::MapInnerTo>>;
+        fn map_inner_to(
+            self,
+            mut f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
+        ) -> Self::MapInnerTo {
+            let value = self.value.map({
+                let f = f.clone();
+                move |n| n.map_inner_to(f)
+            });
+            XStream {
+                stream: self
+                    .stream
+                    .map(move |n| n.map_inner_to(f.clone()))
+                    .boxed_maybe_local(),
+                value,
+                already_end: self.already_end,
+            }
+        }
+    }
+
+    impl<R, T, VM, X, M> ViewMemberOrigin<R> for InnerIvmToVm<XFuture<T>, M>
     where
         R: Renderer,
-        TO: Future + MaybeSend + 'static,
+        T: Future<Output = X> + MaybeSend + 'static,
         VM: ViewMemberOrigin<R>,
-        TO::Output: XNest<R, MapInner<M> = VM> + MaybeSend + 'static,
+        X: XNest<MapInner<M> = VM> + MaybeSend + 'static,
         M: MaybeSend + 'static,
     {
         type Origin = VM::Origin;
     }
 
-    impl<R, TO, VM, M> ViewMember<R> for InnerIvmToVm<XFuture<TO>, M>
+    impl<R, T, VM, X, M> ViewMember<R> for InnerIvmToVm<XFuture<T>, M>
     where
         R: Renderer,
-        TO: Future + MaybeSend + 'static,
+        T: Future<Output = X> + MaybeSend + 'static,
         VM: ViewMember<R>,
-        TO::Output: XNest<R, MapInner<M> = VM> + MaybeSend + 'static,
+        X: XNest<MapInner<M> = VM> + MaybeSend + 'static,
         M: MaybeSend + 'static,
     {
         fn count() -> ViewMemberIndex {
@@ -622,26 +614,16 @@ pub mod std_impls {
         }
     }
 
-    impl<R, F, X> XNest<R> for XFuture<F>
+    impl<F, X> XNest for XFuture<F>
     where
-        R: Renderer,
         F: Future<Output = X> + MaybeSend + 'static,
-        X: XNest<R> + MaybeSend + 'static,
+        X: XNest + MaybeSend + 'static,
     {
         type Inner = X::Inner;
         type MapInner<M> = InnerIvmToVm<Self, X::MapInner<M>>;
 
-        type MapInnerTo<U: 'static> = futures_lite::future::Boxed<X::MapInnerTo<U>>;
-
         fn map_inner<M>(self) -> Self::MapInner<M> {
             InnerIvmToVm::new(self)
-        }
-
-        fn map_inner_to<U: 'static>(
-            self,
-            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
-        ) -> Self::MapInnerTo<U> {
-            async move { self.0.await.map_inner_to::<U>(f) }.boxed_maybe_local()
         }
 
         fn is_static() -> bool {
@@ -649,66 +631,99 @@ pub mod std_impls {
         }
     }
 
-    impl<R, X> XNest<R> for futures_lite::future::Boxed<X>
+    impl<F, X, U> XNestMapper<U> for XFuture<F>
     where
-        R: Renderer,
-        X: XNest<R> + MaybeSend + 'static,
+        U: 'static,
+        F: Future<Output = X> + MaybeSend + 'static,
+        X: XNestMapper<U> + MaybeSend + 'static,
+    {
+        type MapInnerTo = BoxedFutureMaybeLocal<X::MapInnerTo>;
+        fn map_inner_to(
+            self,
+            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
+        ) -> Self::MapInnerTo {
+            async move { self.0.await.map_inner_to(f) }.boxed_maybe_local()
+        }
+    }
+
+    impl<X> XNest for BoxedFutureMaybeLocal<X>
+    where
+        X: XNest + 'static,
     {
         type Inner = X::Inner;
-        type MapInner<M> = futures_lite::future::Boxed<X::MapInner<M>>;
-        type MapInnerTo<U: 'static> = futures_lite::future::Boxed<X::MapInnerTo<U>>;
+        type MapInner<M> = BoxedFutureMaybeLocal<X::MapInner<M>>;
 
         fn map_inner<M>(self) -> Self::MapInner<M> {
             async move { self.await.map_inner::<M>() }.boxed_maybe_local()
         }
 
-        fn map_inner_to<U: 'static>(
-            self,
-            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
-        ) -> Self::MapInnerTo<U> {
-            async move { self.await.map_inner_to::<U>(f) }.boxed_maybe_local()
-        }
-
         fn is_static() -> bool {
             false
+        }
+    }
+
+    impl<X, U> XNestMapper<U> for BoxedFutureMaybeLocal<X>
+    where
+        U: 'static,
+        X: XNestMapper<U> + 'static,
+    {
+        type MapInnerTo = BoxedFutureMaybeLocal<X::MapInnerTo>;
+        fn map_inner_to(
+            self,
+            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
+        ) -> Self::MapInnerTo {
+            async move { self.await.map_inner_to(f) }.boxed_maybe_local()
         }
     }
 }
 
 pub mod builder {
     use crate::{
-        member_builder, BuildFlags, InnerIvmToVm, MaybeSend, Renderer, ViewMember, ViewMemberCtx,
-        ViewMemberIndex, ViewMemberOrigin, XBuilder, XNest,
+        member_builder, BuildFlags, InnerIvmToVm, MaybeSend, Renderer, ViewMember,
+        ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, XBuilder, XNest, XNestMapper,
     };
+    use alloc::boxed::Box;
 
-    impl<R, F, X> XNest<R> for XBuilder<R, F>
+    impl<R, F, X> XNest for XBuilder<R, F>
     where
         F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> X + MaybeSend + 'static,
         R: Renderer,
-        X: XNest<R>,
+        X: XNest,
     {
         type Inner = X::Inner;
         type MapInner<M> = InnerIvmToVm<Self, X::MapInner<M>>;
-        type MapInnerTo<U: 'static> = XBuilder<
-            R,
-            Box<dyn FnOnce(ViewMemberCtx<R>, BuildFlags) -> X::MapInnerTo<U> + MaybeSend + 'static>,
-        >;
 
         fn map_inner<M>(self) -> Self::MapInner<M> {
             InnerIvmToVm::new(self)
         }
 
-        fn map_inner_to<U: 'static>(
-            self,
-            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
-        ) -> Self::MapInnerTo<U> {
-            member_builder(Box::new(move |ctx, flags| {
-                self.0(ctx, flags).map_inner_to::<U>(f)
-            }))
-        }
-
         fn is_static() -> bool {
             X::is_static()
+        }
+    }
+    impl<R, F, X, U> XNestMapper<U> for XBuilder<R, F>
+    where
+        U: 'static,
+        F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> X + MaybeSend + 'static,
+        R: Renderer,
+        X: XNestMapper<U>,
+    {
+        #[cfg(feature = "send_sync")]
+        type MapInnerTo = XBuilder<
+            R,
+            Box<dyn FnOnce(ViewMemberCtx<R>, BuildFlags) -> X::MapInnerTo + MaybeSend + 'static>,
+        >;
+        #[cfg(not(feature = "send_sync"))]
+        type MapInnerTo =
+            XBuilder<R, Box<dyn FnOnce(ViewMemberCtx<R>, BuildFlags) -> X::MapInnerTo + 'static>>;
+
+        fn map_inner_to(
+            self,
+            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
+        ) -> Self::MapInnerTo {
+            member_builder(Box::new(move |ctx, flags| {
+                self.0(ctx, flags).map_inner_to(f.clone())
+            }))
         }
     }
 
@@ -716,7 +731,7 @@ pub mod builder {
     where
         F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> X + MaybeSend + 'static,
         R: Renderer,
-        X: XNest<R, MapInner<M> = VM>,
+        X: XNest<MapInner<M> = VM>,
         VM: ViewMemberOrigin<R>,
         M: MaybeSend + 'static,
     {
@@ -727,7 +742,7 @@ pub mod builder {
     where
         F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> X + MaybeSend + 'static,
         R: Renderer,
-        X: XNest<R, MapInner<M> = VM>,
+        X: XNest<MapInner<M> = VM>,
         VM: ViewMember<R>,
         M: MaybeSend + 'static,
     {

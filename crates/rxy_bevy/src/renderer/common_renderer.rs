@@ -21,7 +21,7 @@ impl CommonRenderer for BevyRenderer {
     type SpanContentEA = all_attrs::content;
 
     fn crate_span<T>(
-        str: impl XNest<Self, MapInner<MapToAttrMarker<Self::SpanContentEA>> = T>,
+        str: impl XNest< MapInner<MapToAttrMarker<Self::SpanContentEA>> = T>,
     ) -> Self::SpanView<T>
     where
         T: ViewMember<Self>

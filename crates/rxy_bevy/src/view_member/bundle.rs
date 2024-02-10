@@ -13,28 +13,6 @@ pub fn x_bundle<T: Bundle>(bundle: T) -> XBundle<T> {
     XBundle(bundle)
 }
 
-impl<T> XNest<BevyRenderer> for XBundle<T>
-where
-    T: Bundle,
-{
-    type Inner = Self;
-    type MapInner<M> = Self;
-    type MapInnerTo<U:'static> = U;
-
-    fn map_inner<M>(self) -> Self::MapInner<M>
-    {
-        self
-    }
-
-    fn map_inner_to<U:'static>(self, f: impl FnOnce(Self::Inner) -> U) -> Self::MapInnerTo<U> {
-        f(self)
-    }
-
-    fn is_static() -> bool {
-        true
-    }
-}
-
 impl<T> ViewMemberOrigin<BevyRenderer> for XBundle<T>
 where
     T: Bundle,

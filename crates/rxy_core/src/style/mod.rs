@@ -6,7 +6,7 @@ mod view_member;
 use crate::utils::all_tuples;
 use crate::{
     AttrIndex, AttrValue, Either, EitherExt, MemberOwner, Renderer, RendererNodeId, RendererWorld,
-    SmallBox, ViewMember, ViewMemberOrigin, XNest, XValueWrapper, S1,
+    SmallBox, ViewMember, XValueWrapper, S1,
 };
 pub use attr_style_owner::*;
 use bevy_utils::HashMap;

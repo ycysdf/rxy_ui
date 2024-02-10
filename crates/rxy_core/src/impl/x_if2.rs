@@ -5,7 +5,7 @@ use core::marker::PhantomData;
 use crate::{
     member_builder, schema_view, ConstIndex, Either, EitherExt, FnSchema, IntoSchemaProp, IntoView,
     MaybeSend, MutableView, NodeTree, RebuildFnReceiver, Renderer, SchemaView, ToMutableWrapper,
-    View, ViewCtx, ViewMember, ViewMemberCtx, VirtualContainer, XNest,
+    View, ViewCtx, ViewMember, ViewMemberCtx, VirtualContainer, XNest, XNestMapper,
 };
 
 pub struct XIf<R, C, V, V2 = ()>
@@ -36,13 +36,13 @@ where
     }
 }
 
-impl<R, V, V2, C> View<R> for XIf<R, C, V, V2>
+impl<R, V, V2, X> View<R> for XIf<R, X, V, V2>
 where
     R: Renderer,
     V: IntoView<R> + Clone + MaybeSend,
     V2: IntoView<R> + Clone + MaybeSend,
-    C: XNest<R, Inner = bool> + MaybeSend + 'static,
-    C::MapInnerTo<()>: ViewMember<R>,
+    X: XNestMapper<(), Inner = bool> + MaybeSend + 'static,
+    X::MapInnerTo: ViewMember<R>,
 {
     type Key = ();
 
@@ -64,7 +64,7 @@ where
             }
             .into_view();
             world_scoped.scoped(move |world| {
-                let key = view.build(  ViewCtx { world, parent }, None, will_rebuild);
+                let key = view.build(ViewCtx { world, parent }, None, will_rebuild);
             });
         });
         member.build(

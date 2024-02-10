@@ -202,44 +202,53 @@ where
     }
 }
 
-impl<R, T> ViewMemberOrigin<R> for futures_lite::future::Boxed<T>
-where
-    R: Renderer,
-    T: ViewMember<R> + ViewMemberOrigin<R>,
-{
-    type Origin = T::Origin;
+macro_rules! impl_for_boxed {
+    ($ty:ty) => {
+        impl<R, T> ViewMemberOrigin<R> for $ty
+        where
+            R: Renderer,
+            T: ViewMember<R> + ViewMemberOrigin<R>,
+        {
+            type Origin = T::Origin;
+        }
+
+        impl<R, T> ViewMember<R> for $ty
+        where
+            R: Renderer,
+            T: ViewMember<R> + MaybeSend + 'static,
+        {
+            fn count() -> ViewMemberIndex {
+                T::count()
+            }
+
+            fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
+                T::unbuild(ctx, view_removed)
+            }
+
+            fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
+                future_view_member_rebuild(self, ctx, will_rebuild)
+            }
+
+            fn rebuild(self, ctx: ViewMemberCtx<R>) {
+                self.build(ctx, true);
+            }
+        }
+
+        impl<R, T> IntoView<R> for $ty
+        where
+            R: Renderer,
+            T: IntoView<R> + MaybeSend + 'static,
+        {
+            type View = XFuture<Self>;
+
+            fn into_view(self) -> Self::View {
+                XFuture(self)
+            }
+        }
+    };
 }
 
-impl<R, T> ViewMember<R> for futures_lite::future::Boxed<T>
-where
-    R: Renderer,
-    T: ViewMember<R> + MaybeSend + 'static,
-{
-    fn count() -> ViewMemberIndex {
-        T::count()
-    }
+impl_for_boxed!(futures_lite::future::Boxed<T>);
 
-    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
-        T::unbuild(ctx, view_removed)
-    }
-
-    fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
-        future_view_member_rebuild(self, ctx, will_rebuild)
-    }
-
-    fn rebuild(self, ctx: ViewMemberCtx<R>) {
-        self.build(ctx, true);
-    }
-}
-
-impl<R, T> IntoView<R> for futures_lite::future::Boxed<T>
-where
-    R: Renderer,
-    T: IntoView<R> + MaybeSend + 'static,
-{
-    type View = XFuture<Self>;
-
-    fn into_view(self) -> Self::View {
-        XFuture(self)
-    }
-}
+#[cfg(not(feature = "send_sync"))]
+impl_for_boxed!(futures_lite::future::BoxedLocal<T>);

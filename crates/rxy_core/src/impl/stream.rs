@@ -7,10 +7,10 @@ use futures_lite::{Stream, StreamExt};
 
 use crate::{
     build_info::{node_build_status, node_build_times_increment},
-    into_view, mutable_view_rebuild, Either, InnerIvmToVm, IntoView, XNest,
-    MaybeSend, MutableView, NodeTree, Renderer, RendererNodeId, TaskState, ToIntoView, View,
-    ViewCtx, ViewKey, ViewMember, ViewMemberBuildExt, ViewMemberCtx, ViewMemberIndex,
-    ViewMemberOrigin,
+    into_view, mutable_view_rebuild, Either, InnerIvmToVm, IntoView, MaybeSend,
+    MaybeSendSyncStreamExt, MutableView, NodeTree, Renderer, RendererNodeId, TaskState, ToIntoView,
+    View, ViewCtx, ViewKey, ViewMember, ViewMemberBuildExt, ViewMemberCtx, ViewMemberIndex,
+    ViewMemberOrigin, XNest,
 };
 
 fn stream_vm_rebuild<R, S, VM>(
@@ -61,37 +61,6 @@ fn stream_vm_rebuild<R, S, VM>(
             });
         }
     })));
-}
-
-
-impl<R, VM> ViewMemberOrigin<R> for futures_lite::stream::Boxed<VM>
-where
-    R: Renderer,
-    VM: ViewMemberOrigin<R>,
-{
-    type Origin = VM::Origin;
-}
-
-impl<R, VM> ViewMember<R> for futures_lite::stream::Boxed<VM>
-where
-    R: Renderer,
-    VM: ViewMember<R>,
-{
-    fn count() -> ViewMemberIndex {
-        VM::count()
-    }
-
-    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
-        VM::unbuild(ctx, view_removed)
-    }
-
-    fn build(self, ctx: ViewMemberCtx<R>, _will_rebuild: bool) {
-        stream_vm_rebuild(x_stream_immediate(self), ctx, true);
-    }
-
-    fn rebuild(self, ctx: ViewMemberCtx<R>) {
-        stream_vm_rebuild(x_stream_immediate(self), ctx, false);
-    }
 }
 
 pub fn stream_view_rebuild<R, S>(
@@ -228,18 +197,6 @@ where
     }
 }
 
-impl<R, IV> IntoView<R> for futures_lite::stream::Boxed<IV>
-where
-    R: Renderer,
-    IV: IntoView<R> + MaybeSend,
-{
-    type View = XStream<futures_lite::stream::Boxed<IV>>;
-
-    fn into_view(self) -> Self::View {
-        x_stream_immediate(self)
-    }
-}
-
 impl<S, F, R, IV> IntoView<R> for futures_lite::stream::Map<S, F>
 where
     IV: IntoView<R> + MaybeSend,
@@ -259,8 +216,8 @@ where
     T: Stream,
 {
     pub stream: T,
-    value: Option<T::Item>,
-    already_end: bool,
+    pub value: Option<T::Item>,
+    pub already_end: bool,
 }
 
 impl<T> XStream<T>
@@ -278,6 +235,7 @@ where
             already_end: self.already_end,
         }
     }
+
     pub fn with_value(self, value: T::Item) -> Self {
         Self {
             stream: self.stream,
@@ -314,7 +272,7 @@ where
 #[inline(always)]
 pub fn x_stream_immediate<S>(mut stream: S) -> XStream<S>
 where
-    S: Stream + Unpin + MaybeSend + 'static,
+    S: Stream + Unpin + 'static,
 {
     if let Some(value) = now_or_never(stream.next()) {
         if value.is_some() {
@@ -340,10 +298,10 @@ where
 }
 
 impl<R, S> ViewMemberOrigin<R> for XStream<S>
-    where
-        R: Renderer,
-        S: Stream + MaybeSend + 'static,
-        S::Item: ViewMemberOrigin<R>,
+where
+    R: Renderer,
+    S: Stream + MaybeSend + 'static,
+    S::Item: ViewMemberOrigin<R>,
 {
     type Origin = <S::Item as ViewMemberOrigin<R>>::Origin;
 }
@@ -370,3 +328,53 @@ where
         stream_vm_rebuild(self, ctx, false);
     }
 }
+
+macro_rules! impl_for_boxed {
+    ($ty:ty) => {
+        impl<R, T> ViewMemberOrigin<R> for $ty
+        where
+            R: Renderer,
+            T: ViewMemberOrigin<R>,
+        {
+            type Origin = T::Origin;
+        }
+
+        impl<R, T> ViewMember<R> for $ty
+        where
+            R: Renderer,
+            T: ViewMember<R>,
+        {
+            fn count() -> ViewMemberIndex {
+                T::count()
+            }
+
+            fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
+                T::unbuild(ctx, view_removed)
+            }
+
+            fn build(self, ctx: ViewMemberCtx<R>, _will_rebuild: bool) {
+                stream_vm_rebuild(x_stream_immediate(self), ctx, true);
+            }
+
+            fn rebuild(self, ctx: ViewMemberCtx<R>) {
+                stream_vm_rebuild(x_stream_immediate(self), ctx, false);
+            }
+        }
+        impl<R, T> IntoView<R> for $ty
+        where
+            R: Renderer,
+            T: IntoView<R> + MaybeSend,
+        {
+            type View = XStream<$ty>;
+
+            fn into_view(self) -> Self::View {
+                x_stream_immediate(self)
+            }
+        }
+    };
+}
+
+impl_for_boxed!(futures_lite::stream::Boxed<T>);
+
+#[cfg(not(feature = "send_sync"))]
+impl_for_boxed!(futures_lite::stream::BoxedLocal<T>);

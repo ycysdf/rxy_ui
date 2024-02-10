@@ -66,41 +66,41 @@ pub trait RebuildFnReceiverSplit<R, T, FU, RU> {
 //     }
 // }
 
-macro_rules! impl_split {
-    ($($U:ident),*) => {
-        #[allow(non_snake_case)]
-        impl<R, T, $($U),*> RebuildFnReceiverSplit<R, T, ($($U,)*), ($(RebuildFnReceiver<R, $U>,)*)> for RebuildFnReceiver<R, T>
-        where
-            R: Renderer,
-            $($U: 'static),*
-        {
-            fn split(self, map_f: impl Fn(T) -> ($($U,)*) + Clone + MaybeSend + 'static) -> ($(RebuildFnReceiver<R, $U>,)*) {
-                let rebuild_fn_sender_fn = self.1;
-                let ($($U,)*) = match self.0.map(&map_f) {
-                    Some(($($U,)*)) => ($(Some($U),)*),
-                    None => (($({
-                        let $U = None;
-                        $U
-                    },)*)),
-                };
-                paste::paste! {
-                    $(
-                    let (mut [<rebuild_fn $U>], [<receiver $U>]) = target_rebuild_fn_channel($U);
-                    )*
-
-                    rebuild_fn_sender_fn(Box::new(move |iv, world| {
-                        let ($($U,)*) = map_f(iv);
-                        $(
-                        [<rebuild_fn $U>].call(world, $U);
-                        )*
-                    }));
-                    ($([<receiver $U>],)*)
-                }
-            }
-        }
-    };
-    () => {};
-}
+// macro_rules! impl_split {
+//     ($($U:ident),*) => {
+//         #[allow(non_snake_case)]
+//         impl<R, T, $($U),*> RebuildFnReceiverSplit<R, T, ($($U,)*), ($(RebuildFnReceiver<R, $U>,)*)> for RebuildFnReceiver<R, T>
+//         where
+//             R: Renderer,
+//             $($U: 'static),*
+//         {
+//             fn split(self, map_f: impl Fn(T) -> ($($U,)*) + Clone + MaybeSend + 'static) -> ($(RebuildFnReceiver<R, $U>,)*) {
+//                 let rebuild_fn_sender_fn = self.1;
+//                 let ($($U,)*) = match self.0.map(&map_f) {
+//                     Some(($($U,)*)) => ($(Some($U),)*),
+//                     None => (($({
+//                         let $U = None;
+//                         $U
+//                     },)*)),
+//                 };
+//                 paste::paste! {
+//                     $(
+//                     let (mut [<rebuild_fn $U>], [<receiver $U>]) = target_rebuild_fn_channel($U);
+//                     )*
+//
+//                     rebuild_fn_sender_fn(Box::new(move |iv, world| {
+//                         let ($($U,)*) = map_f(iv);
+//                         $(
+//                         [<rebuild_fn $U>].call(world, $U);
+//                         )*
+//                     }));
+//                     ($([<receiver $U>],)*)
+//                 }
+//             }
+//         }
+//     };
+//     () => {};
+// }
 
 // all_tuples!(impl_split, 1, 8, U);
 

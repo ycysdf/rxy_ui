@@ -27,6 +27,7 @@ mod res_change_observe;
 mod view;
 mod view_member;
 mod world_ext;
+mod nest;
 
 pub type FnSchemaView<F, P = ()> =
     SchemaView<BevyRenderer, FnSchema<IntoViewSchemaFnWrapper<F, BevyRenderer>, P>, (), ()>;

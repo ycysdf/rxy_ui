@@ -1,5 +1,5 @@
 use crate::utils::all_tuples;
-use crate::{XNest, MaybeSend, Renderer, ViewMember};
+use crate::{MaybeSend, Renderer, ViewMember};
 
 // todo:
 pub trait MemberOwner<R>
