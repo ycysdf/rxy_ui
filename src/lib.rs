@@ -12,7 +12,6 @@ pub use rxy_web_dom as web_dom;
 pub mod style {
     pub use rxy_bevy::style::prelude;
     pub use rxy_bevy::style::prelude::StyleError;
-    pub use rxy_bevy::style::Result;
     pub use rxy_bevy::style::*;
     pub use rxy_core::style::*;
 }

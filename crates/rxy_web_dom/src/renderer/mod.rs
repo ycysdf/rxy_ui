@@ -1,8 +1,8 @@
 pub mod common_renderer;
 pub use common_renderer::*;
+mod attr_values;
 pub mod attrs;
 pub mod elements;
-mod attr_values;
 
 use std::any::{Any, TypeId};
 use std::borrow::BorrowMut;
@@ -19,9 +19,9 @@ use web_sys::{Document, HtmlElement, Node, Window};
 
 use crate::elements::{ElementTypeDiv, WebRendererElementType};
 use rxy_core::{
-    AttrIndex, DeferredNodeTreeScoped, Element, ElementAttrType, ElementAttr,
-    ElementTypeUnTyped, ElementViewChildren, IntoView, MaybeSend, MaybeSync, NodeTree, Renderer,
-    RendererNodeId, RendererWorld, View, ViewCtx, ViewKey,
+    AttrIndex, DeferredNodeTreeScoped, Element, ElementAttr, ElementAttrType, ElementTypeUnTyped,
+    ElementViewChildren, IntoView, MaybeSend, MaybeSync, NodeTree, Renderer, RendererNodeId,
+    RendererWorld, View, ViewCtx, ViewKey,
 };
 
 #[inline(always)]
@@ -253,10 +253,12 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
         value: A::Value,
     ) {
         A::update_value(self, node_id, value);
-
     }
 
-    fn unbuild_attr<A: ElementAttrType<WebRenderer>>(&mut self, node_id: RendererNodeId<WebRenderer>) {
+    fn unbuild_attr<A: ElementAttrType<WebRenderer>>(
+        &mut self,
+        node_id: RendererNodeId<WebRenderer>,
+    ) {
         if let Some(element) = node_id.dyn_ref::<web_sys::Element>() {
             let _ = element.remove_attribute(A::NAME);
         } else {
@@ -388,11 +390,22 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
     }
 
     fn set_visibility(&mut self, hidden: bool, node_id: &RendererNodeId<WebRenderer>) {
-        // node_id.
+        if let Some(element) = node_id.dyn_ref::<HtmlElement>() {
+            element
+                .style()
+                .set_property("visibility", if hidden { "hidden" } else { "visible" })
+                .unwrap();
+        } else {
+            unreachable!()
+        }
     }
 
     fn get_visibility(&self, node_id: &RendererNodeId<WebRenderer>) -> bool {
-        todo!()
+        if let Some(element) = node_id.dyn_ref::<HtmlElement>() {
+            element.style().get_property_value("visibility").as_deref() == Ok("hidden")
+        } else {
+            unreachable!()
+        }
     }
 }
 

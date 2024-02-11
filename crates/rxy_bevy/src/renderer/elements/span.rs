@@ -112,7 +112,7 @@ pub mod span_attrs {
 
     /*pub struct sections;
 
-    impl ElementAttr for sections {
+    impl ElementAttrType for sections {
         type Value = TextSections;
 
         const NAME: &'static str = "sections";
