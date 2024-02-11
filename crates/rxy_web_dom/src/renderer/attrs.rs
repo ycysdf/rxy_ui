@@ -136,6 +136,7 @@ define_element_attr_fns! {
         node_value
     ]
     style_prop = [
+        // "style",
         "z-index",
         "background-color",
         "border-left",
@@ -178,8 +179,7 @@ define_element_attr_fns! {
         "flex-grow",
         "flex-shrink",
         "flex-basis",
-        "column-gap",
-        "row-gap",
+        "gap",
         "visibility",
         "translation",
         "rotation",

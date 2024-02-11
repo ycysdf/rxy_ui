@@ -7,5 +7,6 @@ pub mod prelude {
     pub use crate::renderer::common_renderer::*;
     pub use crate::renderer::event::HtmlElementEvents;
     pub use crate::renderer::WebElement;
+    pub use crate::elements::*;
     pub use crate::WebRenderer;
 }
