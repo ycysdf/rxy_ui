@@ -1,8 +1,10 @@
 pub mod common_renderer;
 pub use common_renderer::*;
+use wasm_bindgen::intern;
 mod attr_values;
 pub mod attrs;
 pub mod elements;
+pub mod event;
 
 use std::any::{Any, TypeId};
 use std::borrow::BorrowMut;
@@ -23,6 +25,10 @@ use rxy_core::{
     ElementViewChildren, IntoView, MaybeSend, MaybeSync, NodeTree, Renderer, RendererNodeId,
     RendererWorld, View, ViewCtx, ViewKey,
 };
+
+pub fn log(s: &str) {
+    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(s));
+}
 
 #[inline(always)]
 pub fn view_element_type() -> &'static dyn ElementTypeUnTyped<WebRenderer> {
@@ -122,6 +128,15 @@ impl NodeStateId {
 
 pub struct WebDomNodeStates {
     states: SlotMap<NodeStateId, NodeStates>,
+}
+
+impl WebDomNodeStates {
+    fn ensure_spawn_data_id(&mut self, reserve_node_id: &RendererNodeId<WebRenderer>) {
+        if reserve_node_id.get_state_id().is_none() {
+            let id = self.states.insert(NodeStates::new());
+            reserve_node_id.set_state_id(id);
+        }
+    }
 }
 
 thread_local! {
@@ -239,9 +254,7 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
         node_id: RendererNodeId<WebRenderer>,
         value: A::Value,
     ) {
-        web_sys::console::log_1(&format!("build_attr: {:?}", value).into());
         A::first_set_value(self, node_id, value);
-        // todo: already init
     }
 
     fn rebuild_attr<A: ElementAttrType<WebRenderer>>(
@@ -257,9 +270,8 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
         node_id: RendererNodeId<WebRenderer>,
     ) {
         if let Some(element) = node_id.dyn_ref::<web_sys::Element>() {
-            let _ = element.remove_attribute(A::NAME);
+            let _ = element.remove_attribute(intern(A::NAME));
         } else {
-            println!("unbuild_attr: {:?}", node_id);
         }
     }
 
@@ -271,8 +283,9 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
         &mut self,
         node_id: &RendererNodeId<WebRenderer>,
     ) -> Option<&mut S> {
+        // self.ensure_spawn_data_id(node_id);
         self.states
-            .get_mut(node_id.get_state_id().unwrap())
+            .get_mut(node_id.get_state_id()?)
             .and_then(|states| states.get_mut::<S>())
     }
 
@@ -280,8 +293,9 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
         &self,
         node_id: &RendererNodeId<WebRenderer>,
     ) -> Option<&S> {
+        // self.ensure_spawn_data_id(node_id);
         self.states
-            .get(node_id.get_state_id().unwrap())
+            .get(node_id.get_state_id()?)
             .and_then(|states| states.get::<S>())
     }
 
@@ -289,8 +303,9 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
         &mut self,
         node_id: &RendererNodeId<WebRenderer>,
     ) -> Option<S> {
+        // self.ensure_spawn_data_id(node_id);
         self.states
-            .get_mut(node_id.get_state_id().unwrap())
+            .get_mut(node_id.get_state_id()?)
             .and_then(|node_states| node_states.remove::<S>())
     }
 
@@ -299,6 +314,7 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
         node_id: &RendererNodeId<WebRenderer>,
         state: S,
     ) {
+        self.ensure_spawn_data_id(node_id);
         self.states
             .get_mut(node_id.get_state_id().unwrap())
             .unwrap()
@@ -335,10 +351,7 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
     }
 
     fn ensure_spawn(&mut self, reserve_node_id: RendererNodeId<WebRenderer>) {
-        if reserve_node_id.get_state_id().is_none() {
-            let id = self.states.insert(NodeStates::new());
-            reserve_node_id.set_state_id(id);
-        }
+        self.ensure_spawn_data_id(&reserve_node_id)
     }
 
     fn spawn_empty_node(

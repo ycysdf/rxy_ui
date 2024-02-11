@@ -5,6 +5,7 @@ use rxy_core::{AttrIndex, ElementAttrType, HasIndex, RendererNodeId, RendererWor
 use std::borrow::Cow;
 use web_sys::wasm_bindgen::JsCast;
 use web_sys::{Element, HtmlElement};
+use wasm_bindgen::intern;
 
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct WebRendererElementAttr<const INDEX: AttrIndex>;
@@ -24,7 +25,7 @@ macro_rules! define_element_attr {
                     value: impl Into<Self::Value>,
                 ) {
                     if let Some(element) = node_id.dyn_ref::<HtmlElement>() {
-                        element.set_attribute(Self::NAME, &*value.into()).unwrap();
+                        element.set_attribute(intern(Self::NAME), &*value.into()).unwrap();
                     }
                 }
             }
@@ -43,8 +44,7 @@ macro_rules! define_element_attr {
                     value: impl Into<Self::Value>,
                 ) {
                     let value =&*value.into();
-                    web_sys::console::log_1(&format!("update_value: {:?} {:?} {:?}",node_id.unchecked_ref::<HtmlElement>().style(),Self::NAME, value).into());
-                    node_id.unchecked_ref::<HtmlElement>().style().set_property(Self::NAME, value).unwrap();
+                    node_id.unchecked_ref::<HtmlElement>().style().set_property(intern(Self::NAME), value).unwrap();
                 }
             }
         }
@@ -191,7 +191,10 @@ define_element_attr_fns! {
         "font",
         "outline-width",
         "outline-offset",
-        "outline-color"
+        "outline-color",
+        "border",
+        "margin",
+        "padding"
     ]
 }
 

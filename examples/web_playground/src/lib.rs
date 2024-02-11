@@ -1,4 +1,4 @@
-use rxy_ui::prelude::*;
+use rxy_ui::{prelude::*, web_dom::log};
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[cfg(feature = "wee_alloc")]
@@ -13,8 +13,14 @@ pub fn run() {
 fn test_view() -> impl IntoView<WebRenderer> {
     let children = div()
         .padding_left(30)
+        .border("2px solid red")
         .padding_right(Some(Some(Some("3px"))))
         .padding_bottom(Some(Some(Some("10px"))))
         .children(("Hello World!", "HHH", "HHH", "XX"));
-    children
+    (
+        children,
+        button().padding(40).on_click(|_| {
+            log("click!!".into());
+        }).children("Button!"),
+    )
 }

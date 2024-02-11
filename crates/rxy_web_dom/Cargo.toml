@@ -21,6 +21,7 @@ hashbrown = "0.14"
 #oneshot.workspace = true
 
 #xy_reactive = { workspace = true, optional = true, features = ["web"] }
+wasm-bindgen = "0.2"
 wasm-bindgen-futures.workspace = true
 slotmap.workspace = true
 web-sys.workspace = true

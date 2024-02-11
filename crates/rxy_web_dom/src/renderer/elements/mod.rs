@@ -6,6 +6,7 @@ use rxy_core::{
 };
 use web_sys::wasm_bindgen::JsValue;
 use web_sys::Node;
+use wasm_bindgen::intern;
 
 pub fn replace_placeholder(placeholder: &Node, new_node: &Node) -> Result<(), JsValue> {
     placeholder
@@ -41,7 +42,6 @@ pub const VIEW_ATTRS: &[&'static dyn ElementAttrUntyped<WebRenderer>] =
 
 macro_rules! define_html_elements {
     ($($ty:ident)*) => {
-
         count_macro::count! {
             $(
                 paste! {
@@ -61,7 +61,7 @@ macro_rules! define_html_elements {
                             parent: Option<&RendererNodeId<WebRenderer>>,
                             reserve_node_id: Option<RendererNodeId<WebRenderer>>,
                         ) -> RendererNodeId<WebRenderer> {
-                            spawn_element(Self::TAG_NAME, parent, reserve_node_id)
+                            spawn_element(intern(Self::TAG_NAME), parent, reserve_node_id)
                         }
                     }
                 }
@@ -73,6 +73,43 @@ define_html_elements! {
     div
     span
     button
+    a
+    p
+    h1
+    h2
+    h3
+    h4
+    h5
+    h6
+    br
+    hr
+    pre
+    blockquote
+    ol
+    ul
+    li
+    dl
+    dt
+    dd
+    figure
+    figcaption
+    main
+}
+
+macro_rules! define_view_fns {
+    ($($ty:ident)*) => {
+        $(
+            paste! {
+                #[inline]
+                pub fn $ty() -> crate::WebElement<[<ElementType $ty:camel>], ()> {
+                    crate::WebElement::default()
+                }
+            }
+        )*
+    };
+}
+
+define_view_fns! {
     a
     p
     h1
