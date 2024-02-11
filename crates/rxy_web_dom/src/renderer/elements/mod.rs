@@ -1,32 +1,43 @@
-use crate::renderer::{body, document, WebRenderer};
-use rxy_core::{ElementAttrUntyped, ElementType, ElementTypeUnTyped, RendererNodeId, RendererWorld};
-use rxy_core::{count_macro,paste};
 use crate::renderer::attrs::CommonAttrs;
+use crate::renderer::{body, document, WebRenderer};
+use rxy_core::{count_macro, paste};
+use rxy_core::{
+    ElementAttrUntyped, ElementType, ElementTypeUnTyped, RendererNodeId, RendererWorld,
+};
+use web_sys::wasm_bindgen::JsValue;
+use web_sys::Node;
+
+pub fn replace_placeholder(placeholder: &Node, new_node: &Node) -> Result<(), JsValue> {
+    placeholder
+        .parent_node()
+        .unwrap()
+        .replace_child(new_node, placeholder)?;
+    Ok(())
+}
 
 pub fn spawn_element(
     name: &str,
     parent: Option<&RendererNodeId<WebRenderer>>,
     reserve_node_id: Option<RendererNodeId<WebRenderer>>,
 ) -> RendererNodeId<WebRenderer> {
-    let element =
-        reserve_node_id.unwrap_or_else(|| document().create_element(name).unwrap().into());
+    let element = document().create_element(name).unwrap();
+    if let Some(reserve_node_id) = reserve_node_id {
+        replace_placeholder(&reserve_node_id, &element).unwrap();
+    }
     if let Some(parent) = parent {
         parent.append_child(&element).unwrap();
     } else {
         body().append_child(&element).unwrap();
     }
-    element
+    element.into()
 }
 
 #[derive(Default, Debug, Clone, Copy)]
 pub struct WebRendererElementType<const T: usize>;
 
-// pub type WebRendererDivElementType = WebRendererElementType<0>;
-
 impl CommonAttrs for ElementTypeDiv {}
 pub const VIEW_ATTRS: &[&'static dyn ElementAttrUntyped<WebRenderer>] =
     <ElementTypeDiv as CommonAttrs>::ATTRS;
-
 
 macro_rules! define_html_elements {
     ($($ty:ident)*) => {
@@ -83,4 +94,33 @@ define_html_elements! {
     figure
     figcaption
     main
+}
+
+pub struct NodeTypeText;
+
+impl ElementType<WebRenderer> for NodeTypeText {
+    const TAG_NAME: &'static str = stringify!(text);
+    const ATTRS: &'static [&'static [&'static dyn ElementAttrUntyped<WebRenderer>]] = &[];
+
+    fn get() -> &'static dyn ElementTypeUnTyped<WebRenderer> {
+        &Self
+    }
+
+    #[inline]
+    fn spawn(
+        _world: &mut RendererWorld<WebRenderer>,
+        parent: Option<&RendererNodeId<WebRenderer>>,
+        reserve_node_id: Option<RendererNodeId<WebRenderer>>,
+    ) -> RendererNodeId<WebRenderer> {
+        let element = document().create_text_node("");
+        if let Some(reserve_node_id) = reserve_node_id {
+            replace_placeholder(&reserve_node_id, &element).unwrap();
+        }
+        if let Some(parent) = parent {
+            parent.append_child(&element).unwrap();
+        } else {
+            body().append_child(&element).unwrap();
+        }
+        element.into()
+    }
 }

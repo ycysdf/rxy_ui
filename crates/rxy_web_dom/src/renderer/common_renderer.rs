@@ -1,28 +1,25 @@
 use crate::attrs::ElementAttrNodeValue;
-use crate::elements::{ElementTypeButton, ElementTypeDiv, ElementTypeSpan};
+use crate::elements::{ElementTypeButton, ElementTypeDiv, ElementTypeSpan, NodeTypeText};
 use crate::renderer::WebRenderer;
 use crate::WebElement;
 use rxy_core::common_renderer::CommonRenderer;
-use rxy_core::{
-    define_common_view_fns, ElementAttrMember, MapToAttrMarker, MemberOwner, XNest,
-};
+use rxy_core::{define_common_view_fns, ElementAttrMember, MapToAttrMarker, MemberOwner, XNest};
 
 define_common_view_fns!(WebRenderer);
 
 impl CommonRenderer for WebRenderer {
     type DivView = WebElement<ElementTypeDiv, ()>;
-    type SpanView<T: ElementAttrMember<Self, Self::SpanContentEA>> =
-        WebElement<ElementTypeSpan, (T,)>;
+    type TextView<T: ElementAttrMember<Self, Self::TextContentEA>> = WebElement<NodeTypeText, (T,)>;
     type ButtonView = WebElement<ElementTypeButton, ()>;
-    type SpanContentEA = ElementAttrNodeValue;
+    type TextContentEA = ElementAttrNodeValue;
 
-    fn crate_span<T>(
-        str: impl XNest<MapInner<MapToAttrMarker<Self::SpanContentEA>> = T>,
-    ) -> Self::SpanView<T>
+    fn crate_text<T>(
+        str: impl XNest<MapInner<MapToAttrMarker<Self::TextContentEA>> = T>,
+    ) -> Self::TextView<T>
     where
-        T: ElementAttrMember<Self, Self::SpanContentEA>,
+        T: ElementAttrMember<Self, Self::TextContentEA>,
     {
-        WebElement::default().members(str.map_inner::<MapToAttrMarker<Self::SpanContentEA>>())
+        WebElement::default().members(str.map_inner::<MapToAttrMarker<Self::TextContentEA>>())
     }
 
     fn crate_div() -> Self::DivView {

@@ -12,35 +12,39 @@ pub struct WebRendererElementAttr<const INDEX: AttrIndex>;
 macro_rules! define_element_attr {
     (@custom $ty:ident) => {};
     (@attribute $ty:ident) => {
-        impl ElementAttrType<WebRenderer> for paste!([<ElementAttr $ty:camel>]) {
-            type Value = Cow<'static, str>;
+        paste! {
+            impl ElementAttrType<WebRenderer> for [<ElementAttr $ty:camel>] {
+                type Value = Cow<'static, str>;
 
-            const NAME: &'static str = stringify!($ty);
+                const NAME: &'static str = stringify!($ty);
 
-            fn update_value(
-                _world: &mut RendererWorld<WebRenderer>,
-                node_id: RendererNodeId<WebRenderer>,
-                value: impl Into<Self::Value>,
-            ) {
-                if let Some(element) = node_id.dyn_ref::<HtmlElement>() {
-                    element.set_attribute(Self::NAME, &*value.into()).unwrap();
+                fn update_value(
+                    _world: &mut RendererWorld<WebRenderer>,
+                    node_id: RendererNodeId<WebRenderer>,
+                    value: impl Into<Self::Value>,
+                ) {
+                    if let Some(element) = node_id.dyn_ref::<HtmlElement>() {
+                        element.set_attribute(Self::NAME, &*value.into()).unwrap();
+                    }
                 }
             }
         }
     };
-    (@style_prop $ty:ident) => {
-        impl ElementAttrType<WebRenderer> for paste!([<ElementAttr $ty:camel>]) {
-            type Value = Cow<'static, str>;
+    (@style_prop $ty:tt) => {
+        paste! {
+            impl ElementAttrType<WebRenderer> for [<ElementAttr $ty:camel>] {
+                type Value = Cow<'static, str>;
 
-            const NAME: &'static str = stringify!($ty);
+                const NAME: &'static str = $ty;
 
-            fn update_value(
-                _world: &mut RendererWorld<WebRenderer>,
-                node_id: RendererNodeId<WebRenderer>,
-                value: impl Into<Self::Value>,
-            ) {
-                if let Some(element) = node_id.dyn_ref::<HtmlElement>() {
-                    element.style().set_property(Self::NAME, &*value.into()).unwrap();
+                fn update_value(
+                    _world: &mut RendererWorld<WebRenderer>,
+                    node_id: RendererNodeId<WebRenderer>,
+                    value: impl Into<Self::Value>,
+                ) {
+                    let value =&*value.into();
+                    web_sys::console::log_1(&format!("update_value: {:?} {:?} {:?}",node_id.unchecked_ref::<HtmlElement>().style(),Self::NAME, value).into());
+                    node_id.unchecked_ref::<HtmlElement>().style().set_property(Self::NAME, value).unwrap();
                 }
             }
         }
@@ -53,7 +57,7 @@ macro_rules! define_element_attr_fns {
         index_start = $index_start:expr;
         $(
         $m:tt = [
-            $($ty:ident),*
+            $($ty:tt),*
         ]
         )*
     ) => {
@@ -68,7 +72,7 @@ macro_rules! define_element_attr_fns {
     (
         $name:ident;
         $index_start:expr;
-        $($m:tt $ty:ident)*
+        $($m:tt $ty:tt)*
     ) => {
         count_macro::count! {
             paste!{
@@ -90,8 +94,10 @@ macro_rules! define_element_attr_fns {
                 const ATTRS: &'static [&'static dyn rxy_core::ElementAttrUntyped<$crate::WebRenderer>] = &[
                 $(
                     {
-                        let $ty = &WebRendererElementAttr::<_int_>;
-                        $ty
+                        paste! {
+                            let [<$ty:snake>] = &WebRendererElementAttr::<_int_>;
+                            [<$ty:snake>]
+                        }
                     },
                 )*
                 ];
@@ -102,7 +108,7 @@ macro_rules! define_element_attr_fns {
             paste! {
                 pub trait [<$name ViewBuilder>]: rxy_core::MemberOwner<$crate::WebRenderer> + Sized {
                     $(
-                        fn $ty<T>(self, value: impl rxy_core::XNest<MapInner<rxy_core::MapToAttrMarker<WebRendererElementAttr<_int_a_>>> = T>) -> Self::AddMember<T>
+                        fn [<$ty:snake>]<T>(self, value: impl rxy_core::XNest<MapInner<rxy_core::MapToAttrMarker<WebRendererElementAttr<_int_a_>>> = T>) -> Self::AddMember<T>
                         where
                             T: rxy_core::ElementAttrMember<$crate::WebRenderer, WebRendererElementAttr<_int_b_>>,
                             (Self::VM, T): rxy_core::ViewMember<$crate::WebRenderer>
@@ -130,69 +136,69 @@ define_element_attr_fns! {
         node_value
     ]
     style_prop = [
-        z_index,
-        bg_color,
-        border_left,
-        border_right,
-        border_top,
-        border_bottom,
-        border_color,
-        display,
-        position_type,
-        overflow_x,
-        overflow_y,
-        direction,
-        left,
-        right,
-        top,
-        bottom,
-        width,
-        height,
-        min_width,
-        min_height,
-        max_width,
-        max_height,
-        margin_left,
-        margin_right,
-        margin_top,
-        margin_bottom,
-        padding_left,
-        padding_right,
-        padding_top,
-        padding_bottom,
-        aspect_ratio,
-        align_items,
-        justify_items,
-        align_self,
-        justify_self,
-        align_content,
-        justify_content,
-        flex_direction,
-        flex_wrap,
-        flex_grow,
-        flex_shrink,
-        flex_basis,
-        column_gap,
-        row_gap,
-        visibility,
-        translation,
-        rotation,
-        scale,
-        text_color,
-        font_size,
-        text_linebreak,
-        text_align,
-        font,
-        outline_width,
-        outline_offset,
-        outline_color
+        "z-index",
+        "background-color",
+        "border-left",
+        "border-right",
+        "border-top",
+        "border-bottom",
+        "border-color",
+        "display",
+        "position-type",
+        "overflow-x",
+        "overflow-y",
+        "direction",
+        "left",
+        "right",
+        "top",
+        "bottom",
+        "width",
+        "height",
+        "min-width",
+        "min-height",
+        "max-width",
+        "max-height",
+        "margin-left",
+        "margin-right",
+        "margin-top",
+        "margin-bottom",
+        "padding-left",
+        "padding-right",
+        "padding-top",
+        "padding-bottom",
+        "aspect-ratio",
+        "align-items",
+        "justify-items",
+        "align-self",
+        "justify-self",
+        "align-content",
+        "justify-content",
+        "flex-direction",
+        "flex-wrap",
+        "flex-grow",
+        "flex-shrink",
+        "flex-basis",
+        "column-gap",
+        "row-gap",
+        "visibility",
+        "translation",
+        "rotation",
+        "scale",
+        "text-color",
+        "font-size",
+        "text-linebreak",
+        "text-align",
+        "font",
+        "outline-width",
+        "outline-offset",
+        "outline-color"
     ]
 }
 
 impl ElementAttrType<WebRenderer> for ElementAttrNodeValue{
     type Value = Cow<'static, str>;
 
-    const NAME: &'static str = stringify!(node_value);
+    const NAME: &'static str = stringify!(node-value);
 
     fn update_value(
         _world: &mut RendererWorld<WebRenderer>,

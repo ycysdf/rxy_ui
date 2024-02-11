@@ -5,6 +5,9 @@ use crate::{
     RendererWorld,
 };
 
+#[cfg(feature = "attr_index_u16")]
+pub type AttrIndex = u8;
+#[cfg(not(feature = "attr_index_u16"))]
 pub type AttrIndex = u8;
 
 pub trait HasIndex {

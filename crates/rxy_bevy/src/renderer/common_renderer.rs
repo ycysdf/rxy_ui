@@ -12,19 +12,19 @@ define_common_view_fns!(BevyRenderer);
 
 impl CommonRenderer for BevyRenderer {
     type DivView = BevyElement<element_div, ()>;
-    type SpanView<T: ElementAttrMember<Self, Self::SpanContentEA>> =
+    type TextView<T: ElementAttrMember<Self, Self::TextContentEA>> =
         BevyElement<element_span, (T,)>;
     type ButtonView =
         BevyElement<element_div, (XBundle<(FocusPolicy, Interaction, Button, Focusable)>,)>;
-    type SpanContentEA = all_attrs::content;
+    type TextContentEA = all_attrs::content;
 
-    fn crate_span<T>(
-        str: impl XNest<MapInner<MapToAttrMarker<Self::SpanContentEA>> = T>,
-    ) -> Self::SpanView<T>
+    fn crate_text<T>(
+        str: impl XNest<MapInner<MapToAttrMarker<Self::TextContentEA>> = T>,
+    ) -> Self::TextView<T>
     where
-        T: ElementAttrMember<Self, Self::SpanContentEA>,
+        T: ElementAttrMember<Self, Self::TextContentEA>,
     {
-        BevyElement::default().members(str.map_inner::<MapToAttrMarker<Self::SpanContentEA>>())
+        BevyElement::default().members(str.map_inner::<MapToAttrMarker<Self::TextContentEA>>())
     }
 
     fn crate_div() -> Self::DivView {

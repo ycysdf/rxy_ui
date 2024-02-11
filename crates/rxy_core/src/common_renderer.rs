@@ -4,15 +4,15 @@ use alloc::borrow::Cow;
 
 pub trait CommonRenderer: Renderer {
     type DivView: ElementSoloView<Self>;
-    type SpanView<T: ElementAttrMember<Self, Self::SpanContentEA>>: ElementSoloView<Self>;
+    type TextView<T: ElementAttrMember<Self, Self::TextContentEA>>: ElementSoloView<Self>;
     type ButtonView: ElementSoloView<Self>;
-    type SpanContentEA: ElementAttrType<Self, Value = Cow<'static, str>>;
+    type TextContentEA: ElementAttrType<Self, Value = Cow<'static, str>>;
 
-    fn crate_span<T>(
-        str: impl XNest<MapInner<MapToAttrMarker<Self::SpanContentEA>> = T>,
-    ) -> Self::SpanView<T>
+    fn crate_text<T>(
+        str: impl XNest<MapInner<MapToAttrMarker<Self::TextContentEA>> = T>,
+    ) -> Self::TextView<T>
     where
-        T: ElementAttrMember<Self, Self::SpanContentEA>;
+        T: ElementAttrMember<Self, Self::TextContentEA>;
     fn crate_div() -> Self::DivView;
     fn crate_button() -> Self::ButtonView;
 }
@@ -22,13 +22,13 @@ macro_rules! define_common_view_fns {
     ($renderer:ident) => {
         #[inline(always)]
         pub fn span<T>(
-            str: impl XNest<MapInner<MapToAttrMarker<<$renderer as CommonRenderer>::SpanContentEA>> = T,
+            str: impl XNest<MapInner<MapToAttrMarker<<$renderer as CommonRenderer>::TextContentEA>> = T,
             >,
-        ) -> <$renderer as CommonRenderer>::SpanView<T>
+        ) -> <$renderer as CommonRenderer>::TextView<T>
         where
-            T: rxy_core::ElementAttrMember<$renderer, <$renderer as CommonRenderer>::SpanContentEA>
+            T: rxy_core::ElementAttrMember<$renderer, <$renderer as CommonRenderer>::TextContentEA>
         {
-            <$renderer as CommonRenderer>::crate_span(str)
+            <$renderer as CommonRenderer>::crate_text(str)
         }
 
         #[inline(always)]
@@ -42,24 +42,24 @@ macro_rules! define_common_view_fns {
         }
 
         impl rxy_core::IntoView<$renderer> for std::borrow::Cow<'static, str> {
-            type View = <$renderer as CommonRenderer>::SpanView<
-                rxy_core::ElementAttr<$renderer, <$renderer as CommonRenderer>::SpanContentEA>,
+            type View = <$renderer as CommonRenderer>::TextView<
+                rxy_core::ElementAttr<$renderer, <$renderer as CommonRenderer>::TextContentEA>,
             >;
 
             #[inline(always)]
             fn into_view(self) -> Self::View {
-                <$renderer as CommonRenderer>::crate_span::<
-                    rxy_core::ElementAttr<$renderer, <$renderer as CommonRenderer>::SpanContentEA>,
+                <$renderer as CommonRenderer>::crate_text::<
+                    rxy_core::ElementAttr<$renderer, <$renderer as CommonRenderer>::TextContentEA>,
                 >(rxy_core::ElementAttr::<
                     $renderer,
-                    <$renderer as CommonRenderer>::SpanContentEA,
+                    <$renderer as CommonRenderer>::TextContentEA,
                 >::new(self))
             }
         }
 
         impl rxy_core::IntoView<$renderer> for &'static str {
-            type View = <$renderer as CommonRenderer>::SpanView<
-                rxy_core::ElementAttr<$renderer, <$renderer as CommonRenderer>::SpanContentEA>,
+            type View = <$renderer as CommonRenderer>::TextView<
+                rxy_core::ElementAttr<$renderer, <$renderer as CommonRenderer>::TextContentEA>,
             >;
 
             #[inline(always)]
@@ -70,8 +70,8 @@ macro_rules! define_common_view_fns {
         }
 
         impl rxy_core::IntoView<$renderer> for String {
-            type View = <$renderer as CommonRenderer>::SpanView<
-                rxy_core::ElementAttr<$renderer, <$renderer as CommonRenderer>::SpanContentEA>,
+            type View = <$renderer as CommonRenderer>::TextView<
+                rxy_core::ElementAttr<$renderer, <$renderer as CommonRenderer>::TextContentEA>,
             >;
 
             #[inline(always)]

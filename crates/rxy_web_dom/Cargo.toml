@@ -9,7 +9,7 @@ edition = "2021"
 #rxy_core = { workspace = true, features = ["async-channel", "xy_reactive"] }
 #rxy_core = { workspace = true, features = ["std", "view_erasure", "async-channel", "either_future", "send_sync"] }
 #rxy_core = { workspace = true, default-features = false, features = ["std", "view_erasure", "either_future"] }
-rxy_core = { workspace = true, default-features = false, features = ["common_renderer"] }
+rxy_core = { workspace = true, default-features = false, features = ["common_renderer", "attr_index_u16"] }
 hashbrown = "0.14"
 #count-macro.workspace = true
 #paste.workspace = true

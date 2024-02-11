@@ -130,7 +130,7 @@ thread_local! {
     });
 }
 
-pub fn dom_build<V>(view: V) -> <V::View as View<WebRenderer>>::Key
+pub fn build_on_body<V>(view: V) -> <V::View as View<WebRenderer>>::Key
 where
     V: IntoView<WebRenderer>,
 {
@@ -239,11 +239,8 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
         node_id: RendererNodeId<WebRenderer>,
         value: A::Value,
     ) {
-        if let Some(element) = node_id.dyn_ref::<web_sys::Element>() {
-            A::first_set_value(self, node_id, value);
-        } else {
-            println!("build_attr: {:?}", node_id);
-        }
+        web_sys::console::log_1(&format!("build_attr: {:?}", value).into());
+        A::first_set_value(self, node_id, value);
         // todo: already init
     }
 

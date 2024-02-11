@@ -111,13 +111,15 @@ impl Into<XValueWrapper<Cow<'static, str>>> for &'static str {
 // todo: ? feature
 impl Into<XValueWrapper<Cow<'static, str>>> for i32 {
     fn into(self) -> XValueWrapper<Cow<'static, str>> {
-        XValueWrapper(self.to_string().into())
+        use alloc::format;
+        XValueWrapper(format!("{}px",self).into())
     }
 }
 
 impl Into<XValueWrapper<Cow<'static, str>>> for f32 {
     fn into(self) -> XValueWrapper<Cow<'static, str>> {
-        XValueWrapper(self.to_string().into())
+        use alloc::format;
+        XValueWrapper(format!("{}px",self).into())
     }
 }
 
