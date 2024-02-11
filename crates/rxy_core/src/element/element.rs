@@ -34,27 +34,27 @@ where
         view_children(self, children)
     }
 
-    // #[cfg(feature = "view_erasure")]
-    // pub fn children<CV>(
-    //     self,
-    //     children: CV,
-    // ) -> ElementViewChildren<R, Element<R, E, VM>, crate::BoxedErasureView<R>>
-    // where
-    //     CV: IntoView<R>,
-    // {
-    //     use crate::IntoViewErasureExt;
-    //     view_children(self, unsafe { children.into_erasure_view() })
-    // }
-
-    // todo:
     #[cfg(feature = "view_erasure")]
-    pub fn children(
+    pub fn children<CV>(
         self,
-        children: impl IntoView<R>,
-    ) -> ElementViewChildren<R, Element<R, E, VM>, impl View<R>>
+        children: CV,
+    ) -> ElementViewChildren<R, Element<R, E, VM>, crate::BoxedErasureView<R>>
+    where
+        CV: IntoView<R>,
     {
-        view_children(self, children)
+        use crate::IntoViewErasureExt;
+        view_children(self, unsafe { children.into_erasure_view() })
     }
+
+    // // todo:
+    // #[cfg(feature = "view_erasure")]
+    // pub fn children(
+    //     self,
+    //     children: impl IntoView<R>,
+    // ) -> ElementViewChildren<R, Element<R, E, VM>, impl View<R>>
+    // {
+    //     view_children(self, children)
+    // }
 }
 
 impl<R, E> Default for Element<R, E, ()>
