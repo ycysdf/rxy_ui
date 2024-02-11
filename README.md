@@ -386,13 +386,8 @@ fn my_view() -> impl IntoView<BevyRenderer> {
 
 Adding members to the `View` type through chained calls, the `children` method is used to configure the view's child views.
 
-You can also use the `erasure_children` method to set a view's child views, The only difference from `children` method is that `erasure_children` performs type erasure on the child views, which can help avoid overly complex types.
-
-> Currently, the `view_erasure` feature is enabled by default, forcing all child views to under go erasure and be placed on the heap. This is becasue if erasure is not performed. the types will become overly complex, causing the compiler to fail and type evaluation to overflow. You can also disable this feature and manually use `erasure_children` to erasure some child views, Avoid making your types too complex and causing compilation failures.
-
 You can set the attrs of the view using attributes such as `width`, `height`, `flex`, `border`, `outline`, and so on.
-
-> a complete list of currently supported attributes: [attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy_element/src/element_attrs/attrs.rs),[composite_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy/src/view_member/composite_attrs.rs),[tailwind_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy_style/src/tailwind_attrs.rs)
+> a complete list of currently supported attributes: [attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy/src/renderer/attrs.rs),[composite_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy/src/renderer/composite_attrs.rs),[tailwind_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy/src/renderer/tailwind_attrs.rs)
 
 Any type that implements `ViewMember` can be used as a member of the view, and members can be manually added using the `member` method.
 
@@ -810,8 +805,6 @@ fn sample_style_sheet() -> impl IntoView<BevyRenderer> {
 ```
 
 Currently, styles within the style sheet are static and do not allow the use of `rx`, `Future`, `Stream`, `Option`, etc, However, you can call `style` method multiple times to add styles.
-
-There are also convenient methods like `rx_style`, `style_builder`, `style_option`, `style_stream`, etc (it's perferable to use these methods first, using `style_future`)
 
 ```rust
 fn sample_dynamic_style_sheet() -> impl IntoView<BevyRenderer> {

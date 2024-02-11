@@ -383,15 +383,10 @@ fn my_view() -> impl IntoView<BevyRenderer> {
 
 通过链式调用向 `View` 类型添加成员，`children` 方法用于设置视图的子视图
 
-你也可以通过 `erasure_children`方法去用于设置视图的子视图，它与`children`方法唯一的不同是，它会将子视图进行类型擦除，这样可以避免类型过于复杂
-
-> 目前默认开启了 view_erasure feature, 强制将所有子视图进行了擦除，放入了堆中，因为如果不进行擦除，类型将过于复杂，导致编译器罢工，类型评估溢出.
-> 你也可以关闭此 feature, 并使用 `erasure_children` 手动擦除一些子视图，避免让类型过于复杂，导致编译失败.
-
 可以通过`width`、`height`、`flex`、`border`、`outline` 等等去设置视图的属性
 
 >
-目前支持的全部属性请看：[attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy_element/src/element_attrs/attrs.rs),[composite_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy/src/view_member/composite_attrs.rs),[tailwind_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy_style/src/tailwind_attrs.rs)
+目前支持的全部属性请看：[attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy/src/renderer/attrs.rs),[composite_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy/src/renderer/composite_attrs.rs),[tailwind_attrs](https://github.com/ycysdf/rxy_ui/blob/main/crates/rxy_bevy/src/renderer/tailwind_attrs.rs)
 .基本 NodeBundle 里面成员都有对应的属性
 
 所有实现了 `ViewMember` 的类型都可以作为视图的成员，可通过 `member` 方法来手动添加成员
@@ -820,9 +815,6 @@ fn sample_style_sheet() -> impl IntoView<BevyRenderer> {
 目前样式表里面的样式都是静态的，不允许使用`rx`、`Future`、`Stream`、`Option` 等，但是你可以多次调用 `style` 方法来添加样式，
 
 `style` 与其他成员一样可以接受 `Reactive`、`Future`、`Option`、`Stream` 等类型
-
-也有 `rx_style`、`style_builder`、`style_option`、`style_stream` 等便捷方法 ( 最好优先使用这些方法，使用`style_future`
-内部可以避免 `boxed`，性能更好 )
 
 ```rust
 fn sample_dynamic_style_sheet() -> impl IntoView<BevyRenderer> {

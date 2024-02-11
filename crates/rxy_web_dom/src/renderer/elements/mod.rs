@@ -1,12 +1,16 @@
+use crate::attrs::ElementAttrNodeValue;
 use crate::renderer::attrs::CommonAttrs;
 use crate::renderer::{body, document, WebRenderer};
-use rxy_core::{count_macro, paste};
+use crate::{span, WebElement};
+use rxy_core::MapToAttrMarker;
+use rxy_core::MemberOwner;
+use rxy_core::{count_macro, paste, view_children, ElementAttrMember, ElementViewChildren, XNest};
 use rxy_core::{
     ElementAttrUntyped, ElementType, ElementTypeUnTyped, RendererNodeId, RendererWorld,
 };
+use wasm_bindgen::intern;
 use web_sys::wasm_bindgen::JsValue;
 use web_sys::Node;
-use wasm_bindgen::intern;
 
 pub fn replace_placeholder(placeholder: &Node, new_node: &Node) -> Result<(), JsValue> {
     placeholder
@@ -109,7 +113,30 @@ macro_rules! define_view_fns {
     };
 }
 
-define_view_fns! {
+pub type WebElementWithContent<E, VM> =
+    ElementViewChildren<WebRenderer, WebElement<E, ()>, WebElement<NodeTypeText, (VM,)>>;
+macro_rules! define_view_fns_with_content {
+    ($($ty:ident)*) => {
+        $(
+            paste! {
+                #[inline]
+                pub fn $ty<VM>(
+                    str: impl XNest<MapInner<MapToAttrMarker<ElementAttrNodeValue>> = VM>,
+                ) -> WebElementWithContent<[<ElementType $ty:camel>],VM>
+                where
+                    VM: ElementAttrMember<WebRenderer, ElementAttrNodeValue>,
+                {
+                    view_children(
+                        WebElement::default(),
+                        WebElement::<NodeTypeText,()>::default().members(str.map_inner::<MapToAttrMarker<ElementAttrNodeValue>>())
+                    )
+                }
+            }
+        )*
+    };
+}
+
+define_view_fns_with_content! {
     a
     p
     h1
@@ -118,6 +145,9 @@ define_view_fns! {
     h4
     h5
     h6
+}
+
+define_view_fns! {
     br
     hr
     pre

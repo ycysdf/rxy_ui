@@ -18,8 +18,8 @@ fn test_view() -> impl IntoView<WebRenderer> {
             .padding_right(Some(Some(Some("3px"))))
             .padding_bottom(Some(Some(Some("10px"))))
             .children(("Hello World!", "HHH", "HHH", "XX")),
-        h1().children("Hello World!"),
-        h2().children("Hello World2!"),
+        h1("Hello World!"),
+        h2("Hello World2!"),
         div().display("flex").gap(5).children((
             button()
                 .padding(40)
