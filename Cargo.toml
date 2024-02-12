@@ -36,7 +36,7 @@ bevy = [
 ]
 
 [workspace]
-members = ["crates/*", "examples/web_playground"]
+members = ["crates/*"]
 
 [workspace.dependencies]
 hooked_collection = { path = "crates/hooked_collection", default-features = false }

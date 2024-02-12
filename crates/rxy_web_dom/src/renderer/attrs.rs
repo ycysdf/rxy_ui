@@ -1,20 +1,22 @@
 #![allow(non_camel_case_types)]
 
 use crate::renderer::WebRenderer;
-use rxy_core::{AttrIndex, ElementAttrType, HasIndex, RendererNodeId, RendererWorld, count_macro, paste, ElementAttr};
+use rxy_core::{AttrIndex, ElementAttrType, HasIndex, RendererNodeId, RendererWorld, count_macro, paste, ElementAttr, attrs_fn_define, impl_index_for_tys, XNest};
 use std::borrow::Cow;
 use web_sys::wasm_bindgen::JsCast;
 use web_sys::{Element, HtmlElement};
 use wasm_bindgen::intern;
+use super::elements::*;
 
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct WebRendererElementAttr<const INDEX: AttrIndex>;
 
 macro_rules! define_element_attr {
-    (@custom $ty:ident) => {};
+    (@common_attribute $ty:ident) => {};
     (@attribute $ty:ident) => {
         paste! {
-            impl ElementAttrType<WebRenderer> for [<ElementAttr $ty:camel>] {
+            pub struct [<$ty:snake>];
+            impl ElementAttrType<WebRenderer> for [<$ty:snake>] {
                 type Value = Cow<'static, str>;
 
                 const NAME: &'static str = stringify!($ty);
@@ -33,7 +35,8 @@ macro_rules! define_element_attr {
     };
     (@style_prop $ty:tt) => {
         paste! {
-            impl ElementAttrType<WebRenderer> for [<ElementAttr $ty:camel>] {
+            pub struct [<$ty:snake>];
+            impl ElementAttrType<WebRenderer> for [<$ty:snake>] {
                 type Value = Cow<'static, str>;
 
                 const NAME: &'static str = $ty;
@@ -53,87 +56,91 @@ macro_rules! define_element_attr {
 
 macro_rules! define_element_attr_fns {
     (
-        name = $name:ident;
-        index_start = $index_start:expr;
         $(
-        $m:tt = [
-            $($ty:tt),*
-        ]
+            $(element = $element:ident;)?
+            -
+            $(
+            $m:ident = [
+                $($ty:tt),*
+            ]
+            )*
+            ----
         )*
     ) => {
         define_element_attr_fns!(
-            $name;
-            $index_start;
+            @INNER;
             $(
-                $($m $ty)*
+                $(element = $element;)?
+                -
+                $(
+                    $($m:$ty)*
+                )*
+                ----
             )*
         );
     };
     (
-        $name:ident;
-        $index_start:expr;
-        $($m:tt $ty:tt)*
+        @INNER;
+        $(
+            $(element = $element:ident;)?
+            -
+            $($m:ident:$ty:tt)*
+            ----
+        )*
     ) => {
-        count_macro::count! {
-            paste!{
-            $(
-                pub type [<ElementAttr $ty:camel>] = WebRendererElementAttr<_int_a_>;
-
-                impl rxy_core::HasIndex for [<ElementAttr $ty:camel>] {
-                   const INDEX: rxy_core::AttrIndex = $index_start + _int_b_;
-                }
-                define_element_attr!(@$m $ty);
-            )*
-            }
-        }
-
-        #[allow(non_upper_case_globals)]
-        #[allow(non_camel_case_types)]
-        pub trait $name {
-            count_macro::count! {
-                const ATTRS: &'static [&'static dyn rxy_core::ElementAttrUntyped<$crate::WebRenderer>] = &[
+        $(
+            $(define_element_attr!(@$m $ty);)*
+        )*
+        paste! {
+            impl_index_for_tys! {
                 $(
-                    {
-                        paste! {
-                            let [<$ty:snake>] = &WebRendererElementAttr::<_int_>;
-                            [<$ty:snake>]
-                        }
-                    },
+                    $([<$ty:snake>])*
                 )*
-                ];
             }
         }
 
-        count_macro::count! {
-            paste! {
-                pub trait [<$name ViewBuilder>]: rxy_core::MemberOwner<$crate::WebRenderer> + Sized {
-                    $(
-                        fn [<$ty:snake>]<T>(self, value: impl rxy_core::XNest<MapInner<rxy_core::MapToAttrMarker<WebRendererElementAttr<_int_a_>>> = T>) -> Self::AddMember<T>
-                        where
-                            T: rxy_core::ElementAttrMember<$crate::WebRenderer, WebRendererElementAttr<_int_b_>>,
-                            (Self::VM, T): rxy_core::ViewMember<$crate::WebRenderer>
-                        {
-                            self.member(value.map_inner::<rxy_core::MapToAttrMarker<WebRendererElementAttr<_int_c_>>>())
-                        }
-                    )*
-                }
+        // #[allow(non_upper_case_globals)]
+        // #[allow(non_camel_case_types)]
+        // pub trait $name {
+        //     count_macro::count! {
+        //         const ATTRS: &'static [&'static dyn rxy_core::ElementAttrUntyped<$crate::WebRenderer>] = &[
+        //         $(
+        //             {
+        //                 paste! {
+        //                     let [<$ty:snake>] = &WebRendererElementAttr::<_int_>;
+        //                     [<$ty:snake>]
+        //                 }
+        //             },
+        //         )*
+        //         ];
+        //     }
+        // }
 
-                impl<T: rxy_core::MemberOwner<$crate::WebRenderer>> [<$name ViewBuilder>] for T {}
+
+
+        paste!{
+        $(
+            attrs_fn_define! {
+                renderer = WebRenderer;
+                $(element = [<element_ $element>];)?
+                attrs = [
+                    $({
+                        name = $ty,
+                        ty = [<$ty:snake>]
+                    })*
+                ]
             }
+        )*
         }
+
     };
 }
-
 define_element_attr_fns! {
-    name = CommonAttrs;
-    index_start = 0;
+    -
     attribute = [
         id,
         name,
         class
-    ]
-    custom = [
-        node_value
     ]
     style_prop = [
         // "style",
@@ -196,9 +203,56 @@ define_element_attr_fns! {
         "margin",
         "padding"
     ]
+    ----
+    element = img;
+    -
+    attribute = [
+        src
+    ]
+    ----
+    element = input;
+    -
+    // common_attribute = [
+    //     value,
+    //     placeholder
+    // ]
+    ----
+    element = textarea;
+    -
+    // common_attribute = [
+    //     value,
+    //     placeholder
+    // ]
+    ----
+    element = select;
+    -
+    attribute = [
+    ]
+    ----
+    element = a;
+    -
+    attribute = [
+        href,
+        target
+    ]
+    ----
+    element = button;
+    -
+    attribute = [
+        disabled
+    ]
+    ----
+    element = text;
+    -
+    common_attribute = [
+        node_value
+    ]
+    ----
 }
 
-impl ElementAttrType<WebRenderer> for ElementAttrNodeValue{
+pub struct node_value;
+
+impl ElementAttrType<WebRenderer> for node_value{
     type Value = Cow<'static, str>;
 
     const NAME: &'static str = stringify!(node-value);
@@ -211,3 +265,6 @@ impl ElementAttrType<WebRenderer> for ElementAttrNodeValue{
         node_id.set_node_value(Some(&*value.into()));
     }
 }
+
+// define_element_attr!(@attribute value);
+// define_element_attr!(@attribute placeholder);

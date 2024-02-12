@@ -6,13 +6,14 @@ use bevy_reflect::Reflect;
 use bevy_text::Text;
 use bevy_ui::prelude::TextBundle;
 
-use rxy_core::{ElementAttrType, ElementAttrUntyped, ElementType, ElementTypeUnTyped, RendererNodeId, RendererWorld};
+use rxy_core::{
+    ElementAttrType, ElementType, ElementTypeUnTyped, RendererNodeId,
+    RendererWorld,
+};
 
 use crate::{
     all_attrs, BevyRenderer, BevyWorldExt, ReflectTextStyledElementType, TextStyledElementType,
 };
-
-use super::*;
 
 #[derive(Reflect, Debug, Default, Clone, Copy)]
 #[reflect(TextStyledElementType)]
@@ -20,9 +21,6 @@ pub struct element_span;
 
 impl ElementType<BevyRenderer> for element_span {
     const TAG_NAME: &'static str = "span";
-
-    const ATTRS: &'static [&'static [&'static dyn ElementAttrUntyped<BevyRenderer>]] =
-        &[VIEW_ATTRS];
 
     fn get() -> &'static dyn ElementTypeUnTyped<BevyRenderer> {
         &element_span
@@ -102,7 +100,7 @@ impl TextStyledElementType for element_span {
     }
 }
 
-pub mod span_attrs {
+pub mod attrs {
     use bevy_text::TextStyle;
     use std::borrow::Cow;
 
@@ -139,7 +137,8 @@ pub mod span_attrs {
     #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
     pub struct content;
 
-    impl ElementAttrType<BevyRenderer> for content {
+    impl ElementAttrType<BevyRenderer> for content
+    {
         type Value = Cow<'static, str>;
 
         const NAME: &'static str = stringify!(content);

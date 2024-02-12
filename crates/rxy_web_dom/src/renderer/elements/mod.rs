@@ -1,5 +1,3 @@
-use crate::attrs::ElementAttrNodeValue;
-use crate::renderer::attrs::CommonAttrs;
 use crate::renderer::{body, document, WebRenderer};
 use crate::{span, WebElement};
 use rxy_core::MapToAttrMarker;
@@ -11,6 +9,7 @@ use rxy_core::{
 use wasm_bindgen::intern;
 use web_sys::wasm_bindgen::JsValue;
 use web_sys::Node;
+use crate::attrs::node_value;
 
 pub fn replace_placeholder(placeholder: &Node, new_node: &Node) -> Result<(), JsValue> {
     placeholder
@@ -40,23 +39,18 @@ pub fn spawn_element(
 #[derive(Default, Debug, Clone, Copy)]
 pub struct WebRendererElementType<const T: usize>;
 
-impl CommonAttrs for ElementTypeDiv {}
-pub const VIEW_ATTRS: &[&'static dyn ElementAttrUntyped<WebRenderer>] =
-    <ElementTypeDiv as CommonAttrs>::ATTRS;
-
 macro_rules! define_html_elements {
     ($($ty:ident)*) => {
         count_macro::count! {
             $(
                 paste! {
-                    pub type [<ElementType $ty:camel>] = WebRendererElementType<_int_a_>;
-                    impl ElementType<WebRenderer> for [<ElementType $ty:camel>]  {
+
+                    pub struct [<element_ $ty:snake>];
+                    impl ElementType<WebRenderer> for [<element_ $ty:snake>]  {
                         const TAG_NAME: &'static str = stringify!($ty);
-                        const ATTRS: &'static [&'static [&'static dyn ElementAttrUntyped<WebRenderer>]] =
-                            &[VIEW_ATTRS];
 
                         fn get() -> &'static dyn ElementTypeUnTyped<WebRenderer> {
-                            &WebRendererElementType::<_int_b_>
+                            &Self
                         }
 
                         #[inline]
@@ -77,6 +71,10 @@ define_html_elements! {
     div
     span
     button
+    img
+    input
+    textarea
+    select
     a
     p
     h1
@@ -105,7 +103,7 @@ macro_rules! define_view_fns {
         $(
             paste! {
                 #[inline]
-                pub fn $ty() -> crate::WebElement<[<ElementType $ty:camel>], ()> {
+                pub fn $ty() -> crate::WebElement<[<element_ $ty:snake>], ()> {
                     crate::WebElement::default()
                 }
             }
@@ -114,21 +112,22 @@ macro_rules! define_view_fns {
 }
 
 pub type WebElementWithContent<E, VM> =
-    ElementViewChildren<WebRenderer, WebElement<E, ()>, WebElement<NodeTypeText, (VM,)>>;
+    ElementViewChildren<WebRenderer, WebElement<E, ()>, WebElement<element_text, (VM,)>>;
+
 macro_rules! define_view_fns_with_content {
     ($($ty:ident)*) => {
         $(
             paste! {
                 #[inline]
                 pub fn $ty<VM>(
-                    str: impl XNest<MapInner<MapToAttrMarker<ElementAttrNodeValue>> = VM>,
-                ) -> WebElementWithContent<[<ElementType $ty:camel>],VM>
+                    str: impl XNest<MapInner<MapToAttrMarker<node_value>> = VM>,
+                ) -> WebElementWithContent<[<element_ $ty:snake>],VM>
                 where
-                    VM: ElementAttrMember<WebRenderer, ElementAttrNodeValue>,
+                    VM: ElementAttrMember<WebRenderer, node_value>,
                 {
                     view_children(
                         WebElement::default(),
-                        WebElement::<NodeTypeText,()>::default().members(str.map_inner::<MapToAttrMarker<ElementAttrNodeValue>>())
+                        WebElement::<element_text,()>::default().members(str.map_inner::<MapToAttrMarker<node_value>>())
                     )
                 }
             }
@@ -148,6 +147,10 @@ define_view_fns_with_content! {
 }
 
 define_view_fns! {
+    img
+    input
+    textarea
+    select
     br
     hr
     pre
@@ -163,11 +166,10 @@ define_view_fns! {
     main
 }
 
-pub struct NodeTypeText;
+pub struct element_text;
 
-impl ElementType<WebRenderer> for NodeTypeText {
+impl ElementType<WebRenderer> for element_text {
     const TAG_NAME: &'static str = stringify!(text);
-    const ATTRS: &'static [&'static [&'static dyn ElementAttrUntyped<WebRenderer>]] = &[];
 
     fn get() -> &'static dyn ElementTypeUnTyped<WebRenderer> {
         &Self

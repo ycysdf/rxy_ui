@@ -8,10 +8,11 @@ use bevy_ecs::system::{Command, ResMut};
 use bevy_ui::Interaction;
 use bevy_utils::EntityHashMap;
 use super::rxy_bevy_crate::{
-    view_element_type, AttrSetBits, ElementEntityExtraData, FocusedEntity, RendererState,
+    AttrSetBits, ElementEntityExtraData, FocusedEntity, RendererState,
 };
 use rxy_core::AttrIndex;
 use rxy_core::style::{NodeInterStyleAttrInfos, NodeStyleAttrInfos, StyleAttrValue, StyleInteraction, StyleItemValue};
+use crate::attrs::get_attr_by_index;
 
 #[derive(Default, DerefMut, Deref, Debug)]
 pub struct SetAttrValuesCommand(EntityHashMap<Entity, Vec<(AttrIndex, Option<StyleAttrValue>)>>);
@@ -42,8 +43,7 @@ impl Command for SetAttrValuesCommand {
                 .attr_is_set;
             let world = entity_world_mut.into_world_mut();
             for (attr_index, value) in changed.into_iter().filter_attr_already_set(attr_is_set) {
-                view_element_type()
-                    .attr_by_index(attr_index as _)
+                get_attr_by_index(attr_index)
                     .set_value(world, entity, value);
             }
         }

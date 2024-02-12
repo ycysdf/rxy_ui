@@ -1,7 +1,7 @@
 use bevy_ecs::world::EntityWorldMut;
-use super::rxy_bevy_crate::view_element_type;
 use rxy_core::prelude::Either;
 use rxy_core::style::{NodeInterStyleItemId, NodeStyleAttrInfo, NodeStyleItemId};
+use crate::attrs::get_attr_by_index;
 
 use super::{Result, StateOwner};
 
@@ -35,7 +35,7 @@ impl<'a> EntityAttrSyncer for &'a NodeStyleAttrInfo {
 impl EntityAttrSyncer for NodeStyleItemId {
     fn sync_attr_value_to_element(self, entity_world_mut: &mut EntityWorldMut) -> Result {
         let node_id = entity_world_mut.id();
-        let attr_id = entity_world_mut
+        let attr_index = entity_world_mut
             .world()
             .get_style_item_attr_id(node_id, self)?;
         let value = entity_world_mut
@@ -43,8 +43,7 @@ impl EntityAttrSyncer for NodeStyleItemId {
             .get_style_item_value(node_id, self)
             .map(|n| n.clone().value)?;
         entity_world_mut.world_scope(|world| {
-            view_element_type()
-                .attr_by_index(attr_id)
+            get_attr_by_index(attr_index)
                 .set_value(world, node_id, Some(value));
         });
         Ok(())

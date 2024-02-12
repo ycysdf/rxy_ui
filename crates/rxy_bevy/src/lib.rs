@@ -42,14 +42,17 @@ pub type CloneableSlot = CloneableSchemaSlot<BevyRenderer>;
 pub mod all_attrs {
     pub use crate::attrs::*;
     // pub use crate::elements::input_attrs::*;
-    pub use crate::elements::span_attrs::*;
+    pub use crate::elements::attrs::*;
 }
+
+pub use crate::attrs::element_view_builder;
 
 pub mod prelude {
     pub use bevy_ui::prelude::Val;
 
     pub use crate::renderer::BevyElement;
     pub use crate::renderer::common_renderer::*;
+    pub use crate::attrs::element_view_builder::*;
 
     pub use super::{
         all_attrs::CommonAttrsViewBuilder, event::*, system_once, x_res,

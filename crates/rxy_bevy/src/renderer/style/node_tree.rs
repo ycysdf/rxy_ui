@@ -5,7 +5,7 @@ use crate::renderer::style::{
     EntityStyleAttrInfoIterArgs, Previous, StyleEntityMutExt, StyleEntityWorldMutExt,
 };
 use crate::{
-    view_element_type, ElementEntityExtraData, ElementEntityWorldMutExt, EntityWorldMutExt,
+    ElementEntityExtraData, ElementEntityWorldMutExt, EntityWorldMutExt,
     RendererState,
 };
 use bevy_ecs::prelude::{EntityWorldMut, World};
@@ -16,6 +16,7 @@ use rxy_core::style::{
     StyleSheets, StyledNodeTree,
 };
 use rxy_core::{AttrIndex, RendererNodeId};
+use crate::attrs::get_attr_by_index;
 
 pub fn scoped_style_sheet_definition<U>(
     applied_style_sheet: &AppliedStyleSheet<BevyRenderer>,
@@ -156,9 +157,8 @@ impl StyledNodeTree<BevyRenderer> for World {
         })??;
 
         entity_world_mut.world_scope(|world: &mut World| {
-            for key in reset_keys.iter().cloned() {
-                let attr = view_element_type().attr_by_index(key as _);
-                attr.set_value(world, node_id, None);
+            for attr_index in reset_keys.iter().cloned() {
+                get_attr_by_index(attr_index).set_value(world, node_id, None);
             }
         });
 

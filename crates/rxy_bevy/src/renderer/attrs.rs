@@ -1,10 +1,12 @@
 #![allow(non_camel_case_types)]
 
-use std::borrow::Cow;
 use bevy_asset::Handle;
+use std::borrow::Cow;
 
-use crate::{BevyRenderer, ElementStyleEntityExt, TextStyledElementEntityWorldMutExt};
+use crate::elements::element_span;
+use crate::{all_attrs, BevyRenderer, ElementStyleEntityExt, TextStyledElementEntityWorldMutExt};
 use bevy_render::color::Color;
+use bevy_render::render_resource::encase::private::RuntimeSizedArray;
 use bevy_render::view::Visibility;
 use bevy_text::{BreakLineOn, Font, TextAlignment};
 use bevy_transform::components::Transform;
@@ -15,85 +17,93 @@ use bevy_ui::{
 };
 use bevy_utils::tracing::warn;
 use glam::{Quat, Vec3};
-use crate::elements::element_span;
-use rxy_core::{AttrIndex, ElementAttrType, HasIndex, RendererNodeId, RendererWorld};
+use rxy_core::{
+    paste,
+    attrs_fn_define, define_attr_get_fn, impl_attrs_for_element_type, impl_index_for_tys,
+    AttrIndex, ElementAttrType, ElementAttrUntyped, RendererNodeId, RendererWorld,
+};
 
-#[macro_export]
 macro_rules! common_attrs_fn_define {
-    ($name:ident;$index_start:expr;$($attr:ident)*) => {
-        count_macro::count! {
-            $(
-            impl rxy_core::HasIndex for $crate::all_attrs::$attr{
-               const INDEX: rxy_core::AttrIndex = $index_start+_int_;
-            }
-            )*
+    ($($attr:ident)*) => {
+        impl_index_for_tys! {
+            $($crate::all_attrs::$attr)*
         }
 
-        #[allow(non_upper_case_globals)]
-        #[allow(non_camel_case_types)]
-        pub trait $name {
-            const ATTRS: &'static [&'static dyn rxy_core::ElementAttrUntyped<$crate::BevyRenderer>] = &[
-                $(&$crate::all_attrs::$attr,)*
-            ];
-        }
+        pub const COMMON_ATTRS: &'static [&'static dyn rxy_core::ElementAttrUntyped<$crate::BevyRenderer>] = &[
+            $(&$crate::all_attrs::$attr,)*
+        ];
 
-        paste::paste!{
-            pub trait [<$name ViewBuilder>]: rxy_core::MemberOwner<$crate::BevyRenderer> + Sized {
-
-                $(
-                    fn $attr<T>(self, value: impl rxy_core::XNest<MapInner<rxy_core::MapToAttrMarker<$crate::all_attrs::$attr>> = T>) -> Self::AddMember<T>
-                    where
-                        T: rxy_core::ElementAttrMember<$crate::BevyRenderer, $crate::all_attrs::$attr>,
-                        (Self::VM, T): rxy_core::ViewMember<$crate::BevyRenderer>
-                    {
-                        self.member(value.map_inner::<rxy_core::MapToAttrMarker<$crate::all_attrs::$attr>>())
-                    }
-                )*
-            }
-
-            impl<T: rxy_core::MemberOwner<$crate::BevyRenderer>> [<$name ViewBuilder>] for T {}
+        attrs_fn_define! {
+            renderer = $crate::BevyRenderer;
+            name = CommonAttrs;
+            attrs = [
+                $({
+                    name = $attr,
+                    ty = all_attrs::$attr
+                })*
+            ]
         }
     };
 }
-#[macro_export]
+
 macro_rules! element_attrs_fn_define {
-    ($name:ident;$element:ty;$index_start:expr;$($attr:ident)*) => {
-        count_macro::count! {
-            $(
-            impl rxy_core::HasIndex for $crate::all_attrs::$attr{
-               const INDEX: rxy_core::AttrIndex = $index_start+_int_;
-            }
-            )*
+    (
+        $(
+        [$element:ident]
+        attrs = [
+            $($attr:ident)*
+        ]
+        )*
+    ) => {
+        impl_index_for_tys! {
+            index_start = (COMMON_ATTRS.len() as AttrIndex);
+            types = [
+                $(
+                    $(all_attrs::$attr)*
+                )*
+            ]
         }
 
-        #[allow(non_upper_case_globals)]
-        #[allow(non_camel_case_types)]
-        pub trait $name {
-            const ATTRS: &'static [&'static dyn rxy_core::ElementAttrUntyped<$crate::BevyRenderer>] = &[
-                $(&$crate::all_attrs::$attr,)*
-            ];
-        }
-
+        pub const ALL_ATTRS: &'static [&'static [&'static dyn rxy_core::ElementAttrUntyped<BevyRenderer>]] = &[
+            COMMON_ATTRS,
+            &[
+                $(
+                    $(&all_attrs::$attr)*
+                )*
+            ]
+        ];
         paste::paste!{
-            pub trait [<$name ViewBuilder>]: rxy_core::MemberOwner<$crate::BevyRenderer> + Sized
-            {
-                // $(
-                //     fn $attr<T>(self, value: impl rxy_core::XNest<MapInner<rxy_core::MapToAttrMarker<$crate::BevyRenderer>> = T>) -> Self::AddMember<T>
-                //     where T: rxy_core::ElementAttrMember<$crate::BevyRenderer, $crate::all_attrs::$attr>,
-                //         (Self::VM, T): rxy_core::ViewMember<$crate::BevyRenderer>
-                //     {
-                //         self.member(value)
-                //     }
-                // )*
-            }
+            $(
+                attrs_fn_define! {
+                    renderer = BevyRenderer;
+                    name = [<$element Attrs>];
+                    element = $element;
+                    attrs = [
+                        $({
+                            name = $attr,
+                            ty = all_attrs::$attr
+                        })*
+                    ]
+                }
 
-            impl<T: rxy_core::MemberOwner<$crate::BevyRenderer,E=$element>> [<$name ViewBuilder>] for T {}
+                pub mod element_view_builder{
+                    pub use super::[<$element:camel AttrsViewBuilder>];
+                }
+
+                impl_attrs_for_element_type! {
+                    renderer = BevyRenderer;
+                    element = $element;
+                    attrs = [
+                        $($attr)*
+                    ]
+                }
+            )*
         }
     };
 }
 
-common_attrs_fn_define!(CommonAttrs;0;
-    class
+common_attrs_fn_define! {
+    // class
     name
     z_index
     bg_color
@@ -151,41 +161,40 @@ common_attrs_fn_define!(CommonAttrs;0;
     outline_width
     outline_offset
     outline_color
-);
-
-const COMMON_ATTRS_COUNT: AttrIndex = <outline_color as HasIndex>::INDEX + 1;
-
-element_attrs_fn_define!(TextAttrs;element_span;COMMON_ATTRS_COUNT - 1;
-    content
-);
-
-// element_attrs_fn_define!(InputAttrs;elements::input;
-//     text_value
-// );
-
-#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
-pub struct class;
-
-impl ElementAttrType<BevyRenderer> for class {
-    type Value = Cow<'static, str>;
-
-    const NAME: &'static str = stringify!(class);
-
-    fn update_value(
-        _world: &mut RendererWorld<BevyRenderer>,
-        _node_id: RendererNodeId<BevyRenderer>,
-        _value: impl Into<Self::Value>,
-    ) {
-        // todo:
-        // let value = value.into();
-        // handle_classes(context, value.as_ref());
-        // if !context.entity_extra_data().interaction_classes.is_empty()
-        //     && !world.contains::<Interaction>()
-        // {
-        //     world.insert(Interaction::default());
-        // }
-    }
 }
+
+element_attrs_fn_define! {
+    [element_span]
+    attrs = [
+        content
+    ]
+}
+
+define_attr_get_fn!(BevyRenderer);
+
+// #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+// pub struct class;
+//
+// impl ElementAttrType<BevyRenderer> for class {
+//     type Value = Cow<'static, str>;
+//
+//     const NAME: &'static str = stringify!(class);
+//
+//     fn update_value(
+//         _world: &mut RendererWorld<BevyRenderer>,
+//         _node_id: RendererNodeId<BevyRenderer>,
+//         _value: impl Into<Self::Value>,
+//     ) {
+//         // todo:
+//         // let value = value.into();
+//         // handle_classes(context, value.as_ref());
+//         // if !context.entity_extra_data().interaction_classes.is_empty()
+//         //     && !world.contains::<Interaction>()
+//         // {
+//         //     world.insert(Interaction::default());
+//         // }
+//     }
+// }
 
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct name;

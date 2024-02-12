@@ -19,7 +19,7 @@ use slotmap::{Key, KeyData, SlotMap};
 use web_sys::wasm_bindgen::JsCast;
 use web_sys::{Document, HtmlElement, Node, Window};
 
-use crate::elements::{ElementTypeDiv, WebRendererElementType};
+
 use rxy_core::{
     AttrIndex, DeferredNodeTreeScoped, Element, ElementAttr, ElementAttrType, ElementTypeUnTyped,
     ElementViewChildren, IntoView, MaybeSend, MaybeSync, NodeTree, Renderer, RendererNodeId,
@@ -28,11 +28,6 @@ use rxy_core::{
 
 pub fn log(s: &str) {
     web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(s));
-}
-
-#[inline(always)]
-pub fn view_element_type() -> &'static dyn ElementTypeUnTyped<WebRenderer> {
-    &WebRendererElementType::<0>
 }
 
 pub type WebElement<E, VM> = Element<WebRenderer, E, VM>;

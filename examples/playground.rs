@@ -9,7 +9,7 @@ use rxy_ui::{
 };
 // use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy::sprite::MaterialMesh2dBundle;
-use bevy::utils::synccell::SyncCell;
+use rxy_ui::utils::SyncCell;
 use futures_lite::{FutureExt, StreamExt};
 use rxy_bevy::{system_with_config, x_bundle};
 
@@ -33,7 +33,7 @@ fn setup(mut commands: Commands) {
 
 #[schema]
 fn schema_tt(_ctx: SchemaCtx, value: ReadSignal<bool>) -> impl IntoView<BevyRenderer> {
-    (checkbox(), rx(move || value.get().to_string()))
+    (checkbox(), rx(move || value.get().to_string()),span("XXX").content("XXXXXXX"))
 }
 
 fn sample2() -> impl IntoView<BevyRenderer> {
