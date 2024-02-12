@@ -9,8 +9,8 @@ use crate::all_attrs::{
 };
 use crate::BevyRenderer;
 use rxy_core::{
-    ElementAttr, ElementAttrMember, ElementAttrType, MapToAttrMarker, MemberOwner, Renderer,
-    ViewMember, ViewMemberOrigin, XNest,
+    ElementAttr, ElementAttrMember, MapToAttrMarker, MemberOwner,
+    XNest,
 };
 
 pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {

@@ -1150,7 +1150,7 @@ fn sample_system_once() -> impl IntoView<BevyRenderer> {
 ```rust
 fn sample_system() -> impl IntoView<BevyRenderer> {
     div().flex_col().gap(10).children(unsafe {
-        system(Update, |query: Query<Entity, With<Style>>| {
+        system_with_config(Update,|config| config.run_if(|| true), |query: Query<Entity, With<Style>>| {
             x_iter_keyed(query.iter().map(|entity| {
                 Keyed(
                     entity,
@@ -1158,7 +1158,6 @@ fn sample_system() -> impl IntoView<BevyRenderer> {
                 )
             }))
         })
-        .configure(|config| config.run_if(|| true))
     })
 }
 ```

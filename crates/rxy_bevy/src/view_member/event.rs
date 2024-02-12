@@ -6,7 +6,7 @@ use bevy_ecs::system::SystemId;
 use bevy_input::prelude::KeyCode;
 use bevy_utils::tracing::error;
 
-use rxy_core::{MemberOwner, ViewMember, ViewMemberCtx, ViewMemberOrigin, XNest};
+use rxy_core::{MemberOwner, ViewMember, ViewMemberCtx, ViewMemberOrigin};
 
 use crate::event::*;
 use crate::prelude::FocusInputEventIterator;

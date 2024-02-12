@@ -8,7 +8,6 @@ use bevy_ecs::prelude::{Entity, Query};
 use bevy_ecs::query::ReadOnlyWorldQuery;
 use bevy_ecs::world::{EntityRef, EntityWorldMut, World};
 use bevy_ui::Interaction;
-use bevy_utils::petgraph::visit::Walker;
 use super::rxy_bevy_crate::{
     AttrSetBits, ElementEntityExtraData, ElementEntityWorldMutExt, FocusedEntity, RendererState,
 };
@@ -78,12 +77,12 @@ pub(crate) trait StateOwner<'a, 's>: Sized {
 pub(crate) trait StateOwnerWithNodeId<'a, 's>: StateOwner<'a, 's> {
     fn get_current_entity(&'s self) -> Entity;
 
-    fn get_current_style_item_attr_id(
-        &'s self,
-        style_item_id: impl Into<NodeStyleItemId>,
-    ) -> Result<AttrIndex> {
-        self.get_style_item_attr_id(self.get_current_entity(), style_item_id)
-    }
+    // fn get_current_style_item_attr_id(
+    //     &'s self,
+    //     style_item_id: impl Into<NodeStyleItemId>,
+    // ) -> Result<AttrIndex> {
+    //     self.get_style_item_attr_id(self.get_current_entity(), style_item_id)
+    // }
 
     #[inline(always)]
     fn get_current_style_item_value(

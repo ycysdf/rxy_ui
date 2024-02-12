@@ -6,7 +6,6 @@ use crate::style::{
 use crate::style::style_sheet_definition::StyleSheetDefinition;
 use crate::style::view_member::StyleItemIndex;
 use crate::{AttrIndex, Either, EitherExt, Renderer, RendererNodeId, RendererWorld};
-use bevy_asset::AssetContainer;
 use std::collections::BinaryHeap;
 
 /*pub enum NodeStyleAttrInfosMutVariant<'a> {

@@ -1,6 +1,6 @@
 #![allow(clippy::blocks_in_conditions)]
 
-use crate::style::{ApplyStyleSheets, StyleError, StyleSheets, StyledNodeTree};
+use crate::style::{ApplyStyleSheets, StyleSheets, StyledNodeTree};
 use crate::{Renderer, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin};
 
 pub type StyleItemIndex = u8;

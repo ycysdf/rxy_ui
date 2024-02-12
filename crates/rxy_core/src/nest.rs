@@ -1,5 +1,5 @@
 use crate::utils::all_tuples;
-use crate::{MaybeSend, MaybeSync};
+use crate::MaybeSend;
 use core::marker::PhantomData;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -561,7 +561,7 @@ pub mod core_impls {
         type MapInnerTo = XStream<BoxedStreamMaybeLocal<X::MapInnerTo>>;
         fn map_inner_to(
             self,
-            mut f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
+            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
         ) -> Self::MapInnerTo {
             let value = self.value.map({
                 let f = f.clone();

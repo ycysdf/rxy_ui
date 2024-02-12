@@ -4,8 +4,8 @@ use bevy_ui::prelude::Button;
 use bevy_ui::{FocusPolicy, Interaction};
 use rxy_core::common_renderer::CommonRenderer;
 use rxy_core::{
-    define_common_view_fns, ElementAttrMember, MapToAttrMarker, MemberOwner, ViewMember,
-    ViewMemberOrigin, XNest,
+    define_common_view_fns, ElementAttrMember, MapToAttrMarker, MemberOwner,
+    XNest,
 };
 
 define_common_view_fns!(BevyRenderer);

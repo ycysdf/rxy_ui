@@ -8,7 +8,6 @@ use crate::{AttrIndex, AttrValue, Either, EitherExt, MemberOwner, NodeTree, Rend
 pub use attr_style_owner::*;
 use bevy_utils::HashMap;
 use derive_more::{Deref, DerefMut, From, IntoIterator};
-use futures_lite::StreamExt;
 use std::any::TypeId;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;

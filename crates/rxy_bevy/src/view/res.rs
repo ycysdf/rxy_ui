@@ -189,7 +189,7 @@ where
         ViewMember::build(x_res(f), ctx, will_rebuild);
     }
 
-    fn rebuild(self, mut ctx: ViewMemberCtx<BevyRenderer>) {
+    fn rebuild(self, ctx: ViewMemberCtx<BevyRenderer>) {
         let f = move |resource: &T| (self.0.f)(resource).map_inner::<M>();
         ViewMember::rebuild(x_res(f), ctx);
     }

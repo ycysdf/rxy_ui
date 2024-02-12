@@ -1,11 +1,6 @@
 use super::rxy_bevy_crate::BevyRenderer;
-use rxy_core::style::{ApplyStyleSheets, ElementStyleMember, StyleSheets};
-use rxy_core::{
-    rx, style_builder, x_future, x_stream, BuildFlags, ElementView, InnerIvmToVm,
-    MapToStyleSheetsMarker, MaybeSend, Reactive, ViewMember, ViewMemberCtx, ViewMemberOrigin,
-    XBuilder, XFuture, XNest, XStream,
-};
-use std::future::Future;
+use rxy_core::style::{ElementStyleMember, StyleSheets};
+use rxy_core::{rx, ElementView, MapToStyleSheetsMarker, MaybeSend, Reactive, XNest};
 
 pub trait ElementStyleExt: ElementView<BevyRenderer> {
     #[inline]
@@ -21,16 +16,17 @@ pub trait ElementStyleExt: ElementView<BevyRenderer> {
     }
 
     #[inline]
-    fn rx_style<F, X, VM, SS>(self, f: F) -> Self::AddMember<Reactive<impl Fn() -> VM + MaybeSend + 'static, VM>>
+    fn rx_style<F, X, VM, SS>(
+        self,
+        f: F,
+    ) -> Self::AddMember<Reactive<impl Fn() -> VM + MaybeSend + 'static, VM>>
     where
         F: Fn() -> X + MaybeSend + 'static,
         X: XNest<MapInner<MapToStyleSheetsMarker<SS>> = VM>,
         VM: ElementStyleMember<BevyRenderer, SS>,
         SS: StyleSheets<BevyRenderer>,
     {
-        self.member(rx(move || {
-            f().map_inner::<MapToStyleSheetsMarker<SS>>()
-        }))
+        self.member(rx(move || f().map_inner::<MapToStyleSheetsMarker<SS>>()))
     }
 }
 

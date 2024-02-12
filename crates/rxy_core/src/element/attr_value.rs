@@ -1,4 +1,3 @@
-use crate::alloc::string::ToString;
 use crate::smallbox::{SmallBox, S1};
 use crate::{impl_x_value_wrappers, XValueWrapper};
 use crate::{smallbox, MaybeFromReflect, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath};
@@ -111,15 +110,13 @@ impl Into<XValueWrapper<Cow<'static, str>>> for &'static str {
 // todo: ? feature
 impl Into<XValueWrapper<Cow<'static, str>>> for i32 {
     fn into(self) -> XValueWrapper<Cow<'static, str>> {
-        use alloc::format;
-        XValueWrapper(format!("{}px",self).into())
+        XValueWrapper(alloc::format!("{}px",self).into())
     }
 }
 
 impl Into<XValueWrapper<Cow<'static, str>>> for f32 {
     fn into(self) -> XValueWrapper<Cow<'static, str>> {
-        use alloc::format;
-        XValueWrapper(format!("{}px",self).into())
+        XValueWrapper(alloc::format!("{}px",self).into())
     }
 }
 
