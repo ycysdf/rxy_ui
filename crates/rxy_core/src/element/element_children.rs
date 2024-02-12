@@ -39,19 +39,20 @@ where
         }
     }
 
+    #[inline]
     #[cfg(not(feature = "view_erasure"))]
-    pub fn children<CV2>(self, children: CV2) -> ElementViewChildren<R, V, CV2>
+    pub fn children<CV2>(self, children: CV2) -> ElementViewChildren<R, V, CV2::View>
     where
-        CV: IntoView<R>,
+        CV2: IntoView<R>,
     {
         ElementViewChildren {
             view: self.view,
-            children,
+            children: children.into_view(),
             _marker: Default::default(),
         }
     }
 
-    #[inline(always)]
+    #[inline]
     #[cfg(feature = "view_erasure")]
     pub fn children<CV2>(self, children: CV2) -> ElementViewChildren<R, V, BoxedErasureView<R>>
     where
@@ -60,7 +61,7 @@ where
         self.erasure_children(children)
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn erasure_children<CV2>(
         self,
         children: CV2,

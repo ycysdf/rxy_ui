@@ -26,6 +26,7 @@ where
         }
     }
 
+    #[inline]
     #[cfg(not(feature = "view_erasure"))]
     pub fn children<CV>(self, children: CV) -> ElementViewChildren<R, Element<R, E, VM>, CV::View>
     where
@@ -34,6 +35,7 @@ where
         view_children(self, children)
     }
 
+    #[inline]
     #[cfg(feature = "view_erasure")]
     pub fn children<CV>(
         self,
@@ -42,18 +44,31 @@ where
     where
         CV: IntoView<R>,
     {
+        self.erasure_children(children)
+    }
+
+    #[inline]
+    pub fn erasure_children<CV2>(
+        self,
+        children: CV2,
+    ) -> ElementViewChildren<R, Element<R, E, VM>, crate::BoxedErasureView<R>>
+    where
+        CV2: IntoView<R>,
+    {
         use crate::IntoViewErasureExt;
         view_children(self, unsafe { children.into_erasure_view() })
     }
 
-    // // todo:
     // #[cfg(feature = "view_erasure")]
     // pub fn children(
     //     self,
     //     children: impl IntoView<R>,
-    // ) -> ElementViewChildren<R, Element<R, E, VM>, impl View<R>>
-    // {
-    //     view_children(self, children)
+    // ) -> ElementViewChildren<R, impl SoloView<R> + ElementView<R>, impl View<R>> {
+    //     ElementViewChildren {
+    //         view: self,
+    //         children: children.into_view(),
+    //         _marker: Default::default(),
+    //     }
     // }
 }
 
