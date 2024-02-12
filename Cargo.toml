@@ -17,8 +17,7 @@ bevy_mod_picking = { workspace = true, optional = true }
 rxy_web_dom = { workspace = true, optional = true }
 
 [features]
-default = ["std", "view_erasure", "x_iter_source", "signal"]
-default_without_view_erasure = ["std", "x_iter_source", "signal"]
+default = ["std", "x_iter_source", "signal"]
 
 #web = ["std", "rxy_web_dom", "tailwind_aliases", "xy_reactive?/web"]
 #web = ["std", "tailwind_aliases", "xy_reactive?/web", "rxy_web_dom"]
@@ -27,7 +26,7 @@ web = ["std", "rxy_web_dom"]
 std = ["rxy_core/async-channel"]
 hooked_collection = ["dep:hooked_collection"]
 x_iter_source = ["hooked_collection", "rxy_core/x_iter_source"]
-view_erasure = ["rxy_core/view_erasure"]
+view_children_erasure = ["rxy_core/view_children_erasure"]
 tailwind_aliases = ["rxy_bevy/tailwind_aliases"]
 style = ["rxy_bevy/style", "rxy_core/style"]
 signal = ["xy_reactive", "rxy_core/xy_reactive", "rxy_bevy?/xy_reactive"]

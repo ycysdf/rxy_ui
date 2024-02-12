@@ -38,33 +38,6 @@ macro_rules! impl_into_view_for_tuples {
     }
 }
 
-// #[cfg(feature = "view_erasure")]
-// macro_rules! impl_into_view_for_tuples {
-//     ($first:ident) => {
-//         impl_into_view_for_tuples!($first,);
-//     };
-//     ($first:ident,$($ty:ident),*$(,)?) => {
-//         impl<R,$first,$($ty),*> $crate::IntoView<R> for ($first,$($ty,)*)
-// 		where
-//             R: $crate::Renderer,
-// 			$first: $crate::IntoView<R>,
-// 			$($ty: $crate::IntoView<R>),*
-//         {
-// 			type View = crate::BoxedErasureView<R>;
-//
-//             fn into_view(self) -> Self::View {
-// 				paste::paste! {
-//                     let ([<$first:lower>], $([<$ty:lower>],)*) = self;
-//                     crate::erasure_view((
-//                         [<$first:lower>].into_view(),
-//                         $([<$ty:lower>].into_view(),)*
-//                     ))
-//                 }
-//             }
-//         }
-//     }
-// }
-
 impl_into_view!(());
 
 all_tuples!(impl_into_view_for_tuples, 1, 12, T);

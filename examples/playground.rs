@@ -11,7 +11,7 @@ use rxy_ui::{
 use bevy::sprite::MaterialMesh2dBundle;
 use bevy::utils::synccell::SyncCell;
 use futures_lite::{FutureExt, StreamExt};
-use rxy_bevy::x_bundle;
+use rxy_bevy::{system_with_config, x_bundle};
 
 fn main() {
     let mut app = App::new();
@@ -42,7 +42,99 @@ fn sample2() -> impl IntoView<BevyRenderer> {
         .size(Some(rx(|| Some(20))))
         .padding_right(rx(|| 20))
         .padding_left(Some(Some(Some(20))))
-        .children("Hello World")
+        .children(
+            div()
+                .style(rx(|| x().bg_color(Color::WHITE)))
+                .size(Some(rx(|| Some(20))))
+                .padding_right(rx(|| 20))
+                .padding_left(Some(Some(Some(20))))
+                .children(
+                    div()
+                        .style(rx(|| x().bg_color(Color::WHITE)))
+                        .size(Some(rx(|| Some(20))))
+                        .padding_right(rx(|| 20))
+                        .padding_left(Some(Some(Some(20))))
+                        .children(
+                            div()
+                                .style(rx(|| x().bg_color(Color::WHITE)))
+                                .size(Some(rx(|| Some(20))))
+                                .padding_right(rx(|| 20))
+                                .padding_left(Some(Some(Some(20))))
+                                .children(
+                                    div()
+                                .style(rx(|| x().bg_color(Color::WHITE)))
+                                .size(Some(rx(|| Some(20))))
+                                .padding_right(rx(|| 20))
+                                .padding_left(Some(Some(Some(20))))
+                                .children(div()
+                                .style(rx(|| x().bg_color(Color::WHITE)))
+                                .size(Some(rx(|| Some(20))))
+                                .padding_right(rx(|| 20))
+                                .padding_left(Some(Some(Some(20))))
+                                .children(div()
+                                .style(rx(|| x().bg_color(Color::WHITE)))
+                                .size(Some(rx(|| Some(20))))
+                                .padding_right(rx(|| 20))
+                                .padding_left(Some(Some(Some(20))))
+                                .children(div()
+                                .style(rx(|| x().bg_color(Color::WHITE)))
+                                .size(Some(rx(|| Some(20))))
+                                .padding_right(rx(|| 20))
+                                .padding_left(Some(Some(Some(20))))
+                                .children(div()
+                                .style(rx(|| x().bg_color(Color::WHITE)))
+                                .size(Some(rx(|| Some(20))))
+                                .padding_right(rx(|| 20))
+                                .padding_left(Some(Some(Some(20))))
+                                .children(div()
+                                .style(rx(|| x().bg_color(Color::WHITE)))
+                                .size(Some(rx(|| Some(20))))
+                                .padding_right(rx(|| 20))
+                                .padding_left(Some(Some(Some(20))))
+                                .children(div()
+                                .style(rx(|| x().bg_color(Color::WHITE)))
+                                .size(Some(rx(|| Some(20))))
+                                .padding_right(rx(|| 20))
+                                .padding_left(Some(Some(Some(20))))
+                                .children(div()
+                                .style(rx(|| x().bg_color(Color::WHITE)))
+                                .size(Some(rx(|| Some(20))))
+                                .padding_right(rx(|| 20))
+                                .padding_left(Some(Some(Some(20))))
+                                .children(div()
+                                .style(rx(|| x().bg_color(Color::WHITE)))
+                                .size(Some(rx(|| Some(20))))
+                                .padding_right(rx(|| 20))
+                                .padding_left(Some(Some(Some(20))))
+                                .children(div()
+                                .style(rx(|| x().bg_color(Color::WHITE)))
+                                .size(Some(rx(|| Some(20))))
+                                .padding_right(rx(|| 20))
+                                .padding_left(Some(Some(Some(20))))
+                                .children(div()
+                                .style(rx(|| x().bg_color(Color::WHITE)))
+                                .size(Some(rx(|| Some(20))))
+                                .padding_right(rx(|| 20))
+                                .padding_left(Some(Some(Some(20))))
+                                .children(div()
+                                .style(rx(|| x().bg_color(Color::WHITE)))
+                                .size(Some(rx(|| Some(20))))
+                                .padding_right(rx(|| 20))
+                                .padding_left(Some(Some(Some(20))))
+                                .children(div()
+                                .style(rx(|| x().bg_color(Color::WHITE)))
+                                .size(Some(rx(|| Some(20))))
+                                .padding_right(rx(|| 20))
+                                .padding_left(Some(Some(Some(20))))
+                                .children(div()
+                                .style(rx(|| x().bg_color(Color::WHITE)))
+                                .size(Some(rx(|| Some(20))))
+                                .padding_right(rx(|| 20))
+                                .padding_left(Some(Some(Some(20))))
+                                .children(())))))))))))))))
+                        ),
+                ),
+        )
 }
 
 fn signal_sample() -> impl IntoView<BevyRenderer> {
@@ -527,7 +619,7 @@ fn sample_context() -> impl IntoView<BevyRenderer> {
 
 fn sample_system() -> impl IntoView<BevyRenderer> {
     div().flex_col().gap(10).children(unsafe {
-        system(Update, |query: Query<Entity, With<Style>>| {
+        system_with_config(Update,|config| config.run_if(|| true), |query: Query<Entity, With<Style>>| {
             x_iter_keyed(query.iter().map(|entity| {
                 Keyed(
                     entity,
@@ -535,7 +627,6 @@ fn sample_system() -> impl IntoView<BevyRenderer> {
                 )
             }))
         })
-        .configure(|config| config.run_if(|| true))
     })
 }
 

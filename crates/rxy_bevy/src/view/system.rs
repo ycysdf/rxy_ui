@@ -5,7 +5,7 @@ use bevy_ecs::prelude::{In, IntoSystem, Resource, Schedules, World};
 use bevy_ecs::schedule::{ScheduleLabel, SystemConfigs};
 use bevy_utils::default;
 
-use rxy_bevy_macro::BevyIntoView;
+use rxy_bevy_macro::{bevy_force_dynamic_view, BevyIntoView};
 use rxy_core::{IntoView, View, ViewCtx};
 
 use crate::BevyRenderer;
@@ -38,6 +38,7 @@ where
 /// # Safety
 /// make sure that this view is always alive
 /// .
+#[bevy_force_dynamic_view]
 pub unsafe fn system<L, S, M, IV>(label: L, system: S) -> SystemView<L, S, M, IV>
 where
     M: Send + 'static,
@@ -53,6 +54,7 @@ where
 /// # Safety
 /// make sure that this view is always alive
 /// .
+#[bevy_force_dynamic_view]
 pub unsafe fn system_with_config<L, S, M, IV, F>(
     label: L,
     config_f: F,

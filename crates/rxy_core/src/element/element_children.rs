@@ -40,7 +40,7 @@ where
     }
 
     #[inline]
-    #[cfg(not(feature = "view_erasure"))]
+    #[cfg(not(feature = "view_children_erasure"))]
     pub fn children<CV2>(self, children: CV2) -> ElementViewChildren<R, V, CV2::View>
     where
         CV2: IntoView<R>,
@@ -53,7 +53,7 @@ where
     }
 
     #[inline]
-    #[cfg(feature = "view_erasure")]
+    #[cfg(feature = "view_children_erasure")]
     pub fn children<CV2>(self, children: CV2) -> ElementViewChildren<R, V, BoxedErasureView<R>>
     where
         CV2: IntoView<R>,

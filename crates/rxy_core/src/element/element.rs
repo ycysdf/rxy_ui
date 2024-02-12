@@ -27,7 +27,7 @@ where
     }
 
     #[inline]
-    #[cfg(not(feature = "view_erasure"))]
+    #[cfg(not(feature = "view_children_erasure"))]
     pub fn children<CV>(self, children: CV) -> ElementViewChildren<R, Element<R, E, VM>, CV::View>
     where
         CV: IntoView<R>,
@@ -36,7 +36,7 @@ where
     }
 
     #[inline]
-    #[cfg(feature = "view_erasure")]
+    #[cfg(feature = "view_children_erasure")]
     pub fn children<CV>(
         self,
         children: CV,
@@ -59,7 +59,7 @@ where
         view_children(self, unsafe { children.into_erasure_view() })
     }
 
-    // #[cfg(feature = "view_erasure")]
+    // #[cfg(feature = "view_children_erasure")]
     // pub fn children(
     //     self,
     //     children: impl IntoView<R>,

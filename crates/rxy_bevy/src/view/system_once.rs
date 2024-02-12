@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use bevy_ecs::prelude::{IntoSystem, System};
 use bevy_utils::default;
 
-use rxy_bevy_macro::BevyIntoView;
+use rxy_bevy_macro::{bevy_force_dynamic_view, BevyIntoView};
 use rxy_core::{IntoView, View, ViewCtx};
 
 use crate::BevyRenderer;
@@ -15,7 +15,7 @@ where
     IV: IntoView<BevyRenderer> + Send + 'static,
     S: IntoSystem<(), IV, M> + Send + 'static;
 
-// #[cfg_attr(feature = "dyn", bevy_force_dynamic_view)]
+#[bevy_force_dynamic_view]
 pub fn system_once<S, M, IV>(system: S) -> SystemOnce<S, M, IV>
 where
     M: Send + 'static,
