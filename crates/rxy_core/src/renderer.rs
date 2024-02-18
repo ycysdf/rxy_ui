@@ -2,6 +2,7 @@ use crate::utils::{HashMap, SyncCell};
 use alloc::borrow::Cow;
 use core::fmt::Debug;
 use core::future::Future;
+use std::ops::{Deref, DerefMut};
 
 use crate::element::{AttrIndex, ElementAttrType};
 use crate::{ElementType, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, ViewKey};
@@ -33,7 +34,7 @@ impl<'a, R: Renderer> ViewMemberCtx<'a, R> {
     pub fn take_indexed_view_member_state<S: MaybeSend + 'static>(&mut self) -> Option<S> {
         self.world
             .get_node_state_mut::<MemberHashMapState<S>>(&self.node_id)
-            .and_then(|s| s.0.get().remove(&self.index))
+            .and_then(|mut s| s.0.get().remove(&self.index))
     }
     pub fn set_indexed_view_member_state<S: MaybeSend + 'static>(&mut self, state: S) {
         if let Some(map) = self
@@ -62,12 +63,47 @@ pub trait Renderer:
 {
     type NodeId: ViewKey<Self>;
     type NodeTree: NodeTree<Self>;
+    type StateMutRef<'a, S: MaybeSend + MaybeSync + 'static>: StateMutRef<Target = S>
+    where
+        Self: 'a;
+    type StateRef<'a, S: Send + Sync + 'static>: StateRef<Target = S>
+    where
+        Self: 'a;
 
     type Task<T: MaybeSend + 'static>: MaybeSend + 'static;
 
     fn spawn_task<T: MaybeSend + 'static>(
         future: impl Future<Output = T> + MaybeSend + 'static,
     ) -> Self::Task<T>;
+}
+
+pub trait StateMutRef<'a>: DerefMut {
+    fn map<U>(
+        &mut self,
+        f: impl FnOnce(&mut Self::Target) -> &mut U,
+    ) -> impl StateMutRef<'a, Target = U>;
+}
+
+impl<'a, T> StateMutRef<'a> for &'a mut T {
+    fn map<U>(
+        &mut self,
+        f: impl FnOnce(&mut Self::Target) -> &mut U,
+    ) -> impl StateMutRef<'a, Target = U> {
+        f(self)
+    }
+}
+
+pub trait StateRef<'a>: Deref {
+    fn map<U>(
+        &mut self,
+        f: impl FnOnce(&mut Self::Target) -> &mut U,
+    ) -> impl StateRef<'a, Target = U>;
+}
+
+impl<'a, T> StateRef<'a> for &'a T {
+    fn map<U>(&self, f: impl FnOnce(&Self::Target) -> &U) -> impl StateRef<'a, Target = U> {
+        f(self)
+    }
 }
 
 pub trait NodeTree<R>
@@ -88,12 +124,12 @@ where
     fn get_node_state_mut<S: MaybeSend + MaybeSync + 'static>(
         &mut self,
         node_id: &RendererNodeId<R>,
-    ) -> Option<&mut S>;
+    ) -> Option<R::StateMutRef<'_, S>>;
 
     fn get_node_state_ref<S: MaybeSend + MaybeSync + 'static>(
         &self,
         node_id: &RendererNodeId<R>,
-    ) -> Option<&S>;
+    ) -> Option<R::StateRef<'_, S>>;
 
     fn take_node_state<S: MaybeSend + MaybeSync + 'static>(
         &mut self,
@@ -179,7 +215,7 @@ where
     fn get_or_insert_default_node_state<S: Default + MaybeSend + MaybeSync + 'static>(
         &mut self,
         node_id: &RendererNodeId<R>,
-    ) -> &mut S {
+    ) -> R::StateMutRef<'_, &mut S> {
         if self.get_node_state_mut::<S>(node_id).is_none() {
             self.set_node_state(node_id, S::default());
         }

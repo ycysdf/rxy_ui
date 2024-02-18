@@ -33,10 +33,10 @@ bevy_ecs.workspace = true
 bevy_hierarchy.workspace = true
 bevy_mod_picking.workspace = true
 bevy_reflect.workspace = true
-bevy_sprite.workspace = true
+#bevy_sprite.workspace = true
 bevy_tasks.workspace = true
 bevy_utils.workspace = true
-bevy_a11y.workspace = true
+#bevy_a11y.workspace = true
 bevy_input.workspace = true
 
 futures-lite.workspace = true

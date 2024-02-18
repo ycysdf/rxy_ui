@@ -21,6 +21,12 @@ use crate::{
 };
 
 impl NodeTree<BevyRenderer> for World {
+    type StateMutRef<'a, S: Send + Sync + 'static> = &'a mut S
+    where
+        Self: 'a;
+    type StateRef<'a, S: Send + Sync + 'static> = &'a S
+    where
+        Self: 'a;
     fn prepare_set_attr_and_get_is_init(
         &mut self,
         node_id: &RendererNodeId<BevyRenderer>,
@@ -66,7 +72,10 @@ impl NodeTree<BevyRenderer> for World {
             .set_attr(A::INDEX, true);
     }
 
-    fn unbuild_attr<A: ElementAttrType<BevyRenderer>>(&mut self, entity: RendererNodeId<BevyRenderer>) {
+    fn unbuild_attr<A: ElementAttrType<BevyRenderer>>(
+        &mut self,
+        entity: RendererNodeId<BevyRenderer>,
+    ) {
         A::set_value(self, entity, None::<A::Value>);
         let Some(mut entity_world_mut) = self.get_entity_mut(entity) else {
             return;

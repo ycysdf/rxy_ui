@@ -33,7 +33,7 @@ oneshot.workspace = true
 bitflags = { workspace = true, optional = true }
 # serde.workspace = true
 
-derive_more.workspace = true
+#derive_more.workspace = true
 count-macro.workspace = true
 paste.workspace = true
 

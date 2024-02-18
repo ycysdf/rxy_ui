@@ -1,0 +1,27 @@
+[package]
+edition = "2021"
+name = "rxy_native"
+version = "0.1.0"
+
+[dependencies]
+raw-window-handle = "0.5"
+rxy_core = { workspace = true, features = ["common_renderer", "async-channel", "xy_reactive"] }
+vello = { path = "../../../../SourceProjects/vello" }
+xy_reactive = { workspace = true, optional = true, default-features = false }
+bevy_ecs = { path = "../../../../SourceProjects/bevy/crates/bevy_ecs", default-features = false }
+bevy_hierarchy = { path = "../../../../SourceProjects/bevy/crates/bevy_hierarchy", default-features = false }
+
+smallvec.workspace = true
+#bevy_ecs = { workspace = true, default-features = false }
+bitflags = "2"
+kurbo = "0.10"
+taffy = "0.3"
+tracing = "0.1"
+wgpu = "0.18"
+winit = "0.28"
+
+cfg-if = "1.0"
+compio = { version = "0.9.0-beta.4", optional = true }
+tokio = { version = "1", default-features = false, optional = true, features = ["rt", "rt-multi-thread"] }
+[features]
+default = ["tokio"]

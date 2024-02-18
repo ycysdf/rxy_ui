@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use paste::paste;
 
 #[macro_export]

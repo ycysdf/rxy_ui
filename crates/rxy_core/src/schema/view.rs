@@ -1,4 +1,4 @@
-use crate::{into_view, BoxedCloneableErasureView, BoxedErasureView, BoxedPropValue, ConstIndex, DataNodeId, InnerSchemaCtx, IntoCloneableView, IntoSchemaProp, IntoView, IntoViewCloneableErasureExt, IntoViewErasureExt, NodeTree, PropHashMap, Renderer, RendererNodeId, RendererWorld, Schema, SchemaProp, SchemaProps, View, ViewCtx, ViewKey, MaybeSend};
+use crate::{into_view, BoxedCloneableErasureView, BoxedErasureView, BoxedPropValue, ConstIndex, DataNodeId, InnerSchemaCtx, IntoCloneableView, IntoSchemaProp, IntoView, IntoViewCloneableErasureExt, IntoViewErasureExt, NodeTree, PropHashMap, Renderer, RendererNodeId, RendererWorld, Schema, SchemaProp, SchemaProps, View, ViewCtx, ViewKey, MaybeSend, StateMutRef};
 use alloc::boxed::Box;
 use crate::utils::SyncCell;
 use crate::utils::HashMap;
@@ -163,8 +163,7 @@ where
 
     let option = world.get_node_state_mut::<SchemaViewState<R>>(node_id)
         .unwrap()
-        .prop_state
-        .get();
+        .map(|n| n.prop_state.get_mut());
     *option = Some(taken_map);
     Some(u)
 }

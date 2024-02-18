@@ -4,15 +4,17 @@ mod style_sheet_items;
 mod view_member;
 
 use crate::utils::all_tuples;
-use crate::{AttrIndex, AttrValue, Either, EitherExt, MemberOwner, NodeTree, Renderer, RendererNodeId, RendererWorld, SmallBox, ViewMember, XValueWrapper, S1, ViewMemberOrigin};
+use crate::{
+    AttrIndex, AttrValue, Either, EitherExt, MemberOwner, NodeTree, Renderer, RendererNodeId,
+    RendererWorld, SmallBox, ViewMember, ViewMemberOrigin, XValueWrapper, S1,
+};
 pub use attr_style_owner::*;
 use bevy_utils::HashMap;
-use derive_more::{Deref, DerefMut, From, IntoIterator};
 use std::any::TypeId;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::iter::{once, Chain};
-use std::ops::{AddAssign, Deref};
+use std::ops::{AddAssign, Deref, DerefMut};
 pub use style_sheet_definition::*;
 pub use style_sheet_items::*;
 pub use view_member::*;
@@ -213,13 +215,19 @@ where
     }
 }
 
-#[derive(Deref, DerefMut, From, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct NodeStyleAttrInfo(pub Either<NodeStyleItemId, BinaryHeap<NodeStyleItemId>>);
+
+impl From<Either<NodeStyleItemId, BinaryHeap<NodeStyleItemId>>> for NodeStyleAttrInfo{
+    fn from(val: Either<NodeStyleItemId, BinaryHeap<NodeStyleItemId>>) -> Self {
+        NodeStyleAttrInfo(val)
+    }
+}
 
 impl NodeStyleAttrInfo {
     #[inline(always)]
     pub fn top_item_id(&self) -> NodeStyleItemId {
-        *self.as_ref().map_right(|n| n.peek().unwrap()).into_inner()
+        *self.0.as_ref().map_right(|n| n.peek().unwrap()).into_inner()
     }
 }
 
@@ -275,11 +283,50 @@ where
     NoFoundNode { node_id: RendererNodeId<R> },
 }
 
-#[derive(Default, Deref, DerefMut, Debug, IntoIterator, From)]
+#[derive(Default, Debug)]
 pub struct NodeStyleAttrInfos(pub HashMap<AttrIndex, NodeStyleAttrInfo>);
+impl Deref for NodeStyleAttrInfos {
+    type Target = HashMap<AttrIndex, NodeStyleAttrInfo>;
+    #[inline]
+    fn deref(&self) -> &Self::Target { &self.0 }
+}
+impl DerefMut for NodeStyleAttrInfos {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+}
 
-#[derive(Default, Deref, DerefMut, Debug, IntoIterator, From)]
+impl IntoIterator for NodeStyleAttrInfos {
+    type Item = <HashMap<AttrIndex, NodeStyleAttrInfo> as IntoIterator>::Item;
+    type IntoIter = <HashMap<AttrIndex, NodeStyleAttrInfo> as IntoIterator>::IntoIter;
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        <HashMap<AttrIndex, NodeStyleAttrInfo> as IntoIterator>::into_iter(self.0)
+    }
+}
+
+#[derive(Default, Debug)]
 pub struct NodeInterStyleAttrInfos(pub HashMap<StyleInteraction, NodeStyleAttrInfos>);
+impl Deref for NodeInterStyleAttrInfos {
+    type Target = HashMap<StyleInteraction, NodeStyleAttrInfos>;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl DerefMut for NodeInterStyleAttrInfos {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+impl IntoIterator for NodeInterStyleAttrInfos {
+    type Item = <HashMap<StyleInteraction, NodeStyleAttrInfos> as IntoIterator>::Item;
+    type IntoIter = <HashMap<StyleInteraction, NodeStyleAttrInfos> as IntoIterator>::IntoIter;
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        <HashMap<StyleInteraction, NodeStyleAttrInfos> as IntoIterator>::into_iter(self.0)
+    }
+}
 
 impl NodeInterStyleAttrInfos {
     pub fn remove_attr_info(
