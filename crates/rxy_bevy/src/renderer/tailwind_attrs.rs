@@ -1,5 +1,5 @@
 use bevy_render::prelude::Visibility;
-use bevy_text::{BreakLineOn, TextAlignment};
+use bevy_text::{BreakLineOn, JustifyText};
 use bevy_ui::{AlignItems, Display, FlexDirection, FlexWrap, JustifyContent, PositionType, Val};
 use crate::all_attrs::{
     align_items, column_gap, display, flex_direction, flex_grow, flex_shrink, flex_wrap, height,
@@ -226,13 +226,13 @@ pub trait TailwindAttrs: MemberOwner<BevyRenderer> + Sized {
         self.member(ElementAttr::new(BreakLineOn::NoWrap.into()))
     }
     fn text_left(self) -> Self::AddMember<ElementAttr<BevyRenderer, text_align>> {
-        self.member(ElementAttr::new(TextAlignment::Left.into()))
+        self.member(ElementAttr::new(JustifyText::Left.into()))
     }
     fn text_center(self) -> Self::AddMember<ElementAttr<BevyRenderer, text_align>> {
-        self.member(ElementAttr::new(TextAlignment::Center.into()))
+        self.member(ElementAttr::new(JustifyText::Center.into()))
     }
     fn text_right(self) -> Self::AddMember<ElementAttr<BevyRenderer, text_align>> {
-        self.member(ElementAttr::new(TextAlignment::Right.into()))
+        self.member(ElementAttr::new(JustifyText::Right.into()))
     }
 
     fn size<T>(

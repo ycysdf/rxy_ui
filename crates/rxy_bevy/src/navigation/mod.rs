@@ -3,8 +3,8 @@ use bevy_ecs::query::With;
 use bevy_ecs::schedule::IntoSystemConfigs;
 use bevy_ecs::system::{Query, Res, ResMut};
 use bevy_ecs::{change_detection::DetectChangesMut, entity::Entity, prelude::Resource};
-use bevy_input::InputSystem;
-use bevy_input::{prelude::KeyCode, Input};
+use bevy_input::{ButtonInput, InputSystem};
+use bevy_input::prelude::KeyCode;
 use bevy_render::view::ViewVisibility;
 use bevy_ui::{Interaction, UiStack, UiSystem};
 
@@ -54,7 +54,7 @@ impl Default for KeyboardNavigationInput {
 
 /// Should the [`keyboard_navigation_system`] run?
 pub(crate) fn tab_pressed(
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     keyboard_navigation: Res<KeyboardNavigationInput>,
 ) -> bool {
     keyboard_navigation.enabled && keyboard_input.just_pressed(KeyCode::Tab)
@@ -67,7 +67,7 @@ pub(crate) fn keyboard_navigation_system(
     mut focus: ResMut<FocusedEntity>,
     mut interactions: Query<&mut Interaction>,
     focusables: Query<&ViewVisibility, With<Focusable>>,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     ui_stack: Res<UiStack>,
 ) {
     let reverse_order =
@@ -124,8 +124,8 @@ pub(crate) fn keyboard_navigation_system(
 }
 
 /// Should the [`keyboard_click`] system run?
-pub(crate) fn trigger_click(keyboard_input: Res<Input<KeyCode>>) -> bool {
-    keyboard_input.just_pressed(KeyCode::Space) || keyboard_input.just_pressed(KeyCode::Return)
+pub(crate) fn trigger_click(keyboard_input: Res<ButtonInput<KeyCode>>) -> bool {
+    keyboard_input.just_pressed(KeyCode::Space) || keyboard_input.just_pressed(KeyCode::Enter)
 }
 
 /// Trigger the [`Focus`] entity to be clicked.
@@ -136,8 +136,8 @@ pub(crate) fn keyboard_click(mut interactions: Query<&mut Interaction>, focus: R
 }
 
 /// Should the [`end_keyboard_click`] system run?
-pub(crate) fn trigger_click_end(keyboard_input: Res<Input<KeyCode>>) -> bool {
-    keyboard_input.just_released(KeyCode::Space) || keyboard_input.just_released(KeyCode::Return)
+pub(crate) fn trigger_click_end(keyboard_input: Res<ButtonInput<KeyCode>>) -> bool {
+    keyboard_input.just_released(KeyCode::Space) || keyboard_input.just_released(KeyCode::Enter)
 }
 
 /// Reset the clicked state.
@@ -176,7 +176,7 @@ mod test {
         let mut commands = Commands::new(&mut queue, &world);
 
         commands.init_resource::<bevy_a11y::Focus>();
-        commands.init_resource::<Input<KeyCode>>();
+        commands.init_resource::<ButtonInput<KeyCode>>();
         commands.init_resource::<UiStack>();
 
         let mut children = Vec::new();
@@ -207,7 +207,7 @@ mod test {
 
         // Simulate pressing shift
         let mut keyboard_input =
-            world.get_resource_mut::<Input<KeyCode>>().expect("keyboard input resource");
+            world.get_resource_mut::<ButtonInput<KeyCode>>().expect("keyboard input resource");
         keyboard_input.press(KeyCode::ShiftLeft);
 
         schedule.run(&mut world);

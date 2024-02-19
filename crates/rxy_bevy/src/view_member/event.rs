@@ -111,7 +111,7 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         self.on(x_pressed(events), system)
     }
 
-    fn on_return<S, Marker>(
+    fn on_enter<S, Marker>(
         self,
         system: S,
     ) -> Self::AddMember<EventViewMember<impl ElementEventIds, S, Marker>>
@@ -119,7 +119,7 @@ pub trait ElementKeyboardEvents: MemberOwner<BevyRenderer> + Sized {
         S: IntoSystem<(), (), Marker> + Send + 'static,
         Marker: Send + 'static,
     {
-        self.on_just_pressed(KeyCode::Return, system)
+        self.on_just_pressed(KeyCode::Enter, system)
     }
 
     fn on_esc<S, Marker>(

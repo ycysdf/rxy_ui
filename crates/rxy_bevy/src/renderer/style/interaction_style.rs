@@ -2,11 +2,10 @@ use bevy_derive::{Deref, DerefMut};
 use super::attr_iter::{EntityStyleWorldQuery, StateOwnerWithNodeId};
 use super::node_style_state::NodeStyleSheetsState;
 use super::{Previous};
-use bevy_ecs::entity::Entity;
+use bevy_ecs::entity::{Entity, EntityHashMap};
 use bevy_ecs::prelude::{Changed, Commands, Query, With, World};
 use bevy_ecs::system::{Command, ResMut};
 use bevy_ui::Interaction;
-use bevy_utils::EntityHashMap;
 use super::rxy_bevy_crate::{
     AttrSetBits, ElementEntityExtraData, FocusedEntity, RendererState,
 };
@@ -15,7 +14,7 @@ use rxy_core::style::{NodeInterStyleAttrInfos, NodeStyleAttrInfos, StyleAttrValu
 use crate::attrs::get_attr_by_index;
 
 #[derive(Default, DerefMut, Deref, Debug)]
-pub struct SetAttrValuesCommand(EntityHashMap<Entity, Vec<(AttrIndex, Option<StyleAttrValue>)>>);
+pub struct SetAttrValuesCommand(EntityHashMap<Vec<(AttrIndex, Option<StyleAttrValue>)>>);
 
 impl SetAttrValuesCommand {
     pub fn add(

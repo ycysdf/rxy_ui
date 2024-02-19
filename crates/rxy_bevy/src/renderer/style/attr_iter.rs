@@ -5,9 +5,9 @@ use super::node_style_state::NodeStyleSheetsState;
 use super::{interaction_to_style_interaction, EntityAttrSyncer, StyleEntityRefExt, StyleError};
 use super::{EntityWorldRef, Result};
 use bevy_ecs::prelude::{Entity, Query};
-use bevy_ecs::query::ReadOnlyWorldQuery;
 use bevy_ecs::world::{EntityRef, EntityWorldMut, World};
 use bevy_ui::Interaction;
+use bevy_ecs::query::QueryFilter;
 use super::rxy_bevy_crate::{
     AttrSetBits, ElementEntityExtraData, ElementEntityWorldMutExt, FocusedEntity, RendererState,
 };
@@ -132,12 +132,12 @@ impl<'a> StateOwnerWithNodeId<'a, '_> for EntityWorldRef<'a> {
     }
 }
 
-pub struct EntityStyleWorldQuery<'a, 'world, 'state, F: ReadOnlyWorldQuery> {
+pub struct EntityStyleWorldQuery<'a, 'world, 'state, F: QueryFilter> {
     pub query: Query<'world, 'state, &'a RendererState<NodeStyleSheetsState>, F>,
     pub current_entity: Entity,
 }
 
-impl<'a, 'world, 'state, F: ReadOnlyWorldQuery> StateOwner<'a, 'a>
+impl<'a, 'world, 'state, F: QueryFilter> StateOwner<'a, 'a>
     for EntityStyleWorldQuery<'world, 'state, 'a, F>
 {
     fn get_style_sheets_state(&'a self, entity: Entity) -> Result<&'a NodeStyleSheetsState> {
@@ -148,7 +148,7 @@ impl<'a, 'world, 'state, F: ReadOnlyWorldQuery> StateOwner<'a, 'a>
     }
 }
 
-impl<'a, 'world, 'state, F: ReadOnlyWorldQuery> StateOwnerWithNodeId<'a, 'a>
+impl<'a, 'world, 'state, F: QueryFilter> StateOwnerWithNodeId<'a, 'a>
     for EntityStyleWorldQuery<'world, 'state, 'a, F>
 {
     fn get_current_entity(&self) -> Entity {
