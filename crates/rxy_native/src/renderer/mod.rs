@@ -1,25 +1,29 @@
-use hecs::World;
-use rxy_core::{NodeTree, Renderer};
+use rxy_core::{Element, NodeTree, Renderer};
 use std::future::Future;
+use bevy_ecs::prelude::Entity;
+use bevy_ecs::world::World;
 use winit::event_loop::EventLoopProxy;
 
 use crate::tt::XyWindow;
 
 pub mod node_tree;
 mod view_key;
+pub mod common_renderer;
+pub mod elements;
+mod layout;
+pub mod ui_node;
+pub mod geometry;
+mod visibility;
+pub mod node_bundles;
+
+pub type NativeElement<E, VM> = Element<NativeRenderer, E, VM>;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NativeRenderer;
 
 impl Renderer for NativeRenderer {
-    type NodeId = hecs::Entity;
-    type NodeTree = XyWindow;
-    type StateMutRef<'a, S: Send + Sync + 'static> = hecs::RefMut<'a, S>
-        where
-            Self: 'a;
-    type StateRef<'a, S: Send + Sync + 'static> = hecs::Ref<'a, S>
-        where
-            Self: 'a;
+    type NodeId = Entity;
+    type NodeTree = World;
 
     cfg_if::cfg_if! {
         if #[cfg(feature = "tokio")] {

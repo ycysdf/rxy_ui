@@ -35,7 +35,7 @@ bevy = [
     "xy_reactive?/bevy", "rxy_core/bevy"
 ]
 web = ["std", "rxy_web_dom"]
-native = ["std", "rxy_native"]
+native = ["std", "rxy_native", "rxy_native/tokio"]
 
 [workspace]
 members = ["crates/*", "examples/native_playground"]
@@ -221,7 +221,7 @@ web-sys = { version = "0.3", features = [
 
 [dev-dependencies]
 bevy = { version = "0.12.1", default-features = false, features = [
-#    "dynamic_linking",
+    #    "dynamic_linking",
     #    "animation",
     "bevy_asset", #    "bevy_audio",  #    "bevy_gilrs",
     #    "bevy_scene",

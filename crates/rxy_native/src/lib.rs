@@ -1,17 +1,26 @@
+pub use renderer::*;
 mod renderer;
-
+pub mod all_attrs {
+    // pub use crate::attrs::*;
+    // pub use crate::elements::input_attrs::*;
+    pub use crate::elements::attrs::*;
+}
 pub mod prelude {
     pub use crate::tt::XyApp;
+
+    pub use crate::renderer::common_renderer::*;
+    pub use crate::renderer::*;
+    // pub use crate::attrs::element_view_builder::*;
 }
 pub mod tt {
-    use hecs::World;
-    use kurbo::{Affine, Size};
+    use kurbo::{Affine, Point, Size, Vec2};
     use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
     use rxy_core::prelude::{IntoView, Renderer, View, ViewCtx};
-    use rxy_core::utils::HashMap;
+    use rxy_core::utils::{HashMap, SyncCell};
     use std::any::Any;
     use std::iter::Scan;
     use std::mem::size_of;
+    use std::ops::{Deref, DerefMut};
     use vello::util::{RenderContext, RenderSurface};
     use vello::{peniko::Color, AaSupport, RenderParams, RendererOptions, Scene};
     use winit::event::{Event, WindowEvent};
@@ -19,7 +28,13 @@ pub mod tt {
     use winit::window::{Window, WindowBuilder, WindowId};
 
     use crate::renderer::NativeRenderer;
+    use crate::ui_node::{
+        BackgroundColor, BorderColor, BorderRadius, Node, Outline, VelloFragment,
+    };
     use bevy_ecs::commands::CommandQueue;
+    use bevy_ecs::prelude::{Entity, Resource, World};
+    use bevy_ecs::query::{AnyOf, Changed, QueryState};
+    use vello::peniko::{Brush, Fill};
 
     pub enum EventLoopUserEvent {
         CommandQueue(CommandQueue),
@@ -33,7 +48,7 @@ pub mod tt {
 
     impl UserEventSender {
         #[inline]
-        pub fn send(&self, f: impl FnOnce(&mut XyWindow) + Send + 'static) {
+        pub fn send(&self, f: impl FnOnce(&mut World) + Send + 'static) {
             let mut command_queue = CommandQueue::default();
             command_queue.push(f);
             self.send_queue(command_queue)
@@ -88,6 +103,12 @@ pub mod tt {
                 render_cx,
             }
         }
+
+        pub fn resize(&mut self, (width, height): (u32, u32)) {
+            self.render_cx
+                .resize_surface(&mut self.surface, width, height);
+        }
+
         pub fn render_scene(&mut self, scene: &Scene, size: Option<(u32, u32)>) {
             // let scale_factor =window.scale_factor();
             // let mut size = window.inner_size().to_logical(scale_factor);
@@ -123,18 +144,32 @@ pub mod tt {
         }
     }
 
-    pub struct XyWindow {
-        pub world: hecs::World,
-        pub user_event_sender: UserEventSender,
-        pub window: Window,
-        pub root_entity: hecs::Entity,
-        pub surface_renderer: Option<WindowSurfaceRenderer>,
+    pub struct XyWindow(Window);
+
+    impl Deref for XyWindow {
+        type Target = Window;
+
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl DerefMut for XyWindow {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    #[derive(Resource)]
+    pub struct XyWindowScene {
         pub scene: Scene,
+        pub root_entity: Entity,
     }
 
     pub struct XyApp {
-        pub main_window: XyWindow,
+        pub world: World,
         pub event_loop: EventLoop<EventLoopUserEvent>,
+        pub root_entity: Entity,
     }
 
     impl Default for XyApp {
@@ -148,17 +183,17 @@ pub mod tt {
             let event_loop = EventLoopBuilder::<EventLoopUserEvent>::with_user_event().build();
             let main_window = main_window.build(&event_loop).unwrap();
             let mut world = World::new();
-            let user_event_sender = UserEventSender::new(event_loop.create_proxy());
+            let root_entity = world.spawn(()).id();
+            world.insert_non_send_resource(XyWindow(main_window));
+            world.insert_resource(XyWindowScene {
+                scene: Default::default(),
+                root_entity,
+            });
+            world.insert_non_send_resource(UserEventSender::new(event_loop.create_proxy()));
             XyApp {
                 event_loop,
-                main_window: XyWindow {
-                    window: main_window,
-                    root_entity: world.spawn(()),
-                    world,
-                    user_event_sender,
-                    surface_renderer: Default::default(),
-                    scene: Default::default(),
-                },
+                world,
+                root_entity,
             }
         }
 
@@ -166,12 +201,12 @@ pub mod tt {
         where
             V: View<NativeRenderer>,
         {
-            let root = self.main_window.root_entity;
+            let parent = self.root_entity;
             let view = view.into_view();
             view.build(
                 ViewCtx {
-                    world: &mut self.main_window,
-                    parent: root,
+                    world: &mut self.world,
+                    parent,
                 },
                 None,
                 false,
@@ -179,46 +214,154 @@ pub mod tt {
         }
 
         pub fn run(mut self) {
-            let proxy = self.event_loop.create_proxy();
-            let surface_renderer = tokio::runtime::Builder::new_current_thread()
+            // let proxy = self.event_loop.create_proxy();
+            let window = self.world.non_send_resource::<XyWindow>();
+            let mut surface_renderer = tokio::runtime::Builder::new_current_thread()
                 .build()
                 .unwrap()
-                .block_on(async { WindowSurfaceRenderer::new(&self.main_window.window).await });
+                .block_on(async { WindowSurfaceRenderer::new(window.deref()).await });
+            // let renderer = WindowSurfaceRenderer::new(&main_window);
+            // world.insert_non_send_resource(surface_renderer);
             // NativeRenderer::spawn_task(async move {
             //     proxy.send_event(EventLoopUserEvent::SurfaceReady(surface_renderer.await))
             // });
 
-            // proxy.send_event(event)
             let _ = self.event_loop.run(move |event, _, control_flow| {
                 control_flow.set_wait();
                 match event {
-                    Event::WindowEvent {
-                        event: WindowEvent::CloseRequested,
-                        ..
-                    } => {
-                        // println!("The close button was pressed; stopping");
-                        control_flow.set_exit();
-                    }
-                    Event::UserEvent(user_event) =>{
-                        match user_event {
-                            EventLoopUserEvent::CommandQueue(mut cmd_queue) => {
-                                cmd_queue.apply(&mut self.main_window);
-                            },
-                            EventLoopUserEvent::SurfaceReady(mut surface_renderer) => {
-                                surface_renderer.render_scene(&self.main_window.scene, None);
-                                self.main_window.surface_renderer = Some(surface_renderer);
-                            },
+                    Event::WindowEvent { event, .. } => {
+                        let mut window = &self.world.non_send_resource::<XyWindow>().0;
+                        match event {
+                            WindowEvent::Resized(size) => {
+                                surface_renderer.resize(size.into());
+                                window.request_redraw();
+                            }
+                            WindowEvent::ScaleFactorChanged { .. } => {}
+                            WindowEvent::CloseRequested => {
+                                control_flow.set_exit();
+                            }
+                            _ => {}
                         }
                     }
-                    Event::RedrawRequested {
-                        ..
-                    } => {
+                    Event::UserEvent(user_event) => {
+                        match user_event {
+                            EventLoopUserEvent::CommandQueue(mut cmd_queue) => {
+                                cmd_queue.apply(&mut self.world);
+                            }
+                            EventLoopUserEvent::SurfaceReady(mut surface_renderer) => {
+                                // surface_renderer.render_scene(&self.main_window.scene, None);
+                                // self.main_window.surface_renderer = Some(surface_renderer);
+                            }
+                        }
                     }
-                    Event::WindowEvent {
-                        event: WindowEvent::ScaleFactorChanged { /*scale_factor,*/ .. },
-                        ..
-                    } => {
-                        // window.request_redraw();
+                    Event::RedrawRequested { .. } => {
+                        println!("RedrawRequested");
+                        let XyWindowScene {
+                            scene: mut root_scene,
+                            root_entity,
+                        } = self.world.remove_resource::<XyWindowScene>().unwrap();
+                        {
+                            let mut ui_nodes: QueryState<
+                                (
+                                    Entity,
+                                    &mut VelloFragment,
+                                    Option<&BackgroundColor>,
+                                    Option<&BorderColor>,
+                                    Option<&Outline>,
+                                    Option<&BorderRadius>,
+                                    &Node,
+                                    // &GlobalTransform
+                                    // &ViewVisibility,
+                                    // Option<&CalculatedClip>,
+                                ),
+                                (),
+                            > = self.world.query_filtered();
+                            println!("ui_nodes : {:?}", ui_nodes.iter(&self.world).len());
+                            // par_
+                            ui_nodes.iter_mut(&mut self.world).for_each(
+                                |(
+                                    entity,
+                                    mut vello_node,
+                                    bg_color,
+                                    border_color,
+                                    outline,
+                                    border_radius,
+                                    node,
+                                )| {
+                                    if let Some(bg_color) = bg_color {
+                                        if let Some(border_radius) = border_radius {
+                                            let radii = border_radius.resolve(
+                                                node.calculated_size,
+                                                Vec2::default(),
+                                                1.,
+                                            );
+                                            let rounded_rect = kurbo::RoundedRect::from_rect(
+                                                kurbo::Rect::from_points(
+                                                    Point::new(0., 0.),
+                                                    node.calculated_size.to_point(),
+                                                ),
+                                                radii,
+                                            );
+                                            vello_node.fill(
+                                                Fill::NonZero,
+                                                Affine::default(),
+                                                &Brush::Solid(bg_color.0),
+                                                None,
+                                                &rounded_rect,
+                                            );
+                                        } else {
+                                            vello_node.fill(
+                                                Fill::NonZero,
+                                                Affine::default(),
+                                                &Brush::Solid(bg_color.0),
+                                                None,
+                                                &kurbo::Rect::from_points(
+                                                    Point::new(0., 0.),
+                                                    node.calculated_size.to_point(),
+                                                ),
+                                            );
+                                        }
+                                    }
+
+                                    root_scene.append(&vello_node.0, None);
+                                },
+                            );
+
+                            // let mut vello_nodes: QueryState<&VelloFragment, ()> =
+                            //     self.world.query_filtered();
+                            //
+                            // for node in vello_nodes.iter(&self.world) {
+                            //     root_scene.append(&node.0, None);
+                            // }
+                        }
+
+                        root_scene.fill(
+                            Fill::EvenOdd,
+                            Affine::default(),
+                            &Brush::Solid(Color::rgb8(44, 55, 122)),
+                            None,
+                            &kurbo::Circle::new(Point::new(10., 10.), 10.0),
+                        );
+                        // scene.fill(
+                        //     Fill::EvenOdd,
+                        //     Affine::default(),
+                        //     &Brush::Solid(Color::rgb8(255, 0, 255)),
+                        //     None,
+                        //     &kurbo::Circle::new(Point::new(100., 100.), 150.0),
+                        // );
+                        // scene.fill(
+                        //     Fill::EvenOdd,
+                        //     Affine::default(),
+                        //     &Brush::Solid(Color::rgb8(255, 0, 0)),
+                        //     None,
+                        //     &kurbo::Circle::new(Point::new(100., 100.), 30.0),
+                        // );
+                        surface_renderer.render_scene(&root_scene, None);
+                        root_scene.reset();
+                        self.world.insert_resource(XyWindowScene {
+                            scene: root_scene,
+                            root_entity,
+                        });
                     }
                     _ => (),
                 }

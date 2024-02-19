@@ -21,12 +21,6 @@ use crate::{
 };
 
 impl NodeTree<BevyRenderer> for World {
-    type StateMutRef<'a, S: Send + Sync + 'static> = &'a mut S
-    where
-        Self: 'a;
-    type StateRef<'a, S: Send + Sync + 'static> = &'a S
-    where
-        Self: 'a;
     fn prepare_set_attr_and_get_is_init(
         &mut self,
         node_id: &RendererNodeId<BevyRenderer>,

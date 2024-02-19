@@ -60,6 +60,7 @@ impl Renderer for BevyRenderer {
     #[cfg(not(target_arch = "wasm32"))]
     type Task<T: Send + 'static> = Task<T>;
 
+    // todo: Abortable task
     #[cfg(target_arch = "wasm32")]
     type Task<T: Send + 'static> = ();
 

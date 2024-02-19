@@ -1,11 +1,11 @@
-use rxy_core::{prelude::ViewKey, RendererNodeId, RendererWorld};
+use bevy_ecs::prelude::Entity;
+use bevy_hierarchy::DespawnRecursiveExt;
+use rxy_core::{NodeTree, RendererNodeId, RendererWorld, ViewKey};
+use crate::renderer::NativeRenderer;
 
-use super::NativeRenderer;
-
-impl ViewKey<NativeRenderer> for hecs::Entity {
+impl ViewKey<NativeRenderer> for Entity {
     fn remove(self, world: &mut RendererWorld<NativeRenderer>) {
-        let _ = world.world.despawn(self);
-        //   world.entity_mut(self).despawn_recursive();
+        world.entity_mut(self).despawn_recursive();
     }
 
     #[inline]
@@ -15,11 +15,11 @@ impl ViewKey<NativeRenderer> for hecs::Entity {
         parent: Option<&RendererNodeId<NativeRenderer>>,
         before_node_id: Option<&RendererNodeId<NativeRenderer>>,
     ) {
-        //   world.insert_before(parent, before_node_id, std::slice::from_ref(self));
+        world.insert_before(parent, before_node_id, std::slice::from_ref(self));
     }
     #[inline]
     fn set_visibility(&self, world: &mut RendererWorld<NativeRenderer>, hidden: bool) {
-        //   world.set_visibility(hidden, self)
+        world.set_visibility(hidden, self)
     }
 
     #[inline]
@@ -29,7 +29,7 @@ impl ViewKey<NativeRenderer> for hecs::Entity {
 
     #[inline]
     fn reserve_key(world: &mut RendererWorld<NativeRenderer>, _will_rebuild: bool) -> Self {
-        world.world.reserve_entity()
+        world.reserve_node_id()
     }
 
     fn first_node_id(

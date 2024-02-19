@@ -1,7 +1,12 @@
-use crate::{into_view, BoxedCloneableErasureView, BoxedErasureView, BoxedPropValue, ConstIndex, DataNodeId, InnerSchemaCtx, IntoCloneableView, IntoSchemaProp, IntoView, IntoViewCloneableErasureExt, IntoViewErasureExt, NodeTree, PropHashMap, Renderer, RendererNodeId, RendererWorld, Schema, SchemaProp, SchemaProps, View, ViewCtx, ViewKey, MaybeSend, StateMutRef};
-use alloc::boxed::Box;
-use crate::utils::SyncCell;
 use crate::utils::HashMap;
+use crate::utils::SyncCell;
+use crate::{
+    into_view, BoxedCloneableErasureView, BoxedErasureView, BoxedPropValue, ConstIndex, DataNodeId,
+    InnerSchemaCtx, IntoCloneableView, IntoSchemaProp, IntoView, IntoViewCloneableErasureExt,
+    IntoViewErasureExt, MaybeSend, NodeTree, PropHashMap, Renderer, RendererNodeId, RendererWorld,
+    Schema, SchemaProp, SchemaProps, View, ViewCtx, ViewKey,
+};
+use alloc::boxed::Box;
 use core::any::TypeId;
 use core::marker::PhantomData;
 use rxy_macro::IntoView;
@@ -157,13 +162,15 @@ pub fn scheme_state_scoped<R, U>(
 where
     R: Renderer,
 {
-    let mut taken_map = world.get_node_state_mut::<SchemaViewState<R>>(node_id)
+    let mut taken_map = world
+        .get_node_state_mut::<SchemaViewState<R>>(node_id)
         .and_then(|n| n.prop_state.get().take())?;
     let u = f(&mut *world, &mut taken_map);
 
-    let option = world.get_node_state_mut::<SchemaViewState<R>>(node_id)
-        .unwrap()
-        .map(|n| n.prop_state.get_mut());
+    let option = world
+        .get_node_state_mut::<SchemaViewState<R>>(node_id)
+        .map(|n| n.prop_state.get())
+        .unwrap();
     *option = Some(taken_map);
     Some(u)
 }
@@ -179,7 +186,6 @@ where
     pub data_node_id: Option<DataNodeId<R>>,
     pub key: K,
 }
-
 
 impl<R, K> ViewKey<R> for ViewKeyOrDataNodeId<R, K>
 where

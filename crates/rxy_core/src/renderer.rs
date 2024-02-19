@@ -63,47 +63,12 @@ pub trait Renderer:
 {
     type NodeId: ViewKey<Self>;
     type NodeTree: NodeTree<Self>;
-    type StateMutRef<'a, S: MaybeSend + MaybeSync + 'static>: StateMutRef<Target = S>
-    where
-        Self: 'a;
-    type StateRef<'a, S: Send + Sync + 'static>: StateRef<Target = S>
-    where
-        Self: 'a;
 
     type Task<T: MaybeSend + 'static>: MaybeSend + 'static;
 
     fn spawn_task<T: MaybeSend + 'static>(
         future: impl Future<Output = T> + MaybeSend + 'static,
     ) -> Self::Task<T>;
-}
-
-pub trait StateMutRef<'a>: DerefMut {
-    fn map<U>(
-        &mut self,
-        f: impl FnOnce(&mut Self::Target) -> &mut U,
-    ) -> impl StateMutRef<'a, Target = U>;
-}
-
-impl<'a, T> StateMutRef<'a> for &'a mut T {
-    fn map<U>(
-        &mut self,
-        f: impl FnOnce(&mut Self::Target) -> &mut U,
-    ) -> impl StateMutRef<'a, Target = U> {
-        f(self)
-    }
-}
-
-pub trait StateRef<'a>: Deref {
-    fn map<U>(
-        &mut self,
-        f: impl FnOnce(&mut Self::Target) -> &mut U,
-    ) -> impl StateRef<'a, Target = U>;
-}
-
-impl<'a, T> StateRef<'a> for &'a T {
-    fn map<U>(&self, f: impl FnOnce(&Self::Target) -> &U) -> impl StateRef<'a, Target = U> {
-        f(self)
-    }
 }
 
 pub trait NodeTree<R>
@@ -124,12 +89,12 @@ where
     fn get_node_state_mut<S: MaybeSend + MaybeSync + 'static>(
         &mut self,
         node_id: &RendererNodeId<R>,
-    ) -> Option<R::StateMutRef<'_, S>>;
+    ) -> Option<&mut S>;
 
     fn get_node_state_ref<S: MaybeSend + MaybeSync + 'static>(
         &self,
         node_id: &RendererNodeId<R>,
-    ) -> Option<R::StateRef<'_, S>>;
+    ) -> Option<&S>;
 
     fn take_node_state<S: MaybeSend + MaybeSync + 'static>(
         &mut self,
@@ -215,7 +180,7 @@ where
     fn get_or_insert_default_node_state<S: Default + MaybeSend + MaybeSync + 'static>(
         &mut self,
         node_id: &RendererNodeId<R>,
-    ) -> R::StateMutRef<'_, &mut S> {
+    ) -> &mut S {
         if self.get_node_state_mut::<S>(node_id).is_none() {
             self.set_node_state(node_id, S::default());
         }

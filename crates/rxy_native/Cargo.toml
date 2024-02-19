@@ -19,9 +19,16 @@ taffy = "0.3"
 tracing = "0.1"
 wgpu = "0.18"
 winit = "0.28"
+thiserror = "1.0"
+
+serde = { version = "1.0", features = ["derive"], optional = true }
 
 cfg-if = "1.0"
 compio = { version = "0.9.0-beta.4", optional = true }
 tokio = { version = "1", default-features = false, optional = true, features = ["rt", "rt-multi-thread"] }
+
 [features]
 default = ["tokio"]
+tokio = ["dep:tokio"]
+compio = ["dep:compio"]
+serialize = ["dep:serde"]
