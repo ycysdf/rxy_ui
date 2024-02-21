@@ -1,4 +1,7 @@
-use crate::{IntoView, MaybeSend, MemberOwner, Renderer, RendererNodeId, SoloView, View, ViewCtx, ViewMember, ViewMemberCtx};
+use crate::{
+    IntoView, MaybeSend, MemberOwner, Renderer, RendererNodeId, SoloView, View, ViewCtx,
+    ViewMember, ViewMemberCtx,
+};
 use rxy_macro::IntoView;
 
 /*
@@ -25,7 +28,7 @@ where
     }
 }*/
 
-pub trait ElementView<R>: View<R>
+pub trait ElementView<R>: SoloView<R> + View<R>
 where
     R: Renderer,
 {
@@ -35,19 +38,13 @@ where
     type VM: ViewMember<R>;
     type AddMember<VM: ViewMember<R>>: ElementView<R>;
     type SetMembers<VM: ViewMember<R> + MemberOwner<R>>: ElementView<R>;
-    fn member<VM>(
-        self,
-        member: VM,
-    ) -> Self::AddMember<VM>
-        where
-            (Self::VM, VM): ViewMember<R>,
-            VM: ViewMember<R>;
-    fn members<VM: ViewMember<R>>(
-        self,
-        members: VM,
-    ) -> Self::SetMembers<(VM,)>
-        where
-            VM: ViewMember<R>;
+    fn member<VM>(self, member: VM) -> Self::AddMember<VM>
+    where
+        (Self::VM, VM): ViewMember<R>,
+        VM: ViewMember<R>;
+    fn members<VM: ViewMember<R>>(self, members: VM) -> Self::SetMembers<(VM,)>
+    where
+        VM: ViewMember<R>;
 }
 
 pub trait IntoElementView<R>: 'static
@@ -73,8 +70,7 @@ where
 }
 
 #[derive(Clone, Debug)]
-pub struct ElementViewExtraMembers<R, EV, VM>
-{
+pub struct ElementViewExtraMembers<R, EV, VM> {
     pub element_view: EV,
     pub view_members: VM,
     _marker: core::marker::PhantomData<R>,

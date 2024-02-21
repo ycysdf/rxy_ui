@@ -117,6 +117,33 @@ where
     fn element_node_id(key: &Self::Key) -> &RendererNodeId<R> {
         U::View::element_node_id(&key.key)
     }
+
+    type E = <U::View as ElementView<R>>::E;
+    type VM = VM;
+    type AddMember<AddedMember: ViewMember<R>> = ElementSchemaView<R, U, (VM, AddedMember), P, M>;
+    type SetMembers<Members: ViewMember<R> + MemberOwner<R>> =
+    ElementSchemaView<R, U, Members, P, M>;
+
+    fn member<T>(self, member: T) -> Self::AddMember<T>
+        where
+            (VM, T): ViewMember<R>,
+            T: ViewMember<R>,
+    {
+        ElementSchemaView {
+            members: (self.members, member),
+            schema_view: self.schema_view,
+        }
+    }
+
+    fn members<T>(self, members: T) -> Self::SetMembers<(T,)>
+        where
+            T: ViewMember<R>,
+    {
+        ElementSchemaView {
+            members: (members,),
+            schema_view: self.schema_view,
+        }
+    }
 }
 
 impl<R, U, VM, P, M> SoloView<R> for ElementSchemaView<R, U, VM, P, M>
@@ -161,7 +188,7 @@ where
         );
         self.members.build(
             ViewMemberCtx {
-                index: <U::View as MemberOwner<R>>::VM::count(),
+                index: <U::View as ElementView<R>>::VM::count(),
                 world: ctx.world,
                 node_id: U::View::element_node_id(&key.key).clone(),
             },
@@ -175,42 +202,16 @@ where
     }
 }
 
-impl<R, VM, U, P, M> MemberOwner<R> for ElementSchemaView<R, U, VM, P, M>
-where
-    R: Renderer,
-    VM: ViewMember<R>,
-    U: Schema<R>,
-    U::View: ElementView<R>,
-    P: SchemaProps<R>,
-    M: MaybeSend + 'static,
-{
-    type E = <U::View as MemberOwner<R>>::E;
-    type VM = VM;
-    type AddMember<AddedMember: ViewMember<R>> = ElementSchemaView<R, U, (VM, AddedMember), P, M>;
-    type SetMembers<Members: ViewMember<R> + MemberOwner<R>> =
-        ElementSchemaView<R, U, Members, P, M>;
-
-    fn member<T>(self, member: T) -> Self::AddMember<T>
-    where
-        (VM, T): ViewMember<R>,
-        T: ViewMember<R>,
-    {
-        ElementSchemaView {
-            members: (self.members, member),
-            schema_view: self.schema_view,
-        }
-    }
-
-    fn members<T>(self, members: T) -> Self::SetMembers<(T,)>
-    where
-        T: ViewMember<R>,
-    {
-        ElementSchemaView {
-            members: (members,),
-            schema_view: self.schema_view,
-        }
-    }
-}
+// impl<R, VM, U, P, M> MemberOwner<R> for ElementSchemaView<R, U, VM, P, M>
+// where
+//     R: Renderer,
+//     VM: ViewMember<R>,
+//     U: Schema<R>,
+//     U::View: ElementView<R>,
+//     P: SchemaProps<R>,
+//     M: MaybeSend + 'static,
+// {
+// }
 
 // pub struct SoloWrapper<T>(pub T, PhantomData<OVM>);
 //

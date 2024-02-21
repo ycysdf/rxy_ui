@@ -51,7 +51,7 @@ pub mod prelude {
         DeferredNodeTreeScoped, DynamicView, Either, EitherExt, ElementView, ErasureView,
         IntoDynamicView, IntoElementView, IntoView, IntoViewErasureExt, Keyed, MemberOwner,
         Renderer, Required, SchemaIntoViewFn, SoloView, Static, View, ViewCtx, ViewKey, ViewMember,
-        ViewMemberCtx,
+        ViewMemberCtx
     };
     #[cfg(feature = "xy_reactive")]
     pub use crate::{rx, MemberOwnerRxExt};
