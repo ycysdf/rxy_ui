@@ -3,8 +3,10 @@ use std::fmt::Debug;
 
 use bevy::prelude::*;
 use bevy::render::color::Color;
-use rxy_core::{ElementAttr, fn_schema_view, XNest};
-
+use rxy_bevy::FocusedEntity;
+use rxy_bevy::RendererState;
+use rxy_core::utils::SyncCell;
+use rxy_core::{fn_schema_view, ElementAttr, NodeTree, RendererNodeId, XNest};
 use rxy_ui::prelude::*;
 
 use crate::FocusStyle;
@@ -50,36 +52,58 @@ where
             .bg_color(Color::GRAY)
             .w_full()
     });
+    let (id_sender, id_receiver) = oneshot::channel();
 
-    button()
-        .name("select")
-        .style(SelectStyle)
-        .rx_member(move || {
-            (!readonly.get()).then_some(().on(XConfirm, move || {
-                is_open.update(|is_open| *is_open = !*is_open);
-            }))
-        })
-        .children((
+    let select = button().name("select").style(SelectStyle).children((
+        rx(move || {
+            format!("{}", value.get())
+                .into_view()
+                .text_color(Color::WHITE)
+        }),
+        selection_list::<T>()
+            .style(SelectSelectionListStyle)
+            .slot_content(content)
+            .visibility(is_open)
+            .value(value)
+            .onchange(move |new_value: T| {
+                is_open.set(false);
+                value.set(new_value);
+            })
+            .member(member_builder(
+                |member_ctx: ViewMemberCtx<BevyRenderer>, _| {
+                    let _ = id_sender.send(member_ctx.node_id);
+                },
+            )),
+    ));
+
+    add_members(
+        select,
+        member_builder(move |_, _| {
+            let selection_list_entity = id_receiver.try_recv().unwrap();
             rx(move || {
-                format!("{}", value.get())
-                    .into_view()
-                    .text_color(Color::WHITE)
-            }),
-            selection_list::<T>()
-                .style(SelectSelectionListStyle)
-                .slot_content(content)
-                .visibility(is_open)
-                .value(value)
-                .onchange(move |new_value: T| {
-                    is_open.set(false);
-                    value.set(new_value);
-                }),
-        ))
+                (!readonly.get()).then_some(().on(
+                    XConfirm,
+                    move |query: Query<&RendererState<Context<SelectionListContext<T>>>>,
+                          cmd_sender: Res<CmdSender>| {
+                        is_open.update(|is_open| *is_open = !*is_open);
+                        let selection_list_ctx = &query.get(selection_list_entity).unwrap().0 .0;
+                        if let Some(selected_entity) = selection_list_ctx.selected_entity {
+                            cmd_sender.add(move |world: &mut World| {
+                                let mut focused_entity = world.resource_mut::<FocusedEntity>();
+                                focused_entity.0 = Some(selected_entity);
+                            })
+                        }
+                    },
+                ))
+            })
+        }),
+    )
 }
 
 #[derive(Clone)]
 pub struct SelectionListContext<T: Send + Sync + 'static> {
     value_signal: RwSignal<T>,
+    selected_entity: Option<RendererNodeId<BevyRenderer>>,
 }
 
 #[schema]
@@ -92,7 +116,10 @@ pub fn schema_selection_list<T: Default + Debug + Send + Sync + PartialEq + Clon
 ) -> impl IntoElementView<BevyRenderer> {
     let value_signal = ctx.use_controlled_state(value, onchange);
     provide_context(
-        SelectionListContext { value_signal },
+        SelectionListContext {
+            value_signal,
+            selected_entity: None,
+        },
         div().style(x().flex_col().py(4)).children(content),
     )
 }
@@ -113,10 +140,11 @@ where
 {
     fn_schema_view(move || {
         view_builder(|ctx, _| {
-            let ctx = ctx.context::<SelectionListContext<T>>();
+            let parent = ctx.parent;
+            let selection_list = ctx.context::<SelectionListContext<T>>();
             let is_selected = use_memo({
                 let value = value.clone();
-                let value_signal = ctx.value_signal;
+                let value_signal = selection_list.value_signal;
                 move |_| value_signal.get() == value
             });
 
@@ -126,8 +154,21 @@ where
                         value: value.clone(),
                         is_selected: is_selected.get(),
                     }),
-                    ().on(XConfirm, {
-                        let value_signal = ctx.value_signal;
+                    ().member(rx(move || {
+                        is_selected.get().then_some(member_builder(
+                            move |member_ctx: ViewMemberCtx<BevyRenderer>, _| {
+                                if let Some(selection_list) = member_ctx
+                                    .world
+                                    .get_node_state_mut::<Context<SelectionListContext<T>>>(&parent)
+                                {
+                                    selection_list.0.selected_entity = Some(member_ctx.node_id);
+                                    println!("selected entity: {:?}", member_ctx.node_id);
+                                }
+                            },
+                        ))
+                    }))
+                    .on(XConfirm, {
+                        let value_signal = selection_list.value_signal;
                         let value = value.clone();
                         move || {
                             value_signal.set(value.clone());

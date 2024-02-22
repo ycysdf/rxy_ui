@@ -21,13 +21,13 @@ mod entity_extra_data;
 mod event;
 mod focusable;
 pub mod navigation;
+mod nest;
 mod plugin;
 mod renderer;
 mod res_change_observe;
 mod view;
 mod view_member;
 mod world_ext;
-mod nest;
 
 pub type FnSchemaView<F, P = ()> =
     SchemaView<BevyRenderer, FnSchema<IntoViewSchemaFnWrapper<F, BevyRenderer>, P>, (), ()>;
@@ -50,19 +50,24 @@ pub use crate::attrs::element_view_builder;
 pub mod prelude {
     pub use bevy_ui::prelude::Val;
 
-    pub use crate::renderer::BevyElement;
-    pub use crate::renderer::common_renderer::*;
     pub use crate::attrs::element_view_builder::*;
+    pub use crate::renderer::common_renderer::*;
+    pub use crate::renderer::BevyElement;
 
-    pub use super::{
-        all_attrs::CommonAttrsViewBuilder, event::*, system_once, x_res,
-        BevyRenderer, CloneableSlot, CmdReceiver, CmdSender, ElementKeyboardEvents,
-        FnSchemaView, Focusable, MemberOwnerBundleExt, ReceiverProp, ResChangeWorldExt, RxyPlugin,
-        RxyUiCommandExt, SchemaCtx, Slot,CompositeAttrs
+    pub use super::all_attrs::{
+        CommonAttrsElementViewBuilder, CommonAttrsViewBuilder, ElementSpanAttrsElementViewBuilder,
+        ElementSpanAttrsViewBuilder,
     };
     #[cfg(feature = "tailwind_aliases")]
-    pub use super::TailwindAttrs;
-
+    pub use super::renderer::{ElementViewTailwindAttrs, MemberOwnerTailwindAttrs};
+    pub use super::{
+        event::*, system_once, x_res, BevyRenderer, CloneableSlot, CmdReceiver, CmdSender,
+        FnSchemaView, Focusable, ReceiverProp,
+        ResChangeWorldExt, RxyPlugin, RxyUiCommandExt, SchemaCtx, Slot,
+    };
+    pub use super::renderer::view_builder_ext::*;
+    pub use super::renderer::event::*;
+    pub use super::{ElementViewCompositeAttrs, MemberOwnerCompositeAttrs};
 
     #[cfg(feature = "style")]
     pub use super::style::prelude::StyleError;
