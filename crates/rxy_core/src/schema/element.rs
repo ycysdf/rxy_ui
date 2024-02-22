@@ -1,6 +1,6 @@
 use rxy_macro::IntoView;
 
-use crate::schema::view::SchemaView;
+use crate::schema::view::RendererSchemaView;
 use crate::{
     ConstIndex, ElementView, IntoCloneableView, IntoSchemaProp, IntoView,
     MaybeSend, MemberOwner, Renderer, RendererNodeId, Schema, SchemaProps, SoloView, View, ViewCtx,
@@ -8,7 +8,7 @@ use crate::{
 };
 
 #[derive(IntoView)]
-pub struct ElementSchemaView<R, U, VM = (), P = (), M = ()>
+pub struct RendererSchemaElementView<R, U, VM = (), P = (), M = ()>
 where
     R: Renderer,
     VM: ViewMember<R>,
@@ -18,10 +18,10 @@ where
     M: MaybeSend + 'static,
 {
     members: VM,
-    schema_view: SchemaView<R, U, P, M>,
+    schema_view: RendererSchemaView<R, U, P, M>,
 }
 
-impl<R, U, M> ElementSchemaView<R, U, (), (), M>
+impl<R, U, M> RendererSchemaElementView<R, U, (), (), M>
 where
     R: Renderer,
     U: Schema<R>,
@@ -29,15 +29,15 @@ where
     M: MaybeSend + 'static,
 {
     #[inline]
-    pub fn new(u: U) -> ElementSchemaView<R, U, (), (), M> {
-        ElementSchemaView {
+    pub fn new(u: U) -> RendererSchemaElementView<R, U, (), (), M> {
+        RendererSchemaElementView {
             members: (),
-            schema_view: SchemaView::new(u),
+            schema_view: RendererSchemaView::new(u),
         }
     }
 }
 
-impl<R, U, VM, P, M> ElementSchemaView<R, U, VM, P, M>
+impl<R, U, VM, P, M> RendererSchemaElementView<R, U, VM, P, M>
 where
     R: Renderer,
     VM: ViewMember<R>,
@@ -47,12 +47,12 @@ where
     M: MaybeSend + 'static,
 {
     #[inline(always)]
-    pub fn map<MU>(self, f: impl FnOnce(U) -> MU) -> ElementSchemaView<R, MU, VM, P, M>
+    pub fn map<MU>(self, f: impl FnOnce(U) -> MU) -> RendererSchemaElementView<R, MU, VM, P, M>
     where
         MU: Schema<R>,
         MU::View: ElementView<R>,
     {
-        ElementSchemaView {
+        RendererSchemaElementView {
             members: self.members,
             schema_view: self.schema_view.map(f),
         }
@@ -60,7 +60,7 @@ where
 
     #[inline(always)]
     pub fn indexed_slot<const I: usize>(self, view: impl IntoView<R>) -> Self {
-        ElementSchemaView {
+        RendererSchemaElementView {
             members: self.members,
             schema_view: self.schema_view.indexed_slot::<I>(view),
         }
@@ -68,7 +68,7 @@ where
 
     #[inline(always)]
     pub fn cloneable_indexed_slot<const I: usize>(self, view: impl IntoCloneableView<R>) -> Self {
-        ElementSchemaView {
+        RendererSchemaElementView {
             members: self.members,
             schema_view: self.schema_view.cloneable_indexed_slot::<I>(view),
         }
@@ -78,13 +78,13 @@ where
     pub fn set_indexed_prop<const I: usize, ISP, T>(
         self,
         value: ISP,
-    ) -> ElementSchemaView<R, U, VM, P::Props<ConstIndex<I, ISP::Prop>>, M>
+    ) -> RendererSchemaElementView<R, U, VM, P::Props<ConstIndex<I, ISP::Prop>>, M>
     where
         P::Props<ConstIndex<I, ISP::Prop>>: SchemaProps<R>,
         ISP: IntoSchemaProp<R, T>,
         T: MaybeSend + 'static,
     {
-        ElementSchemaView {
+        RendererSchemaElementView {
             members: self.members,
             schema_view: self.schema_view.set_indexed_prop::<I, ISP, T>(value),
         }
@@ -96,7 +96,7 @@ where
         ISP: IntoSchemaProp<R, IT>,
         IT: MaybeSend + 'static,
     {
-        ElementSchemaView {
+        RendererSchemaElementView {
             members: self.members,
             schema_view: self
                 .schema_view
@@ -105,7 +105,7 @@ where
     }
 }
 
-impl<R, U, VM, P, M> ElementView<R> for ElementSchemaView<R, U, VM, P, M>
+impl<R, U, VM, P, M> ElementView<R> for RendererSchemaElementView<R, U, VM, P, M>
 where
     R: Renderer,
     VM: ViewMember<R>,
@@ -120,16 +120,16 @@ where
 
     type E = <U::View as ElementView<R>>::E;
     type VM = VM;
-    type AddMember<AddedMember: ViewMember<R>> = ElementSchemaView<R, U, (VM, AddedMember), P, M>;
+    type AddMember<AddedMember: ViewMember<R>> = RendererSchemaElementView<R, U, (VM, AddedMember), P, M>;
     type SetMembers<Members: ViewMember<R> + MemberOwner<R>> =
-    ElementSchemaView<R, U, Members, P, M>;
+    RendererSchemaElementView<R, U, Members, P, M>;
 
     fn member<T>(self, member: T) -> Self::AddMember<T>
         where
             (VM, T): ViewMember<R>,
             T: ViewMember<R>,
     {
-        ElementSchemaView {
+        RendererSchemaElementView {
             members: (self.members, member),
             schema_view: self.schema_view,
         }
@@ -139,14 +139,14 @@ where
         where
             T: ViewMember<R>,
     {
-        ElementSchemaView {
+        RendererSchemaElementView {
             members: (members,),
             schema_view: self.schema_view,
         }
     }
 }
 
-impl<R, U, VM, P, M> SoloView<R> for ElementSchemaView<R, U, VM, P, M>
+impl<R, U, VM, P, M> SoloView<R> for RendererSchemaElementView<R, U, VM, P, M>
 where
     R: Renderer,
     VM: ViewMember<R>,
@@ -160,7 +160,7 @@ where
     }
 }
 
-impl<R, U, VM, P, M> View<R> for ElementSchemaView<R, U, VM, P, M>
+impl<R, U, VM, P, M> View<R> for RendererSchemaElementView<R, U, VM, P, M>
 where
     R: Renderer,
     VM: ViewMember<R>,

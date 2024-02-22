@@ -6,7 +6,7 @@ use bevy::render::color::Color;
 use rxy_bevy::FocusedEntity;
 use rxy_bevy::RendererState;
 use rxy_core::utils::SyncCell;
-use rxy_core::{fn_schema_view, ElementAttr, NodeTree, RendererNodeId, XNest};
+use rxy_core::{fn_schema_view, ElementAttr, NodeTree, RendererNodeId, SchemaElementView, XNest};
 use rxy_ui::prelude::*;
 
 use crate::FocusStyle;
@@ -18,86 +18,103 @@ pub struct SelectStyle;
 #[derive(TypedStyle)]
 pub struct SelectSelectionListStyle;
 
-#[schema]
-pub fn schema_select<T>(
-    mut ctx: SchemaCtx,
+#[derive(ElementSchema)]
+pub struct Select<T>
+where
+    T: Default + Debug + Display + Send + Sync + PartialEq + Clone + 'static,
+{
+    ctx: SchemaCtx,
     content: CloneableSlot,
     value: ReadSignal<T>,
     readonly: ReadSignal<bool>,
     onchange: Sender<T>,
-) -> impl IntoElementView<BevyRenderer>
+}
+
+impl<T> SchemaElementView<BevyRenderer> for Select<T>
 where
     T: Default + Debug + Display + Send + Sync + PartialEq + Clone + 'static,
 {
-    let value = ctx.use_controlled_state(value, onchange);
-    let is_open = use_rw_signal(false);
+    fn view(self) -> impl IntoElementView<BevyRenderer> {
+        let Select {
+            content,
+            value,
+            mut ctx,
+            onchange,
+            readonly,
+        } = self;
+        let value = ctx.use_controlled_state(value, onchange);
+        let is_open = use_rw_signal(false);
 
-    ctx.default_typed_style(SelectStyle, || {
-        (
-            x().flex()
-                .border(1)
-                .border_color(Color::WHITE)
-                .center()
-                .relative()
-                .py(8)
-                .min_w(150),
-            x_hover().bg_color(Color::DARK_GRAY),
-            FocusStyle,
-        )
-    });
-    ctx.default_typed_style(SelectSelectionListStyle, || {
-        x().absolute()
-            .z(1)
-            .top(Val::Percent(100.))
-            .bg_color(Color::GRAY)
-            .w_full()
-    });
-    let (id_sender, id_receiver) = oneshot::channel();
+        ctx.default_typed_style(SelectStyle, || {
+            (
+                x().flex()
+                    .border(1)
+                    .border_color(Color::WHITE)
+                    .center()
+                    .relative()
+                    .py(8)
+                    .min_w(150),
+                x_hover().bg_color(Color::DARK_GRAY),
+                FocusStyle,
+            )
+        });
+        ctx.default_typed_style(SelectSelectionListStyle, || {
+            x().absolute()
+                .z(1)
+                .top(Val::Percent(100.))
+                .bg_color(Color::GRAY)
+                .w_full()
+        });
+        let (id_sender, id_receiver) = oneshot::channel();
 
-    let select = button().name("select").style(SelectStyle).children((
-        rx(move || {
-            format!("{}", value.get())
-                .into_view()
-                .text_color(Color::WHITE)
-        }),
-        selection_list::<T>()
-            .style(SelectSelectionListStyle)
-            .slot_content(content)
-            .visibility(is_open)
-            .value(value)
-            .onchange(move |new_value: T| {
-                is_open.set(false);
-                value.set(new_value);
-            })
-            .member(member_builder(
-                |member_ctx: ViewMemberCtx<BevyRenderer>, _| {
-                    let _ = id_sender.send(member_ctx.node_id);
-                },
-            )),
-    ));
-
-    add_members(
-        select,
-        member_builder(move |_, _| {
-            let selection_list_entity = id_receiver.try_recv().unwrap();
+        let select = button().name("select").style(SelectStyle).children((
             rx(move || {
-                (!readonly.get()).then_some(().on(
-                    XConfirm,
-                    move |query: Query<&RendererState<Context<SelectionListContext<T>>>>,
-                          cmd_sender: Res<CmdSender>| {
-                        is_open.update(|is_open| *is_open = !*is_open);
-                        let selection_list_ctx = &query.get(selection_list_entity).unwrap().0 .0;
-                        if let Some(selected_entity) = selection_list_ctx.selected_entity {
-                            cmd_sender.add(move |world: &mut World| {
-                                let mut focused_entity = world.resource_mut::<FocusedEntity>();
-                                focused_entity.0 = Some(selected_entity);
-                            })
-                        }
+                format!("{}", value.get())
+                    .into_view()
+                    .text_color(Color::WHITE)
+            }),
+            selection_list::<T>()
+                .style(SelectSelectionListStyle)
+                .slot_content(content)
+                .visibility(is_open)
+                .value(value)
+                .onchange(move |new_value: T| {
+                    is_open.set(false);
+                    value.set(new_value);
+                })
+                .member(member_builder(
+                    |member_ctx: ViewMemberCtx<BevyRenderer>, _| {
+                        let _ = id_sender.send(member_ctx.node_id);
                     },
-                ))
-            })
-        }),
-    )
+                )),
+        ));
+
+        add_members(
+            select,
+            member_builder(move |ctx:ViewMemberCtx<BevyRenderer>, _| {
+                let select_entity =ctx.node_id;
+                let selection_list_entity = id_receiver.try_recv().unwrap();
+                rx(move || {
+                    (!readonly.get()).then_some(().on(
+                        XConfirm,
+                        move |query: Query<&RendererState<Context<SelectionListContext<T>>>>,
+                              cmd_sender: Res<CmdSender>| {
+                            is_open.update(|is_open| *is_open = !*is_open);
+                            let selection_list_ctx =
+                                &query.get(selection_list_entity).unwrap().0 .0;
+                            if let Some(selected_entity) = selection_list_ctx.selected_entity {
+                                cmd_sender.add(move |world: &mut World| {
+                                    let mut focused_entity =
+                                        world.resource_mut::<FocusedEntity>();
+                                    focused_entity.0 = Some(selected_entity);
+                                })
+                            }
+                        },
+                    ))
+                })
+            }),
+        )
+    }
 }
 
 #[derive(Clone)]
@@ -106,22 +123,36 @@ pub struct SelectionListContext<T: Send + Sync + 'static> {
     selected_entity: Option<RendererNodeId<BevyRenderer>>,
 }
 
-#[schema]
-pub fn schema_selection_list<T: Default + Debug + Send + Sync + PartialEq + Clone + 'static>(
-    mut ctx: SchemaCtx,
+#[derive(ElementSchema)]
+pub struct SelectionList<T: Default + Debug + Send + Sync + PartialEq + Clone + 'static> {
+    ctx: SchemaCtx,
     content: Slot,
     value: ReadSignal<T>,
-    readonly: ReadSignal<T>,
+    readonly: ReadSignal<bool>,
     onchange: Sender<T>,
-) -> impl IntoElementView<BevyRenderer> {
-    let value_signal = ctx.use_controlled_state(value, onchange);
-    provide_context(
-        SelectionListContext {
-            value_signal,
-            selected_entity: None,
-        },
-        div().style(x().flex_col().py(4)).children(content),
-    )
+}
+
+impl<T> SchemaElementView<BevyRenderer> for SelectionList<T>
+where
+    T: Default + Debug + Send + Sync + PartialEq + Clone + 'static,
+{
+    fn view(self) -> impl IntoElementView<BevyRenderer> {
+        let SelectionList {
+            mut ctx,
+            value,
+            onchange,
+            content,
+            ..
+        } = self;
+        let value_signal = ctx.use_controlled_state(value, onchange);
+        provide_context(
+            SelectionListContext {
+                value_signal,
+                selected_entity: None,
+            },
+            div().style(x().flex_col().py(4)).children(content),
+        )
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -170,8 +201,13 @@ where
                     .on(XConfirm, {
                         let value_signal = selection_list.value_signal;
                         let value = value.clone();
-                        move || {
+                        move |cmd_sender: Res<CmdSender>| {
                             value_signal.set(value.clone());
+                            cmd_sender.add(move |world: &mut World| {
+                                let select_entity = world.get::<Parent>(parent).unwrap().get();
+                                let mut focused_entity = world.resource_mut::<FocusedEntity>();
+                                focused_entity.0 = Some(select_entity);
+                            })
                         }
                     }),
                 )

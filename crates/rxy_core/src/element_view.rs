@@ -2,7 +2,6 @@ use crate::{
     IntoView, MaybeSend, MemberOwner, Renderer, RendererNodeId, SoloView, View, ViewCtx,
     ViewMember, ViewMemberCtx,
 };
-use rxy_macro::IntoView;
 
 /*
 pub trait ElementSoloView<R>: ElementView<R> + SoloView<R>

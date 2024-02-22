@@ -40,6 +40,7 @@ pub use smallbox::*;
 pub mod test;
 
 pub mod prelude {
+    pub use crate::{SchemaElementView, SchemaView};
     #[cfg(feature = "async-channel")]
     pub use async_channel::Sender;
 

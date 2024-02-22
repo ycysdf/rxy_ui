@@ -44,6 +44,20 @@ pub trait Schema<R: Renderer>: MaybeSend + 'static {
     fn view(self, ctx: InnerSchemaCtx<R, Self>) -> Self::View;
 }
 
+pub trait SchemaView<R>
+where
+    R: Renderer,
+{
+    fn view(self) -> impl IntoView<R>;
+}
+
+pub trait SchemaElementView<R>
+where
+    R: Renderer,
+{
+    fn view(self) -> impl IntoElementView<R>;
+}
+
 impl<R, P, F> Schema<R> for FnElementSchema<F, P>
 where
     R: Renderer,
@@ -58,6 +72,7 @@ where
         self.0.call(P::from(&mut ctx)).into_element_view()
     }
 }
+
 impl<R, P, F> Schema<R> for FnSchema<F, P>
 where
     R: Renderer,
@@ -96,7 +111,7 @@ impl<F, P, M> FnSchema<F, P, M> {
     }
 }
 
-pub fn schema_view<R, P, F, M>(f: F, _m: M) -> SchemaView<R, FnSchema<F, P>, (), M>
+pub fn schema_view<R, P, F, M>(f: F, _m: M) -> RendererSchemaView<R, FnSchema<F, P>, (), M>
 where
     R: Renderer,
     F: SchemaFn<P>,
@@ -104,13 +119,13 @@ where
     F::View: IntoView<R>,
     M: MaybeSend + 'static,
 {
-    SchemaView::new(FnSchema::new(f))
+    RendererSchemaView::new(FnSchema::new(f))
 }
 
 pub fn element_schema_view<R, P, F, M>(
     f: F,
     _m: M,
-) -> ElementSchemaView<R, FnElementSchema<F, P>, (), (), M>
+) -> RendererSchemaElementView<R, FnElementSchema<F, P>, (), (), M>
 where
     R: Renderer,
     F: SchemaFn<P>,
@@ -118,7 +133,29 @@ where
     F::View: IntoElementView<R>,
     M: MaybeSend + 'static,
 {
-    ElementSchemaView::new(FnElementSchema::new(f))
+    RendererSchemaElementView::new(FnElementSchema::new(f))
+}
+
+pub fn struct_schema_view<R, P, F>(f: F) -> RendererSchemaView<R, FnSchema<F, (P,)>, (), P>
+where
+    R: Renderer,
+    F: SchemaFn<(P,)>,
+    P: SchemaParam<R>,
+    F::View: IntoView<R>,
+{
+    RendererSchemaView::new(FnSchema::new(f))
+}
+
+pub fn struct_element_schema_view<R, P, F>(
+    f: F,
+) -> RendererSchemaElementView<R, FnElementSchema<F, (P,)>, (), (), P>
+where
+    R: Renderer,
+    F: SchemaFn<(P,)>,
+    P: SchemaParam<R>,
+    F::View: IntoElementView<R>,
+{
+    RendererSchemaElementView::new(FnElementSchema::new(f))
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]

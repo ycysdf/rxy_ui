@@ -1,7 +1,7 @@
 use core::fmt::{Debug, Formatter};
 use core::marker::PhantomData;
 
-use crate::{FnSchema, IntoView, MaybeSend, Renderer, SchemaFn, SchemaParams, SchemaView};
+use crate::{FnSchema, IntoView, MaybeSend, Renderer, SchemaFn, SchemaParams, RendererSchemaView};
 
 pub struct IntoViewSchemaFnWrapper<T, M>(pub T, PhantomData<M>);
 
@@ -77,7 +77,7 @@ where
 }
 
 pub type FnSchemaView<R, F, P = ()> =
-    SchemaView<R, FnSchema<IntoViewSchemaFnWrapper<F, R>, P>, (), ()>;
+    RendererSchemaView<R, FnSchema<IntoViewSchemaFnWrapper<F, R>, P>, (), ()>;
 
 pub fn fn_schema_view<R, F, P>(f: F) -> FnSchemaView<R, F, P>
 where
@@ -85,5 +85,5 @@ where
     F: SchemaIntoViewFn<R, P>,
     P: SchemaParams<R>,
 {
-    SchemaView::new(FnSchema::new(IntoViewSchemaFnWrapper::<F, R>::new(f)))
+    RendererSchemaView::new(FnSchema::new(IntoViewSchemaFnWrapper::<F, R>::new(f)))
 }

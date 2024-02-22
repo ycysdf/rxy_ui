@@ -1,15 +1,12 @@
-use std::hash::Hash;
 use std::marker::PhantomData;
 
 use bevy_ecs::prelude::IntoSystem;
 use bevy_ecs::system::SystemId;
-use bevy_input::prelude::KeyCode;
 use bevy_utils::tracing::error;
 
-use rxy_core::{MemberOwner, ViewMember, ViewMemberCtx, ViewMemberOrigin};
+use rxy_core::{ViewMember, ViewMemberCtx, ViewMemberOrigin};
 
 use crate::event::*;
-use crate::prelude::FocusInputEventIterator;
 use crate::BevyRenderer;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

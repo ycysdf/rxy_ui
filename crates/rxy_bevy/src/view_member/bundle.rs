@@ -1,7 +1,7 @@
 use bevy_ecs::bundle::Bundle;
 
 use rxy_core::{
-    MemberOwner, ViewMember, ViewMemberCtx, ViewMemberIndex,
+    ViewMember, ViewMemberCtx, ViewMemberIndex,
     ViewMemberOrigin,
 };
 

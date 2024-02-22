@@ -3,7 +3,7 @@ use crate::{all_attrs, x_bundle, BevyElement, BevyRenderer, Focusable, XBundle};
 use bevy_ui::prelude::Button;
 use bevy_ui::{FocusPolicy, Interaction};
 use rxy_core::common_renderer::CommonRenderer;
-use rxy_core::{define_common_view_fns, ElementAttrMember, ElementView, MapToAttrMarker, MemberOwner, XNest};
+use rxy_core::{define_common_view_fns, ElementAttrMember, ElementView, MapToAttrMarker, XNest};
 
 define_common_view_fns!(BevyRenderer);
 

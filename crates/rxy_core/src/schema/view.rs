@@ -7,7 +7,7 @@ use core::marker::PhantomData;
 use rxy_macro::IntoView;
 
 #[derive(IntoView)]
-pub struct SchemaView<R, U, P = (), M = ()>
+pub struct RendererSchemaView<R, U, P = (), M = ()>
 where
     R: Renderer,
     U: Schema<R>,
@@ -22,7 +22,7 @@ where
     _marker: PhantomData<M>,
 }
 
-impl<R, U, M> Default for SchemaView<R, U, (), M>
+impl<R, U, M> Default for RendererSchemaView<R, U, (), M>
 where
     R: Renderer,
     U: Schema<R> + Default,
@@ -40,7 +40,7 @@ where
     }
 }
 
-impl<R, U, M> SchemaView<R, U, (), M>
+impl<R, U, M> RendererSchemaView<R, U, (), M>
 where
     R: Renderer,
     U: Schema<R>,
@@ -48,7 +48,7 @@ where
 {
     #[inline]
     pub fn new(u: U) -> Self {
-        SchemaView {
+        RendererSchemaView {
             u,
             props: Some(()),
             static_values: Default::default(),
@@ -59,7 +59,7 @@ where
     }
 }
 
-impl<R, U, P, M> SchemaView<R, U, P, M>
+impl<R, U, P, M> RendererSchemaView<R, U, P, M>
 where
     R: Renderer,
     U: Schema<R>,
@@ -67,11 +67,11 @@ where
     M: MaybeSend + 'static,
 {
     #[inline(always)]
-    pub fn map<MU>(self, f: impl FnOnce(U) -> MU) -> SchemaView<R, MU, P, M>
+    pub fn map<MU>(self, f: impl FnOnce(U) -> MU) -> RendererSchemaView<R, MU, P, M>
     where
         MU: Schema<R>,
     {
-        SchemaView {
+        RendererSchemaView {
             u: f(self.u),
             props: self.props,
             static_values: self.static_values,
@@ -105,13 +105,13 @@ where
     pub fn set_indexed_prop<const I: usize, ISP, IT>(
         self,
         value: ISP,
-    ) -> SchemaView<R, U, P::Props<ConstIndex<I, ISP::Prop>>, M>
+    ) -> RendererSchemaView<R, U, P::Props<ConstIndex<I, ISP::Prop>>, M>
     where
         P::Props<ConstIndex<I, ISP::Prop>>: SchemaProps<R>,
         ISP: IntoSchemaProp<R, IT>,
         IT: MaybeSend + 'static,
     {
-        SchemaView {
+        RendererSchemaView {
             u: self.u,
             props: self
                 .props
@@ -223,7 +223,7 @@ where
 }
 
 pub fn schema_view_build<R, U, P, M>(
-    mut schema_view: SchemaView<R, U, P, M>,
+    mut schema_view: RendererSchemaView<R, U, P, M>,
     ctx: ViewCtx<R>,
     reserve_key: Option<ViewKeyOrDataNodeId<R, <U::View as View<R>>::Key>>,
     will_rebuild: bool,
@@ -305,7 +305,7 @@ where
     ViewKeyOrDataNodeId { data_node_id, key }
 }
 
-impl<R, U, P, M> View<R> for SchemaView<R, U, P, M>
+impl<R, U, P, M> View<R> for RendererSchemaView<R, U, P, M>
 where
     R: Renderer,
     U: Schema<R>,

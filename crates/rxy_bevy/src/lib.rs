@@ -9,7 +9,7 @@ pub use renderer::*;
 pub use res_change_observe::*;
 use rxy_core::{
     CloneableSchemaSlot, FnSchema, IntoViewSchemaFnWrapper, RebuildFnReceiver, RenderSchemaCtx,
-    SchemaSlot, SchemaView,
+    SchemaSlot, RendererSchemaView,
 };
 pub use view::*;
 pub use view_member::*;
@@ -18,7 +18,7 @@ pub use world_ext::*;
 mod cmd;
 mod command;
 mod entity_extra_data;
-mod event;
+pub mod event;
 mod focusable;
 pub mod navigation;
 mod nest;
@@ -30,7 +30,7 @@ mod view_member;
 mod world_ext;
 
 pub type FnSchemaView<F, P = ()> =
-    SchemaView<BevyRenderer, FnSchema<IntoViewSchemaFnWrapper<F, BevyRenderer>, P>, (), ()>;
+    RendererSchemaView<BevyRenderer, FnSchema<IntoViewSchemaFnWrapper<F, BevyRenderer>, P>, (), ()>;
 
 pub type SchemaCtx = RenderSchemaCtx<BevyRenderer>;
 
@@ -48,9 +48,9 @@ pub mod all_attrs {
 pub use crate::attrs::element_view_builder;
 
 pub mod prelude {
+    pub use rxy_bevy_macro::{ElementSchema,Schema};
     pub use bevy_ui::prelude::Val;
 
-    pub use crate::attrs::element_view_builder::*;
     pub use crate::renderer::common_renderer::*;
     pub use crate::renderer::BevyElement;
 
