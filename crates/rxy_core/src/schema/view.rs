@@ -18,7 +18,6 @@ where
     props: Option<P>,
     static_values: HashMap<TypeId, BoxedPropValue>,
     slots: HashMap<TypeId, BoxedErasureView<R>>,
-    param_index_to_prop_type_id: HashMap<usize, TypeId>,
     cloneable_slots: HashMap<TypeId, BoxedCloneableErasureView<R>>,
     _marker: PhantomData<M>,
 }
@@ -36,7 +35,6 @@ where
             static_values: Default::default(),
             slots: Default::default(),
             cloneable_slots: Default::default(),
-            param_index_to_prop_type_id: Default::default(),
             _marker: Default::default(),
         }
     }
@@ -56,7 +54,6 @@ where
             static_values: Default::default(),
             slots: Default::default(),
             cloneable_slots: Default::default(),
-            param_index_to_prop_type_id: Default::default(),
             _marker: Default::default(),
         }
     }
@@ -80,7 +77,6 @@ where
             static_values: self.static_values,
             slots: self.slots,
             cloneable_slots: self.cloneable_slots,
-            param_index_to_prop_type_id: self.param_index_to_prop_type_id,
             _marker: Default::default(),
         }
     }
@@ -122,7 +118,6 @@ where
                 .map(|n| n.add(ConstIndex::<I, ISP::Prop>(value.into_schema_prop::<I>()))),
             static_values: self.static_values,
             slots: self.slots,
-            param_index_to_prop_type_id: self.param_index_to_prop_type_id,
             cloneable_slots: self.cloneable_slots,
             _marker: Default::default(),
         }
