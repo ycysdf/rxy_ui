@@ -3,10 +3,10 @@ use std::fmt::Debug;
 
 use bevy::prelude::*;
 use bevy::render::color::Color;
+use rxy_bevy::FocusedEntity;
 use rxy_bevy::RendererState;
 use rxy_core::utils::SyncCell;
 use rxy_core::{fn_schema_view, ElementAttr, NodeTree, RendererNodeId, XNest};
-use rxy_bevy::FocusedEntity;
 use rxy_ui::prelude::*;
 
 use crate::FocusStyle;
@@ -76,26 +76,28 @@ where
             )),
     ));
 
-    select
-    // add_members(
-    //     select,
-    //     member_builder(move |_, _| {
-    //         let selection_list_entity = id_receiver.try_recv().unwrap();
-    //         rx(move || {
-    //             (!readonly.get()).then_some(().on(
-    //                 XConfirm,
-    //                 move |query: Query<&RendererState<Context<SelectionListContext<T>>>>,
-    //                       mut focused_entity: ResMut<FocusedEntity>| {
-    //                     is_open.update(|is_open| *is_open = !*is_open);
-    //                     let selection_list_ctx = &query.get(selection_list_entity).unwrap().0 .0;
-    //                     if let Some(selected_entity) = selection_list_ctx.selected_entity {
-    //                         focused_entity.0 = Some(selected_entity);
-    //                     }
-    //                 },
-    //             ))
-    //         })
-    //     }),
-    // )
+    add_members(
+        select,
+        member_builder(move |_, _| {
+            let selection_list_entity = id_receiver.try_recv().unwrap();
+            rx(move || {
+                (!readonly.get()).then_some(().on(
+                    XConfirm,
+                    move |query: Query<&RendererState<Context<SelectionListContext<T>>>>,
+                          cmd_sender: Res<CmdSender>| {
+                        is_open.update(|is_open| *is_open = !*is_open);
+                        let selection_list_ctx = &query.get(selection_list_entity).unwrap().0 .0;
+                        if let Some(selected_entity) = selection_list_ctx.selected_entity {
+                            cmd_sender.add(move |world: &mut World| {
+                                let mut focused_entity = world.resource_mut::<FocusedEntity>();
+                                focused_entity.0 = Some(selected_entity);
+                            })
+                        }
+                    },
+                ))
+            })
+        }),
+    )
 }
 
 #[derive(Clone)]

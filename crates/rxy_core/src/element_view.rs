@@ -147,13 +147,28 @@ where
         self.element_view.rebuild(ctx, key);
     }
 }
-/*
-impl<R, EV, VM> MemberOwner<R> for ElementViewExtraMembers<R, EV, VM>
+
+impl<R, EV, VM> SoloView<R> for ElementViewExtraMembers<R, EV, VM>
 where
     R: Renderer,
     EV: ElementView<R>,
     VM: ViewMember<R>,
 {
+    fn node_id(key: &Self::Key) -> &RendererNodeId<R> {
+        EV::node_id(key)
+    }
+}
+
+impl<R, EV, VM> ElementView<R> for ElementViewExtraMembers<R, EV, VM>
+where
+    R: Renderer,
+    EV: ElementView<R>,
+    VM: ViewMember<R>,
+{
+    fn element_node_id(key: &Self::Key) -> &RendererNodeId<R> {
+        EV::element_node_id(key)
+    }
+
     type E = EV::E;
     type VM = EV::VM;
     type AddMember<T: ViewMember<R>> = ElementViewExtraMembers<R, EV::AddMember<T>, VM>;
@@ -183,6 +198,7 @@ where
         }
     }
 }
+/*
 
 impl<R, EV, VM> ElementView<R> for ElementViewExtraMembers<R, EV, VM>
 where
