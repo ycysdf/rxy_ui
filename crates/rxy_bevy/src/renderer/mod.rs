@@ -29,9 +29,11 @@ mod view_key;
 pub mod style;
 #[cfg(feature = "tailwind_aliases")]
 mod tailwind_attrs;
+pub mod event;
+pub mod view_builder_ext;
 
 #[cfg(feature = "tailwind_aliases")]
-pub use tailwind_attrs::TailwindAttrs;
+pub use tailwind_attrs::*;
 
 #[inline(always)]
 pub fn view_element_type() -> &'static dyn ElementTypeUnTyped<BevyRenderer> {

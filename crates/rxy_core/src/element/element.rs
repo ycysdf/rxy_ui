@@ -84,39 +84,6 @@ where
     }
 }
 
-impl<R, E, VM> MemberOwner<R> for Element<R, E, VM>
-where
-    R: Renderer,
-    E: ElementType<R>,
-    VM: ViewMember<R>,
-{
-    type E = E;
-    type VM = VM;
-    type AddMember<T: ViewMember<R>> = Element<R, E, (VM, T)>;
-    type SetMembers<T: ViewMember<R> + MemberOwner<R>> = Element<R, E, T>;
-
-    fn member<T>(self, member: T) -> Self::AddMember<T>
-    where
-        (VM, T): ViewMember<R>,
-        T: ViewMember<R>,
-    {
-        Element {
-            members: (self.members, member),
-            _marker: self._marker,
-        }
-    }
-
-    fn members<T>(self, members: T) -> Self::SetMembers<(T,)>
-    where
-        T: ViewMember<R>,
-    {
-        Element {
-            members: (members,),
-            _marker: self._marker,
-        }
-    }
-}
-
 impl<R, E, VM> SoloView<R> for Element<R, E, VM>
 where
     E: ElementType<R>,
@@ -136,6 +103,33 @@ where
 {
     fn element_node_id(key: &Self::Key) -> &RendererNodeId<R> {
         &key.0
+    }
+
+
+    type E = E;
+    type VM = VM;
+    type AddMember<T: ViewMember<R>> = Element<R, E, (VM, T)>;
+    type SetMembers<T: ViewMember<R> + MemberOwner<R>> = Element<R, E, T>;
+
+    fn member<T>(self, member: T) -> Self::AddMember<T>
+        where
+            (VM, T): ViewMember<R>,
+            T: ViewMember<R>,
+    {
+        Element {
+            members: (self.members, member),
+            _marker: self._marker,
+        }
+    }
+
+    fn members<T>(self, members: T) -> Self::SetMembers<(T,)>
+        where
+            T: ViewMember<R>,
+    {
+        Element {
+            members: (members,),
+            _marker: self._marker,
+        }
     }
 }
 

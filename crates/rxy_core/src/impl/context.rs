@@ -147,23 +147,17 @@ where
     fn element_node_id(key: &Self::Key) -> &RendererNodeId<R> {
         V::element_node_id(key)
     }
-}
 
-impl<R, T, V> MemberOwner<R> for ProvideContext<R, T, V>
-where
-    R: Renderer,
-    T: MaybeSend + MaybeSync + 'static,
-    V: MemberOwner<R>,
-{
+
     type E = V::E;
     type VM = V::VM;
     type AddMember<VM: ViewMember<R>> = ProvideContext<R, T, V::AddMember<VM>>;
     type SetMembers<VM: ViewMember<R> + MemberOwner<R>> = ProvideContext<R, T, V::SetMembers<VM>>;
 
     fn member<VM>(self, member: VM) -> Self::AddMember<VM>
-    where
-        (Self::VM, VM): ViewMember<R>,
-        VM: ViewMember<R>,
+        where
+            (Self::VM, VM): ViewMember<R>,
+            VM: ViewMember<R>,
     {
         ProvideContext {
             provide_context: self.provide_context,
@@ -173,8 +167,8 @@ where
     }
 
     fn members<VM: ViewMember<R>>(self, members: VM) -> Self::SetMembers<(VM,)>
-    where
-        VM: ViewMember<R>,
+        where
+            VM: ViewMember<R>,
     {
         ProvideContext {
             provide_context: self.provide_context,

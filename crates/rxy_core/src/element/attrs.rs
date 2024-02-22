@@ -74,6 +74,25 @@ macro_rules! attrs_fn_define {
                 where T: $crate::MemberOwner<$renderer$(,E=$element)?>
             {}
         }
+
+        paste! {
+            pub trait [<$name:camel ElementViewBuilder>]: $crate::ElementView<$renderer> + Sized {
+                $(
+                    #[inline]
+                    fn [<$attr_name:snake>]<T>(self, value: impl $crate::XNest<MapInner<$crate::MapToAttrMarker<$attr_ty>> = T>) -> Self::AddMember<T>
+                    where
+                        T: $crate::ElementAttrMember<$renderer, $attr_ty>,
+                        (Self::VM, T): $crate::ViewMember<$renderer>
+                    {
+                        self.member(value.map_inner::<$crate::MapToAttrMarker<$attr_ty>>())
+                    }
+                )*
+            }
+
+            impl<T> [<$name:camel ElementViewBuilder>] for T
+                where T: $crate::ElementView<$renderer$(,E=$element)?>
+            {}
+        }
     };
     (
         renderer = $renderer:ty;

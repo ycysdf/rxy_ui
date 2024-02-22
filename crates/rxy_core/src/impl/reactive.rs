@@ -6,11 +6,7 @@ use xy_reactive::effect::ErasureEffect;
 use xy_reactive::prelude::{create_render_effect, use_memo, Memo, ReadSignal, RwSignal, SignalGet};
 use xy_reactive::render_effect::RenderEffect;
 
-use crate::{
-    DeferredNodeTreeScoped, InnerIvmToVm, IntoView, MaybeSend, MaybeSync, MemberOwner, NodeTree,
-    Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
-    ViewMemberIndex, ViewMemberOrigin, XNest,
-};
+use crate::{DeferredNodeTreeScoped, ElementView, InnerIvmToVm, IntoView, MaybeSend, MaybeSync, MemberOwner, NodeTree, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, XNest};
 
 struct FnOnceCell<'a, I, T> {
     func: Option<Box<dyn FnOnce(I) -> T + 'a>>,
@@ -375,25 +371,31 @@ where
     }
 }
 
-// tod: ivm
-pub trait MemberOwnerRxExt<R>: MemberOwner<R>
-where
-    R: Renderer,
-{
-    #[inline]
-    fn rx_member<T, VM>(self, f: T) -> Self::AddMember<Reactive<T, VM>>
-    where
-        Self: Sized,
-        T: Fn() -> VM + MaybeSend + 'static,
-        VM: ViewMember<R>,
-    {
-        self.member(rx(f))
-    }
+macro_rules! impl_rx_ext {
+    ($name:ident;$ty:ident) => {
+        pub trait $name<R>: $ty<R>
+        where
+            R: Renderer,
+        {
+            #[inline]
+            fn rx_member<T, VM>(self, f: T) -> Self::AddMember<Reactive<T, VM>>
+            where
+                Self: Sized,
+                T: Fn() -> VM + MaybeSend + 'static,
+                VM: ViewMember<R>,
+            {
+                self.member(rx(f))
+            }
+        }
+
+        impl<R, T> $name<R> for T
+        where
+            R: Renderer,
+            T: $ty<R>,
+        {
+        }
+    };
 }
 
-impl<R, T> MemberOwnerRxExt<R> for T
-where
-    R: Renderer,
-    T: MemberOwner<R>,
-{
-}
+impl_rx_ext!(MemberOwnerRxExt;MemberOwner);
+impl_rx_ext!(ElementViewRxExt;ElementView);

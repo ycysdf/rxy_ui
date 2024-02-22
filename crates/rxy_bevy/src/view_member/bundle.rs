@@ -45,15 +45,3 @@ where
         self.build(ctx, true);
     }
 }
-
-pub trait MemberOwnerBundleExt: MemberOwner<BevyRenderer> {
-    #[inline(always)]
-    fn bundle<T: Bundle>(self, bundle: T) -> Self::AddMember<XBundle<T>>
-    where
-        Self: Sized,
-    {
-        self.member(XBundle(bundle))
-    }
-}
-
-impl<T> MemberOwnerBundleExt for T where T: MemberOwner<BevyRenderer> {}

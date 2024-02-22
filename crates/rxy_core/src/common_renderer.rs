@@ -1,11 +1,11 @@
-use crate::{ElementAttrMember, ElementAttrType, ElementSoloView, MapToAttrMarker, Renderer, XNest,
+use crate::{ElementAttrMember, ElementAttrType, ElementView, MapToAttrMarker, Renderer, XNest,
 };
 use alloc::borrow::Cow;
 
 pub trait CommonRenderer: Renderer {
-    type DivView: ElementSoloView<Self>;
-    type TextView<T: ElementAttrMember<Self, Self::TextContentEA>>: ElementSoloView<Self>;
-    type ButtonView: ElementSoloView<Self>;
+    type DivView: ElementView<Self>;
+    type TextView<T: ElementAttrMember<Self, Self::TextContentEA>>: ElementView<Self>;
+    type ButtonView: ElementView<Self>;
     type TextContentEA: ElementAttrType<Self, Value = Cow<'static, str>>;
 
     fn crate_text<T>(
