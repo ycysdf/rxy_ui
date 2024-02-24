@@ -2,6 +2,7 @@ use crate::utils::{HashMap, SyncCell};
 use alloc::borrow::Cow;
 use core::fmt::Debug;
 use core::future::Future;
+use std::ops::{Deref, DerefMut};
 
 use crate::element::{AttrIndex, ElementAttrType};
 use crate::{ElementType, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, ViewKey};
@@ -33,7 +34,7 @@ impl<'a, R: Renderer> ViewMemberCtx<'a, R> {
     pub fn take_indexed_view_member_state<S: MaybeSend + 'static>(&mut self) -> Option<S> {
         self.world
             .get_node_state_mut::<MemberHashMapState<S>>(&self.node_id)
-            .and_then(|s| s.0.get().remove(&self.index))
+            .and_then(|mut s| s.0.get().remove(&self.index))
     }
     pub fn set_indexed_view_member_state<S: MaybeSend + 'static>(&mut self, state: S) {
         if let Some(map) = self

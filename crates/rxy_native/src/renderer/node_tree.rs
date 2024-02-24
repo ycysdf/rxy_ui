@@ -1,95 +1,82 @@
 use core::cmp::Ordering;
 use std::borrow::Cow;
 
-use bevy_core::Name;
-use bevy_ecs::prelude::Entity;
 use bevy_ecs::prelude::World;
+use bevy_ecs::prelude::{Component, Entity, EntityWorldMut};
 use bevy_hierarchy::{BuildWorldChildren, DespawnRecursiveExt};
 use bevy_hierarchy::{Children, Parent};
-use bevy_render::prelude::Visibility;
-use bevy_ui::prelude::NodeBundle;
-use bevy_ui::Display;
-use bevy_ui::Style;
+// use bevy_render::prelude::Visibility;
+// use bevy_ui::prelude::NodeBundle;
+// use bevy_ui::Display;
+// use bevy_ui::Style;
 
 use rxy_core::{
     AttrIndex, DeferredNodeTreeScoped, ElementAttrType, ElementType, NodeTree, RendererNodeId,
+    RendererWorld,
 };
 
-use crate::{
-    BevyDeferredWorldScoped, BevyRenderer, BevyWorldExt, CmdSender, ElementEntityExtraData,
-    ElementEntityWorldMutExt, ElementStyleEntityExt, RendererState,
-};
+use crate::renderer::NativeRenderer;
+use crate::renderer::visibility::Visibility;
+use crate::tt::UserEventSender;
 
-impl NodeTree<BevyRenderer> for World {
+#[derive(Component)]
+pub struct Name(pub String);
+
+impl Name {
+    pub fn new(name: impl Into<String>) -> Self {
+        Self(name.into())
+    }
+}
+
+#[derive(Component, Clone)]
+pub struct RendererState<T: Send + Sync + 'static>(pub T);
+
+impl NodeTree<NativeRenderer> for World {
     fn prepare_set_attr_and_get_is_init(
         &mut self,
-        node_id: &RendererNodeId<BevyRenderer>,
+        node_id: &RendererNodeId<NativeRenderer>,
         attr_index: AttrIndex,
     ) -> bool {
-        let mut entity_mut = self.entity_mut(*node_id);
-        let mut extra_data = entity_mut.get_mut::<ElementEntityExtraData>().unwrap();
-        let is_init = extra_data.is_init_attr(attr_index);
-        if !is_init {
-            extra_data.init_attr(attr_index, true);
-        }
-        is_init
+        true
     }
 
-    fn build_attr<A: ElementAttrType<BevyRenderer>>(
+    fn build_attr<A: ElementAttrType<NativeRenderer>>(
         &mut self,
-        entity: RendererNodeId<BevyRenderer>,
+        entity: RendererNodeId<NativeRenderer>,
         value: A::Value,
     ) {
         A::first_set_value(self, entity, value);
         let Some(mut entity_world_mut) = self.get_entity_mut(entity) else {
             return;
         };
-        entity_world_mut
-            .as_entity_mut()
-            .get_element_extra_data_mut()
-            .unwrap() // todo: error handle
-            .set_attr(A::INDEX, true);
     }
-    fn rebuild_attr<A: ElementAttrType<BevyRenderer>>(
+    fn rebuild_attr<A: ElementAttrType<NativeRenderer>>(
         &mut self,
-        entity: RendererNodeId<BevyRenderer>,
+        entity: RendererNodeId<NativeRenderer>,
         value: A::Value,
     ) {
         A::update_value(self, entity, value);
         let Some(mut entity_world_mut) = self.get_entity_mut(entity) else {
             return;
         };
-        entity_world_mut
-            .as_entity_mut()
-            .get_element_extra_data_mut()
-            .unwrap() // todo: error handle
-            .set_attr(A::INDEX, true);
     }
 
-    fn unbuild_attr<A: ElementAttrType<BevyRenderer>>(
+    fn unbuild_attr<A: ElementAttrType<NativeRenderer>>(
         &mut self,
-        entity: RendererNodeId<BevyRenderer>,
+        entity: RendererNodeId<NativeRenderer>,
     ) {
         A::set_value(self, entity, None::<A::Value>);
         let Some(mut entity_world_mut) = self.get_entity_mut(entity) else {
             return;
         };
-        entity_world_mut
-            .as_entity_mut()
-            .get_element_extra_data_mut()
-            .unwrap() // todo: error handle
-            .set_attr(A::INDEX, false);
     }
 
-    fn deferred_world_scoped(&mut self) -> impl DeferredNodeTreeScoped<BevyRenderer> {
-        BevyDeferredWorldScoped {
-            cmd_sender: self.resource::<CmdSender>().clone(),
-        }
+    fn deferred_world_scoped(&mut self) -> impl DeferredNodeTreeScoped<NativeRenderer> {
+        self.non_send_resource::<UserEventSender>().clone()
     }
-
     fn get_node_state_mut<S: Send + Sync + 'static>(
         &mut self,
-        node_id: &RendererNodeId<BevyRenderer>,
+        node_id: &RendererNodeId<NativeRenderer>,
     ) -> Option<&mut S> {
         self.get_mut::<RendererState<S>>(*node_id)
             .map(|n| &mut n.into_inner().0)
@@ -97,14 +84,14 @@ impl NodeTree<BevyRenderer> for World {
 
     fn get_node_state_ref<S: Send + Sync + 'static>(
         &self,
-        node_id: &RendererNodeId<BevyRenderer>,
+        node_id: &RendererNodeId<NativeRenderer>,
     ) -> Option<&S> {
         self.get::<RendererState<S>>(*node_id).map(|n| &n.0)
     }
 
     fn take_node_state<S: Send + Sync + 'static>(
         &mut self,
-        node_id: &RendererNodeId<BevyRenderer>,
+        node_id: &RendererNodeId<NativeRenderer>,
     ) -> Option<S> {
         self.entity_mut(*node_id)
             .take::<RendererState<S>>()
@@ -113,40 +100,40 @@ impl NodeTree<BevyRenderer> for World {
 
     fn set_node_state<S: Send + Sync + 'static>(
         &mut self,
-        node_id: &RendererNodeId<BevyRenderer>,
+        node_id: &RendererNodeId<NativeRenderer>,
         state: S,
     ) {
         self.entity_mut(*node_id).insert(RendererState(state));
     }
 
-    fn exist_node_id(&mut self, node_id: &RendererNodeId<BevyRenderer>) -> bool {
+    fn exist_node_id(&mut self, node_id: &RendererNodeId<NativeRenderer>) -> bool {
         self.entities().contains(*node_id)
     }
 
-    fn reserve_node_id(&mut self) -> RendererNodeId<BevyRenderer> {
+    fn reserve_node_id(&mut self) -> RendererNodeId<NativeRenderer> {
         self.entities().reserve_entity()
     }
 
     fn spawn_placeholder(
         &mut self,
         name: impl Into<Cow<'static, str>>,
-        parent: Option<&RendererNodeId<BevyRenderer>>,
-        reserve_node_id: Option<RendererNodeId<BevyRenderer>>,
-    ) -> RendererNodeId<BevyRenderer> {
+        parent: Option<&RendererNodeId<NativeRenderer>>,
+        reserve_node_id: Option<RendererNodeId<NativeRenderer>>,
+    ) -> RendererNodeId<NativeRenderer> {
         let mut entity_mut = match reserve_node_id {
             None => self.spawn_empty(),
             Some(node_id) => self.get_or_spawn(node_id).unwrap(),
         };
         let entity = entity_mut.id();
         entity_mut.insert((
-            NodeBundle {
-                visibility: Visibility::Hidden,
-                style: Style {
-                    display: Display::None,
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
+            // NodeBundle {
+            //     visibility: Visibility::Hidden,
+            //     style: Style {
+            //         display: Display::None,
+            //         ..Default::default()
+            //     },
+            //     ..Default::default()
+            // },
             Name::new(format!("{} ({:?})", name.into(), entity)),
         ));
         if let Some(parent) = parent {
@@ -155,7 +142,7 @@ impl NodeTree<BevyRenderer> for World {
         entity_mut.id()
     }
 
-    fn ensure_spawn(&mut self, reserve_node_id: RendererNodeId<BevyRenderer>) {
+    fn ensure_spawn(&mut self, reserve_node_id: RendererNodeId<NativeRenderer>) {
         self.get_or_spawn(reserve_node_id)
             .unwrap()
             .insert(Name::new("[TEMP DATA]"));
@@ -163,48 +150,48 @@ impl NodeTree<BevyRenderer> for World {
 
     fn spawn_empty_node(
         &mut self,
-        parent: Option<&RendererNodeId<BevyRenderer>>,
-        reserve_node_id: Option<RendererNodeId<BevyRenderer>>,
-    ) -> RendererNodeId<BevyRenderer> {
+        parent: Option<&RendererNodeId<NativeRenderer>>,
+        reserve_node_id: Option<RendererNodeId<NativeRenderer>>,
+    ) -> RendererNodeId<NativeRenderer> {
         self.get_or_spawn_empty(parent, reserve_node_id).id()
     }
 
-    fn spawn_data_node(&mut self) -> RendererNodeId<BevyRenderer> {
+    fn spawn_data_node(&mut self) -> RendererNodeId<NativeRenderer> {
         // spawn to container
         self.spawn((Name::new("[DATA]"),)).id()
     }
 
-    fn spawn_node<E: ElementType<BevyRenderer>>(
+    fn spawn_node<E: ElementType<NativeRenderer>>(
         &mut self,
-        parent: Option<&RendererNodeId<BevyRenderer>>,
-        reserve_node_id: Option<RendererNodeId<BevyRenderer>>,
-    ) -> RendererNodeId<BevyRenderer> {
+        parent: Option<&RendererNodeId<NativeRenderer>>,
+        reserve_node_id: Option<RendererNodeId<NativeRenderer>>,
+    ) -> RendererNodeId<NativeRenderer> {
         let node_id = E::spawn(self, parent, reserve_node_id);
         {
-            let entity_extra_data = ElementEntityExtraData::new(E::get());
-            self.entity_mut(node_id).insert(entity_extra_data);
+            // let entity_extra_data = ElementEntityExtraData::new(E::get());
+            // self.entity_mut(node_id).insert(entity_extra_data);
         };
         node_id
     }
 
     fn get_parent(
         &self,
-        node_id: &RendererNodeId<BevyRenderer>,
-    ) -> Option<RendererNodeId<BevyRenderer>> {
+        node_id: &RendererNodeId<NativeRenderer>,
+    ) -> Option<RendererNodeId<NativeRenderer>> {
         self.get::<Parent>(*node_id).map(|n| n.get())
     }
 
     #[inline]
-    fn remove_node(&mut self, _node_id: &RendererNodeId<BevyRenderer>) {
+    fn remove_node(&mut self, _node_id: &RendererNodeId<NativeRenderer>) {
         self.entity_mut(*_node_id).despawn_recursive();
     }
 
     #[inline]
     fn insert_before(
         &mut self,
-        parent: Option<&RendererNodeId<BevyRenderer>>,
-        before_node_id: Option<&RendererNodeId<BevyRenderer>>,
-        inserted_node_ids: &[RendererNodeId<BevyRenderer>],
+        parent: Option<&RendererNodeId<NativeRenderer>>,
+        before_node_id: Option<&RendererNodeId<NativeRenderer>>,
+        inserted_node_ids: &[RendererNodeId<NativeRenderer>],
     ) {
         let parent = parent
             .cloned()
@@ -246,7 +233,7 @@ impl NodeTree<BevyRenderer> for World {
         }
     }
 
-    fn set_visibility(&mut self, hidden: bool, node_id: &RendererNodeId<BevyRenderer>) {
+    fn set_visibility(&mut self, hidden: bool, node_id: &RendererNodeId<NativeRenderer>) {
         if let Some(mut visibility) = self.get_mut::<Visibility>(*node_id) {
             *visibility = if hidden {
                 Visibility::Hidden
@@ -256,8 +243,39 @@ impl NodeTree<BevyRenderer> for World {
         }
     }
 
-    fn get_visibility(&self, node_id: &RendererNodeId<BevyRenderer>) -> bool {
+    fn get_visibility(&self, node_id: &RendererNodeId<NativeRenderer>) -> bool {
         self.get::<Visibility>(*node_id)
             .is_some_and(|n| *n == Visibility::Hidden)
+    }
+}
+
+impl DeferredNodeTreeScoped<NativeRenderer> for UserEventSender {
+    fn scoped(&self, f: impl FnOnce(&mut RendererWorld<NativeRenderer>) + Send + 'static) {
+        self.send(f)
+    }
+}
+
+pub trait NodeTreeWorldExt {
+    fn get_or_spawn_empty(
+        &mut self,
+        parent: Option<&RendererNodeId<NativeRenderer>>,
+        reserve_node_id: Option<RendererNodeId<NativeRenderer>>,
+    ) -> EntityWorldMut<'_>;
+}
+
+impl NodeTreeWorldExt for World {
+    fn get_or_spawn_empty(
+        &mut self,
+        parent: Option<&RendererNodeId<NativeRenderer>>,
+        reserve_node_id: Option<RendererNodeId<NativeRenderer>>,
+    ) -> EntityWorldMut<'_> {
+        let mut entity_world_mut = match reserve_node_id {
+            None => self.spawn_empty(),
+            Some(reserve_node_id) => self.get_or_spawn(reserve_node_id).unwrap(),
+        };
+        if let Some(parent) = parent {
+            entity_world_mut.set_parent(*parent);
+        }
+        entity_world_mut
     }
 }

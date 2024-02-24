@@ -31,6 +31,8 @@ pub mod prelude {
 
     #[cfg(feature = "web")]
     pub use rxy_web_dom::prelude::*;
+    #[cfg(feature = "native")]
+    pub use rxy_native::prelude::*;
 
     #[cfg(feature = "signal")]
     pub use xy_reactive::prelude::*;

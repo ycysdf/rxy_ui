@@ -1,0 +1,7 @@
+[package]
+name = "native_playground"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rxy_ui = { path = "../..", default-features = false, features = ["native"] }
