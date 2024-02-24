@@ -46,8 +46,10 @@ pub mod prelude {
 
     #[cfg(feature = "hooked_collection")]
     pub use crate::ListOperator;
+    pub use crate::OnBuildExt;
+    pub use super::member_after_children::MemberAfterChildrenExt;
     pub use crate::{
-        add_members, build_configure, fn_schema_view, into_view, member_builder, provide_context,
+        build_configure, fn_schema_view, into_view, member_builder, provide_context,
         style_builder, view_builder, x_future, x_if, x_if_else, x_iter, x_iter_keyed, x_stream,
         BoxedCloneableDynamicView, BoxedDynamicView, BoxedErasureView, Context,
         DeferredNodeTreeScoped, DynamicView, Either, EitherExt, ElementView, ErasureView,
@@ -83,3 +85,4 @@ mod r#static;
 #[cfg(feature = "style")]
 pub mod style;
 pub mod utils;
+pub mod member_after_children;

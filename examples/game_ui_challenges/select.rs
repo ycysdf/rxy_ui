@@ -67,32 +67,30 @@ where
         });
         let (id_sender, id_receiver) = oneshot::channel();
 
-        let select = button().name("select").style(SelectStyle).children((
-            rx(move || {
-                format!("{}", value.get())
-                    .into_view()
-                    .text_color(Color::WHITE)
-            }),
-            selection_list::<T>()
-                .style(SelectSelectionListStyle)
-                .slot_content(content)
-                .visibility(is_open)
-                .value(value)
-                .onchange(move |new_value: T| {
-                    is_open.set(false);
-                    value.set(new_value);
-                })
-                .member(member_builder(
-                    |member_ctx: ViewMemberCtx<BevyRenderer>, _| {
+        button()
+            .name("select")
+            .style(SelectStyle)
+            .children((
+                rx(move || {
+                    format!("{}", value.get())
+                        .into_view()
+                        .text_color(Color::WHITE)
+                }),
+                selection_list::<T>()
+                    .style(SelectSelectionListStyle)
+                    .slot_content(content)
+                    .visibility(is_open)
+                    .value(value)
+                    .onchange(move |new_value: T| {
+                        is_open.set(false);
+                        value.set(new_value);
+                    })
+                    .on_build(|member_ctx: ViewMemberCtx<BevyRenderer>, _| {
                         let _ = id_sender.send(member_ctx.node_id);
-                    },
-                )),
-        ));
-
-        add_members(
-            select,
-            member_builder(move |ctx:ViewMemberCtx<BevyRenderer>, _| {
-                let select_entity =ctx.node_id;
+                    }),
+            ))
+            .on_build_after_children(move |ctx: ViewMemberCtx<BevyRenderer>, _| {
+                let select_entity = ctx.node_id;
                 let selection_list_entity = id_receiver.try_recv().unwrap();
                 rx(move || {
                     (!readonly.get()).then_some(().on(
@@ -104,16 +102,14 @@ where
                                 &query.get(selection_list_entity).unwrap().0 .0;
                             if let Some(selected_entity) = selection_list_ctx.selected_entity {
                                 cmd_sender.add(move |world: &mut World| {
-                                    let mut focused_entity =
-                                        world.resource_mut::<FocusedEntity>();
+                                    let mut focused_entity = world.resource_mut::<FocusedEntity>();
                                     focused_entity.0 = Some(selected_entity);
                                 })
                             }
                         },
                     ))
                 })
-            }),
-        )
+            })
     }
 }
 
@@ -180,36 +176,40 @@ where
             });
 
             rx(move || {
-                add_members(
-                    f(SelectionItem {
-                        value: value.clone(),
-                        is_selected: is_selected.get(),
-                    }),
-                    ().member(rx(move || {
-                        is_selected.get().then_some(member_builder(
-                            move |member_ctx: ViewMemberCtx<BevyRenderer>, _| {
-                                if let Some(selection_list) = member_ctx
-                                    .world
-                                    .get_node_state_mut::<Context<SelectionListContext<T>>>(&parent)
-                                {
-                                    selection_list.0.selected_entity = Some(member_ctx.node_id);
-                                    println!("selected entity: {:?}", member_ctx.node_id);
-                                }
-                            },
-                        ))
-                    }))
-                    .on(XConfirm, {
-                        let value_signal = selection_list.value_signal;
-                        let value = value.clone();
-                        move |cmd_sender: Res<CmdSender>| {
-                            value_signal.set(value.clone());
-                            cmd_sender.add(move |world: &mut World| {
-                                let select_entity = world.get::<Parent>(parent).unwrap().get();
-                                let mut focused_entity = world.resource_mut::<FocusedEntity>();
-                                focused_entity.0 = Some(select_entity);
-                            })
-                        }
-                    }),
+                let element_view = f(SelectionItem {
+                    value: value.clone(),
+                    is_selected: is_selected.get(),
+                })
+                .into_element_view();
+                into_view(
+                    element_view
+                        .rx_member(move || {
+                            is_selected.get().then_some(member_builder(
+                                move |member_ctx: ViewMemberCtx<BevyRenderer>, _| {
+                                    if let Some(selection_list) = member_ctx
+                                        .world
+                                        .get_node_state_mut::<Context<SelectionListContext<T>>>(
+                                            &parent,
+                                        )
+                                    {
+                                        selection_list.0.selected_entity = Some(member_ctx.node_id);
+                                        println!("selected entity: {:?}", member_ctx.node_id);
+                                    }
+                                },
+                            ))
+                        })
+                        .on(XConfirm, {
+                            let value_signal = selection_list.value_signal;
+                            let value = value.clone();
+                            move |cmd_sender: Res<CmdSender>| {
+                                value_signal.set(value.clone());
+                                cmd_sender.add(move |world: &mut World| {
+                                    let select_entity = world.get::<Parent>(parent).unwrap().get();
+                                    let mut focused_entity = world.resource_mut::<FocusedEntity>();
+                                    focused_entity.0 = Some(select_entity);
+                                })
+                            }
+                        }),
                 )
             })
         })

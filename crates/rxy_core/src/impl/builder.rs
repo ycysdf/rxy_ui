@@ -2,8 +2,9 @@ use alloc::boxed::Box;
 use core::marker::PhantomData;
 
 use crate::{
-    InnerIvmToVm, IntoElementView, IntoView, MaybeSend, MutableView, Renderer, RendererNodeId,
-    SoloView, View, ViewCtx, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, XNest,
+    ElementView, InnerIvmToVm, IntoElementView, IntoView, MaybeSend, MutableView, Renderer,
+    RendererNodeId, SoloView, View, ViewCtx, ViewMember, ViewMemberCtx, ViewMemberIndex,
+    ViewMemberOrigin, XNest,
 };
 
 #[derive(Clone)]
@@ -200,6 +201,7 @@ where
         .rebuild(ctx, key)
     }
 }
+
 impl<R, F, IV> SoloView<R> for XBuilder<R, F>
 where
     IV: IntoView<R>,
@@ -328,3 +330,24 @@ where
     }
 }
 */
+
+pub trait OnBuildExt<R>: ElementView<R>
+where
+    R: Renderer,
+{
+    #[inline]
+    fn on_build<F, T>(self, f: F) -> Self::AddMember<XBuilder<R, F>>
+    where
+        F: FnOnce(ViewMemberCtx<R>, BuildFlags) -> T + MaybeSend + 'static,
+        T: ViewMember<R>,
+    {
+        self.member(member_builder(f))
+    }
+}
+
+impl<R, EV> OnBuildExt<R> for EV
+where
+    R: Renderer,
+    EV: ElementView<R>,
+{
+}

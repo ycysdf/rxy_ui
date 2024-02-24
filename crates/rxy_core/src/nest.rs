@@ -719,6 +719,7 @@ pub mod builder {
         type MapInnerTo =
             XBuilder<R, Box<dyn FnOnce(ViewMemberCtx<R>, BuildFlags) -> X::MapInnerTo + 'static>>;
 
+        #[inline]
         fn map_inner_to(
             self,
             f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
@@ -748,19 +749,23 @@ pub mod builder {
         VM: ViewMember<R>,
         M: MaybeSend + 'static,
     {
+        #[inline]
         fn count() -> ViewMemberIndex {
             1
         }
 
+        #[inline]
         fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
             VM::unbuild(ctx, view_removed)
         }
 
+        #[inline]
         fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
             member_builder(|ctx, flags| self.0 .0(ctx, flags).map_inner::<M>())
                 .build(ctx, will_rebuild)
         }
 
+        #[inline]
         fn rebuild(self, ctx: ViewMemberCtx<R>) {
             member_builder(|ctx, flags| self.0 .0(ctx, flags).map_inner::<M>()).rebuild(ctx)
         }

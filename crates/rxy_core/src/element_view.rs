@@ -1,6 +1,5 @@
 use crate::{
-    IntoView, MaybeSend, MemberOwner, Renderer, RendererNodeId, SoloView, View, ViewCtx,
-    ViewMember, ViewMemberCtx,
+    IntoView, MaybeSend, MemberOwner, Renderer, RendererNodeId, SoloView, View, ViewMember,
 };
 
 /*
@@ -31,7 +30,9 @@ pub trait ElementView<R>: SoloView<R> + View<R>
 where
     R: Renderer,
 {
-    fn element_node_id(key: &Self::Key) -> &RendererNodeId<R>;
+    fn element_node_id(key: &Self::Key) -> &RendererNodeId<R> {
+        Self::node_id(key)
+    }
 
     type E: MaybeSend + 'static;
     type VM: ViewMember<R>;
@@ -65,136 +66,6 @@ where
     #[inline(always)]
     fn into_element_view(self) -> Self::View {
         self.into_view()
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct ElementViewExtraMembers<R, EV, VM> {
-    pub element_view: EV,
-    pub view_members: VM,
-    _marker: core::marker::PhantomData<R>,
-}
-
-impl<R, EV, VM> crate::IntoView<R> for ElementViewExtraMembers<R, EV, VM>
-where
-    R: Renderer,
-    EV: ElementView<R>,
-    VM: ViewMember<R>,
-{
-    type View = ElementViewExtraMembers<R, EV, VM>;
-    fn into_view(self) -> Self::View {
-        self
-    }
-}
-
-/// Members are built after children are built
-pub fn add_members<R, EV, VM>(
-    element_view: EV,
-    view_members: VM,
-) -> ElementViewExtraMembers<R, EV::View, VM>
-where
-    R: Renderer,
-    EV: IntoElementView<R>,
-    VM: ViewMember<R>,
-{
-    ElementViewExtraMembers {
-        element_view: element_view.into_element_view(),
-        view_members,
-        _marker: Default::default(),
-    }
-}
-
-impl<R, EV, VM> View<R> for ElementViewExtraMembers<R, EV, VM>
-where
-    R: Renderer,
-    EV: ElementView<R>,
-    VM: ViewMember<R>,
-{
-    type Key = EV::Key;
-
-    fn build(
-        self,
-        ctx: ViewCtx<R>,
-        reserve_key: Option<Self::Key>,
-        will_rebuild: bool,
-    ) -> Self::Key {
-        let key = self.element_view.build(
-            ViewCtx {
-                world: &mut *ctx.world,
-                parent: ctx.parent,
-            },
-            reserve_key,
-            will_rebuild,
-        );
-        self.view_members.build(
-            ViewMemberCtx {
-                index: <EV::VM as ViewMember<R>>::count(),
-                world: ctx.world,
-                node_id: EV::element_node_id(&key).clone(),
-            },
-            will_rebuild,
-        );
-        key
-    }
-
-    fn rebuild(self, ctx: ViewCtx<R>, key: Self::Key) {
-        self.view_members.rebuild(ViewMemberCtx {
-            index: <EV::VM as ViewMember<R>>::count(),
-            world: &mut *ctx.world,
-            node_id: EV::element_node_id(&key).clone(),
-        });
-        self.element_view.rebuild(ctx, key);
-    }
-}
-
-impl<R, EV, VM> SoloView<R> for ElementViewExtraMembers<R, EV, VM>
-where
-    R: Renderer,
-    EV: ElementView<R>,
-    VM: ViewMember<R>,
-{
-    fn node_id(key: &Self::Key) -> &RendererNodeId<R> {
-        EV::node_id(key)
-    }
-}
-
-impl<R, EV, VM> ElementView<R> for ElementViewExtraMembers<R, EV, VM>
-where
-    R: Renderer,
-    EV: ElementView<R>,
-    VM: ViewMember<R>,
-{
-    fn element_node_id(key: &Self::Key) -> &RendererNodeId<R> {
-        EV::element_node_id(key)
-    }
-
-    type E = EV::E;
-    type VM = EV::VM;
-    type AddMember<T: ViewMember<R>> = ElementViewExtraMembers<R, EV::AddMember<T>, VM>;
-    type SetMembers<T: ViewMember<R> + MemberOwner<R>> =
-        ElementViewExtraMembers<R, EV::SetMembers<T>, VM>;
-
-    fn member<T>(self, member: T) -> Self::AddMember<T>
-    where
-        (VM, T): ViewMember<R>,
-        T: ViewMember<R>,
-    {
-        ElementViewExtraMembers {
-            element_view: self.element_view.member(member),
-            view_members: self.view_members,
-            _marker: Default::default(),
-        }
-    }
-
-    fn members<T>(self, members: T) -> Self::SetMembers<(T,)>
-    where
-        T: ViewMember<R>,
-    {
-        ElementViewExtraMembers {
-            element_view: self.element_view.members(members),
-            view_members: self.view_members,
-            _marker: Default::default(),
-        }
     }
 }
 /*
