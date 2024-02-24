@@ -10,11 +10,7 @@ use bevy_render::render_resource::encase::private::RuntimeSizedArray;
 use bevy_render::view::Visibility;
 use bevy_text::{BreakLineOn, Font, TextAlignment};
 use bevy_transform::components::Transform;
-use bevy_ui::{
-    AlignContent, AlignItems, AlignSelf, BackgroundColor, BorderColor, Direction, FlexDirection,
-    FlexWrap, JustifyContent, JustifyItems, JustifySelf, Outline, OverflowAxis, PositionType, Val,
-    ZIndex,
-};
+use bevy_ui::{AlignContent, AlignItems, AlignSelf, BackgroundColor, BorderColor, Direction, FlexDirection, FlexWrap, GridAutoFlow, GridPlacement, GridTrack, JustifyContent, JustifyItems, JustifySelf, Outline, OverflowAxis, PositionType, RepeatedGridTrack, Val, ZIndex};
 use bevy_utils::tracing::warn;
 use glam::{Quat, Vec3};
 use rxy_core::{
@@ -161,6 +157,13 @@ common_attrs_fn_define! {
     outline_width
     outline_offset
     outline_color
+    grid_auto_flow
+    grid_template_rows
+    grid_template_columns
+    grid_auto_rows
+    grid_auto_columns
+    grid_row
+    grid_column
 }
 
 element_attrs_fn_define! {
@@ -1414,4 +1417,40 @@ impl ElementAttrType<BevyRenderer> for outline_color {
             outline.color = value;
         }
     }
+}
+
+macro_rules! define_style_attr_type {
+    ($($ident:ident:$value_ty:ty)*) => {
+        $(
+            #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+            pub struct $ident;
+
+            impl ElementAttrType<BevyRenderer> for $ident {
+                type Value = $value_ty;
+
+                const NAME: &'static str = stringify!($ident);
+
+                fn update_value(
+                    world: &mut RendererWorld<BevyRenderer>,
+                    node_id: RendererNodeId<BevyRenderer>,
+                    value: impl Into<Self::Value>,
+                ) {
+                    world.entity_mut(node_id).try_set_style(|style| {
+                        let value = value.into();
+                        style.$ident = value;
+                    });
+                }
+            }
+        )*
+    };
+}
+
+define_style_attr_type!{
+    grid_auto_flow: GridAutoFlow
+    grid_template_rows: Vec<RepeatedGridTrack>
+    grid_template_columns: Vec<RepeatedGridTrack>
+    grid_auto_rows: Vec<GridTrack>
+    grid_auto_columns: Vec<GridTrack>
+    grid_row: GridPlacement
+    grid_column: GridPlacement
 }

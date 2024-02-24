@@ -1,5 +1,7 @@
-
-use crate::{impl_attr_value, impl_attr_value_and_wrapper, impl_x_value_wrappers, smallbox, AttrValue, SmallBox, S1, XValueWrapper};
+use crate::{
+    impl_attr_value, impl_attr_value_and_wrapper, impl_x_value_wrappers, smallbox, AttrValue,
+    SmallBox, XValueWrapper, S1,
+};
 use bevy_asset::Handle;
 use bevy_render::prelude::Color;
 
@@ -19,6 +21,10 @@ impl_attr_value_and_wrapper! {
     bevy_ui::JustifyContent,
     bevy_ui::FlexDirection,
     bevy_ui::FlexWrap,
+    bevy_ui::GridAutoFlow,
+    bevy_ui::RepeatedGridTrack => bevy_ui::RepeatedGridTrack::auto(1),
+    bevy_ui::GridTrack,
+    bevy_ui::GridPlacement,
     bevy_render::prelude::Visibility,
     // bevy_transform::prelude::Transform,
     glam::Quat,

@@ -74,6 +74,14 @@ macro_rules! impl_attr_value {
     };
 }
 
+
+impl<T> Into<XValueWrapper<Vec<T>>> for Vec<T>
+{
+    fn into(self) -> XValueWrapper<Vec<T>> {
+        XValueWrapper(self)
+    }
+}
+
 impl_attr_value_and_wrapper! {
     u8,
     u16,
@@ -121,6 +129,31 @@ impl Into<XValueWrapper<Cow<'static, str>>> for f32 {
 }
 
 impl<T> AttrValue for Option<T>
+where
+    T: AttrValue + Clone + PartialEq + MaybeTypePath + MaybeFromReflect,
+{
+    fn clone_att_value(&self) -> SmallBox<dyn AttrValue, S1> {
+        smallbox!(self.clone())
+    }
+
+    fn default_value() -> Self
+    where
+        Self: Sized,
+    {
+        <Self as Default>::default()
+    }
+
+    #[cfg(not(feature = "bevy_reflect"))]
+    fn as_any(&self) -> &dyn core::any::Any {
+        self
+    }
+
+    fn eq(&self, other: &Self) -> bool {
+        self == other
+    }
+}
+
+impl<T> AttrValue for Vec<T>
 where
     T: AttrValue + Clone + PartialEq + MaybeTypePath + MaybeFromReflect,
 {
