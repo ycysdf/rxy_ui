@@ -9,8 +9,8 @@ use rxy_core::utils::SyncCell;
 use rxy_core::{fn_schema_view, ElementAttr, NodeTree, RendererNodeId, SchemaElementView, XNest};
 use rxy_ui::prelude::*;
 
-use crate::FocusStyle;
-use crate::XConfirm;
+use super::FocusStyle;
+use super::XConfirm;
 
 #[derive(TypedStyle)]
 pub struct SelectStyle;

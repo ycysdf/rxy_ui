@@ -8,7 +8,7 @@ use core::any::Any;
 use super::rxy_bevy_crate::SchemaCtx;
 use super::rxy_bevy_crate::{BevyRenderer, RendererState};
 use rxy_bevy_macro::BevyIntoView;
-use rxy_core::{RendererNodeId, View, ViewCtx};
+use rxy_core::{IntoView, RendererNodeId, View, ViewCtx};
 
 use std::any::TypeId;
 use rxy_core::style::{StyleSheetCtx, StyleSheets};
@@ -138,6 +138,10 @@ where
     fn rebuild(self, _ctx: ViewCtx<BevyRenderer>, _key: Self::Key) {
         todo!()
     }
+}
+
+pub trait DefaultStyleDef {
+    fn def_default() -> impl IntoView<BevyRenderer>;
 }
 
 pub trait TypedStyleLabel: Copy + Clone + Send + 'static {

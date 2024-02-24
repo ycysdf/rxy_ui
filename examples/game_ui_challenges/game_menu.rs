@@ -9,15 +9,9 @@ use bevy::app::AppExit;
 
 use std::fmt::Debug;
 
-mod checkbox;
-mod select;
-mod slider;
-
-use checkbox::*;
-use select::*;
-use slider::*;
-
-pub const COLOR_PRIMARY: Color = Color::BLUE;
+mod components;
+use components::*;
+use rxy_bevy::style::DefaultStyleDef;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, States)]
 enum GameState {
@@ -46,37 +40,15 @@ fn setup(mut commands: Commands) {
     commands.spawn_rxy_ui(game_ui);
 }
 
-#[derive(TypedStyle)]
-struct FocusStyle;
-
 fn game_ui() -> impl IntoView<BevyRenderer> {
     (
-        FocusStyle::def(
-            x_focus()
-                .outline_width(2)
-                .outline_offset(2)
-                .outline_color(COLOR_PRIMARY),
-        ),
+        FocusStyle::def_default(),
         x_res(|state: &State<GameState>| match state.get() {
             GameState::MainMenu => main_menu().into_dynamic(),
             GameState::Setting => setting().into_dynamic(),
             GameState::InGame => in_game().into_dynamic(),
         }),
     )
-}
-
-#[derive(Copy, Clone, Debug)]
-pub struct XConfirm;
-
-impl ElementEventIds for XConfirm {
-    fn iter_event_ids(self) -> impl Iterator<Item = ElementEventId> + Send + 'static {
-        (
-            x_just_pressed(KeyCode::Return),
-            x_just_pressed(GamepadButton::new(Gamepad::new(1), GamepadButtonType::West)),
-            x_pointer_click(),
-        )
-            .iter_event_ids()
-    }
 }
 
 #[schema]
