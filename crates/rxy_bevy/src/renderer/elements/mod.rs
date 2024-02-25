@@ -23,7 +23,7 @@ pub mod prelude {
         attrs = [
             content
         ]
-        
+
         [element_img]
         attrs = [
             src
@@ -42,5 +42,6 @@ impl ElementTypeRegisterAppExt for App {
     fn register_element_types(&mut self) -> &mut Self {
         self.register_type::<element_div>()
             .register_type::<element_span>()
+            .register_type::<element_img>()
     }
 }

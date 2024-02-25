@@ -1,6 +1,5 @@
 mod attr_iter;
 mod attr_syncer;
-mod element_view_ext;
 mod entity_world_ref;
 mod focus_style;
 mod interaction_style;
@@ -18,7 +17,6 @@ use rxy_bevy_crate::BevyRenderer;
 
 pub use attr_iter::EntityStyleAttrInfoIterArgs;
 pub(crate) use attr_iter::StateOwner;
-pub use element_view_ext::ElementStyleExt;
 pub use interaction_style::interaction_to_style_interaction;
 pub use plugin::{Previous, RxyStyleSheetPlugin};
 pub use style_sheets::res;
@@ -34,7 +32,7 @@ pub type StyleError = rxy_core::style::StyleError<BevyRenderer>;
 
 pub mod prelude {
     pub use super::{
-        res, typed_shared_style_sheets, ElementStyleExt,
+        res, typed_shared_style_sheets,
         RxyStyleSheetPlugin, SchemaCtxExt, StyleError, TypedStyleLabel,
     };
 }

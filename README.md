@@ -771,7 +771,7 @@ fn ui() -> impl IntoView<BevyRenderer> {
             )),
             div().flex_col().gap(8).children((
                 "--Header--",
-                x_iter_source(source, |n| n.to_string()),
+                x_iter_source(source, |n,_| n.to_string()),
                 "--Footer--",
             )),
         )),

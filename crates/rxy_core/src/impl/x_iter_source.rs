@@ -261,7 +261,7 @@ where
     S: VecDataSource<R>,
     S::Item: Clone + Debug + MaybeSend + 'static,
     IV: IntoView<R>,
-    F: Fn(Cow<S::Item>) -> IV + Clone + MaybeSend + 'static,
+    F: Fn(Cow<S::Item>, usize) -> IV + Clone + MaybeSend + 'static,
 {
     ForSource { source, view_f }
 }
@@ -277,7 +277,7 @@ where
     S: VecDataSource<R>,
     S::Item: Clone + Debug + MaybeSend + 'static,
     IV: IntoView<R>,
-    F: Fn(Cow<S::Item>) -> IV + Clone + MaybeSend + 'static,
+    F: Fn(Cow<S::Item>, usize) -> IV + Clone + MaybeSend + 'static,
 {
     type View = VirtualContainer<R, Self>;
 
@@ -431,7 +431,7 @@ where
     fn map_and_init_state<U>(
         self,
         world: &mut RendererWorld<R>,
-        map_f: impl FnMut(&Self::Item, &mut RendererWorld<R>) -> U,
+        map_f: impl FnMut(&Self::Item, &mut RendererWorld<R>, usize) -> U,
     ) -> (Vec<U>, Option<(Self::InitState, Receiver<Self::Op>)>);
     fn ready_state(state: &mut Self::InitState) -> Self::State;
     fn apply_ops(
@@ -456,13 +456,15 @@ where
     fn map_and_init_state<U>(
         mut self,
         world: &mut RendererWorld<R>,
-        mut map_f: impl FnMut(&Self::Item, &mut RendererWorld<R>) -> U,
-    ) -> (
-        Vec<U>,
-        Option<(Self::InitState, Receiver<Self::Op>)>,
-    ) {
+        mut map_f: impl FnMut(&Self::Item, &mut RendererWorld<R>, usize) -> U,
+    ) -> (Vec<U>, Option<(Self::InitState, Receiver<Self::Op>)>) {
         self.try_apply_ops();
-        let vec = self.vec.iter().map(|n| map_f(n, world)).collect::<Vec<_>>();
+        let vec = self
+            .vec
+            .iter()
+            .enumerate()
+            .map(|(i, n)| map_f(n, world, i))
+            .collect::<Vec<_>>();
         let vec_or_receiver = Some(self.vec.either_left());
         (vec, Some((vec_or_receiver, self.op_receiver)))
     }
@@ -561,7 +563,7 @@ where
     S: VecDataSource<R>,
     S::Item: Clone + MaybeSend + Debug + 'static,
     IV: IntoView<R>,
-    F: Fn(Cow<S::Item>) -> IV + Clone + MaybeSend + 'static,
+    F: Fn(Cow<S::Item>, usize) -> IV + Clone + MaybeSend + 'static,
 {
     let source = for_source.source;
     let view_f = for_source.view_f;
@@ -573,8 +575,8 @@ where
         DataOrPlaceholderNodeId::Data(ctx.world.spawn_data_node())
     };
 
-    let (view_keys, state) = source.map_and_init_state(ctx.world, |n, world| {
-        let view = view_f(Cow::Borrowed(n)).into_view();
+    let (view_keys, state) = source.map_and_init_state(ctx.world, |n, world, index| {
+        let view = view_f(Cow::Borrowed(n), index).into_view();
         view.build(
             ViewCtx {
                 world,
@@ -656,11 +658,11 @@ fn apply_op_to_view_keys<R, T, F, IV>(
     R: Renderer,
     T: Clone + MaybeSend + Debug + 'static,
     IV: IntoView<R>,
-    F: Fn(Cow<T>) -> IV + Clone + MaybeSend + 'static,
+    F: Fn(Cow<T>, usize) -> IV + Clone + MaybeSend + 'static,
 {
     match op {
         VecOperation::Push { item } => {
-            let view = view_f(item).into_view();
+            let view = view_f(item, view_keys.len()).into_view();
             let view_key = view.build(
                 ViewCtx {
                     world,
@@ -684,7 +686,7 @@ fn apply_op_to_view_keys<R, T, F, IV>(
             }
         }
         VecOperation::Insert { index, item } => {
-            let view = view_f(item).into_view();
+            let view = view_f(item, index).into_view();
             let view_key = view.build(
                 ViewCtx {
                     world,
@@ -706,7 +708,7 @@ fn apply_op_to_view_keys<R, T, F, IV>(
             view_keys.insert(index, view_key);
         }
         VecOperation::Update { index, item } => {
-            let view = view_f(item).into_view();
+            let view = view_f(item, index).into_view();
             view.rebuild(
                 ViewCtx {
                     world,
@@ -735,7 +737,7 @@ fn apply_op_to_view_keys<R, T, F, IV>(
             }
         }
         VecOperation::Patch { index } => {
-            let view = view_f(Cow::Borrowed(&vec[index])).into_view();
+            let view = view_f(Cow::Borrowed(&vec[index]), index).into_view();
             view.rebuild(
                 ViewCtx {
                     world,
@@ -753,7 +755,7 @@ where
     S: VecDataSource<R>,
     S::Item: Clone + MaybeSend + Debug + 'static,
     IV: IntoView<R>,
-    F: Fn(Cow<S::Item>) -> IV + Clone + MaybeSend + 'static,
+    F: Fn(Cow<S::Item>, usize) -> IV + Clone + MaybeSend + 'static,
 {
     type Key = ForSourceViewKey<R, <IV::View as View<R>>::Key>;
 

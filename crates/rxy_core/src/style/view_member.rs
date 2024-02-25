@@ -62,10 +62,11 @@ where
         if view_removed {
             return;
         }
-        let member_state = ctx
+        let Some(member_state) = ctx
             .indexed_view_member_state_mut::<ApplyStyleSheetsMemberState>()
-            .cloned()
-            .unwrap();
+            .cloned() else {
+            return;
+        };
 
         ctx.world
             .unbuild_style_sheet(ctx.node_id.clone(), member_state)

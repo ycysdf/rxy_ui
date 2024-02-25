@@ -1,3 +1,4 @@
+use crate::VecExt;
 use alloc::collections::TryReserveError;
 use alloc::vec::Vec;
 use core::cmp::{Ord, Ordering};
@@ -208,7 +209,13 @@ where
         self.vec.truncate(len);
     }
 
-    // pub fn swap(&mut self, a: usize, b: usize) {
-    //     self.data.swap(a, b);
-    // }
+    pub fn swap(&mut self, a: usize, b: usize) {
+        self.move_item(a, b);
+        self.move_item(b - 1, a);
+        // self.observer.on_remove(a, once(&self.vec[a]));
+        // self.observer.on_remove(b, once(&self.vec[b]));
+        // self.observer.on_insert(a, once(&self.vec[b]));
+        // self.observer.on_insert(b, once(&self.vec[a]));
+        // self.vec.swap(a, b);
+    }
 }
