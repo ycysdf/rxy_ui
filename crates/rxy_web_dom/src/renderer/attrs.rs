@@ -14,7 +14,7 @@ pub struct WebRendererElementAttr<const INDEX: AttrIndex>;
 macro_rules! define_element_attr {
     (@common_attribute $ty:ident) => {};
     (@attribute $ty:ident) => {
-        paste! {
+        paste::paste! {
             pub struct [<$ty:snake>];
             impl ElementAttrType<WebRenderer> for [<$ty:snake>] {
                 type Value = Cow<'static, str>;
@@ -34,7 +34,7 @@ macro_rules! define_element_attr {
         }
     };
     (@style_prop $ty:tt) => {
-        paste! {
+        paste::paste! {
             pub struct [<$ty:snake>];
             impl ElementAttrType<WebRenderer> for [<$ty:snake>] {
                 type Value = Cow<'static, str>;
@@ -91,7 +91,7 @@ macro_rules! define_element_attr_fns {
         $(
             $(define_element_attr!(@$m $ty);)*
         )*
-        paste! {
+        paste::paste! {
             impl_index_for_tys! {
                 $(
                     $([<$ty:snake>])*

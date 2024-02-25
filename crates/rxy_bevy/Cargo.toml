@@ -11,6 +11,7 @@ rxy_bevy_macro.workspace = true
 rxy_core = { workspace = true, features = ["common_renderer", "async-channel", "bevy", "xy_reactive", "bevy_reflect"] }
 xy_reactive = { workspace = true, optional = true, features = ["bevy"] }
 rxy_macro.workspace = true
+hooked_collection.workspace = true
 
 glam.workspace = true
 serde.workspace = true

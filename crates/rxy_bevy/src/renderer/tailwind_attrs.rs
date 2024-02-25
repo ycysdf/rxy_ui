@@ -13,15 +13,19 @@ use rxy_core::{ElementAttr, ElementAttrMember, ElementView, MapToAttrMarker, Mem
 macro_rules! impl_tailwind_attrs {
     ($name:ident;$ty:ident) => {
         pub trait $name: $ty<BevyRenderer> + Sized {
+            #[inline]
             fn visible(self) -> Self::AddMember<ElementAttr<BevyRenderer, visibility>> {
                 self.member(ElementAttr::new(Visibility::Visible.into()))
             }
+            #[inline]
             fn invisible(self) -> Self::AddMember<ElementAttr<BevyRenderer, visibility>> {
                 self.member(ElementAttr::new(Visibility::Hidden.into()))
             }
+            #[inline]
             fn flex(self) -> Self::AddMember<ElementAttr<BevyRenderer, display>> {
                 self.member(ElementAttr::new(Display::Flex.into()))
             }
+            #[inline]
             fn flex_col(
                 self,
             ) -> Self::AddMember<(
@@ -33,6 +37,7 @@ macro_rules! impl_tailwind_attrs {
                     ElementAttr::new(FlexDirection::Column.into()),
                 ))
             }
+            #[inline]
             fn flex_row(
                 self,
             ) -> Self::AddMember<(
@@ -44,56 +49,73 @@ macro_rules! impl_tailwind_attrs {
                     ElementAttr::new(FlexDirection::Row.into()),
                 ))
             }
+            #[inline]
             fn grid(self) -> Self::AddMember<ElementAttr<BevyRenderer, display>> {
                 self.member(ElementAttr::new(Display::Grid.into()))
             }
+            #[inline]
             fn shrink(self) -> Self::AddMember<ElementAttr<BevyRenderer, flex_shrink>> {
                 self.member(ElementAttr::new(1.0.into()))
             }
+            #[inline]
             fn shrink_0(self) -> Self::AddMember<ElementAttr<BevyRenderer, flex_shrink>> {
                 self.member(ElementAttr::new(0.0.into()))
             }
+            #[inline]
             fn grow(self) -> Self::AddMember<ElementAttr<BevyRenderer, flex_grow>> {
                 self.member(ElementAttr::new(1.0.into()))
             }
+            #[inline]
             fn grow_0(self) -> Self::AddMember<ElementAttr<BevyRenderer, flex_grow>> {
                 self.member(ElementAttr::new(0.0.into()))
             }
 
+            #[inline]
             fn justify_start(self) -> Self::AddMember<ElementAttr<BevyRenderer, justify_content>> {
                 self.member(ElementAttr::new(JustifyContent::Start.into()))
             }
+            #[inline]
             fn justify_end(self) -> Self::AddMember<ElementAttr<BevyRenderer, justify_content>> {
                 self.member(ElementAttr::new(JustifyContent::End.into()))
             }
+            #[inline]
             fn justify_center(self) -> Self::AddMember<ElementAttr<BevyRenderer, justify_content>> {
                 self.member(ElementAttr::new(JustifyContent::Center.into()))
             }
+            #[inline]
             fn justify_between(self) -> Self::AddMember<ElementAttr<BevyRenderer, justify_content>> {
                 self.member(ElementAttr::new(JustifyContent::SpaceBetween.into()))
             }
+            #[inline]
             fn justify_around(self) -> Self::AddMember<ElementAttr<BevyRenderer, justify_content>> {
                 self.member(ElementAttr::new(JustifyContent::SpaceAround.into()))
             }
+            #[inline]
             fn justify_evenly(self) -> Self::AddMember<ElementAttr<BevyRenderer, justify_content>> {
                 self.member(ElementAttr::new(JustifyContent::SpaceEvenly.into()))
             }
+            #[inline]
             fn items_start(self) -> Self::AddMember<ElementAttr<BevyRenderer, align_items>> {
                 self.member(ElementAttr::new(AlignItems::FlexStart.into()))
             }
+            #[inline]
             fn items_end(self) -> Self::AddMember<ElementAttr<BevyRenderer, align_items>> {
                 self.member(ElementAttr::new(AlignItems::FlexEnd.into()))
             }
+            #[inline]
             fn items_center(self) -> Self::AddMember<ElementAttr<BevyRenderer, align_items>> {
                 self.member(ElementAttr::new(AlignItems::Center.into()))
             }
+            #[inline]
             fn items_baseline(self) -> Self::AddMember<ElementAttr<BevyRenderer, align_items>> {
                 self.member(ElementAttr::new(AlignItems::Baseline.into()))
             }
+            #[inline]
             fn items_stretch(self) -> Self::AddMember<ElementAttr<BevyRenderer, align_items>> {
                 self.member(ElementAttr::new(AlignItems::Stretch.into()))
             }
 
+            #[inline]
             fn gap<T>(
                 self,
                 value: T,
@@ -109,6 +131,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member((value.clone().map_inner(), value.map_inner()))
             }
 
+            #[inline]
             fn gap_x<T>(self, value: T) -> Self::AddMember<T::MapInner<MapToAttrMarker<column_gap>>>
             where
                 T: XNest,
@@ -117,6 +140,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member(value.map_inner())
             }
 
+            #[inline]
             fn gap_y<T>(self, value: T) -> Self::AddMember<T::MapInner<MapToAttrMarker<row_gap>>>
             where
                 T: XNest,
@@ -125,27 +149,34 @@ macro_rules! impl_tailwind_attrs {
                 self.member(value.map_inner())
             }
 
+            #[inline]
             fn relative(self) -> Self::AddMember<ElementAttr<BevyRenderer, position_type>> {
                 self.member(ElementAttr::new(PositionType::Relative.into()))
             }
+            #[inline]
             fn absolute(self) -> Self::AddMember<ElementAttr<BevyRenderer, position_type>> {
                 self.member(ElementAttr::new(PositionType::Absolute.into()))
             }
+            #[inline]
             fn hidden(self) -> Self::AddMember<ElementAttr<BevyRenderer, display>> {
                 self.member(ElementAttr::new(Display::None.into()))
             }
 
-            fn flex_wrap(self) -> Self::AddMember<ElementAttr<BevyRenderer, flex_wrap>> {
+            #[inline]
+            fn flex_wrap_wrap(self) -> Self::AddMember<ElementAttr<BevyRenderer, flex_wrap>> {
                 self.member(ElementAttr::new(FlexWrap::Wrap.into()))
             }
 
+            #[inline]
             fn flex_wrap_reverse(self) -> Self::AddMember<ElementAttr<BevyRenderer, flex_wrap>> {
                 self.member(ElementAttr::new(FlexWrap::WrapReverse.into()))
             }
+            #[inline]
             fn flex_nowrap(self) -> Self::AddMember<ElementAttr<BevyRenderer, flex_wrap>> {
                 self.member(ElementAttr::new(FlexWrap::NoWrap.into()))
             }
 
+            #[inline]
             fn w<T>(self, value: T) -> Self::AddMember<T::MapInner<MapToAttrMarker<width>>>
             where
                 T: XNest,
@@ -154,6 +185,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member(value.map_inner())
             }
 
+            #[inline]
             fn h<T>(self, value: T) -> Self::AddMember<T::MapInner<MapToAttrMarker<height>>>
             where
                 T: XNest,
@@ -162,6 +194,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member(value.map_inner())
             }
 
+            #[inline]
             fn min_w<T>(self, value: T) -> Self::AddMember<T::MapInner<MapToAttrMarker<min_width>>>
             where
                 T: XNest,
@@ -170,6 +203,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member(value.map_inner())
             }
 
+            #[inline]
             fn max_w<T>(self, value: T) -> Self::AddMember<T::MapInner<MapToAttrMarker<max_width>>>
             where
                 T: XNest,
@@ -178,6 +212,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member(value.map_inner())
             }
 
+            #[inline]
             fn min_h<T>(self, value: T) -> Self::AddMember<T::MapInner<MapToAttrMarker<min_height>>>
             where
                 T: XNest,
@@ -186,6 +221,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member(value.map_inner())
             }
 
+            #[inline]
             fn max_h<T>(self, value: T) -> Self::AddMember<T::MapInner<MapToAttrMarker<max_height>>>
             where
                 T: XNest,
@@ -194,13 +230,16 @@ macro_rules! impl_tailwind_attrs {
                 self.member(value.map_inner())
             }
 
+            #[inline]
             fn w_screen(self) -> Self::AddMember<ElementAttr<BevyRenderer, width>> {
                 self.member(ElementAttr::new(Val::Vw(100.).into()))
             }
+            #[inline]
             fn h_screen(self) -> Self::AddMember<ElementAttr<BevyRenderer, height>> {
                 self.member(ElementAttr::new(Val::Vh(100.).into()))
             }
 
+            #[inline]
             fn size_screen(
                 self,
             ) -> Self::AddMember<(
@@ -213,27 +252,45 @@ macro_rules! impl_tailwind_attrs {
                 ))
             }
 
+            #[inline]
             fn h_full(self) -> Self::AddMember<ElementAttr<BevyRenderer, height>> {
                 self.member(ElementAttr::new(Val::Percent(100.).into()))
             }
 
+            #[inline]
             fn w_full(self) -> Self::AddMember<ElementAttr<BevyRenderer, width>> {
                 self.member(ElementAttr::new(Val::Percent(100.).into()))
             }
 
+            #[inline]
+            fn size_full(self) -> Self::AddMember<(
+                ElementAttr<BevyRenderer, width>,
+                ElementAttr<BevyRenderer, height>,
+            )> {
+                self.member((
+                    ElementAttr::new(Val::Percent(100.).into()),
+                    ElementAttr::new(Val::Percent(100.).into()),
+                ))
+            }
+
+            #[inline]
             fn text_nowrap(self) -> Self::AddMember<ElementAttr<BevyRenderer, text_linebreak>> {
                 self.member(ElementAttr::new(BreakLineOn::NoWrap.into()))
             }
+            #[inline]
             fn text_left(self) -> Self::AddMember<ElementAttr<BevyRenderer, text_align>> {
                 self.member(ElementAttr::new(TextAlignment::Left.into()))
             }
+            #[inline]
             fn text_center(self) -> Self::AddMember<ElementAttr<BevyRenderer, text_align>> {
                 self.member(ElementAttr::new(TextAlignment::Center.into()))
             }
+            #[inline]
             fn text_right(self) -> Self::AddMember<ElementAttr<BevyRenderer, text_align>> {
                 self.member(ElementAttr::new(TextAlignment::Right.into()))
             }
 
+            #[inline]
             fn size<T>(
                 self,
                 value: T,
@@ -249,6 +306,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member((value.clone().map_inner(), value.map_inner()))
             }
 
+            #[inline]
             fn center(
                 self,
             ) -> Self::AddMember<(
@@ -261,6 +319,7 @@ macro_rules! impl_tailwind_attrs {
                 ))
             }
 
+            #[inline]
             fn overflow<T>(
                 self,
                 value: T,
@@ -276,6 +335,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member((value.clone().map_inner(), value.map_inner()))
             }
 
+            #[inline]
             fn pt<T>(self, value: T) -> Self::AddMember<T::MapInner<MapToAttrMarker<padding_top>>>
             where
                 T: XNest,
@@ -284,6 +344,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member(value.map_inner())
             }
 
+            #[inline]
             fn pb<T>(self, value: T) -> Self::AddMember<T::MapInner<MapToAttrMarker<padding_bottom>>>
             where
                 T: XNest,
@@ -293,6 +354,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member(value.map_inner())
             }
 
+            #[inline]
             fn pl<T>(self, value: T) -> Self::AddMember<T::MapInner<MapToAttrMarker<padding_left>>>
             where
                 T: XNest,
@@ -301,6 +363,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member(value.map_inner())
             }
 
+            #[inline]
             fn pr<T>(self, value: T) -> Self::AddMember<T::MapInner<MapToAttrMarker<padding_right>>>
             where
                 T: XNest,
@@ -309,6 +372,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member(value.map_inner())
             }
 
+            #[inline]
             fn px<T>(
                 self,
                 value: T,
@@ -324,6 +388,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member((value.clone().map_inner(), value.map_inner()))
             }
 
+            #[inline]
             fn py<T>(
                 self,
                 value: T,
@@ -340,6 +405,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member((value.clone().map_inner(), value.map_inner()))
             }
 
+            #[inline]
             fn p<T>(
                 self,
                 value: T,
@@ -365,6 +431,7 @@ macro_rules! impl_tailwind_attrs {
                 ))
             }
 
+            #[inline]
             fn mt<T>(self, value: T) -> Self::AddMember<T::MapInner<MapToAttrMarker<margin_top>>>
             where
                 T: XNest,
@@ -373,6 +440,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member(value.map_inner())
             }
 
+            #[inline]
             fn mb<T>(self, value: T) -> Self::AddMember<T::MapInner<MapToAttrMarker<margin_bottom>>>
             where
                 T: XNest,
@@ -381,6 +449,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member(value.map_inner())
             }
 
+            #[inline]
             fn ml<T>(self, value: T) -> Self::AddMember<T::MapInner<MapToAttrMarker<margin_left>>>
             where
                 T: XNest,
@@ -389,6 +458,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member(value.map_inner())
             }
 
+            #[inline]
             fn mr<T>(self, value: T) -> Self::AddMember<T::MapInner<MapToAttrMarker<margin_right>>>
             where
                 T: XNest,
@@ -397,6 +467,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member(value.map_inner())
             }
 
+            #[inline]
             fn mx<T>(
                 self,
                 value: T,
@@ -412,6 +483,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member((value.clone().map_inner(), value.map_inner()))
             }
 
+            #[inline]
             fn my<T>(
                 self,
                 value: T,
@@ -427,6 +499,7 @@ macro_rules! impl_tailwind_attrs {
                 self.member((value.clone().map_inner(), value.map_inner()))
             }
 
+            #[inline]
             fn m<T>(
                 self,
                 value: T,
@@ -451,6 +524,7 @@ macro_rules! impl_tailwind_attrs {
                 ))
             }
 
+            #[inline]
             fn z<T>(self, value: T) -> Self::AddMember<T::MapInner<MapToAttrMarker<z_index>>>
             where
                 T: XNest,

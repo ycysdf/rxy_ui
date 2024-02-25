@@ -6,6 +6,7 @@ pub trait CommonRenderer: Renderer {
     type DivView: ElementView<Self>;
     type TextView<T: ElementAttrMember<Self, Self::TextContentEA>>: ElementView<Self>;
     type ButtonView: ElementView<Self>;
+    type ImgView: ElementView<Self>;
     type TextContentEA: ElementAttrType<Self, Value = Cow<'static, str>>;
 
     fn crate_text<T>(
@@ -15,12 +16,13 @@ pub trait CommonRenderer: Renderer {
         T: ElementAttrMember<Self, Self::TextContentEA>;
     fn crate_div() -> Self::DivView;
     fn crate_button() -> Self::ButtonView;
+    fn crate_img() -> Self::ImgView;
 }
 
 #[macro_export]
 macro_rules! define_common_view_fns {
     ($renderer:ident) => {
-        #[inline(always)]
+        #[inline]
         pub fn span<T>(
             str: impl XNest<MapInner<MapToAttrMarker<<$renderer as CommonRenderer>::TextContentEA>> = T,
             >,
@@ -31,12 +33,17 @@ macro_rules! define_common_view_fns {
             <$renderer as CommonRenderer>::crate_text(str)
         }
 
-        #[inline(always)]
+        #[inline]
         pub fn div() -> <$renderer as CommonRenderer>::DivView {
             <$renderer as CommonRenderer>::crate_div()
         }
 
-        #[inline(always)]
+        #[inline]
+        pub fn img() -> <$renderer as CommonRenderer>::ImgView {
+            <$renderer as CommonRenderer>::crate_img()
+        }
+
+        #[inline]
         pub fn button() -> <$renderer as CommonRenderer>::ButtonView {
             <$renderer as CommonRenderer>::crate_button()
         }
@@ -46,7 +53,7 @@ macro_rules! define_common_view_fns {
                 rxy_core::ElementAttr<$renderer, <$renderer as CommonRenderer>::TextContentEA>,
             >;
 
-            #[inline(always)]
+            #[inline]
             fn into_view(self) -> Self::View {
                 <$renderer as CommonRenderer>::crate_text::<
                     rxy_core::ElementAttr<$renderer, <$renderer as CommonRenderer>::TextContentEA>,
@@ -62,7 +69,7 @@ macro_rules! define_common_view_fns {
                 rxy_core::ElementAttr<$renderer, <$renderer as CommonRenderer>::TextContentEA>,
             >;
 
-            #[inline(always)]
+            #[inline]
             fn into_view(self) -> Self::View {
                 let cow = std::borrow::Cow::<str>::Borrowed(self);
                 rxy_core::IntoView::<$renderer>::into_view(cow)
@@ -74,7 +81,7 @@ macro_rules! define_common_view_fns {
                 rxy_core::ElementAttr<$renderer, <$renderer as CommonRenderer>::TextContentEA>,
             >;
 
-            #[inline(always)]
+            #[inline]
             fn into_view(self) -> Self::View {
                 let cow = std::borrow::Cow::<str>::Owned(self);
                 rxy_core::IntoView::<$renderer>::into_view(cow)

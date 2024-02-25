@@ -22,3 +22,4 @@ wasm-bindgen = "0.2"
 wasm-bindgen-futures.workspace = true
 slotmap.workspace = true
 web-sys.workspace = true
+paste.workspace = true

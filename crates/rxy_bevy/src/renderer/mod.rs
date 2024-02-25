@@ -35,7 +35,7 @@ pub mod view_builder_ext;
 #[cfg(feature = "tailwind_aliases")]
 pub use tailwind_attrs::*;
 
-#[inline(always)]
+#[inline]
 pub fn view_element_type() -> &'static dyn ElementTypeUnTyped<BevyRenderer> {
     &element_div
 }

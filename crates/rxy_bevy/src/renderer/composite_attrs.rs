@@ -8,6 +8,7 @@ use rxy_core::{ElementAttrMember, ElementView, MapToAttrMarker, MemberOwner, XNe
 macro_rules! impl_composite_attrs {
     ($name:ident;$ty:ident) => {
         pub trait $name: $ty<BevyRenderer> + Sized {
+            #[inline]
             fn border_x<T>(
                 self,
                 value: T,
@@ -23,6 +24,7 @@ macro_rules! impl_composite_attrs {
                 self.member((value.clone().map_inner(), value.map_inner()))
             }
 
+            #[inline]
             fn border_y<T>(
                 self,
                 value: T,
@@ -38,6 +40,7 @@ macro_rules! impl_composite_attrs {
                 self.member((value.clone().map_inner(), value.map_inner()))
             }
 
+            #[inline]
             fn border<T>(
                 self,
                 value: T,
@@ -62,6 +65,7 @@ macro_rules! impl_composite_attrs {
                 ))
             }
 
+            #[inline]
             fn margin_horizontal<T>(
                 self,
                 value: T,
@@ -77,6 +81,7 @@ macro_rules! impl_composite_attrs {
                 self.member((value.clone().map_inner(), value.map_inner()))
             }
 
+            #[inline]
             fn margin_vertical<T>(
                 self,
                 value: T,
@@ -92,6 +97,7 @@ macro_rules! impl_composite_attrs {
                 self.member((value.clone().map_inner(), value.map_inner()))
             }
 
+            #[inline]
             fn margin<T>(
                 self,
                 value: T,
@@ -116,6 +122,7 @@ macro_rules! impl_composite_attrs {
                 ))
             }
 
+            #[inline]
             fn padding_horizontal<T>(
                 self,
                 value: T,
@@ -131,6 +138,7 @@ macro_rules! impl_composite_attrs {
                 self.member((value.clone().map_inner(), value.map_inner()))
             }
 
+            #[inline]
             fn padding_vertical<T>(
                 self,
                 value: T,
@@ -147,6 +155,7 @@ macro_rules! impl_composite_attrs {
                 self.member((value.clone().map_inner(), value.map_inner()))
             }
 
+            #[inline]
             fn padding<T>(
                 self,
                 value: T,

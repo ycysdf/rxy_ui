@@ -1,5 +1,5 @@
-use crate::elements::{element_div, element_span};
-use crate::{all_attrs, x_bundle, BevyElement, BevyRenderer, Focusable, XBundle};
+use crate::elements::{element_div, element_img, element_span, element_span_attrs};
+use crate::{x_bundle, BevyElement, BevyRenderer, Focusable, XBundle};
 use bevy_ui::prelude::Button;
 use bevy_ui::{FocusPolicy, Interaction};
 use rxy_core::common_renderer::CommonRenderer;
@@ -13,7 +13,8 @@ impl CommonRenderer for BevyRenderer {
         BevyElement<element_span, (T,)>;
     type ButtonView =
         BevyElement<element_div, (XBundle<(FocusPolicy, Interaction, Button, Focusable)>,)>;
-    type TextContentEA = all_attrs::content;
+    type ImgView = BevyElement<element_img, ()>;
+    type TextContentEA = element_span_attrs::content;
 
     fn crate_text<T>(
         str: impl XNest<MapInner<MapToAttrMarker<Self::TextContentEA>> = T>,
@@ -35,5 +36,9 @@ impl CommonRenderer for BevyRenderer {
             Button,
             Focusable::default(),
         )))
+    }
+
+    fn crate_img() -> Self::ImgView {
+        BevyElement::default()
     }
 }

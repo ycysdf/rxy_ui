@@ -57,7 +57,7 @@ macro_rules! attrs_fn_define {
             })*
         ]
     ) => {
-        paste! {
+        paste::paste! {
             pub trait [<$name:camel ViewBuilder>]: $crate::MemberOwner<$renderer> + Sized {
                 $(
                     #[inline]
@@ -76,7 +76,7 @@ macro_rules! attrs_fn_define {
             {}
         }
 
-        paste! {
+        paste::paste! {
             pub trait [<$name:camel ElementViewBuilder>]: $crate::ElementView<$renderer> + Sized {
                 $(
                     #[inline]
@@ -150,12 +150,14 @@ macro_rules! impl_attrs_for_element_type {
             $($attr:ident)*
         ]
     ) => {
-        impl $crate::ElementTypeAttrs<$renderer> for $element {
-            const ATTRS: &'static [&'static dyn $crate::ElementAttrUntyped<$renderer>] = &[
-                $(
-                    &all_attrs::$attr,
-                )*
-            ];
+        paste::paste! {
+            impl $crate::ElementTypeAttrs<$renderer> for $element {
+                const ATTRS: &'static [&'static dyn $crate::ElementAttrUntyped<$renderer>] = &[
+                    $(
+                        &[<$element _attrs>]::$attr
+                    ),*
+                ];
+            }
         }
     };
 }

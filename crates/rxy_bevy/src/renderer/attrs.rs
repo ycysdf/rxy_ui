@@ -3,7 +3,6 @@
 use bevy_asset::Handle;
 use std::borrow::Cow;
 
-use crate::elements::element_span;
 use crate::{all_attrs, BevyRenderer, ElementStyleEntityExt, TextStyledElementEntityWorldMutExt};
 use bevy_render::color::Color;
 use bevy_render::render_resource::encase::private::RuntimeSizedArray;
@@ -14,8 +13,7 @@ use bevy_ui::{AlignContent, AlignItems, AlignSelf, BackgroundColor, BorderColor,
 use bevy_utils::tracing::warn;
 use glam::{Quat, Vec3};
 use rxy_core::{
-    paste,
-    attrs_fn_define, define_attr_get_fn, impl_attrs_for_element_type, impl_index_for_tys,
+    attrs_fn_define, define_attr_get_fn, impl_index_for_tys,
     AttrIndex, ElementAttrType, ElementAttrUntyped, RendererNodeId, RendererWorld,
 };
 
@@ -42,6 +40,7 @@ macro_rules! common_attrs_fn_define {
     };
 }
 
+#[macro_export]
 macro_rules! element_attrs_fn_define {
     (
         $(
@@ -51,24 +50,26 @@ macro_rules! element_attrs_fn_define {
         ]
         )*
     ) => {
-        impl_index_for_tys! {
-            index_start = (COMMON_ATTRS.len() as AttrIndex);
-            types = [
-                $(
-                    $(all_attrs::$attr)*
-                )*
-            ]
-        }
-
-        pub const ALL_ATTRS: &'static [&'static [&'static dyn rxy_core::ElementAttrUntyped<BevyRenderer>]] = &[
-            COMMON_ATTRS,
-            &[
-                $(
-                    $(&all_attrs::$attr)*
-                )*
-            ]
-        ];
         paste::paste!{
+            impl_index_for_tys! {
+                index_start = (COMMON_ATTRS.len() as AttrIndex);
+                types = [
+                    $(
+                        $([<$element _attrs>]::$attr)*
+                    )*
+                ]
+            }
+            pub mod no_preclude {
+                pub const ALL_ATTRS: &'static [&'static [&'static dyn rxy_core::ElementAttrUntyped<super::BevyRenderer>]] = &[
+                    super::COMMON_ATTRS,
+                    &[
+                        $(
+                            $(&super::[<$element _attrs>]::$attr,)*
+                        )*
+                    ]
+                ];
+            }
+
             $(
                 attrs_fn_define! {
                     renderer = BevyRenderer;
@@ -77,13 +78,9 @@ macro_rules! element_attrs_fn_define {
                     attrs = [
                         $({
                             name = $attr,
-                            ty = all_attrs::$attr
+                            ty = [<$element _attrs>]::$attr
                         })*
                     ]
-                }
-
-                pub mod element_view_builder{
-                    pub use super::[<$element:camel AttrsViewBuilder>];
                 }
 
                 impl_attrs_for_element_type! {
@@ -165,13 +162,7 @@ common_attrs_fn_define! {
     grid_row
     grid_column
 }
-
-element_attrs_fn_define! {
-    [element_span]
-    attrs = [
-        content
-    ]
-}
+pub use crate::prelude::no_preclude::ALL_ATTRS;
 
 define_attr_get_fn!(BevyRenderer);
 
