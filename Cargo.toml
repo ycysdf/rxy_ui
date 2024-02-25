@@ -246,6 +246,12 @@ required-features = ["bevy"]
 
 [[example]]
 doc-scrape-examples = true
+name = "inventory"
+path = "examples/game_ui_challenges/inventory.rs"
+required-features = ["bevy"]
+
+[[example]]
+doc-scrape-examples = true
 name = "counter"
 path = "examples/counter.rs"
 required-features = ["bevy"]
