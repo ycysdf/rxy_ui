@@ -16,10 +16,14 @@ pub mod prelude {
     use rxy_core::{attrs_fn_define, impl_attrs_for_element_type, impl_index_for_tys};
 
     element_attrs_fn_define! {
+        [element_div]
+        attrs = []
+
         [element_span]
         attrs = [
             content
         ]
+        
         [element_img]
         attrs = [
             src
