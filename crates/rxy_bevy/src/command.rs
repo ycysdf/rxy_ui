@@ -53,3 +53,20 @@ impl<'w, 's> RxyUiCommandExt for Commands<'w, 's> {
         });
     }
 }
+
+impl RxyUiCommandExt for World {
+    fn spawn_rxy_ui<IV>(&mut self, f: impl FnOnce() -> IV + Send + 'static)
+    where
+        IV: IntoView<BevyRenderer>,
+    {
+        let root = self.resource::<RxyRootEntity>().0;
+        let _ = f().into_view().build(
+            ViewCtx {
+                world: self,
+                parent: root,
+            },
+            None,
+            false,
+        );
+    }
+}

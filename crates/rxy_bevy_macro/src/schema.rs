@@ -397,7 +397,7 @@ pub fn schema_common<'a, U>(
 
     let schema_fn_def = if is_element {
         quote! {
-            #[inline(always)]
+            #[inline]
             pub fn #fn_name<#schema_generic_params_with_bound>(#(#required_fn_params,)*) -> rxy_ui::RendererSchemaElementView<
                 #renderer,
                 rxy_ui::ElementSchemaBoundWrapper<impl rxy_ui::SchemaWithElementViewBound<#renderer>>,

@@ -12,7 +12,7 @@ use crate::{
 
 pub struct XFuture<T>(pub T);
 
-#[inline(always)]
+#[inline]
 pub fn x_future<T>(f: impl IntoFuture<IntoFuture = T>) -> XFuture<T>
 where
     T: Future,

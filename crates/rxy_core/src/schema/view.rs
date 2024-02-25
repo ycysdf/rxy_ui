@@ -66,7 +66,7 @@ where
     P: SchemaProps<R>,
     M: MaybeSend + 'static,
 {
-    #[inline(always)]
+    #[inline]
     pub fn map<MU>(self, f: impl FnOnce(U) -> MU) -> RendererSchemaView<R, MU, P, M>
     where
         MU: Schema<R>,
@@ -81,7 +81,7 @@ where
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn indexed_slot<const I: usize>(mut self, view: impl IntoView<R>) -> Self {
         let type_id = TypeId::of::<ConstIndex<I>>();
         self.slots
@@ -89,7 +89,7 @@ where
         self
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn cloneable_indexed_slot<const I: usize>(
         mut self,
         view: impl IntoCloneableView<R>,
@@ -101,7 +101,7 @@ where
         self
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn set_indexed_prop<const I: usize, ISP, IT>(
         self,
         value: ISP,
@@ -123,7 +123,7 @@ where
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn set_static_indexed_prop<const I: usize, ISP, IT>(mut self, value: ISP) -> Self
     where
         ISP: IntoSchemaProp<R, IT>,

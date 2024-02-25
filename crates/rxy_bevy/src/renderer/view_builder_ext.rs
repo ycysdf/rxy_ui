@@ -5,7 +5,7 @@ use rxy_core::{ElementView, MemberOwner};
 macro_rules! impl_view_builder_ext {
     ($name:ident;$ty:ident) => {
         pub trait $name: $ty<BevyRenderer> + Sized {
-            #[inline(always)]
+            #[inline]
             fn bundle<T: Bundle>(self, bundle: T) -> Self::AddMember<XBundle<T>>
                 where
                     Self: Sized,

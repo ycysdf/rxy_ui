@@ -24,7 +24,7 @@ pub trait SchemaCtxExt {
 }
 
 impl SchemaCtxExt for SchemaCtx {
-    #[inline(always)]
+    #[inline]
     fn default_typed_style<SS>(
         &mut self,
         typed_style: impl TypedStyleLabel,

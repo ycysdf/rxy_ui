@@ -15,7 +15,7 @@ where
 {
     type View = T::View;
 
-    #[inline(always)]
+    #[inline]
     fn view(self, ctx: InnerSchemaCtx<R, Self>) -> Self::View {
         self.0.view(ctx.cast())
     }
@@ -29,7 +29,7 @@ where
 {
     type View = T::View;
 
-    #[inline(always)]
+    #[inline]
     fn view(self, ctx: InnerSchemaCtx<R, Self>) -> Self::View {
         self.view(ctx)
     }

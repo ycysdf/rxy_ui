@@ -8,21 +8,21 @@ use core::slice::SliceIndex;
 pub trait HookVec {
     type Item;
 
-    #[inline(always)]
+    #[inline]
     fn on_push<'a>(&'a mut self, _items: impl Iterator<Item = &'a Self::Item>) {}
-    #[inline(always)]
+    #[inline]
     fn on_pop<'a>(&'a mut self, _items: impl Iterator<Item = &'a Self::Item>) {}
-    #[inline(always)]
+    #[inline]
     fn on_insert<'a>(&'a mut self, _index: usize, _items: impl Iterator<Item = &'a Self::Item>) {}
-    #[inline(always)]
+    #[inline]
     fn on_update(&mut self, _index: usize, _item: &Self::Item) {}
-    #[inline(always)]
+    #[inline]
     fn on_patch(&mut self, _index: usize) {}
-    #[inline(always)]
+    #[inline]
     fn on_remove<'a>(&'a mut self, _index: usize, _items: impl Iterator<Item = &'a Self::Item>) {}
-    #[inline(always)]
+    #[inline]
     fn on_clear(&mut self) {}
-    #[inline(always)]
+    #[inline]
     fn on_move(&mut self, _from: usize, _to: usize) {}
 }
 
@@ -54,32 +54,32 @@ impl<T, O> HookedVec<T, O> {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn reserve(&mut self, additional: usize) {
         self.vec.reserve(additional);
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn reserve_exact(&mut self, additional: usize) {
         self.vec.reserve_exact(additional);
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn shrink_to(&mut self, min_capacity: usize) {
         self.vec.shrink_to(min_capacity);
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn shrink_to_fit(&mut self) {
         self.vec.shrink_to_fit();
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn try_reserve(&mut self, additional: usize) -> Result<(), TryReserveError> {
         self.vec.try_reserve(additional)
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn try_reserve_exact(&mut self, additional: usize) -> Result<(), TryReserveError> {
         self.vec.try_reserve_exact(additional)
     }

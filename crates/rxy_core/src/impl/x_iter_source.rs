@@ -178,19 +178,19 @@ impl<T: Clone + MaybeSend + 'static> OperatorHandler for ListCountSender<T> {
 }
 
 impl<T> UseListSource<T> {
-    // #[inline(always)]
+    // #[inline]
     // pub fn add_op_handler(&mut self, op_handler: impl OperatorHandler<Op = VecOperation<T>>) {
     //     self.op_handlers.push(Box::new(op_handler));
     // }
 
-    // #[inline(always)]
+    // #[inline]
     // pub fn handle_handlers(&mut self, op: &VecOperation<T>) {
     //     for op_handler in self.op_handlers.iter_mut() {
     //         op_handler.handle(op);
     //     }
     // }
 
-    // #[inline(always)]
+    // #[inline]
     // pub fn commit_handlers(&mut self) {
     //     for op_handler in self.op_handlers.iter_mut() {
     //         op_handler.commit();
@@ -255,15 +255,13 @@ pub fn use_list<T>(init: impl IntoIterator<Item = T>) -> (UseList<T>, UseListSou
     (UseList { op_sender }, UseListSource::new(vec, op_receiver))
 }
 
-pub fn x_iter_source<R, T, F, IV>(
-    source: UseListSource<T>,
-    view_f: F,
-) -> ForSource<UseListSource<T>, F>
+pub fn x_iter_source<R, S, F, IV>(source: S, view_f: F) -> ForSource<S, F>
 where
     R: Renderer,
-    T: Clone + MaybeSend + 'static,
+    S: VecDataSource<R>,
+    S::Item: Clone + Debug + MaybeSend + 'static,
     IV: IntoView<R>,
-    F: Fn(Cow<T>) -> IV + Clone + MaybeSend + 'static,
+    F: Fn(Cow<S::Item>) -> IV + Clone + MaybeSend + 'static,
 {
     ForSource { source, view_f }
 }
@@ -429,12 +427,16 @@ where
     type Item: MaybeSend + Clone + 'static;
     type InitState: MaybeSend + 'static;
     type State: MaybeSend + 'static;
-    fn first_iter(&mut self) -> impl Iterator<Item = &Self::Item>;
-    fn init(self) -> Option<(Self::InitState, Receiver<UseListOperation<Self::Item>>)>;
+    type Op: MaybeSend + 'static;
+    fn map_and_init_state<U>(
+        self,
+        world: &mut RendererWorld<R>,
+        map_f: impl FnMut(&Self::Item, &mut RendererWorld<R>) -> U,
+    ) -> (Vec<U>, Option<(Self::InitState, Receiver<Self::Op>)>);
     fn ready_state(state: &mut Self::InitState) -> Self::State;
     fn apply_ops(
         state: Self::State,
-        ops: Vec<UseListOperation<Self::Item>>,
+        ops: Vec<Self::Op>,
         world: &mut RendererWorld<R>,
         state_node_id: DataOrPlaceholderNodeId<R>,
         f: impl FnMut(VecOperation<Cow<Self::Item>>, &[Self::Item], &mut RendererWorld<R>),
@@ -449,15 +451,20 @@ where
     type Item = T;
     type InitState = Option<Either<Vec<T>, oneshot::Receiver<Vec<T>>>>;
     type State = (Self::InitState, oneshot::Sender<Vec<T>>);
+    type Op = UseListOperation<Self::Item>;
 
-    fn first_iter(&mut self) -> impl Iterator<Item = &Self::Item> {
+    fn map_and_init_state<U>(
+        mut self,
+        world: &mut RendererWorld<R>,
+        mut map_f: impl FnMut(&Self::Item, &mut RendererWorld<R>) -> U,
+    ) -> (
+        Vec<U>,
+        Option<(Self::InitState, Receiver<Self::Op>)>,
+    ) {
         self.try_apply_ops();
-        self.vec.iter()
-    }
-
-    fn init(self) -> Option<(Self::InitState, Receiver<UseListOperation<Self::Item>>)> {
+        let vec = self.vec.iter().map(|n| map_f(n, world)).collect::<Vec<_>>();
         let vec_or_receiver = Some(self.vec.either_left());
-        Some((vec_or_receiver, self.op_receiver))
+        (vec, Some((vec_or_receiver, self.op_receiver)))
     }
 
     fn ready_state(state: &mut Self::InitState) -> Self::State {
@@ -469,7 +476,7 @@ where
 
     fn apply_ops(
         state: Self::State,
-        ops: Vec<UseListOperation<Self::Item>>,
+        ops: Vec<Self::Op>,
         world: &mut RendererWorld<R>,
         _state_node_id: DataOrPlaceholderNodeId<R>,
         mut f: impl FnMut(VecOperation<Cow<Self::Item>>, &[Self::Item], &mut RendererWorld<R>),
@@ -556,22 +563,8 @@ where
     IV: IntoView<R>,
     F: Fn(Cow<S::Item>) -> IV + Clone + MaybeSend + 'static,
 {
-    let mut source = for_source.source;
+    let source = for_source.source;
     let view_f = for_source.view_f;
-    let view_keys = source
-        .first_iter()
-        .map(|n| {
-            let view = view_f(Cow::Borrowed(n)).into_view();
-            view.build(
-                ViewCtx {
-                    world: &mut *ctx.world,
-                    parent: ctx.parent.clone(),
-                },
-                None,
-                true,
-            )
-        })
-        .collect::<Vec<_>>();
 
     let world_scoped = ctx.world.deferred_world_scoped();
     let state_node_id = if let Some(state_node_id) = state_node_id {
@@ -580,7 +573,17 @@ where
         DataOrPlaceholderNodeId::Data(ctx.world.spawn_data_node())
     };
 
-    let state = source.init();
+    let (view_keys, state) = source.map_and_init_state(ctx.world, |n, world| {
+        let view = view_f(Cow::Borrowed(n)).into_view();
+        view.build(
+            ViewCtx {
+                world,
+                parent: ctx.parent.clone(),
+            },
+            None,
+            true,
+        )
+    });
     let task = state.map(|(mut init_state, op_receiver)| {
         R::spawn_task({
             use crate::renderer::DeferredNodeTreeScoped;

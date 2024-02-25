@@ -217,7 +217,7 @@ where
 pub struct NodeStyleAttrInfo(pub Either<NodeStyleItemId, BinaryHeap<NodeStyleItemId>>);
 
 impl NodeStyleAttrInfo {
-    #[inline(always)]
+    #[inline]
     pub fn top_item_id(&self) -> NodeStyleItemId {
         *self.as_ref().map_right(|n| n.peek().unwrap()).into_inner()
     }
@@ -348,7 +348,7 @@ impl NodeInterStyleAttrInfos {
     }
 
     /// There are repeated AttrId
-    #[inline(always)]
+    #[inline]
     pub fn iter_match_attr_ids(
         &self,
         interaction: Option<StyleInteraction>,
@@ -361,11 +361,11 @@ impl NodeInterStyleAttrInfos {
 
 // todo: extract to lib
 pub trait PipeOp: Sized {
-    #[inline(always)]
+    #[inline]
     fn pipe<S, U>(self, state: S, f: fn(Self, S) -> U) -> U {
         f(self, state)
     }
-    #[inline(always)]
+    #[inline]
     fn condition(self, condition: bool, f: impl FnOnce(Self) -> Self) -> Self {
         if condition {
             f(self)
@@ -373,7 +373,7 @@ pub trait PipeOp: Sized {
             self
         }
     }
-    #[inline(always)]
+    #[inline]
     fn condition_map<U>(self, condition: bool, f: impl FnOnce(Self) -> U) -> Either<Self, U> {
         if condition {
             f(self).either_right()
@@ -381,14 +381,14 @@ pub trait PipeOp: Sized {
             self.either_left()
         }
     }
-    #[inline(always)]
+    #[inline]
     fn option_map<T, U>(self, option: Option<T>, f: impl FnOnce(Self, T) -> U) -> Either<Self, U> {
         match option {
             Some(n) => f(self, n).either_right(),
             None => self.either_left(),
         }
     }
-    #[inline(always)]
+    #[inline]
     fn option_map_else<T, U, U2>(
         self,
         option: Option<T>,
@@ -405,7 +405,7 @@ pub trait PipeOp: Sized {
 impl<T> PipeOp for T where T: Sized {}
 
 pub trait IterExt: Iterator + Sized {
-    #[inline(always)]
+    #[inline]
     fn chain_option<I>(self, option: Option<I>) -> Either<Self, Chain<Self, I>>
     where
         I: Iterator<Item = Self::Item>,

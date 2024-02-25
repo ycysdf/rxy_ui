@@ -51,13 +51,13 @@ where
 {
     type View = T;
 
-    #[inline(always)]
+    #[inline]
     fn into_view(self) -> Self::View {
         self.0
     }
 }
 
-#[inline(always)]
+#[inline]
 pub fn into_view<R: Renderer, V: View<R>>(view: V) -> ToIntoView<V> {
     ToIntoView(view)
 }
@@ -78,7 +78,7 @@ where
 {
     type View = T::View;
 
-    #[inline(always)]
+    #[inline]
     fn into_cloneable_view(self) -> Self::View {
         self.into_view()
     }

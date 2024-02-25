@@ -73,12 +73,12 @@ where
     VK: MutableViewKey<R>,
     R: Renderer,
 {
-    #[inline(always)]
+    #[inline]
     fn state_node_id(&self) -> Option<RendererNodeId<R>> {
         Some(self.placeholder_node_id.clone())
     }
 
-    #[inline(always)]
+    #[inline]
     fn remove(self, world: &mut RendererWorld<R>) {
         let Some(view_key) = self.get_view_key(world).cloned() else {
             panic!("view_key is None")
@@ -88,7 +88,7 @@ where
         world.remove_node(&self.placeholder_node_id);
     }
 
-    #[inline(always)]
+    #[inline]
     fn insert_before(
         &self,
         world: &mut RendererWorld<R>,
@@ -106,7 +106,7 @@ where
         );
     }
 
-    #[inline(always)]
+    #[inline]
     fn set_visibility(&self, world: &mut RendererWorld<R>, hidden: bool) {
         let Some(view_key) = self.get_view_key(world).cloned() else {
             panic!("view_key is None")
@@ -114,12 +114,12 @@ where
         view_key.set_visibility(world, hidden)
     }
 
-    #[inline(always)]
+    #[inline]
     fn reserve_key(world: &mut R::NodeTree, _will_rebuild: bool) -> Self {
         VirtualContainerNodeId::new(world.reserve_node_id())
     }
 
-    #[inline(always)]
+    #[inline]
     fn first_node_id(&self, world: &RendererWorld<R>) -> Option<RendererNodeId<R>> {
         let Some(view_key) = self.get_view_key(world).cloned() else {
             panic!("view_key is None")
@@ -253,7 +253,7 @@ where
     }
 }
 
-#[inline(always)]
+#[inline]
 pub fn virtual_container<R: Renderer, V: MutableView<R>>(
     view: V,
     name: impl Into<Cow<'static, str>>,

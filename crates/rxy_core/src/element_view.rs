@@ -20,7 +20,7 @@ where
     R: Renderer,
     A: MemberOwner<R> + SoloView<R>,
 {
-    #[inline(always)]
+    #[inline]
     fn element_node_id(key: &Self::Key) -> &RendererNodeId<R> {
         A::node_id(key)
     }
@@ -63,7 +63,7 @@ where
 {
     type View = T::View;
 
-    #[inline(always)]
+    #[inline]
     fn into_element_view(self) -> Self::View {
         self.into_view()
     }

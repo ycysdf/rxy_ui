@@ -52,11 +52,11 @@ impl FocusableSystemParam<'_, '_> {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn blur(&mut self, entity: Entity) {
         self.set_focus_state(entity, FocusState::None)
     }
-    #[inline(always)]
+    #[inline]
     pub fn focus(&mut self, entity: Entity) {
         self.set_focus_state(entity, FocusState::Focused)
     }
