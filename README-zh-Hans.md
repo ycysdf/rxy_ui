@@ -435,15 +435,8 @@ Rxy UI 支持使用信号来重新构建视图与其成员。
 
 如果闭包返回值实现了 `IntoView`，那么此`Reactive`类型就实现了 `View`, `rx`函数就可以直接在视图中使用
 
-如果闭包返回值实现了 `IntoViewAttrMember`，那么此`Reactive`类型就实现了 `ViewMember`，`rx`函数就可以直接在视图成员中使用
 
-此外如果信号类型`RwSignal<T>`或`ReadSignal<T>` `T` 实现了 `IntoView` 或 `IntoViewAttrMember`，那么它也实现了 `View`
-或 `ViewMember`
-
-> `IntoViewAttrMember` 表示可以转换到 `ViewMember` 的类型，例如：width
-> 属性值要求是 [Val](https://docs.rs/bevy/latest/bevy/ui/enum.Val.html)
-> 类型，但是你可以传入一个 `i32`，`IntoViewAttrMember`
-> 内部会帮你转换为 `Val::Px(100)`
+此外如果信号类型`RwSignal<T>`或`ReadSignal<T>` `T` 实现了 `IntoView`，那么它也实现了 `View`
 
 ```rust
 fn signal_example() -> impl IntoView<BevyRenderer> {
@@ -464,7 +457,15 @@ fn signal_example() -> impl IntoView<BevyRenderer> {
 
 ### Option、Either、Stream、Future
 
-`Option<T>`、`Either<A, B>`、`Stream<T>`、`Future<T>` 等也都实现了 `IntoView` 或者 `IntoViewAttrMember`，可以直接作为视图或视图成员
+如果`IntoView`，`Option<T>`、`Either<A, B>`、`Stream<T>`、`Future<T>`的泛型参数实现了 `IntoView`，那么它们本身也实现了 `IntoView`
+
+例如：`String`、`&'static str` 实现了`IntoView`，`Option<String>`、`Future<Option<String>>` 等也都实现了 `IntoView`，它们是可以嵌套的
+
+视图成员（或者它能接受的值）也同理，如果`T`本身可以作为视图成员，那么`Option<T>`、`Future<Option<T>>` 等也可以直接作为视图成员
+
+例如：`div().width(10)` 中其中值：`10` 是 `width` 成员可以接受的值，那么 `Some(10)`、`async {Some(10)}` 等也可以直接作为成员的值
+
+> `width` 能直接接受值： `10` (等同于 `Val::Px(10.)`)、`10.` (等同于 `Val::Px(10.)`)、`Val::Percent(100)` 等
 
 下面是它们的一些用例
 
@@ -1056,7 +1057,7 @@ fn sample_schema_required_sample() -> impl IntoView<BevyRenderer> {
 
 这时，你可以使用 `into_dynamic()` 将 `IntoView` 转换为动态视图来解决此问题
 
-> 注意: `View` 的类型包裹了 `ViewMember，也就是说` `ViewMember` 成员不同，也会导致 `View` 类型不同
+> 注意: `View` 的类型包裹了 `ViewMember`，也就是说 `ViewMember` 成员不同，也会导致 `View` 类型不同
 
 代码示例：
 
