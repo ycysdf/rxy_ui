@@ -41,6 +41,7 @@ paste.workspace = true
 default = ["std", "async-channel", "either_future", "send_sync"]
 send_sync = []
 std = []
+web_dom = []
 bevy = [
     "std", "send_sync", "bevy_utils",
     "dep:glam",
