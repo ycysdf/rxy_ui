@@ -24,17 +24,17 @@ where
     type Item = T;
     fn on_push<'a>(&'a mut self, _items: impl Iterator<Item = &'a Self::Item>) {
         for item in _items {
-            (self.0)(VecOperation::Push { item });
+            self.0(VecOperation::Push { item });
         }
     }
 
     fn on_pop<'a>(&'a mut self, _items: impl Iterator<Item = &'a Self::Item>) {
-        (self.0)(VecOperation::Pop);
+        self.0(VecOperation::Pop);
     }
 
     fn on_insert<'a>(&'a mut self, _index: usize, _items: impl Iterator<Item = &'a Self::Item>) {
         for item in _items {
-            (self.0)(VecOperation::Insert {
+            self.0(VecOperation::Insert {
                 index: _index,
                 item,
             });
@@ -42,7 +42,7 @@ where
     }
 
     fn on_update(&mut self, _index: usize, item: &Self::Item) {
-        (self.0)(VecOperation::Update {
+        self.0(VecOperation::Update {
             index: _index,
             item,
         });
@@ -50,23 +50,23 @@ where
 
     fn on_remove<'a>(&'a mut self, _index: usize, _items: impl Iterator<Item = &'a Self::Item>) {
         for _ in _items {
-            (self.0)(VecOperation::Remove { index: _index });
+            self.0(VecOperation::Remove { index: _index });
         }
     }
 
     fn on_clear(&mut self) {
-        (self.0)(VecOperation::Clear);
+        self.0(VecOperation::Clear);
     }
 
     fn on_move(&mut self, _from: usize, _to: usize) {
-        (self.0)(VecOperation::Move {
+        self.0(VecOperation::Move {
             from: _from,
             to: _to,
         });
     }
 
     fn on_patch(&mut self, _index: usize) {
-        (self.0)(VecOperation::Patch { index: _index });
+        self.0(VecOperation::Patch { index: _index });
     }
 }
 impl<T> HookVec for VecOperationRecord<T>
