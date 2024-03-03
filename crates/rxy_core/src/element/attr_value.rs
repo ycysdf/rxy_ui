@@ -115,13 +115,14 @@ impl Into<XValueWrapper<Cow<'static, str>>> for &'static str {
     }
 }
 
-// todo: ? feature
+#[cfg(feature = "web_dom")]
 impl Into<XValueWrapper<Cow<'static, str>>> for i32 {
     fn into(self) -> XValueWrapper<Cow<'static, str>> {
         XValueWrapper(alloc::format!("{}px",self).into())
     }
 }
 
+#[cfg(feature = "web_dom")]
 impl Into<XValueWrapper<Cow<'static, str>>> for f32 {
     fn into(self) -> XValueWrapper<Cow<'static, str>> {
         XValueWrapper(alloc::format!("{}px",self).into())

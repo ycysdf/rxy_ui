@@ -218,6 +218,7 @@ web-sys = { version = "0.3", features = [
 
 [dev-dependencies]
 bevy = { version = "0.12.1", features = [
+    "dynamic_linking",
     "animation",
     "bevy_asset", #    "bevy_audio",  #    "bevy_gilrs",
     "bevy_scene",
