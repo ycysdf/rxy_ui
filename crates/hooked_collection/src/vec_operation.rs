@@ -21,6 +21,7 @@ pub enum VecOperation<T> {
     Remove { index: usize },
     Clear,
     Move { from: usize, to: usize },
+    Swap { from: usize, to: usize },
 }
 
 impl<T> VecOperation<T> {
@@ -43,6 +44,11 @@ impl<T> VecOperation<T> {
                 to: *to,
             },
             VecOperation::Patch { index } => VecOperation::Patch { index: *index },
+
+            VecOperation::Swap { from, to } => VecOperation::Swap {
+                from: *from,
+                to: *to,
+            },
         }
     }
     pub fn map<U>(self, f: impl FnOnce(T) -> U) -> VecOperation<U> {
@@ -61,6 +67,7 @@ impl<T> VecOperation<T> {
             VecOperation::Clear => VecOperation::Clear,
             VecOperation::Move { from, to } => VecOperation::Move { from, to },
             VecOperation::Patch { index } => VecOperation::Patch { index },
+            VecOperation::Swap { from, to } => VecOperation::Swap { from, to },
         }
     }
 }
@@ -74,6 +81,7 @@ pub enum ApplyVecOperationResult<'a, T> {
     Remove { item: T, index: usize },
     Clear,
     Move { from: usize, to: usize },
+    Swap { from: usize, to: usize },
 }
 
 pub trait ApplyVecOperation<T> {
@@ -122,6 +130,10 @@ impl<T> ApplyVecOperation<T> for Vec<T> {
             VecOperation::Patch { index: _ } => {
                 unimplemented!("Patch not implemented for HookedVec");
                 // ApplyVecOperationResult::Patch { index }
+            }
+            VecOperation::Swap { from, to } => {
+                self.swap(from, to);
+                ApplyVecOperationResult::Swap { from, to }
             }
         }
     }
@@ -196,6 +208,10 @@ where
             VecOperation::Patch { index: _ } => {
                 unimplemented!("Patch not implemented for HookedVec");
                 // ApplyVecOperationResult::Patch { index }
+            }
+            VecOperation::Swap { from, to } => {
+                self.move_item(from, to);
+                ApplyVecOperationResult::Swap { from, to }
             }
         }
     }

@@ -14,6 +14,7 @@ use core::future::Future;
 use core::hash::{Hash, Hasher};
 use core::marker::PhantomData;
 use core::pin::pin;
+use std::cmp::Ordering;
 use futures_lite::stream::Map;
 use futures_lite::{FutureExt, StreamExt};
 use hooked_collection::{
@@ -44,8 +45,8 @@ pub trait ListOperator {
         f: impl FnOnce(&mut HookedVec<Self::Item, VecOperationRecord<Self::Item>>) + MaybeSend + 'static,
     );
     fn patch(&self, index: usize, f: impl FnOnce(&mut Self::Item) + MaybeSend + 'static)
-    where
-        Self::Item: Clone;
+        where
+            Self::Item: Clone;
 }
 
 #[derive(Clone)]
@@ -72,8 +73,8 @@ impl<T> ListOperator for UseList<T> {
     }
 
     fn patch(&self, index: usize, f: impl FnOnce(&mut T) + MaybeSend + 'static)
-    where
-        T: Clone,
+        where
+            T: Clone,
     {
         self.callback(move |vec: &mut HookedVec<T, VecOperationRecord<T>>| {
             vec.patch(index, f);
@@ -129,7 +130,7 @@ impl<T> ListOperator for UseList<T> {
 pub struct UseListSource<T> {
     vec: Vec<T>,
     op_receiver: Receiver<UseListOperation<T>>,
-    op_handlers: Vec<Box<dyn OperatorHandler<Op = VecOperation<T>>>>,
+    op_handlers: Vec<Box<dyn OperatorHandler<Op=VecOperation<T>>>>,
 }
 
 impl<T> UseListSource<T> {
@@ -249,19 +250,19 @@ impl<T> UseListSource<T> {
     }
 }
 
-pub fn use_list<T>(init: impl IntoIterator<Item = T>) -> (UseList<T>, UseListSource<T>) {
+pub fn use_list<T>(init: impl IntoIterator<Item=T>) -> (UseList<T>, UseListSource<T>) {
     let (op_sender, op_receiver) = async_channel::unbounded();
     let vec = init.into_iter().collect::<Vec<_>>();
     (UseList { op_sender }, UseListSource::new(vec, op_receiver))
 }
 
 pub fn x_iter_source<R, S, F, IV>(source: S, view_f: F) -> ForSource<S, F>
-where
-    R: Renderer,
-    S: VecDataSource<R>,
-    S::Item: Clone + Debug + MaybeSend + 'static,
-    IV: IntoView<R>,
-    F: Fn(Cow<S::Item>, usize) -> IV + Clone + MaybeSend + 'static,
+    where
+        R: Renderer,
+        S: VecDataSource<R>,
+        S::Item: Clone + Debug + MaybeSend + 'static,
+        IV: IntoView<R>,
+        F: Fn(Cow<S::Item>, usize) -> IV + Clone + MaybeSend + 'static,
 {
     ForSource { source, view_f }
 }
@@ -272,12 +273,12 @@ pub struct ForSource<S, F> {
 }
 
 impl<R, S, F, IV> IntoView<R> for ForSource<S, F>
-where
-    R: Renderer,
-    S: VecDataSource<R>,
-    S::Item: Clone + Debug + MaybeSend + 'static,
-    IV: IntoView<R>,
-    F: Fn(Cow<S::Item>, usize) -> IV + Clone + MaybeSend + 'static,
+    where
+        R: Renderer,
+        S: VecDataSource<R>,
+        S::Item: Clone + Debug + MaybeSend + 'static,
+        IV: IntoView<R>,
+        F: Fn(Cow<S::Item>, usize) -> IV + Clone + MaybeSend + 'static,
 {
     type View = VirtualContainer<R, Self>;
 
@@ -287,8 +288,8 @@ where
 }
 
 pub struct ForSourceState<R, K>
-where
-    R: Renderer,
+    where
+        R: Renderer,
 {
     view_keys: Vec<K>,
     task: Option<SyncCell<R::Task<()>>>,
@@ -300,14 +301,14 @@ pub struct ForSourceViewKey<R, K>(
     DataOrPlaceholderNodeId<R>,
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))] PhantomData<K>,
 )
-where
-    R: Renderer,
-    K: ViewKey<R>;
+    where
+        R: Renderer,
+        K: ViewKey<R>;
 
 impl<R, K> ForSourceViewKey<R, K>
-where
-    R: Renderer,
-    K: ViewKey<R>,
+    where
+        R: Renderer,
+        K: ViewKey<R>,
 {
     pub fn new(state_node_id: DataOrPlaceholderNodeId<R>) -> Self {
         Self(state_node_id, Default::default())
@@ -319,9 +320,9 @@ pub fn get_for_source_view_keys_scoped<R, K, U>(
     state_node_id: &RendererNodeId<R>,
     f: impl for<'a, 'b> FnOnce(&'a mut Vec<K>, &'b mut RendererWorld<R>) -> U,
 ) -> U
-where
-    R: Renderer,
-    K: ViewKey<R>,
+    where
+        R: Renderer,
+        K: ViewKey<R>,
 {
     let mut view_keys = core::mem::take(
         &mut world
@@ -338,9 +339,9 @@ where
 }
 
 impl<R, K> MutableViewKey<R> for ForSourceViewKey<R, K>
-where
-    R: Renderer,
-    K: ViewKey<R>,
+    where
+        R: Renderer,
+        K: ViewKey<R>,
 {
     fn remove(self, world: &mut RendererWorld<R>) {
         let state = world
@@ -401,16 +402,16 @@ where
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
 pub enum DataOrPlaceholderNodeId<R>
-where
-    R: Renderer,
+    where
+        R: Renderer,
 {
     Data(RendererNodeId<R>),
     Placeholder(RendererNodeId<R>),
 }
 
 impl<R> DataOrPlaceholderNodeId<R>
-where
-    R: Renderer,
+    where
+        R: Renderer,
 {
     pub fn state_node_id(&self) -> &RendererNodeId<R> {
         match self {
@@ -421,8 +422,8 @@ where
 }
 
 pub trait VecDataSource<R>: MaybeSend + 'static
-where
-    R: Renderer,
+    where
+        R: Renderer,
 {
     type Item: MaybeSend + Clone + 'static;
     type InitState: MaybeSend + 'static;
@@ -444,9 +445,9 @@ where
 }
 
 impl<R, T> VecDataSource<R> for UseListSource<T>
-where
-    T: Clone + MaybeSend + 'static,
-    R: Renderer,
+    where
+        T: Clone + MaybeSend + 'static,
+        R: Renderer,
 {
     type Item = T;
     type InitState = Option<Either<Vec<T>, oneshot::Receiver<Vec<T>>>>;
@@ -521,17 +522,17 @@ pub trait ReceiverExt<T> {
     fn recv_many(
         &self,
         vec: &mut Vec<T>,
-    ) -> impl Future<Output = Result<(), RecvManyError>> + MaybeSend;
+    ) -> impl Future<Output=Result<(), RecvManyError>> + MaybeSend;
 }
 
 impl<T> ReceiverExt<T> for Receiver<T>
-where
-    T: MaybeSend,
+    where
+        T: MaybeSend,
 {
     fn recv_many(
         &self,
         vec: &mut Vec<T>,
-    ) -> impl Future<Output = Result<(), RecvManyError>> + MaybeSend {
+    ) -> impl Future<Output=Result<(), RecvManyError>> + MaybeSend {
         async {
             vec.push(self.recv().await.map_err(|_| RecvManyError::RecvError)?);
             loop {
@@ -558,12 +559,12 @@ pub fn build_for_source<R, S, F, IV>(
     // will_rebuild when state_node_id is Some, todo: Semantization Option<RendererNodeId<R>>
     state_node_id: Option<RendererNodeId<R>>,
 ) -> DataOrPlaceholderNodeId<R>
-where
-    R: Renderer,
-    S: VecDataSource<R>,
-    S::Item: Clone + MaybeSend + Debug + 'static,
-    IV: IntoView<R>,
-    F: Fn(Cow<S::Item>, usize) -> IV + Clone + MaybeSend + 'static,
+    where
+        R: Renderer,
+        S: VecDataSource<R>,
+        S::Item: Clone + MaybeSend + Debug + 'static,
+        IV: IntoView<R>,
+        F: Fn(Cow<S::Item>, usize) -> IV + Clone + MaybeSend + 'static,
 {
     let source = for_source.source;
     let view_f = for_source.view_f;
@@ -726,6 +727,9 @@ fn apply_op_to_view_keys<R, T, F, IV>(
             }
         }
         VecOperation::Move { from, to } => {
+            if from == to {
+                return;
+            }
             let before_node_id = view_keys[to].first_node_id(world).unwrap();
             view_keys[from].insert_before(world, Some(&parent), Some(&before_node_id));
 
@@ -746,16 +750,37 @@ fn apply_op_to_view_keys<R, T, F, IV>(
                 view_keys[index].clone(),
             );
         }
+        VecOperation::Swap { from, to } => {
+            let (to, from) = match from.cmp(&to) {
+                Ordering::Less => {
+                    (to, from)
+                }
+                Ordering::Greater => {
+                    (from, to)
+                }
+                Ordering::Equal => {
+                    return;
+                }
+            };
+            if to - from == 1 {
+                view_keys[to].insert_before(world, Some(&parent), Some(&view_keys[from].first_node_id(world).unwrap()));
+            } else {
+                let before_node_id = view_keys[to].first_node_id(world).unwrap();
+                view_keys[from].insert_before(world, Some(&parent), Some(&before_node_id));
+                view_keys[to].insert_before(world, Some(&parent), Some(&view_keys[from + 1].first_node_id(world).unwrap()));
+            }
+            view_keys.swap(from, to);
+        }
     }
 }
 
 impl<R, S, F, IV> MutableView<R> for ForSource<S, F>
-where
-    R: Renderer,
-    S: VecDataSource<R>,
-    S::Item: Clone + MaybeSend + Debug + 'static,
-    IV: IntoView<R>,
-    F: Fn(Cow<S::Item>, usize) -> IV + Clone + MaybeSend + 'static,
+    where
+        R: Renderer,
+        S: VecDataSource<R>,
+        S::Item: Clone + MaybeSend + Debug + 'static,
+        IV: IntoView<R>,
+        F: Fn(Cow<S::Item>, usize) -> IV + Clone + MaybeSend + 'static,
 {
     type Key = ForSourceViewKey<R, <IV::View as View<R>>::Key>;
 
