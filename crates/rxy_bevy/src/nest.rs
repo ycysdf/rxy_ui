@@ -1,8 +1,7 @@
 use crate::prelude::ElementEventIds;
-use crate::{x_res, BevyRenderer, EventViewMember, XBundle, XRes};
+use crate::{EventViewMember, x_res, XBundle, XRes};
 use bevy_ecs::prelude::{Bundle, IntoSystem, Resource};
-use rxy_core::{InnerIvmToVm, MaybeSend, ViewMember, XFuture, XNest, XNestMapper};
-use std::future::Future;
+use rxy_core::{InnerIvmToVm, MaybeSend, XNest, XNestMapper};
 
 impl<T> XNest for XBundle<T>
 where
@@ -73,7 +72,7 @@ where
 impl<T, F, X> XNest for XRes<T, F>
 where
     T: Resource,
-    F: Fn(&T) -> X + Send + Sync + 'static,
+    F: Fn(&T) -> X + Send + 'static,
     X: XNest + MaybeSend + 'static,
 {
     type Inner = X::Inner;
@@ -91,21 +90,20 @@ where
 impl<T, F, X, U> XNestMapper<U> for XRes<T, F>
 where
     T: Resource,
-    F: Fn(&T) -> X + Send + Sync + 'static,
+    F: Fn(&T) -> X + Send + 'static,
     U: 'static,
     X: XNestMapper<U> + MaybeSend + 'static,
-    X::MapInnerTo: Send + Sync,
+    X::MapInnerTo: Send,
 {
-    type MapInnerTo = XRes<T, Box<dyn Fn(&T) -> X::MapInnerTo + Send + Sync>>;
+    type MapInnerTo = XRes<T, Box<dyn Fn(&T) -> X::MapInnerTo + Send>>;
 
     fn map_inner_to(
         self,
         f: impl FnOnce(Self::Inner) -> U + Send + Clone + 'static,
     ) -> Self::MapInnerTo {
-        todo!()
-        // x_res(Box::new(move |r: &T| {
-        //     let x = (self.f)(r);
-        //     x.map_inner_to(f.clone())
-        // }))
+        x_res(Box::new(move |r: &T| {
+            let x = (self.f)(r);
+            x.map_inner_to(f.clone())
+        }))
     }
 }

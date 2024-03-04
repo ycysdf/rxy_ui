@@ -19,7 +19,7 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
-    commands.spawn_rxy_ui(counter);
+    commands.spawn_view_on_root(counter());
 }
 
 fn counter() -> impl IntoView<BevyRenderer> {

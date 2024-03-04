@@ -5,6 +5,7 @@ use std::borrow::Cow;
 
 use async_channel::Receiver;
 use bevy::asset::AssetLoader;
+use bevy::utils::OnDrop;
 use std::fmt::Debug;
 use std::ops::Deref;
 
@@ -13,6 +14,8 @@ mod components;
 use components::*;
 use hooked_collection::{HookVec, HookedVec, VecOperation};
 use rxy_bevy::vec_data_source::use_hooked_vec_resource_source;
+use rxy_core::utils::SyncCell;
+use rxy_core::NodeTree;
 
 fn main() {
     let mut app = App::new();
@@ -68,7 +71,7 @@ fn setup(mut world: &mut World) {
             },
         ];
         items[0] = InventoryItemContainer::new(sample_items[0].clone(), 2);
-        items[4] = InventoryItemContainer::new(sample_items[0].clone(), 1);
+        items[4] = InventoryItemContainer::new(sample_items[4].clone(), 1);
         items[10] = InventoryItemContainer::new(sample_items[0].clone(), 1);
         items[20] = InventoryItemContainer::new(sample_items[1].clone(), 10);
         items[33] = InventoryItemContainer::new(sample_items[1].clone(), 2);
@@ -79,7 +82,7 @@ fn setup(mut world: &mut World) {
     world.insert_resource(InventoryItems(HookedVec::from_vec(items, sender)));
     world.insert_resource(InventoryItemsOpReceiver(receiver));
 
-    world.spawn_rxy_ui(game_ui);
+    world.spawn_view_on_root(game_ui());
 }
 
 #[derive(TypedStyle)]
@@ -148,10 +151,18 @@ fn game_ui() -> impl IntoView<BevyRenderer> {
 
 #[derive(Resource, Default)]
 pub struct DraggingInventoryItem {
-    item: InventoryItemContainer,
-    is_drag: RwSignal<bool>,
+    // item: InventoryItemContainer,
+    // is_drag: RwSignal<bool>,
     delta: Vec2,
     index: usize,
+    view_key: Option<SyncCell<OnDrop<Box<dyn FnOnce() + Send>>>>,
+}
+
+impl DraggingInventoryItem {
+    pub fn reset(&mut self) {
+        self.delta = Default::default();
+        self.view_key = None;
+    }
 }
 
 #[derive(Resource, Default, Deref)]
@@ -179,15 +190,26 @@ impl SchemaElementView<BevyRenderer> for InventoryItemView {
                     .border_color(Color::BLACK),
                 x_hover().bg_color(Color::GRAY),
             ))
-            // .member(x_res(|is_dragging: &InventoryIsDragging| {
-            //     is_dragging
-            //         .0
-            //         .then_some(().style(x_hover().border_color(Color::BLUE)))
+            // .style(x_res(|is_dragging: &InventoryIsDragging| {
+            //     is_dragging.0.then_some(x_hover().border_color(Color::BLUE))
             // }))
             ;
         root.children(rx(move || {
-            if let Some(InventoryItem { item, count }) = item.get().0 {
-                let is_drag = use_rw_signal(false);
+            if let Some(item) = item.get().0 {
+                fn item_view(InventoryItem { item, count }: InventoryItem) -> impl ElementView<BevyRenderer> {
+                    div()
+                        .size_full()
+                        .absolute()
+                        .children((
+                            img().m(8).src(item.icon),
+                            span(count.to_string())
+                                .text_color(Color::BLUE)
+                                .font_size(18)
+                                .absolute()
+                                .top(1)
+                                .right(1),
+                        ))
+                }
                 let events = ()
                     .on_pointer_drag(
                         move |e: Res<ListenerInputPointerDrag>,
@@ -195,57 +217,56 @@ impl SchemaElementView<BevyRenderer> for InventoryItemView {
                             dargging.delta += e.delta;
                         },
                     )
-                    .on_pointer_drag_end(move |mut dargging: ResMut<DraggingInventoryItem>, mut is_dragging: ResMut<InventoryIsDragging>| {
-                        dargging.delta = Vec2::default();
-                        dargging.is_drag.set(false);
+                    .on_pointer_drag_end(move |mut dragging: ResMut<DraggingInventoryItem>, mut is_dragging: ResMut<InventoryIsDragging>| {
+                        dragging.reset();
                         *is_dragging = InventoryIsDragging(false);
                     })
                     .on_pointer_drop(
                         move |e: Res<ListenerInputPointerDrop>,
-                              mut dargging: ResMut<DraggingInventoryItem>,
+                              mut dragging: ResMut<DraggingInventoryItem>,mut is_dragging: ResMut<InventoryIsDragging>,
                               mut inventory_items: ResMut<InventoryItems>| {
-                            println!("swap {} {}", index, dargging.index);
-                            inventory_items.swap(index, dargging.index);
-                            dargging.is_drag.set(false);
-                            dargging.item = InventoryItemContainer::default();
-                            dargging.delta = Vec2::default();
+                            println!("swap {:?} {:?}",index,dragging.index);
+                            inventory_items.swap(index, dragging.index);
+                            dragging.reset();
+                            *is_dragging = InventoryIsDragging(false);
                         },
                     )
                     .on_pointer_drag_start({
-                        let item = InventoryItemContainer::new(item.clone(), count);
-                        move |mut draggging: ResMut<DraggingInventoryItem>,
-                              mut is_dragging: ResMut<InventoryIsDragging>| {
-                            is_drag.set(true);
-                            *is_dragging = InventoryIsDragging(true);
-                            *draggging = DraggingInventoryItem {
-                                item: item.clone(),
-                                is_drag,
+                        let item = item.clone();
+                        // let item = InventoryItemContainer::new(item.clone(), count);
+                        // move |mut draggging: ResMut<DraggingInventoryItem>,
+                        //       mut is_dragging: ResMut<InventoryIsDragging>| {
+                        move |world: &mut World| {
+                            *world.resource_mut::<InventoryIsDragging>() = InventoryIsDragging(true);
+                            let e =world.resource::<ListenerInputPointerDragStart>();
+                            let parent = world.get_parent(&e.listener()).unwrap();
+                            let view_key =world.spawn_view(
+                                into_view(item_view(item.clone())
+                                    .z(1)
+                                    .member(
+                                        x_res(move |dragging: &DraggingInventoryItem| {
+                                            ().left(dragging.delta.x).top(dragging.delta.y)
+                                        })
+                                    )),
+                                 move |_| parent
+                            );
+                            // world.spawn_rxy_ui()
+                            // is_drag.set(true);
+                            let cmd_sender = world.resource::<CmdSender>().clone();
+                            *world.resource_mut::<DraggingInventoryItem>() = DraggingInventoryItem {
                                 delta: Vec2::default(),
                                 index,
+                                view_key: Some(SyncCell::new(OnDrop::new(Box::new(move || {
+                                    cmd_sender.add(|world:&mut World| {
+                                        view_key.remove(world)
+                                    });
+                                }))))
                             };
                         }
-                    });
-                div()
-                    .member(events)
-                    .size_full()
-                    .absolute()
-                    .z(1)
-                    .rx_member(move || {
-                        is_drag
-                            .get()
-                            .then_some(x_res(move |dragging: &DraggingInventoryItem| {
-                                ().left(dragging.delta.x).top(dragging.delta.y)
-                            }))
                     })
-                    .children((
-                        img().size_full().src(item.icon),
-                        span(count.to_string())
-                            .text_color(Color::BLUE)
-                            .font_size(18)
-                            .absolute()
-                            .top(1)
-                            .right(1),
-                    ))
+                    ;
+                into_view(item_view(item)
+                    .member(events))
                     .either_left()
             } else {
                 ().either_right()
