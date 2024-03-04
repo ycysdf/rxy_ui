@@ -622,7 +622,7 @@ pub mod core_impls {
         X: XNest + MaybeSend + 'static,
     {
         type Inner = X::Inner;
-        type MapInner<M> = InnerIvmToVm<Self, X::MapInner<M>>;
+        type MapInner<M> = InnerIvmToVm<Self, M>;
 
         fn map_inner<M>(self) -> Self::MapInner<M> {
             InnerIvmToVm::new(self)
@@ -693,7 +693,7 @@ pub mod builder {
         X: XNest,
     {
         type Inner = X::Inner;
-        type MapInner<M> = InnerIvmToVm<Self, X::MapInner<M>>;
+        type MapInner<M> = InnerIvmToVm<Self, M>;
 
         fn map_inner<M>(self) -> Self::MapInner<M> {
             InnerIvmToVm::new(self)
