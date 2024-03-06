@@ -43,9 +43,9 @@ impl<T> HookVec for Sender<VecOperation<T>>
         let _ = self.send_blocking(VecOperation::Move { from, to });
     }
 
-    fn on_swap(&mut self, from: usize, to: usize) {
-        let _ = self.send_blocking(VecOperation::Swap { from, to });
-    }
+    // fn on_swap(&mut self, from: usize, to: usize) {
+    //     let _ = self.send_blocking(VecOperation::Swap { from, to });
+    // }
 
     fn on_patch(&mut self, index: usize) {
         let _ = self.send_blocking(VecOperation::Patch { index });

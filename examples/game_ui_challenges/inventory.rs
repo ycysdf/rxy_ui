@@ -5,7 +5,9 @@ use std::borrow::Cow;
 
 use async_channel::Receiver;
 use bevy::asset::AssetLoader;
+use bevy::ui::FocusPolicy;
 use bevy::utils::OnDrop;
+use bevy_mod_picking::prelude::Pickable;
 use std::fmt::Debug;
 use std::ops::Deref;
 
@@ -190,24 +192,44 @@ impl SchemaElementView<BevyRenderer> for InventoryItemView {
                     .border_color(Color::BLACK),
                 x_hover().bg_color(Color::GRAY),
             ))
+            .on_pointer_drop(
+                move |e: Res<ListenerInputPointerDrop>,
+                      mut dragging: ResMut<DraggingInventoryItem>,mut is_dragging: ResMut<InventoryIsDragging>,
+                      mut inventory_items: ResMut<InventoryItems>| {
+                    if inventory_items[dragging.index].0.is_none() {
+                        return;
+                    }
+                    inventory_items.swap(index, dragging.index);
+                    dragging.reset();
+                    *is_dragging = InventoryIsDragging(false);
+                },
+            )
             // .style(x_res(|is_dragging: &InventoryIsDragging| {
             //     is_dragging.0.then_some(x_hover().border_color(Color::BLUE))
             // }))
             ;
         root.children(rx(move || {
             if let Some(item) = item.get().0 {
-                fn item_view(InventoryItem { item, count }: InventoryItem) -> impl ElementView<BevyRenderer> {
+                fn item_view(InventoryItem { item, count }: InventoryItem,ignore_events: bool) -> impl ElementView<BevyRenderer> {
+                    let pickable = if ignore_events {
+                        Pickable::IGNORE
+                    }else {
+                        Pickable::default()
+                    };
                     div()
                         .size_full()
                         .absolute()
+                        .bundle(pickable.clone())
                         .children((
-                            img().m(8).src(item.icon),
+                            img().m(8).src(item.icon)
+                                .bundle(pickable.clone()),
                             span(count.to_string())
                                 .text_color(Color::BLUE)
                                 .font_size(18)
                                 .absolute()
                                 .top(1)
-                                .right(1),
+                                .right(1)
+                                .bundle(pickable),
                         ))
                 }
                 let events = ()
@@ -221,37 +243,23 @@ impl SchemaElementView<BevyRenderer> for InventoryItemView {
                         dragging.reset();
                         *is_dragging = InventoryIsDragging(false);
                     })
-                    .on_pointer_drop(
-                        move |e: Res<ListenerInputPointerDrop>,
-                              mut dragging: ResMut<DraggingInventoryItem>,mut is_dragging: ResMut<InventoryIsDragging>,
-                              mut inventory_items: ResMut<InventoryItems>| {
-                            println!("swap {:?} {:?}",index,dragging.index);
-                            inventory_items.swap(index, dragging.index);
-                            dragging.reset();
-                            *is_dragging = InventoryIsDragging(false);
-                        },
-                    )
                     .on_pointer_drag_start({
                         let item = item.clone();
-                        // let item = InventoryItemContainer::new(item.clone(), count);
-                        // move |mut draggging: ResMut<DraggingInventoryItem>,
-                        //       mut is_dragging: ResMut<InventoryIsDragging>| {
                         move |world: &mut World| {
                             *world.resource_mut::<InventoryIsDragging>() = InventoryIsDragging(true);
                             let e =world.resource::<ListenerInputPointerDragStart>();
                             let parent = world.get_parent(&e.listener()).unwrap();
                             let view_key =world.spawn_view(
-                                into_view(item_view(item.clone())
+                                into_view(item_view(item.clone(),true)
                                     .z(1)
                                     .member(
                                         x_res(move |dragging: &DraggingInventoryItem| {
                                             ().left(dragging.delta.x).top(dragging.delta.y)
                                         })
-                                    )),
+                                    )
+                                ),
                                  move |_| parent
                             );
-                            // world.spawn_rxy_ui()
-                            // is_drag.set(true);
                             let cmd_sender = world.resource::<CmdSender>().clone();
                             *world.resource_mut::<DraggingInventoryItem>() = DraggingInventoryItem {
                                 delta: Vec2::default(),
@@ -265,7 +273,7 @@ impl SchemaElementView<BevyRenderer> for InventoryItemView {
                         }
                     })
                     ;
-                into_view(item_view(item)
+                into_view(item_view(item,false)
                     .member(events))
                     .either_left()
             } else {

@@ -7,8 +7,8 @@ use bevy_utils::synccell::SyncCell;
 
 use rxy_core::{
     prelude::{ViewMember, ViewMemberCtx},
-    DeferredNodeTreeScoped, InnerIvmToVm, MaybeSend, NodeTree, Renderer, View, ViewCtx, ViewKey,
-    ViewMemberIndex, ViewMemberOrigin,
+    DeferredNodeTreeScoped, EitherExt, InnerIvmToVm, MaybeSend, NodeTree, Renderer, View, ViewCtx,
+    ViewKey, ViewMemberIndex, ViewMemberOrigin,
 };
 use rxy_core::{IntoView, XNest};
 
@@ -46,16 +46,19 @@ fn x_res_view_build<T, F, IV>(
     let task = BevyRenderer::spawn_task({
         let res_change_receiver = ctx.world.get_res_change_receiver::<T>();
         let parent = ctx.parent;
-        let f = Arc::new(SyncCell::new(res.f));
+        let mut f2 = Some(res.f.either_left());
         let key = key.clone();
         async move {
             while let Ok(()) = res_change_receiver.recv().await {
-                let f = f.clone();
-                let mut f = Arc::try_unwrap(f).ok().unwrap();
+                let (f_sender, f_receiver) = oneshot::channel();
+                let f = f2.take().unwrap();
+                f2 = Some(f_receiver.either_right());
                 let key = key.clone();
                 world_scoped.scoped(move |world| {
                     let resource = world.resource::<T>();
-                    let view = f.get()(resource).into_view();
+                    let f = f.map_right(|n| n.recv().unwrap()).into_inner();
+                    let view = f(resource).into_view();
+                    f_sender.send(f).unwrap();
                     view.rebuild(ViewCtx { world, parent }, key);
                 })
             }
@@ -153,14 +156,18 @@ where
             node_id: ctx.node_id,
         };
         let res_change_receiver = ctx.world.get_res_change_receiver::<T>();
-        let f = Arc::new(SyncCell::new(res.f));
+        let mut f2 = Some(res.f.either_left());
         async move {
             while let Ok(()) = res_change_receiver.recv().await {
-                let f = f.clone();
-                let mut f = Arc::try_unwrap(f).ok().unwrap();
+                // todo: 封装、重用
+                let (f_sender, f_receiver) = oneshot::channel();
+                let f = f2.take().unwrap();
+                f2 = Some(f_receiver.either_right());
                 world_scoped.scoped(move |world| {
                     let resource = world.resource::<T>();
-                    let vm = f.get()(resource);
+                    let f = f.map_right(|n| n.recv().unwrap()).into_inner();
+                    let vm = f(resource);
+                    f_sender.send(f).unwrap();
                     vm.rebuild(ViewMemberCtx {
                         index: ctx.index,
                         world,

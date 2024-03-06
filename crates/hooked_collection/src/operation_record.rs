@@ -70,12 +70,12 @@ impl<T, F> HookVec for HookFn<F, T>
         });
     }
 
-    fn on_swap(&mut self, _from: usize, _to: usize) {
-        self.0(VecOperation::Swap {
-            from: _from,
-            to: _to,
-        });
-    }
+    // fn on_swap(&mut self, _from: usize, _to: usize) {
+    //     self.0(VecOperation::Swap {
+    //         from: _from,
+    //         to: _to,
+    //     });
+    // }
 }
 
 impl<T> HookVec for VecOperationRecord<T>
@@ -131,12 +131,12 @@ impl<T> HookVec for VecOperationRecord<T>
         self.push(VecOperation::Patch { index: _index });
     }
 
-    fn on_swap(&mut self, _from: usize, _to: usize) {
-        self.push(VecOperation::Swap {
-            from: _from,
-            to: _to,
-        });
-    }
+    // fn on_swap(&mut self, _from: usize, _to: usize) {
+    //     self.push(VecOperation::Swap {
+    //         from: _from,
+    //         to: _to,
+    //     });
+    // }
 }
 
 impl<K, T> HookMap for MapOperationRecord<K, T>

@@ -25,8 +25,8 @@ pub trait HookVec {
     fn on_clear(&mut self) {}
     #[inline]
     fn on_move(&mut self, _from: usize, _to: usize) {}
-    #[inline]
-    fn on_swap(&mut self, _from: usize, _to: usize) {}
+    // #[inline]
+    // fn on_swap(&mut self, _from: usize, _to: usize) {}
 }
 
 pub struct HookedVec<T, O> {
@@ -212,7 +212,8 @@ impl<T, O> HookedVec<T, O>
     }
 
     pub fn swap(&mut self, a: usize, b: usize) {
-        self.observer.on_swap(a, b);
+        self.observer.on_update(a, &self.vec[b]);
+        self.observer.on_update(b, &self.vec[a]);
         self.vec.swap(a, b);
     }
 }

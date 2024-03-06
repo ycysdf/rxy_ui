@@ -750,27 +750,28 @@ fn apply_op_to_view_keys<R, T, F, IV>(
                 view_keys[index].clone(),
             );
         }
-        VecOperation::Swap { from, to } => {
-            let (to, from) = match from.cmp(&to) {
-                Ordering::Less => {
-                    (to, from)
-                }
-                Ordering::Greater => {
-                    (from, to)
-                }
-                Ordering::Equal => {
-                    return;
-                }
-            };
-            if to - from == 1 {
-                view_keys[to].insert_before(world, Some(&parent), Some(&view_keys[from].first_node_id(world).unwrap()));
-            } else {
-                let before_node_id = view_keys[to].first_node_id(world).unwrap();
-                view_keys[from].insert_before(world, Some(&parent), Some(&before_node_id));
-                view_keys[to].insert_before(world, Some(&parent), Some(&view_keys[from + 1].first_node_id(world).unwrap()));
-            }
-            view_keys.swap(from, to);
-        }
+        // VecOperation::Swap { from, to } => {
+        //     let (to, from) = match from.cmp(&to) {
+        //         Ordering::Less => {
+        //             (to, from)
+        //         }
+        //         Ordering::Greater => {
+        //             (from, to)
+        //         }
+        //         Ordering::Equal => {
+        //             return;
+        //         }
+        //     };
+        //     // todo: index
+        //     if to - from == 1 {
+        //         view_keys[to].insert_before(world, Some(&parent), Some(&view_keys[from].first_node_id(world).unwrap()));
+        //     } else {
+        //         let before_node_id = view_keys[to].first_node_id(world).unwrap();
+        //         view_keys[from].insert_before(world, Some(&parent), Some(&before_node_id));
+        //         view_keys[to].insert_before(world, Some(&parent), Some(&view_keys[from + 1].first_node_id(world).unwrap()));
+        //     }
+        //     view_keys.swap(from, to);
+        // }
     }
 }
 
