@@ -48,6 +48,8 @@ xy_reactive = { path = "crates/xy_reactive", default-features = false }
 rxy_web_dom = { path = "crates/rxy_web_dom", default-features = false }
 
 async-channel = { version = "2.1" }
+async-broadcast = "0.7.0"
+#event-listener = "5.2"
 glam = "0.24"
 hashbrown = "0.14"
 indexmap = "2.1"

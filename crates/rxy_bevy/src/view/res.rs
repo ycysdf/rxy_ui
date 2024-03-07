@@ -44,7 +44,7 @@ fn x_res_view_build<T, F, IV>(
     let world_scoped = ctx.world.deferred_world_scoped();
 
     let task = BevyRenderer::spawn_task({
-        let res_change_receiver = ctx.world.get_res_change_receiver::<T>();
+        let mut res_change_receiver = ctx.world.get_res_change_receiver::<T>();
         let parent = ctx.parent;
         let mut f2 = Some(res.f.either_left());
         let key = key.clone();
@@ -58,7 +58,7 @@ fn x_res_view_build<T, F, IV>(
                     let resource = world.resource::<T>();
                     let f = f.map_right(|n| n.recv().unwrap()).into_inner();
                     let view = f(resource).into_view();
-                    f_sender.send(f).unwrap();
+                    let _ = f_sender.send(f);
                     view.rebuild(ViewCtx { world, parent }, key);
                 })
             }
@@ -155,7 +155,7 @@ where
             world: &mut *ctx.world,
             node_id: ctx.node_id,
         };
-        let res_change_receiver = ctx.world.get_res_change_receiver::<T>();
+        let mut res_change_receiver = ctx.world.get_res_change_receiver::<T>();
         let mut f2 = Some(res.f.either_left());
         async move {
             while let Ok(()) = res_change_receiver.recv().await {
@@ -167,7 +167,7 @@ where
                     let resource = world.resource::<T>();
                     let f = f.map_right(|n| n.recv().unwrap()).into_inner();
                     let vm = f(resource);
-                    f_sender.send(f).unwrap();
+                    let _ = f_sender.send(f);
                     vm.rebuild(ViewMemberCtx {
                         index: ctx.index,
                         world,
