@@ -13,6 +13,7 @@ use std::ops::Deref;
 
 mod components;
 
+use crate::InventoryDraggingStatus::NoDragging;
 use components::*;
 use hooked_collection::{HookVec, HookedVec, VecOperation};
 use rxy_bevy::vec_data_source::use_hooked_vec_resource_source;
@@ -28,7 +29,7 @@ fn main() {
         RxyKeyboardNavigationPlugin::default(),
     ))
     .init_resource::<DraggingInventoryItem>()
-    .init_resource::<InventoryIsDragging>()
+    .init_resource::<InventoryDraggingStatus>()
     .add_systems(Startup, setup);
 
     app.run();
@@ -167,8 +168,19 @@ impl DraggingInventoryItem {
     }
 }
 
-#[derive(Resource, Default, Deref)]
-pub struct InventoryIsDragging(bool);
+#[derive(Resource, Default, PartialEq, Eq, Debug, Copy, Clone)]
+pub enum InventoryDraggingStatus {
+    #[default]
+    NoDragging,
+    FullDrag,
+    PartialDrag,
+}
+
+impl InventoryDraggingStatus {
+    pub fn is_dragging(&self) -> bool {
+        *self != NoDragging
+    }
+}
 
 #[derive(ElementSchema)]
 pub struct InventoryItemView {
@@ -194,17 +206,17 @@ impl SchemaElementView<BevyRenderer> for InventoryItemView {
             ))
             .on_pointer_drop(
                 move |e: Res<ListenerInputPointerDrop>,
-                      mut dragging: ResMut<DraggingInventoryItem>,mut is_dragging: ResMut<InventoryIsDragging>,
+                      mut dragging: ResMut<DraggingInventoryItem>,mut is_dragging: ResMut<InventoryDraggingStatus>,
                       mut inventory_items: ResMut<InventoryItems>| {
                     if inventory_items[dragging.index].0.is_none() {
                         return;
                     }
                     inventory_items.swap(index, dragging.index);
                     dragging.reset();
-                    *is_dragging = InventoryIsDragging(false);
+                    *is_dragging = NoDragging;
                 },
             )
-            // .style(x_res(|is_dragging: &InventoryIsDragging| {
+            // .style(x_res(|is_dragging: &InventoryDraggingStatus| {
             //     is_dragging.0.then_some(x_hover().border_color(Color::BLUE))
             // }))
             ;
@@ -239,14 +251,14 @@ impl SchemaElementView<BevyRenderer> for InventoryItemView {
                             dargging.delta += e.delta;
                         },
                     )
-                    .on_pointer_drag_end(move |mut dragging: ResMut<DraggingInventoryItem>, mut is_dragging: ResMut<InventoryIsDragging>| {
+                    .on_pointer_drag_end(move |mut dragging: ResMut<DraggingInventoryItem>, mut is_dragging: ResMut<InventoryDraggingStatus>| {
                         dragging.reset();
-                        *is_dragging = InventoryIsDragging(false);
+                        *is_dragging = NoDragging;
                     })
                     .on_pointer_drag_start({
                         let item = item.clone();
                         move |world: &mut World| {
-                            *world.resource_mut::<InventoryIsDragging>() = InventoryIsDragging(true);
+                            *world.resource_mut::<InventoryDraggingStatus>() = InventoryDraggingStatus::FullDrag;
                             let e =world.resource::<ListenerInputPointerDragStart>();
                             let parent = world.get_parent(&e.listener()).unwrap();
                             let view_key =world.spawn_view(
@@ -274,6 +286,16 @@ impl SchemaElementView<BevyRenderer> for InventoryItemView {
                     })
                     ;
                 into_view(item_view(item,false)
+                    .visibility(x_res(move |dragging_status: &InventoryDraggingStatus| {
+                        let dragging_status = dragging_status.clone();
+                        member_builder(move |ctx:ViewMemberCtx<BevyRenderer>,_| {
+                            if ctx.world.resource::<DraggingInventoryItem>().index == index && dragging_status == InventoryDraggingStatus::FullDrag  {
+                                Visibility::Hidden
+                            } else {
+                                Visibility::Inherited
+                            }
+                        })
+                    }))
                     .member(events))
                     .either_left()
             } else {
