@@ -181,7 +181,8 @@ fn hover_inventory_item_ui(item: InventoryItem) -> impl IntoView<BevyRenderer> {
         .absolute()
         .z(2)
         .member(x_res(|cursor_position: &InventoryCursorPosition| {
-            ().left(cursor_position.0.x).top(cursor_position.0.y)
+            ().left(cursor_position.0.x + 10.)
+                .top(cursor_position.0.y + 10.)
         }))
         .children(item.item.name)
 }
