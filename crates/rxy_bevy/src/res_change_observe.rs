@@ -1,39 +1,16 @@
 use core::{
-    marker::PhantomData,
-    ops::Deref,
-    sync::atomic::{AtomicUsize, Ordering},
+    marker::PhantomData
 };
-use std::sync::Arc;
 
 use bevy_app::PreUpdate;
 use bevy_ecs::prelude::*;
 
 use crate::add_system;
 
-pub struct ResChangeReceiver {
-    inner: async_channel::Receiver<()>,
-    observer_count: Arc<AtomicUsize>,
-}
-
-impl Deref for ResChangeReceiver {
-    type Target = async_channel::Receiver<()>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
-impl Drop for ResChangeReceiver {
-    fn drop(&mut self) {
-        self.observer_count.fetch_sub(1, Ordering::Relaxed);
-    }
-}
-
 #[derive(Resource)]
 pub struct ResChangeObserve<T: Resource> {
-    sender: async_channel::Sender<()>,
-    receiver: async_channel::Receiver<()>,
-    observer_count: Arc<AtomicUsize>,
+    sender: async_broadcast::Sender<()>,
+    receiver: async_broadcast::Receiver<()>,
     _marker: PhantomData<T>,
 }
 
@@ -42,11 +19,10 @@ where
     T: Resource,
 {
     fn default() -> Self {
-        let (sender, receiver) = async_channel::unbounded();
+        let (sender,receiver) = async_broadcast::broadcast(1024);
         Self {
             sender,
             receiver,
-            observer_count: Default::default(),
             _marker: Default::default(),
         }
     }
@@ -59,43 +35,33 @@ impl<T: Resource> ResChangeObserve<T> {
 }
 
 pub trait ResChangeWorldExt {
-    fn get_res_change_receiver<T>(&mut self) -> ResChangeReceiver
+    fn get_res_change_receiver<T>(&mut self) -> async_broadcast::Receiver<()>
     where
         T: Resource;
 }
 
 impl ResChangeWorldExt for World {
-    fn get_res_change_receiver<T>(&mut self) -> ResChangeReceiver
+    fn get_res_change_receiver<T>(&mut self) -> async_broadcast::Receiver<()>
     where
         T: Resource,
     {
         let is_add_system = self.contains_resource::<ResChangeObserve<T>>();
         let res_change_observe = self.get_resource_or_insert_with(ResChangeObserve::<T>::new);
 
-        res_change_observe
-            .observer_count
-            .fetch_add(1, Ordering::Relaxed);
+        let receiver = res_change_observe.receiver.clone();
         fn res_observe<T: Resource>(res_change: Res<ResChangeObserve<T>>) {
-            for _ in 0..res_change.sender.receiver_count() {
-                if res_change.sender.try_send(()).is_err() {
-                    break;
-                }
-            }
+            let _ = res_change.sender.try_broadcast(());
         }
-        let r = ResChangeReceiver {
-            inner: res_change_observe.receiver.clone(),
-            observer_count: res_change_observe.observer_count.clone(),
-        };
 
         if !is_add_system {
             add_system(
                 self,
                 PreUpdate,
                 res_observe::<T>.run_if(|res_change: Res<ResChangeObserve<T>>, res: Res<T>| {
-                    res_change.observer_count.load(Ordering::Relaxed) > 0 && res.is_changed()
+                    res_change.receiver.receiver_count() > 0 && res.is_changed()
                 }),
             );
         }
-        r
+        receiver
     }
 }

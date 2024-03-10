@@ -3,21 +3,21 @@ use alloc::vec;
 use async_channel::Sender;
 
 impl<T> HookVec for Sender<VecOperation<T>>
-where
-    T: Clone,
+    where
+        T: Clone,
 {
     type Item = T;
 
-    fn on_push<'a>(&'a mut self, items: impl Iterator<Item = &'a Self::Item>) {
+    fn on_push<'a>(&'a mut self, items: impl Iterator<Item=&'a Self::Item>) {
         for item in items {
             let _ = self.send_blocking(VecOperation::Push { item: item.clone() });
         }
     }
 
-    fn on_pop<'a>(&'a mut self, _items: impl Iterator<Item = &'a Self::Item>) {
+    fn on_pop<'a>(&'a mut self, _items: impl Iterator<Item=&'a Self::Item>) {
         let _ = self.send_blocking(VecOperation::Pop);
     }
-    fn on_insert<'a>(&'a mut self, index: usize, items: impl Iterator<Item = &'a Self::Item>) {
+    fn on_insert<'a>(&'a mut self, index: usize, items: impl Iterator<Item=&'a Self::Item>) {
         for item in items {
             let _ = self.send_blocking(VecOperation::Insert {
                 index,
@@ -31,7 +31,7 @@ where
             item: item.clone(),
         });
     }
-    fn on_remove<'a>(&'a mut self, index: usize, items: impl Iterator<Item = &'a Self::Item>) {
+    fn on_remove<'a>(&'a mut self, index: usize, items: impl Iterator<Item=&'a Self::Item>) {
         for _ in items {
             let _ = self.send_blocking(VecOperation::Remove { index });
         }
@@ -42,12 +42,20 @@ where
     fn on_move(&mut self, from: usize, to: usize) {
         let _ = self.send_blocking(VecOperation::Move { from, to });
     }
+
+    // fn on_swap(&mut self, from: usize, to: usize) {
+    //     let _ = self.send_blocking(VecOperation::Swap { from, to });
+    // }
+
+    fn on_patch(&mut self, index: usize) {
+        let _ = self.send_blocking(VecOperation::Patch { index });
+    }
 }
 
 impl<K, V> HookMap for Sender<MapOperation<K, V>>
-where
-    K: Clone,
-    V: Clone,
+    where
+        K: Clone,
+        V: Clone,
 {
     type Key = K;
     type Value = V;
@@ -110,7 +118,7 @@ mod tests {
             receiver.try_recv().unwrap(),
             VecOperation::Move {
                 from: pre_len,
-                to: 0
+                to: 0,
             }
         );
         vec.update(0, 5);

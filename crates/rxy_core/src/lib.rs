@@ -86,3 +86,4 @@ mod r#static;
 pub mod style;
 pub mod utils;
 pub mod member_after_children;
+pub mod remove_on_drop;

@@ -198,23 +198,15 @@ impl ElementAttrType<BevyRenderer> for name {
 
     const NAME: &'static str = stringify!(name);
 
-    fn first_set_value(
-        world: &mut RendererWorld<BevyRenderer>,
-        node_id: RendererNodeId<BevyRenderer>,
-        value: impl Into<Self::Value>,
-    ) {
-        let mut entity_world_mut = world.entity_mut(node_id);
-        entity_world_mut.insert(bevy_core::Name::new(value.into()));
-    }
-
     fn update_value(
         world: &mut RendererWorld<BevyRenderer>,
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        if let Some(mut n) = world.get_mut::<bevy_core::Name>(node_id) {
-            *n = bevy_core::Name::new(value.into());
-        }
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.insert(bevy_core::Name::new(value.into()));
     }
 }
 
@@ -226,23 +218,15 @@ impl ElementAttrType<BevyRenderer> for z_index {
 
     const NAME: &'static str = stringify!(z_index);
 
-    fn first_set_value(
-        world: &mut RendererWorld<BevyRenderer>,
-        node_id: RendererNodeId<BevyRenderer>,
-        value: impl Into<Self::Value>,
-    ) {
-        let mut entity_world_mut = world.entity_mut(node_id);
-        entity_world_mut.insert(value.into());
-    }
-
     fn update_value(
         world: &mut RendererWorld<BevyRenderer>,
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        if let Some(mut z) = world.get_mut::<ZIndex>(node_id) {
-            *z = value.into();
-        }
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.insert(value.into());
     }
 }
 
@@ -254,23 +238,15 @@ impl ElementAttrType<BevyRenderer> for bg_color {
 
     const NAME: &'static str = stringify!(bg_color);
 
-    fn first_set_value(
-        world: &mut RendererWorld<BevyRenderer>,
-        node_id: RendererNodeId<BevyRenderer>,
-        value: impl Into<Self::Value>,
-    ) {
-        let mut entity_world_mut = world.entity_mut(node_id);
-        entity_world_mut.insert(BackgroundColor(value.into()));
-    }
-
     fn update_value(
         world: &mut RendererWorld<BevyRenderer>,
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        if let Some(mut bc) = world.get_mut::<BackgroundColor>(node_id) {
-            *bc = BackgroundColor(value.into());
-        }
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.insert(BackgroundColor(value.into()));
         // let entity = world.id();
         // context.commands.add(move |world| {
         //     let entity_mut = world.entity_mut(entity);
@@ -339,7 +315,10 @@ impl ElementAttrType<BevyRenderer> for border_left {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             let value = value.into();
             style.border.left = value;
         });
@@ -359,7 +338,10 @@ impl ElementAttrType<BevyRenderer> for border_right {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             let value = value.into();
             style.border.right = value;
         });
@@ -379,7 +361,10 @@ impl ElementAttrType<BevyRenderer> for border_top {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             let value = value.into();
             style.border.top = value;
         });
@@ -399,7 +384,10 @@ impl ElementAttrType<BevyRenderer> for border_bottom {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             let value = value.into();
             style.border.bottom = value;
         });
@@ -414,24 +402,15 @@ impl ElementAttrType<BevyRenderer> for border_color {
 
     const NAME: &'static str = stringify!(border_color);
 
-    fn first_set_value(
-        world: &mut RendererWorld<BevyRenderer>,
-        node_id: RendererNodeId<BevyRenderer>,
-        value: impl Into<Self::Value>,
-    ) {
-        let mut entity_world_mut = world.entity_mut(node_id);
-        entity_world_mut.insert(BorderColor(value.into()));
-    }
-
     fn update_value(
         world: &mut RendererWorld<BevyRenderer>,
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        if let Some(mut br) = world.get_mut::<BorderColor>(node_id) {
-            *br = BorderColor(value.into());
-        }
-        // world.insert(value.into());
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.insert(BorderColor(value.into()));
     }
 }
 
@@ -448,7 +427,10 @@ impl ElementAttrType<BevyRenderer> for display {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.display = value.into();
         });
     }
@@ -466,7 +448,10 @@ impl ElementAttrType<BevyRenderer> for position_type {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.position_type = value.into();
         });
     }
@@ -484,7 +469,10 @@ impl ElementAttrType<BevyRenderer> for overflow_x {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             let value = value.into();
             style.overflow.x = value;
         });
@@ -503,7 +491,10 @@ impl ElementAttrType<BevyRenderer> for overflow_y {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             let value = value.into();
             style.overflow.y = value;
         });
@@ -522,7 +513,10 @@ impl ElementAttrType<BevyRenderer> for direction {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.direction = value.into();
         });
     }
@@ -541,7 +535,10 @@ impl ElementAttrType<BevyRenderer> for left {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.left = value.into();
         });
     }
@@ -559,7 +556,10 @@ impl ElementAttrType<BevyRenderer> for right {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.right = value.into();
         });
     }
@@ -577,7 +577,10 @@ impl ElementAttrType<BevyRenderer> for top {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.top = value.into();
         });
     }
@@ -595,7 +598,10 @@ impl ElementAttrType<BevyRenderer> for bottom {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.bottom = value.into();
         });
     }
@@ -613,7 +619,10 @@ impl ElementAttrType<BevyRenderer> for width {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.width = value.into();
         });
     }
@@ -631,7 +640,10 @@ impl ElementAttrType<BevyRenderer> for height {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.height = value.into();
         });
     }
@@ -649,7 +661,10 @@ impl ElementAttrType<BevyRenderer> for min_width {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.min_width = value.into();
         });
     }
@@ -667,7 +682,10 @@ impl ElementAttrType<BevyRenderer> for min_height {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.min_height = value.into();
         });
     }
@@ -685,7 +703,10 @@ impl ElementAttrType<BevyRenderer> for max_width {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.max_width = value.into();
         });
     }
@@ -703,7 +724,10 @@ impl ElementAttrType<BevyRenderer> for max_height {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.max_height = value.into();
         });
     }
@@ -721,7 +745,10 @@ impl ElementAttrType<BevyRenderer> for margin_left {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             let value = value.into();
             style.margin.left = value;
         });
@@ -740,7 +767,10 @@ impl ElementAttrType<BevyRenderer> for margin_right {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             let value = value.into();
             style.margin.right = value;
         });
@@ -759,7 +789,10 @@ impl ElementAttrType<BevyRenderer> for margin_top {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             let value = value.into();
             style.margin.top = value;
         });
@@ -778,7 +811,10 @@ impl ElementAttrType<BevyRenderer> for margin_bottom {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             let value = value.into();
             style.margin.bottom = value;
         });
@@ -797,7 +833,10 @@ impl ElementAttrType<BevyRenderer> for padding_left {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             let value = value.into();
             style.padding.left = value;
         });
@@ -816,7 +855,10 @@ impl ElementAttrType<BevyRenderer> for padding_right {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             let value = value.into();
             style.padding.right = value;
         });
@@ -835,7 +877,10 @@ impl ElementAttrType<BevyRenderer> for padding_top {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             let value = value.into();
             style.padding.top = value;
         });
@@ -854,7 +899,10 @@ impl ElementAttrType<BevyRenderer> for padding_bottom {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             let value = value.into();
             style.padding.bottom = value;
         });
@@ -873,7 +921,10 @@ impl ElementAttrType<BevyRenderer> for aspect_ratio {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.aspect_ratio = value.into();
         });
     }
@@ -891,7 +942,10 @@ impl ElementAttrType<BevyRenderer> for align_items {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.align_items = value.into();
         });
     }
@@ -909,7 +963,10 @@ impl ElementAttrType<BevyRenderer> for justify_items {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.justify_items = value.into();
         });
     }
@@ -927,7 +984,10 @@ impl ElementAttrType<BevyRenderer> for align_self {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.align_self = value.into();
         });
     }
@@ -945,7 +1005,10 @@ impl ElementAttrType<BevyRenderer> for justify_self {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.justify_self = value.into();
         });
     }
@@ -963,7 +1026,10 @@ impl ElementAttrType<BevyRenderer> for align_content {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.align_content = value.into();
         });
     }
@@ -981,7 +1047,10 @@ impl ElementAttrType<BevyRenderer> for justify_content {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.justify_content = value.into();
         });
     }
@@ -999,7 +1068,10 @@ impl ElementAttrType<BevyRenderer> for flex_direction {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.flex_direction = value.into();
         });
     }
@@ -1017,7 +1089,10 @@ impl ElementAttrType<BevyRenderer> for flex_wrap {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.flex_wrap = value.into();
         });
     }
@@ -1035,7 +1110,10 @@ impl ElementAttrType<BevyRenderer> for flex_grow {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.flex_grow = value.into();
         });
     }
@@ -1053,7 +1131,10 @@ impl ElementAttrType<BevyRenderer> for flex_shrink {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.flex_shrink = value.into();
         });
     }
@@ -1071,7 +1152,10 @@ impl ElementAttrType<BevyRenderer> for flex_basis {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.flex_basis = value.into();
         });
     }
@@ -1089,7 +1173,10 @@ impl ElementAttrType<BevyRenderer> for column_gap {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.column_gap = value.into();
         });
     }
@@ -1107,7 +1194,10 @@ impl ElementAttrType<BevyRenderer> for row_gap {
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        world.entity_mut(node_id).try_set_style(|style| {
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.try_set_style(|style| {
             style.row_gap = value.into();
         });
     }
@@ -1207,7 +1297,10 @@ impl ElementAttrType<BevyRenderer> for text_color {
         value: impl Into<Self::Value>,
     ) {
         let value = value.into();
-        world.entity_mut(node_id).scoped_text_styled_element_type(
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.scoped_text_styled_element_type(
             |text_schema_type, entity_ref| {
                 text_schema_type.set_text_color(entity_ref, value);
             },
@@ -1228,7 +1321,10 @@ impl ElementAttrType<BevyRenderer> for font_size {
         value: impl Into<Self::Value>,
     ) {
         let value = value.into();
-        world.entity_mut(node_id).scoped_text_styled_element_type(
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.scoped_text_styled_element_type(
             |text_schema_type, entity_ref| {
                 text_schema_type.set_font_size(entity_ref, value);
             },
@@ -1249,7 +1345,10 @@ impl ElementAttrType<BevyRenderer> for text_linebreak {
         value: impl Into<Self::Value>,
     ) {
         let value = value.into();
-        world.entity_mut(node_id).scoped_text_styled_element_type(
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.scoped_text_styled_element_type(
             |text_schema_type, entity_ref| {
                 text_schema_type.set_text_linebreak(entity_ref, value);
             },
@@ -1270,7 +1369,10 @@ impl ElementAttrType<BevyRenderer> for text_align {
         value: impl Into<Self::Value>,
     ) {
         let value = value.into();
-        world.entity_mut(node_id).scoped_text_styled_element_type(
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.scoped_text_styled_element_type(
             |text_schema_type, entity_ref| {
                 text_schema_type.set_text_align(entity_ref, value);
             },
@@ -1291,7 +1393,10 @@ impl ElementAttrType<BevyRenderer> for font {
         value: impl Into<Self::Value>,
     ) {
         let value = value.into();
-        world.entity_mut(node_id).scoped_text_styled_element_type(
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
+        entity_world_mut.scoped_text_styled_element_type(
             |text_schema_type, entity_ref| {
                 text_schema_type.set_font(entity_ref, value.clone());
             },
@@ -1306,12 +1411,14 @@ impl ElementAttrType<BevyRenderer> for outline_width {
 
     const NAME: &'static str = stringify!(outline_width);
 
-    fn first_set_value(
+    fn update_value(
         world: &mut RendererWorld<BevyRenderer>,
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        let mut entity_world_mut = world.entity_mut(node_id);
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
         let value = value.into();
         if entity_world_mut.contains::<Outline>() {
             let mut outline = entity_world_mut.get_mut::<Outline>().unwrap();
@@ -1324,29 +1431,22 @@ impl ElementAttrType<BevyRenderer> for outline_width {
             });
         }
     }
-
-    fn update_value(
-        world: &mut RendererWorld<BevyRenderer>,
-        node_id: RendererNodeId<BevyRenderer>,
-        value: impl Into<Self::Value>,
-    ) {
-        let value = value.into();
-        if let Some(mut outline) = world.get_mut::<Outline>(node_id) {
-            outline.width = value;
-        }
-    }
 }
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct outline_offset;
 
 impl ElementAttrType<BevyRenderer> for outline_offset {
     type Value = Val;
-    fn first_set_value(
+
+    const NAME: &'static str = stringify!(outline_offset);
+    fn update_value(
         world: &mut RendererWorld<BevyRenderer>,
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        let mut entity_world_mut = world.entity_mut(node_id);
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
         let value = value.into();
         if entity_world_mut.contains::<Outline>() {
             let mut outline = entity_world_mut.get_mut::<Outline>().unwrap();
@@ -1359,31 +1459,21 @@ impl ElementAttrType<BevyRenderer> for outline_offset {
             });
         }
     }
-
-    const NAME: &'static str = stringify!(outline_offset);
-    fn update_value(
-        world: &mut RendererWorld<BevyRenderer>,
-        node_id: RendererNodeId<BevyRenderer>,
-        value: impl Into<Self::Value>,
-    ) {
-        let value = value.into();
-        if let Some(mut outline) = world.get_mut::<Outline>(node_id) {
-            outline.offset = value;
-        }
-    }
 }
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct outline_color;
 
 impl ElementAttrType<BevyRenderer> for outline_color {
     type Value = Color;
-
-    fn first_set_value(
+    const NAME: &'static str = stringify!(outline_color);
+    fn update_value(
         world: &mut RendererWorld<BevyRenderer>,
         node_id: RendererNodeId<BevyRenderer>,
         value: impl Into<Self::Value>,
     ) {
-        let mut entity_world_mut = world.entity_mut(node_id);
+        let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+            return;
+        };
         let value = value.into();
         if entity_world_mut.contains::<Outline>() {
             let mut outline = entity_world_mut.get_mut::<Outline>().unwrap();
@@ -1394,18 +1484,6 @@ impl ElementAttrType<BevyRenderer> for outline_color {
                 color: value,
                 width: Val::Px(0.),
             });
-        }
-    }
-
-    const NAME: &'static str = stringify!(outline_color);
-    fn update_value(
-        world: &mut RendererWorld<BevyRenderer>,
-        node_id: RendererNodeId<BevyRenderer>,
-        value: impl Into<Self::Value>,
-    ) {
-        let value = value.into();
-        if let Some(mut outline) = world.get_mut::<Outline>(node_id) {
-            outline.color = value;
         }
     }
 }
@@ -1426,7 +1504,10 @@ macro_rules! define_style_attr_type {
                     node_id: RendererNodeId<BevyRenderer>,
                     value: impl Into<Self::Value>,
                 ) {
-                    world.entity_mut(node_id).try_set_style(|style| {
+                    let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+                        return;
+                    };
+                    entity_world_mut.try_set_style(|style| {
                         let value = value.into();
                         style.$ident = value;
                     });

@@ -63,7 +63,7 @@ where
     fn map_and_init_state<U>(
         self,
         world: &mut RendererWorld<BevyRenderer>,
-        mut map_f: impl FnMut(&Self::Item, &mut RendererWorld<BevyRenderer>) -> U,
+        mut map_f: impl FnMut(&Self::Item, &mut RendererWorld<BevyRenderer>,usize) -> U,
     ) -> (
         Vec<U>,
         Option<(Self::InitState, Receiver<Self::Op>)>,
@@ -72,7 +72,8 @@ where
             hooked_vec_getter
                 .get_hooked_vec()
                 .iter()
-                .map(|item| map_f(item, world))
+                .enumerate()
+                .map(|(i,item)| map_f(item, world,i))
                 .collect::<Vec<_>>()
         });
         (vec, Some(((), self.receiver)))

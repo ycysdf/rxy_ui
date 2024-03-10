@@ -1,5 +1,5 @@
-use bevy_ecs::bundle::Bundle;
 use crate::{BevyRenderer, XBundle};
+use bevy_ecs::bundle::Bundle;
 
 use rxy_core::{ElementView, MemberOwner};
 macro_rules! impl_view_builder_ext {
@@ -7,8 +7,8 @@ macro_rules! impl_view_builder_ext {
         pub trait $name: $ty<BevyRenderer> + Sized {
             #[inline]
             fn bundle<T: Bundle>(self, bundle: T) -> Self::AddMember<XBundle<T>>
-                where
-                    Self: Sized,
+            where
+                Self: Sized,
             {
                 self.member(XBundle(bundle))
             }

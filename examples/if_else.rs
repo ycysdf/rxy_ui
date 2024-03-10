@@ -15,7 +15,7 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
-    commands.spawn_rxy_ui(ui);
+    commands.spawn_view_on_root(ui());
 }
 
 fn ui() -> impl IntoView<BevyRenderer> {

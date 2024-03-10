@@ -1,13 +1,13 @@
-use alloc::boxed::Box;
-use core::sync::atomic::*;
-use alloc::vec::Vec;
-use alloc::string::String;
-use core::any::Any;
+use crate::utils::all_tuples;
 use crate::{IntoSchemaProp, MaybeSend, Renderer, SchemaPropValue};
 use alloc::borrow::Cow;
-use crate::utils::all_tuples;
+use alloc::boxed::Box;
+use alloc::string::String;
+use alloc::vec::Vec;
+use core::any::Any;
+use core::sync::atomic::*;
 
-#[derive(Clone, Debug, PartialEq,Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IntoSchemaPropValueWrapper<T>(pub T);
 
 pub trait IntoSchemaPropValue<T> {

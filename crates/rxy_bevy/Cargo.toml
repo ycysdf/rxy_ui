@@ -20,6 +20,8 @@ count-macro.workspace = true
 paste.workspace = true
 
 async-channel.workspace = true
+async-broadcast.workspace = true
+
 smallvec.workspace = true
 
 bevy_app.workspace = true
@@ -39,6 +41,7 @@ bevy_tasks.workspace = true
 bevy_utils.workspace = true
 bevy_a11y.workspace = true
 bevy_input.workspace = true
+bevy_window.workspace = true
 
 futures-lite.workspace = true
 

@@ -15,7 +15,7 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
-    commands.spawn_rxy_ui(ui);
+    commands.spawn_view_on_root(ui());
 }
 
 fn ui() -> impl IntoView<BevyRenderer> {
@@ -91,7 +91,7 @@ fn ui() -> impl IntoView<BevyRenderer> {
             )),
             div().flex_col().gap(8).children((
                 "--Header--",
-                x_iter_source(source, |n| n.to_string()),
+                x_iter_source(source, |n,_| n.to_string()),
                 "--Footer--",
             )),
         )),

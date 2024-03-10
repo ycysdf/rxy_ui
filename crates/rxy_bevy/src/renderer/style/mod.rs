@@ -1,15 +1,15 @@
 mod attr_iter;
 mod attr_syncer;
-mod element_view_ext;
 mod entity_world_ref;
 mod focus_style;
 mod interaction_style;
 mod node_style_state;
+mod node_tree;
 mod plugin;
 mod shared_style_sheets;
 mod shared_style_view;
 mod style_sheets;
-mod node_tree;
+mod element_view_ext;
 
 use std::any::TypeId;
 
@@ -18,24 +18,23 @@ use rxy_bevy_crate::BevyRenderer;
 
 pub use attr_iter::EntityStyleAttrInfoIterArgs;
 pub(crate) use attr_iter::StateOwner;
-pub use element_view_ext::ElementStyleExt;
-pub use interaction_style::interaction_to_style_interaction;
-pub use plugin::{Previous, RxyStyleSheetPlugin};
-pub use style_sheets::res;
 pub use attr_syncer::EntityAttrSyncer;
 pub use entity_world_ref::*;
+pub use interaction_style::interaction_to_style_interaction;
+pub use plugin::{Previous, RxyStyleSheetPlugin};
 use rxy_core::style::{AppliedStyleSheet, StyleSheetCtx, StyleSheetsInfo};
 pub use shared_style_sheets::SharedStyleState;
 pub use shared_style_view::*;
-
+pub use element_view_ext::*;
+pub use style_sheets::res;
 
 pub type Result<T = ()> = rxy_core::style::Result<BevyRenderer, T>;
 pub type StyleError = rxy_core::style::StyleError<BevyRenderer>;
 
 pub mod prelude {
     pub use super::{
-        res, typed_shared_style_sheets, ElementStyleExt,
-        RxyStyleSheetPlugin, SchemaCtxExt, StyleError, TypedStyleLabel,
+        res, typed_shared_style_sheets, RxyStyleSheetPlugin, SchemaCtxExt, StyleError,
+        TypedStyleLabel,
     };
 }
 

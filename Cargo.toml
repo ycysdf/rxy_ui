@@ -48,6 +48,8 @@ xy_reactive = { path = "crates/xy_reactive", default-features = false }
 rxy_web_dom = { path = "crates/rxy_web_dom", default-features = false }
 
 async-channel = { version = "2.1" }
+async-broadcast = "0.7.0"
+#event-listener = "5.2"
 glam = "0.24"
 hashbrown = "0.14"
 indexmap = "2.1"
@@ -81,6 +83,7 @@ bevy_tasks = { version = "0.12", features = ["multi-threaded"], optional = false
 bevy_text = { version = "0.12", optional = false }
 bevy_transform = { version = "0.12", optional = false }
 bevy_ui = { version = "0.12", features = ["bevy_text"] }
+bevy_window = { version = "0.12"}
 bevy_utils = "0.12"
 bevy_a11y = "0.12"
 bevy_input = "0.12"

@@ -50,6 +50,7 @@ pub mod prelude {
 
     pub use crate::renderer::common_renderer::*;
     pub use crate::renderer::BevyElement;
+    pub use crate::renderer::style::ElementViewStyleExt;
 
     pub use super::all_attrs::{CommonAttrsElementViewBuilder, CommonAttrsViewBuilder};
     pub use super::renderer::event::*;
@@ -58,7 +59,7 @@ pub mod prelude {
     pub use super::renderer::{ElementViewTailwindAttrs, MemberOwnerTailwindAttrs};
     pub use super::{
         event::*, system_once, x_res, BevyRenderer, CloneableSlot, CmdReceiver, CmdSender,
-        FnSchemaView, Focusable, ReceiverProp, ResChangeWorldExt, RxyPlugin, RxyUiCommandExt,
+        FnSchemaView, Focusable, ReceiverProp, ResChangeWorldExt, RxyPlugin, RxyViewSpawner,
         SchemaCtx, Slot,
     };
     pub use super::{ElementViewCompositeAttrs, MemberOwnerCompositeAttrs};
