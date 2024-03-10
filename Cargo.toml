@@ -19,9 +19,7 @@ rxy_web_dom = { workspace = true, optional = true }
 [features]
 default = ["std", "x_iter_source", "signal"]
 
-#web = ["std", "rxy_web_dom", "tailwind_aliases", "xy_reactive?/web"]
-#web = ["std", "tailwind_aliases", "xy_reactive?/web", "rxy_web_dom"]
-web = ["std", "rxy_web_dom"]
+#web = ["std", "rxy_web_dom"]
 
 std = ["rxy_core/async-channel"]
 hooked_collection = ["dep:hooked_collection"]
@@ -58,7 +56,7 @@ serde = { version = "1", features = ["derive"] }
 
 ahash = { version = "0.8", default-features = false }
 # bevy-inspector-egui = "0.21"
-bevy_mod_picking = { version = "0.17", default-features = false, features = ["backend_bevy_ui"] }
+bevy_mod_picking = { version = "0.18", default-features = false, features = ["backend_bevy_ui"] }
 derive_more = "0.99"
 drain_filter_polyfill = "0.1"
 futures-lite = "1.13"

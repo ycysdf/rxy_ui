@@ -7,9 +7,6 @@ use core::clone::Clone;
 use core::cmp::Eq;
 use core::default::Default;
 use core::fmt::Debug;
-use core::iter::Iterator;
-use core::option::Option;
-use core::option::Option::Some;
 use core::{
     hash::{BuildHasherDefault, Hash},
 };

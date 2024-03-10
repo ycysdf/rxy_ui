@@ -23,7 +23,7 @@ impl Plugin for FocusablePlugin {
                 FocusableSystemParam::update_focused_state
                     // .in_set(UiSystem::Interactions)
                     .after(UiSystem::Focus)
-                    .run_if(resource_changed::<FocusedEntity>()),
+                    .run_if(resource_changed::<FocusedEntity>),
             )
             .add_systems(
                 PostUpdate,

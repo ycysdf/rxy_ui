@@ -96,7 +96,7 @@ impl TextStyledElementType for element_span {
         let Some(mut t) = entity_ref.get_mut::<Text>() else {
             return;
         };
-        t.alignment = value;
+        t.justify = value;
     }
 }
 
