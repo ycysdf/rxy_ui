@@ -41,7 +41,6 @@ where
     _marker: PhantomData<VK>,
 }
 
-
 impl<R, VK> VirtualContainerNodeId<R, VK>
 where
     VK: MutableViewKey<R>,
@@ -61,10 +60,9 @@ where
     }
 
     fn get_view_key<'a>(&self, world: &'a R::NodeTree) -> Option<&'a VK> {
-        world.get_node_state_ref::<VirtualContainerChildrenViewKey<VK>>(
-            &self.placeholder_node_id,
-        )
-        .map(move |n| &n.0)
+        world
+            .get_node_state_ref::<VirtualContainerChildrenViewKey<VK>>(&self.placeholder_node_id)
+            .map(move |n| &n.0)
     }
 }
 
@@ -115,8 +113,13 @@ where
     }
 
     #[inline]
-    fn reserve_key(world: &mut R::NodeTree, _will_rebuild: bool) -> Self {
-        VirtualContainerNodeId::new(world.reserve_node_id())
+    fn reserve_key(
+        world: &mut RendererWorld<R>,
+        _will_rebuild: bool,
+        _parent: RendererNodeId<R>,
+        _spawn: bool,
+    ) -> Self {
+        VirtualContainerNodeId::new(world.reserve_node_id_or_spawn(_parent, _spawn))
     }
 
     #[inline]
@@ -170,10 +173,17 @@ where
         }
     }
 
-    fn reserve_key(world: &mut RendererWorld<R>, will_rebuild: bool) -> Self {
+    fn reserve_key(
+        world: &mut RendererWorld<R>,
+        will_rebuild: bool,
+        parent: RendererNodeId<R>,
+        spawn: bool,
+    ) -> Self {
         Either::Left(VirtualContainerNodeId::<R, LK>::reserve_key(
             world,
             will_rebuild,
+            parent,
+            spawn,
         ))
     }
 

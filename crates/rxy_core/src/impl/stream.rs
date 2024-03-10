@@ -79,7 +79,6 @@ where
 
     let world_scoped = ctx.world.deferred_world_scoped();
 
-    ctx.world.ensure_spawn(state_node_id.clone());
     let task = R::spawn_task({
         let state_node_id = state_node_id.clone();
         let parent = ctx.parent;
@@ -161,7 +160,9 @@ where
         } else {
             None
         };
-        let key = key.unwrap_or_else(|| Self::Key::reserve_key(&mut *ctx.world, will_rebuild));
+        let key = key.unwrap_or_else(|| {
+            Self::Key::reserve_key(&mut *ctx.world, will_rebuild, ctx.parent.clone(), true)
+        });
 
         if self.already_end {
             return key;

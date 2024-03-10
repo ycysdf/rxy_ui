@@ -1,4 +1,7 @@
-use crate::{ElementView, IntoView, XNest, MaybeSend, MaybeSync, MemberOwner, NodeTree, Renderer, RendererNodeId, SoloView, View, ViewCtx, ViewKey, ViewMember};
+use crate::{
+    ElementView, IntoView, MaybeSend, MaybeSync, MemberOwner, NodeTree, Renderer, RendererNodeId,
+    SoloView, View, ViewCtx, ViewKey, ViewMember, XNest,
+};
 use core::marker::PhantomData;
 use rxy_macro::IntoView;
 
@@ -90,10 +93,10 @@ where
         reserve_key: Option<Self::Key>,
         will_rebuild: bool,
     ) -> Self::Key {
-        let reserve_key =
-            reserve_key.unwrap_or_else(|| V::Key::reserve_key(ctx.world, will_rebuild));
+        let reserve_key = reserve_key.unwrap_or_else(|| {
+            V::Key::reserve_key(ctx.world, will_rebuild, ctx.parent.clone(), true)
+        });
         let node_id = V::element_node_id(&reserve_key);
-        ctx.world.ensure_spawn(node_id.clone());
         ctx.world
             .set_node_state::<Context<T>>(node_id, Context(self.provide_context));
 
@@ -148,16 +151,15 @@ where
         V::element_node_id(key)
     }
 
-
     type E = V::E;
     type VM = V::VM;
     type AddMember<VM: ViewMember<R>> = ProvideContext<R, T, V::AddMember<VM>>;
     type SetMembers<VM: ViewMember<R> + MemberOwner<R>> = ProvideContext<R, T, V::SetMembers<VM>>;
 
     fn member<VM>(self, member: VM) -> Self::AddMember<VM>
-        where
-            (Self::VM, VM): ViewMember<R>,
-            VM: ViewMember<R>,
+    where
+        (Self::VM, VM): ViewMember<R>,
+        VM: ViewMember<R>,
     {
         ProvideContext {
             provide_context: self.provide_context,
@@ -167,8 +169,8 @@ where
     }
 
     fn members<VM: ViewMember<R>>(self, members: VM) -> Self::SetMembers<(VM,)>
-        where
-            VM: ViewMember<R>,
+    where
+        VM: ViewMember<R>,
     {
         ProvideContext {
             provide_context: self.provide_context,

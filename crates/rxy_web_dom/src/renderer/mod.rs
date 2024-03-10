@@ -19,7 +19,6 @@ use slotmap::{Key, KeyData, SlotMap};
 use web_sys::wasm_bindgen::JsCast;
 use web_sys::{Document, HtmlElement, Node, Window};
 
-
 use rxy_core::{
     AttrIndex, DeferredNodeTreeScoped, Element, ElementAttr, ElementAttrType, ElementTypeUnTyped,
     ElementViewChildren, IntoView, MaybeSend, MaybeSync, NodeTree, Renderer, RendererNodeId,
@@ -428,8 +427,13 @@ impl ViewKey<WebRenderer> for Node {
         Some(self.clone())
     }
 
-    fn reserve_key(world: &mut RendererWorld<WebRenderer>, _will_rebuild: bool) -> Self {
-        world.reserve_node_id()
+    fn reserve_key(
+        world: &mut RendererWorld<WebRenderer>,
+        _will_rebuild: bool,
+        parent: RendererNodeId<WebRenderer>,
+        spawn: bool,
+    ) -> Self {
+        world.reserve_node_id_or_spawn(parent, spawn)
     }
 
     fn first_node_id(

@@ -245,8 +245,8 @@ where
         self.key.state_node_id()
     }
 
-    fn reserve_key(world: &mut RendererWorld<R>, will_rebuild: bool) -> Self {
-        let key = K::reserve_key(world, will_rebuild);
+    fn reserve_key(world: &mut RendererWorld<R>, will_rebuild: bool, parent: RendererNodeId<R>, spawn: bool) -> Self {
+        let key = K::reserve_key(world, will_rebuild, parent, spawn);
         Self {
             key,
             disposer_state_node_id: world.spawn_data_node(),

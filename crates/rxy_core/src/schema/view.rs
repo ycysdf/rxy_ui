@@ -206,14 +206,14 @@ where
         self.key.state_node_id()
     }
 
-    fn reserve_key(world: &mut RendererWorld<R>, will_rebuild: bool) -> Self {
+    fn reserve_key(world: &mut RendererWorld<R>, will_rebuild: bool, parent: RendererNodeId<R>, spawn: bool) -> Self {
         Self {
             data_node_id: if TypeId::of::<K>() == TypeId::of::<()>() {
                 Some(DataNodeId(world.spawn_data_node()))
             } else {
                 None
             },
-            key: K::reserve_key(world, will_rebuild),
+            key: K::reserve_key(world, will_rebuild, parent,spawn ),
         }
     }
 

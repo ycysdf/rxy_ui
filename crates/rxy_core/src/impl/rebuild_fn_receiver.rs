@@ -3,8 +3,8 @@ use alloc::boxed::Box;
 use crate::utils::all_tuples;
 
 use crate::{
-    target_rebuild_fn_channel, IntoView, XNest, MaybeSend, Renderer, RendererNodeId, View,
-    ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin,
+    target_rebuild_fn_channel, IntoView, MaybeSend, Renderer, RendererNodeId, View, ViewCtx,
+    ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, XNest,
 };
 
 #[cfg(feature = "send_sync")]
@@ -283,7 +283,6 @@ where
     R: Renderer,
     VM: ViewMember<R>,
 {
-
     fn count() -> ViewMemberIndex {
         VM::count()
     }
@@ -329,7 +328,10 @@ where
     ) -> Self::Key {
         let parent = ctx.parent.clone();
         let (key, is_build) = match self.0 {
-            None => (V::Key::reserve_key(&mut *ctx.world, will_rebuild), false),
+            None => (
+                V::Key::reserve_key(&mut *ctx.world, will_rebuild, ctx.parent.clone(), true),
+                false,
+            ),
             Some(view) => (view.build(ctx, reserve_key, true), true),
         };
 

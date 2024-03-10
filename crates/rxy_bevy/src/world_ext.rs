@@ -3,7 +3,7 @@ use std::ops::DerefMut;
 use bevy_ecs::component::Component;
 use bevy_ecs::prelude::{EntityMut, EntityWorldMut, Mut};
 use bevy_ecs::world::World;
-use bevy_hierarchy::BuildWorldChildren;
+use bevy_hierarchy::{BuildWorldChildren, Parent};
 use bevy_ui::Style;
 
 use rxy_core::{NodeTree, RendererNodeId};
@@ -28,8 +28,20 @@ impl BevyWorldExt for World {
             None => self.spawn_empty(),
             Some(reserve_node_id) => self.get_or_spawn(reserve_node_id).unwrap(),
         };
-        if let Some(parent) = parent {
-            entity_world_mut.set_parent(*parent);
+        let old_parent = entity_world_mut.get::<Parent>();
+        match (old_parent, parent) {
+            (None, None) => {}
+            (None, Some(parent)) => {
+                entity_world_mut.set_parent(*parent);
+            }
+            (Some(old_parent), Some(parent)) => {
+                if old_parent.get() != *parent {
+                    entity_world_mut.set_parent(*parent);
+                }
+            }
+            (Some(_), None) => {
+                entity_world_mut.remove_parent();
+            }
         }
         entity_world_mut
     }

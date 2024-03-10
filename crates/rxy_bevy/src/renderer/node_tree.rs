@@ -51,7 +51,10 @@ impl NodeTree<BevyRenderer> for World {
             .set_attr(A::INDEX, true);
     }
 
-    fn unset_attr<A: ElementAttrType<BevyRenderer>>(&mut self, entity: RendererNodeId<BevyRenderer>) {
+    fn unset_attr<A: ElementAttrType<BevyRenderer>>(
+        &mut self,
+        entity: RendererNodeId<BevyRenderer>,
+    ) {
         A::set_value(self, entity, None::<A::Value>);
         let Some(mut entity_world_mut) = self.get_entity_mut(entity) else {
             return;

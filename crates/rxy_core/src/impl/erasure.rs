@@ -35,12 +35,12 @@ where
         fn(key: &dyn Any, &mut R::NodeTree, hidden: bool, state_node_id: &RendererNodeId<R>),
     >,
 
-    #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
-    pub state_node_id: Option<fn(key: &dyn Any) -> Option<RendererNodeId<R>>>,
-
-    #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
-    pub reserve_key:
-        Option<fn(world: &mut RendererWorld<R>, will_rebuild: bool) -> DynamicMutableViewKey<R>>,
+    // #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
+    // pub state_node_id: Option<fn(key: &dyn Any) -> Option<RendererNodeId<R>>>,
+    //
+    // #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
+    // pub reserve_key:
+    //     Option<fn(world: &mut RendererWorld<R>, will_rebuild: bool,parent: RendererNodeId<R>,spawn:bool) -> DynamicMutableViewKey<R>>,
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub first_node_id:
         Option<fn(key: &dyn Any, world: &RendererWorld<R>) -> Option<RendererNodeId<R>>>,
@@ -78,14 +78,14 @@ pub fn set_erasure_view_fns<R: Renderer, V: View<R>>(
                 let key = key.downcast_ref::<V::Key>().unwrap();
                 key.set_visibility(world, hidden)
             }),
-            state_node_id: Some(|key| {
-                let key = key.downcast_ref::<V::Key>().unwrap();
-                key.state_node_id()
-            }),
-            reserve_key: Some(|world, will_rebuild| {
-                let key = V::Key::reserve_key(world, will_rebuild);
-                DynamicMutableViewKey::new::<V>(key)
-            }),
+            // state_node_id: Some(|key| {
+            //     let key = key.downcast_ref::<V::Key>().unwrap();
+            //     key.state_node_id()
+            // }),
+            // reserve_key: Some(|world, will_rebuild,parent,spawn| {
+            //     let key = V::Key::reserve_key(world, will_rebuild, parent,spawn );
+            //     DynamicMutableViewKey::new::<V>(key)
+            // }),
             first_node_id: Some(|key, world| {
                 let key = key.downcast_ref::<V::Key>().unwrap();
                 key.first_node_id(world)
@@ -291,7 +291,7 @@ where
         self.state_node_id.clone()
     }
 
-    fn reserve_key(world: &mut RendererWorld<R>, _will_rebuild: bool) -> Self {
+    fn reserve_key(world: &mut RendererWorld<R>, _will_rebuild: bool, _parent: RendererNodeId<R>, _spawn: bool) -> Self {
         ErasureViewKey {
             state_node_id: Some(world.spawn_data_node()),
             is_reserve: true,

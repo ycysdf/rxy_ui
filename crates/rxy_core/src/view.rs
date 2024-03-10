@@ -35,7 +35,7 @@ pub trait ViewKey<R: Renderer>:
     // You need to make sure that it doesn't change
     fn state_node_id(&self) -> Option<RendererNodeId<R>>;
 
-    fn reserve_key(world: &mut RendererWorld<R>, will_rebuild: bool) -> Self;
+    fn reserve_key(world: &mut RendererWorld<R>, will_rebuild: bool, parent: RendererNodeId<R>, spawn: bool) -> Self;
     fn first_node_id(&self, world: &RendererWorld<R>) -> Option<RendererNodeId<R>>;
 }
 
@@ -79,7 +79,7 @@ where
         None
     }
 
-    fn reserve_key(_world: &mut RendererWorld<R>, _will_rebuild: bool) -> Self {}
+    fn reserve_key(_world: &mut RendererWorld<R>, _will_rebuild: bool, _parent: RendererNodeId<R>, _spawn: bool) -> Self {}
 
     fn first_node_id(&self, _world: &RendererWorld<R>) -> Option<RendererNodeId<R>> {
         None
@@ -110,7 +110,7 @@ where
         Some(self.0.clone())
     }
 
-    fn reserve_key(world: &mut RendererWorld<R>, _will_rebuild: bool) -> Self {
+    fn reserve_key(world: &mut RendererWorld<R>, _will_rebuild: bool, _parent: RendererNodeId<R>, _spawn: bool) -> Self {
         DataNodeId(world.reserve_node_id())
     }
 
@@ -163,10 +163,13 @@ macro_rules! impl_view_key_for_tuples {
                     )*
                 }
 
-                fn reserve_key(world: &mut RendererWorld<R>, will_rebuild: bool) -> Self {
-                    let [<$first:lower _key>]=[<$first>]::reserve_key(world, will_rebuild);
+                fn reserve_key(world: &mut RendererWorld<R>, will_rebuild: bool,
+                    parent: RendererNodeId<R>,
+                    spawn: bool,
+                ) -> Self {
+                    let [<$first:lower _key>]=[<$first>]::reserve_key(world, will_rebuild, parent.clone(),spawn);
                     $(
-                        let [<$ty:lower _key>]=[<$ty>]::reserve_key(world, will_rebuild);
+                        let [<$ty:lower _key>]=[<$ty>]::reserve_key(world, will_rebuild, parent.clone(),spawn);
                     )*
                     (
                         [<$first:lower _key>],

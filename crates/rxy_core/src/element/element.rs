@@ -2,10 +2,7 @@ use core::fmt::Debug;
 use core::marker::PhantomData;
 
 use crate::element::{view_children, ElementType, ElementViewChildren};
-use crate::{
-    ElementView, IntoView, MemberOwner, NodeTree, Renderer, RendererNodeId, SoloView, View,
-    ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
-};
+use crate::{ElementView, IntoView, MemberOwner, NodeTree, Renderer, RendererNodeId, RendererWorld, SoloView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx};
 
 #[derive(Clone)]
 pub struct Element<R, E, VM> {
@@ -213,9 +210,9 @@ where
         Some(self.0.clone())
     }
 
-    fn reserve_key(world: &mut crate::RendererWorld<R>, will_rebuild: bool) -> Self {
+    fn reserve_key(world: &mut RendererWorld<R>, will_rebuild: bool, parent: RendererNodeId<R>, spawn: bool) -> Self {
         Self(
-            <RendererNodeId<R> as ViewKey<R>>::reserve_key(world, will_rebuild),
+            <RendererNodeId<R> as ViewKey<R>>::reserve_key(world, will_rebuild,parent ,spawn ),
             Default::default(),
         )
     }

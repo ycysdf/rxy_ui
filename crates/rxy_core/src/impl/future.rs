@@ -36,7 +36,8 @@ where
         _reserve_key: Option<Self::Key>,
         will_rebuild: bool,
     ) -> Self::Key {
-        let key = FutureViewKey::<R, T>::reserve_key(ctx.world, will_rebuild);
+        let key =
+            FutureViewKey::<R, T>::reserve_key(ctx.world, will_rebuild, ctx.parent.clone(), true);
 
         future_view_rebuild(self.0, ctx, will_rebuild, key.clone());
         key
@@ -109,7 +110,6 @@ fn future_view_rebuild<R, T>(
             }
         });
     });
-    ctx.world.ensure_spawn(state_node_id.clone());
     ctx.world
         .set_node_state(&state_node_id, XFutureState::<R>::new(task));
 }

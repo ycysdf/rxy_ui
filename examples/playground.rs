@@ -1,5 +1,6 @@
 #![allow(unused_variables)]
 
+use std::time::Duration;
 use bevy::core::FrameCount;
 use bevy::ecs::{entity::Entities, world};
 use bevy::prelude::*;
@@ -28,9 +29,25 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
-    commands.spawn_view_on_root(sample2());
+    commands.spawn_view_on_root(sample3());
 }
-
+fn sample3() -> impl IntoView<BevyRenderer> {
+    div()
+        .flex_col()
+        .gap(8)
+        .children((
+            "HEADER!",
+            x_future(async {
+                std::thread::sleep(Duration::from_millis(10300));
+                (
+                    "Item1",
+                    "Item2",
+                    "Item3"
+                )
+            }),
+            "FOOTER!"
+        ))
+}
 #[schema]
 fn schema_tt(_ctx: SchemaCtx, value: ReadSignal<bool>) -> impl IntoView<BevyRenderer> {
     (checkbox(), rx(move || value.get().to_string()),span("XXX").content("XXXXXXX"))

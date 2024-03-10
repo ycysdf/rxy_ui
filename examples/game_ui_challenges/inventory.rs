@@ -263,7 +263,8 @@ impl SchemaElementView<BevyRenderer> for InventoryItemView {
             ))
             .on_pointer_drop(
                 move |e: Res<ListenerInputPointerDrop>,
-                      mut dragging: ResMut<DraggingInventoryItem>,mut is_dragging: ResMut<InventoryDraggingStatus>,
+                      mut dragging: ResMut<DraggingInventoryItem>,
+                      mut is_dragging: ResMut<InventoryDraggingStatus>,
                       mut inventory_items: ResMut<InventoryItems>| {
                     if inventory_items[dragging.index].0.is_none() {
                         return;
@@ -315,6 +316,7 @@ impl SchemaElementView<BevyRenderer> for InventoryItemView {
                     .on_pointer_drag_start({
                         let item = item.clone();
                         move |world: &mut World| {
+                            world.resource_mut::<HoveredInventoryItem>().item = None;
                             *world.resource_mut::<InventoryDraggingStatus>() = InventoryDraggingStatus::FullDrag;
                             let e =world.resource::<ListenerInputPointerDragStart>();
                             let parent = world.get_parent(&e.listener()).unwrap();
@@ -339,11 +341,17 @@ impl SchemaElementView<BevyRenderer> for InventoryItemView {
 
                     .on_pointer_over({
                         let item = item.clone();
-                        move |mut hovered_inventory_item: ResMut<HoveredInventoryItem>| {
+                        move |mut hovered_inventory_item: ResMut<HoveredInventoryItem>,dragging_status:Res<InventoryDraggingStatus>| {
+                            if dragging_status.is_dragging(){
+                                return;
+                            }
                             hovered_inventory_item.item = Some((index,item.clone()));
                         }
                     })
-                    .on_pointer_out(move |mut hovered_inventory_item: ResMut<HoveredInventoryItem>| {
+                    .on_pointer_out(move |mut hovered_inventory_item: ResMut<HoveredInventoryItem>,dragging_status:Res<InventoryDraggingStatus>| {
+                        if dragging_status.is_dragging(){
+                            return;
+                        }
                         hovered_inventory_item.item = None;
                     })
                     ;

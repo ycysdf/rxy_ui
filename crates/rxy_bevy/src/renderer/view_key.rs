@@ -28,8 +28,13 @@ impl ViewKey<BevyRenderer> for Entity {
     }
 
     #[inline]
-    fn reserve_key(world: &mut RendererWorld<BevyRenderer>, _will_rebuild: bool) -> Self {
-        world.reserve_node_id()
+    fn reserve_key(
+        world: &mut RendererWorld<BevyRenderer>,
+        _will_rebuild: bool,
+        parent: RendererNodeId<BevyRenderer>,
+        spawn: bool,
+    ) -> Self {
+        world.reserve_node_id_or_spawn(parent,spawn)
     }
 
     fn first_node_id(

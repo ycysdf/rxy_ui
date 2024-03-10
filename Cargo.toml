@@ -57,7 +57,6 @@ pin-project = { version = "1" }
 serde = { version = "1", features = ["derive"] }
 
 ahash = { version = "0.8", default-features = false }
-# bevy-inspector-egui = "0.21"
 bevy_mod_picking = { version = "0.18", default-features = false, features = ["backend_bevy_ui"] }
 derive_more = "0.99"
 drain_filter_polyfill = "0.1"
@@ -232,6 +231,7 @@ bevy = { version = "0.13", features = [
     "multi-threaded", #    "png",  #    "hdr",  #    "vorbis",  #    "x11",  #    "bevy_gizmos",  #    "android_shared_stdcxx",  #    "tonemapping_luts",
     "default_font", #    "webgl2",
 ] }
+#bevy-inspector-egui = "0.23"
 rxy_ui = { path = ".", default-features = false }
 oneshot.workspace = true
 ahash.workspace = true

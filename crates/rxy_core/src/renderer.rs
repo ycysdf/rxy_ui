@@ -74,6 +74,13 @@ pub trait NodeTree<R>
 where
     R: Renderer<NodeTree = Self>,
 {
+    fn reserve_node_id_or_spawn(&mut self, parent: RendererNodeId<R>, spawn: bool)-> RendererNodeId<R> {
+        if spawn {
+            self.spawn_placeholder("[Reserve]", Some(&parent), None)
+        } else {
+            self.reserve_node_id()
+        }
+    }
     fn prepare_set_attr_and_get_is_init(
         &mut self,
         node_id: &RendererNodeId<R>,

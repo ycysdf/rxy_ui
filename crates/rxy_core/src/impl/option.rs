@@ -183,8 +183,8 @@ where
         }
     }
 
-    fn reserve_key(world: &mut RendererWorld<R>, will_rebuild: bool) -> Self {
-        Some(K::reserve_key(world, will_rebuild))
+    fn reserve_key(world: &mut RendererWorld<R>, will_rebuild: bool, parent: RendererNodeId<R>, spawn: bool) -> Self {
+        Some(K::reserve_key(world, will_rebuild, parent, spawn))
     }
 
     fn first_node_id(&self, world: &RendererWorld<R>) -> Option<RendererNodeId<R>> {
