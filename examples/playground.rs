@@ -529,10 +529,10 @@ fn sample_system_once() -> impl IntoView<BevyRenderer> {
                 .on_pointer_click(move || {
                     cmd_sender.add(|world: &mut World| {
                         let mut meshes = world.resource_mut::<Assets<Mesh>>();
-                        let mesh = meshes.add(shape::Quad::default().into()).into();
+                        let mesh = meshes.add(Rectangle::default()).into();
 
                         let mut materials = world.resource_mut::<Assets<ColorMaterial>>();
-                        let material = materials.add(Color::PURPLE.into());
+                        let material = materials.add(Color::PURPLE);
 
                         world.spawn(MaterialMesh2dBundle {
                             mesh,

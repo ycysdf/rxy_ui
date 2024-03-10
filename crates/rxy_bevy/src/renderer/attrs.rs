@@ -7,7 +7,7 @@ use crate::{all_attrs, BevyRenderer, ElementStyleEntityExt, TextStyledElementEnt
 use bevy_render::color::Color;
 use bevy_render::render_resource::encase::private::RuntimeSizedArray;
 use bevy_render::view::Visibility;
-use bevy_text::{BreakLineOn, Font, TextAlignment};
+use bevy_text::{BreakLineOn, Font, JustifyText};
 use bevy_transform::components::Transform;
 use bevy_ui::{AlignContent, AlignItems, AlignSelf, BackgroundColor, BorderColor, Direction, FlexDirection, FlexWrap, GridAutoFlow, GridPlacement, GridTrack, JustifyContent, JustifyItems, JustifySelf, Outline, OverflowAxis, PositionType, RepeatedGridTrack, Val, ZIndex};
 use bevy_utils::tracing::warn;
@@ -1360,7 +1360,7 @@ impl ElementAttrType<BevyRenderer> for text_linebreak {
 pub struct text_align;
 
 impl ElementAttrType<BevyRenderer> for text_align {
-    type Value = TextAlignment;
+    type Value = JustifyText;
 
     const NAME: &'static str = stringify!(text_align);
     fn update_value(

@@ -8,7 +8,7 @@ use bevy_render::prelude::Color;
 impl_attr_value_and_wrapper! {
     Color => Color::rgba_u8(0, 0, 0, 0),
     bevy_text::BreakLineOn => bevy_text::BreakLineOn::WordBoundary,
-    bevy_text::TextAlignment => bevy_text::TextAlignment::Left,
+    bevy_text::JustifyText => bevy_text::JustifyText::Left,
     bevy_ui::Val,
     bevy_ui::Display,
     bevy_ui::PositionType,

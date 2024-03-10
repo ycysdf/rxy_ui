@@ -52,7 +52,7 @@ MIT License ([LICENSE-MIT](https://github.com/ycysdf/rxy_ui/blob/main/LICENSE-MI
 ```toml
 [dependencies]
 rxy_ui = {git = "https://github.com/ycysdf/rxy_ui", features = ["bevy"]}
-bevy = {version = "0.12"}
+bevy = {version = "0.13"}
 ```
 
 ## 示例

@@ -48,7 +48,7 @@ macro_rules! define_event_view_builder {
                     S: IntoSystem<(), (), Marker> + Send + 'static,
                     Marker: Send + 'static,
             {
-                self.on_just_pressed(KeyCode::Return, system)
+                self.on_just_pressed(KeyCode::Enter, system)
             }
 
             fn on_esc<S, Marker>(

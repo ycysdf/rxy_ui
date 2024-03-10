@@ -36,7 +36,7 @@ fn main() {
     .init_resource::<HoveredInventoryItem>()
     .add_systems(
         Update,
-        mange_hover_inventory_item_ui.run_if(resource_changed::<HoveredInventoryItem>()),
+        mange_hover_inventory_item_ui.run_if(resource_changed::<HoveredInventoryItem>),
     )
     .add_systems(Startup, setup);
 

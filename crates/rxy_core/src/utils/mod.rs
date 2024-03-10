@@ -7,9 +7,13 @@ pub use bevy_utils::all_tuples;
 pub use bevy_utils::futures::now_or_never;
 #[cfg(feature = "bevy")]
 pub use bevy_utils::synccell::SyncCell;
+#[cfg(feature = "bevy")]
+pub use bevy_utils::OnDrop;
 
 #[cfg(not(feature = "bevy"))]
 pub use apis::now_or_never;
+#[cfg(not(feature = "bevy"))]
+pub use on_drop::OnDrop;
 #[cfg(not(feature = "bevy"))]
 pub use rxy_macro::{all_tuples, all_tuples_with_size};
 #[cfg(not(feature = "bevy"))]
@@ -20,6 +24,7 @@ pub type AHasher = ahash::AHasher;
 
 #[cfg(not(feature = "bevy"))]
 mod synccell;
+mod on_drop;
 
 #[cfg(not(feature = "bevy"))]
 mod apis {

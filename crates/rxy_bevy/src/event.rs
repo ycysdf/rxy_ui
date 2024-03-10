@@ -8,16 +8,15 @@ use std::iter::once;
 
 use bevy_app::PreUpdate;
 use bevy_ecs::{
-    prelude::{Commands, Entity, Res, Resource, World},
+    prelude::{Commands, Res, Resource, World},
     system::SystemId,
 };
-use bevy_input::{
-    gamepad::GamepadButton, keyboard::KeyCode, mouse::MouseButton, Input, InputSystem,
-};
+use bevy_ecs::entity::EntityHashMap;
+use bevy_input::{gamepad::GamepadButton, keyboard::KeyCode, mouse::MouseButton, InputSystem, ButtonInput};
 use bevy_mod_picking::prelude::*;
 use bevy_reflect::Reflect;
 use bevy_utils::tracing::error;
-use bevy_utils::{all_tuples, EntityHashMap, HashMap};
+use bevy_utils::{all_tuples, HashMap};
 
 use rxy_core::{NodeTree, RendererNodeId, RendererWorld};
 
@@ -439,6 +438,7 @@ pub enum FocusInputEvent {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Reflect)]
+#[reflect(no_field_bounds)]
 pub enum BubblePointerEvent {
     Over,
     Out,
@@ -473,7 +473,7 @@ pub enum FocusInputTriggerWay {
 
 type EntityFocusInputEvents<T> =
     HashMap<(T, FocusInputTriggerWay), smallvec::SmallVec<[SystemId; 1]>>;
-type FocusInputEventsInner<T> = EntityHashMap<Entity, EntityFocusInputEvents<T>>;
+type FocusInputEventsInner<T> = EntityHashMap<EntityFocusInputEvents<T>>;
 
 #[derive(Resource)]
 pub struct FocusInputEvents<T> {
@@ -505,7 +505,7 @@ where
 
     pub fn system_handle(
         registers: Res<FocusInputEvents<T>>,
-        event_reader: Res<Input<T>>,
+        event_reader: Res<ButtonInput<T>>,
         focus: Res<FocusedEntity>,
         mut commands: Commands,
     ) {

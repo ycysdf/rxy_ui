@@ -25,7 +25,7 @@ pub struct XConfirm;
 impl ElementEventIds for XConfirm {
     fn iter_event_ids(self) -> impl Iterator<Item = ElementEventId> + Send + 'static {
         (
-            x_just_pressed(KeyCode::Return),
+            x_just_pressed(KeyCode::Enter),
             x_just_pressed(GamepadButton::new(Gamepad::new(1), GamepadButtonType::West)),
             x_pointer_click(),
         )
