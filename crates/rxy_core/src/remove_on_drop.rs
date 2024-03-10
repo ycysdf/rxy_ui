@@ -2,6 +2,8 @@ use crate::{NodeTree, Renderer, RendererWorld, ViewKey};
 use bevy_utils::synccell::SyncCell;
 use bevy_utils::OnDrop;
 use crate::renderer::DeferredNodeTreeScoped;
+
+#[allow(dead_code)]
 pub struct ViewRemoveOnDrop(SyncCell<OnDrop<Box<dyn FnOnce() + Send>>>);
 
 pub trait RemoveOnDropWorldExt<R>

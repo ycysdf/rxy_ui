@@ -20,7 +20,6 @@ use components::*;
 use hooked_collection::{HookVec, HookedVec, VecOperation};
 use rxy_bevy::vec_data_source::use_hooked_vec_resource_source;
 use rxy_core::remove_on_drop::ViewRemoveOnDrop;
-use rxy_core::utils::SyncCell;
 use rxy_core::NodeTree;
 
 fn main() {

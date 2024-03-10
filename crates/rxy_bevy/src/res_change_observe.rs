@@ -1,9 +1,6 @@
 use core::{
-    marker::PhantomData,
-    ops::Deref,
-    sync::atomic::{AtomicUsize, Ordering},
+    marker::PhantomData
 };
-use std::sync::Arc;
 
 use bevy_app::PreUpdate;
 use bevy_ecs::prelude::*;
