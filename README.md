@@ -145,6 +145,8 @@ Game Menu and Setting
 
 ![game_menu](./assets/game_menu.gif)
 
+> https://github.com/ycysdf/rxy_ui/blob/main/examples/game_ui_challenges/game_menu.rs
+
 ```rust
 use bevy::prelude::*;
 use rxy_bevy::navigation::RxyKeyboardNavigationPlugin;
@@ -358,6 +360,7 @@ fn schema_in_game() -> impl IntoView<BevyRenderer> {
 - Counter：[examples/counter](examples/counter.rs)
 - [10 Challenges for Bevy UI Frameworks](https://github.com/bevyengine/bevy/discussions/11100)
    - 1. Game Menu：[examples/game_ui_challenges/game_menu](examples/game_ui_challenges/game_menu.rs)
+   - 1. Inventory：[examples/game_ui_challenges/inventory](examples/game_ui_challenges/inventory.rs)
    - `todo!()`
 - [7GUIs](https://eugenkiss.github.io/7guis/)
    - `todo!()`

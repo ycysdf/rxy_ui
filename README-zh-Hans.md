@@ -141,6 +141,8 @@ pub fn schema_checkbox(
 
 ![game_menu](./assets/game_menu.gif)
 
+> https://github.com/ycysdf/rxy_ui/blob/main/examples/game_ui_challenges/game_menu.rs
+
 ```rust
 use bevy::prelude::*;
 use rxy_bevy::navigation::RxyKeyboardNavigationPlugin;
@@ -353,8 +355,8 @@ fn schema_in_game() -> impl IntoView<BevyRenderer> {
 
 - 计数器：[examples/counter](examples/counter.rs)
 - [Bevy UI 框架的 10 个挑战](https://github.com/bevyengine/bevy/discussions/11100)
-  -
-        1. 游戏菜单与自定义 UI 组件：[examples/game_ui_challenges/game_menu](examples/game_ui_challenges/game_menu.rs)
+    - 1. 游戏菜单与自定义 UI 组件：[examples/game_ui_challenges/game_menu](examples/game_ui_challenges/game_menu.rs)
+    - 2. 游戏库存：[examples/game_ui_challenges/inventory](examples/game_ui_challenges/inventory.rs)
     - `todo!()`
 - [7GUIs](https://eugenkiss.github.io/7guis/)
     - `todo!()`
