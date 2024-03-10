@@ -35,22 +35,7 @@ impl NodeTree<BevyRenderer> for World {
         is_init
     }
 
-    fn build_attr<A: ElementAttrType<BevyRenderer>>(
-        &mut self,
-        entity: RendererNodeId<BevyRenderer>,
-        value: A::Value,
-    ) {
-        A::first_set_value(self, entity, value);
-        let Some(mut entity_world_mut) = self.get_entity_mut(entity) else {
-            return;
-        };
-        entity_world_mut
-            .as_entity_mut()
-            .get_element_extra_data_mut()
-            .unwrap() // todo: error handle
-            .set_attr(A::INDEX, true);
-    }
-    fn rebuild_attr<A: ElementAttrType<BevyRenderer>>(
+    fn set_attr<A: ElementAttrType<BevyRenderer>>(
         &mut self,
         entity: RendererNodeId<BevyRenderer>,
         value: A::Value,
@@ -66,7 +51,7 @@ impl NodeTree<BevyRenderer> for World {
             .set_attr(A::INDEX, true);
     }
 
-    fn unbuild_attr<A: ElementAttrType<BevyRenderer>>(&mut self, entity: RendererNodeId<BevyRenderer>) {
+    fn unset_attr<A: ElementAttrType<BevyRenderer>>(&mut self, entity: RendererNodeId<BevyRenderer>) {
         A::set_value(self, entity, None::<A::Value>);
         let Some(mut entity_world_mut) = self.get_entity_mut(entity) else {
             return;
@@ -78,7 +63,7 @@ impl NodeTree<BevyRenderer> for World {
             .set_attr(A::INDEX, false);
     }
 
-    fn deferred_world_scoped(&mut self) -> impl DeferredNodeTreeScoped<BevyRenderer> {
+    fn deferred_world_scoped(&self) -> impl DeferredNodeTreeScoped<BevyRenderer> {
         BevyDeferredWorldScoped {
             cmd_sender: self.resource::<CmdSender>().clone(),
         }

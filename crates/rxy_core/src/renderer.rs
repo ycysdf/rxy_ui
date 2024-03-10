@@ -80,11 +80,10 @@ where
         attr_index: AttrIndex,
     ) -> bool;
 
-    fn build_attr<A: ElementAttrType<R>>(&mut self, node_id: RendererNodeId<R>, value: A::Value);
-    fn rebuild_attr<A: ElementAttrType<R>>(&mut self, node_id: RendererNodeId<R>, value: A::Value);
-    fn unbuild_attr<A: ElementAttrType<R>>(&mut self, node_id: RendererNodeId<R>);
+    fn set_attr<A: ElementAttrType<R>>(&mut self, node_id: RendererNodeId<R>, value: A::Value);
+    fn unset_attr<A: ElementAttrType<R>>(&mut self, node_id: RendererNodeId<R>);
 
-    fn deferred_world_scoped(&mut self) -> impl DeferredNodeTreeScoped<R>;
+    fn deferred_world_scoped(&self) -> impl DeferredNodeTreeScoped<R>;
     fn get_node_state_mut<S: MaybeSend + MaybeSync + 'static>(
         &mut self,
         node_id: &RendererNodeId<R>,
