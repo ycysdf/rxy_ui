@@ -5,9 +5,11 @@ use std::borrow::Cow;
 
 use async_channel::Receiver;
 use bevy::asset::AssetLoader;
-use bevy::ui::FocusPolicy;
+use bevy::input::mouse::{MouseButtonInput, MouseMotion};
+use bevy::ui::{FocusPolicy, RelativeCursorPosition};
 use bevy::utils::OnDrop;
 use bevy_mod_picking::prelude::Pickable;
+use rxy_ui::remove_on_drop::RemoveOnDropWorldExt;
 use std::fmt::Debug;
 use std::ops::Deref;
 
@@ -17,6 +19,7 @@ use crate::InventoryDraggingStatus::NoDragging;
 use components::*;
 use hooked_collection::{HookVec, HookedVec, VecOperation};
 use rxy_bevy::vec_data_source::use_hooked_vec_resource_source;
+use rxy_core::remove_on_drop::ViewRemoveOnDrop;
 use rxy_core::utils::SyncCell;
 use rxy_core::NodeTree;
 
@@ -30,6 +33,12 @@ fn main() {
     ))
     .init_resource::<DraggingInventoryItem>()
     .init_resource::<InventoryDraggingStatus>()
+    .init_resource::<InventoryCursorPosition>()
+    .init_resource::<HoveredInventoryItem>()
+    .add_systems(
+        Update,
+        mange_hover_inventory_item_ui.run_if(resource_changed::<HoveredInventoryItem>()),
+    )
     .add_systems(Startup, setup);
 
     app.run();
@@ -127,38 +136,86 @@ fn game_ui() -> impl IntoView<BevyRenderer> {
         .flex()
         .flex_col()
         .center()
-        .children((
-            ("New:",),
-            view_builder(|ctx: ViewCtx<BevyRenderer>, _| {
-                let receiver = ctx
-                    .world
-                    .remove_resource::<InventoryItemsOpReceiver>()
-                    .unwrap();
-                let source = use_hooked_vec_resource_source::<InventoryItems>(receiver.0);
-                div()
-                    .bg_color(Color::GRAY)
-                    .grid()
-                    .gap(10)
-                    .padding(10)
-                    .grid_template_columns(vec![RepeatedGridTrack::auto(INVENTORY_WIDTH)])
-                    .grid_template_rows(vec![RepeatedGridTrack::auto(INVENTORY_HEIGHT)])
-                    .children(x_iter_source(
-                        source,
-                        |item: Cow<InventoryItemContainer>, index: usize| {
-                            inventory_item_view(item.into_owned(), index)
-                        },
-                    ))
-            }),
-        ))
+        .children((view_builder(|ctx: ViewCtx<BevyRenderer>, _| {
+            let receiver = ctx
+                .world
+                .remove_resource::<InventoryItemsOpReceiver>()
+                .unwrap();
+            let source = use_hooked_vec_resource_source::<InventoryItems>(receiver.0);
+            div()
+                .bg_color(Color::GRAY)
+                .grid()
+                .gap(10)
+                .padding(10)
+                .on_pointer_move(
+                    |mut cursor_position: ResMut<InventoryCursorPosition>,
+                     e: Res<ListenerInputPointerMove>| {
+                        cursor_position.0 = e.pointer_location.position;
+                    },
+                )
+                .grid_template_columns(vec![RepeatedGridTrack::auto(INVENTORY_WIDTH)])
+                .grid_template_rows(vec![RepeatedGridTrack::auto(INVENTORY_HEIGHT)])
+                .children(x_iter_source(
+                    source,
+                    |item: Cow<InventoryItemContainer>, index: usize| {
+                        inventory_item_view(item.into_owned(), index)
+                    },
+                ))
+        }),))
+}
+
+#[derive(Resource, Default, Debug)]
+pub struct InventoryCursorPosition(Vec2);
+
+#[derive(Resource, Default)]
+pub struct HoveredInventoryItem {
+    item: Option<(usize, InventoryItem)>,
+    view_key: Option<(usize, ViewRemoveOnDrop)>,
+}
+
+fn hover_inventory_item_ui(item: InventoryItem) -> impl IntoView<BevyRenderer> {
+    div()
+        .p(10)
+        .border(1)
+        .border_color(Color::DARK_GRAY)
+        .bg_color(Color::GRAY)
+        .absolute()
+        .z(2)
+        .member(x_res(|cursor_position: &InventoryCursorPosition| {
+            ().left(cursor_position.0.x).top(cursor_position.0.y)
+        }))
+        .children(item.item.name)
+}
+
+fn mange_hover_inventory_item_ui(world: &mut World) {
+    world.resource_scope(
+        |world, mut hovered_inventory_item: Mut<HoveredInventoryItem>| {
+            let item = hovered_inventory_item.item.clone();
+            match item {
+                None => {
+                    if hovered_inventory_item.view_key.is_some() {
+                        hovered_inventory_item.view_key = None;
+                    }
+                }
+                Some((index, item)) => {
+                    if let Some((view_index, _)) = &hovered_inventory_item.view_key {
+                        if *view_index == index {
+                            return;
+                        }
+                    }
+                    let view_key = world.spawn_view_on_root(hover_inventory_item_ui(item));
+                    hovered_inventory_item.view_key = Some((index, world.remove_on_drop(view_key)));
+                }
+            }
+        },
+    );
 }
 
 #[derive(Resource, Default)]
 pub struct DraggingInventoryItem {
-    // item: InventoryItemContainer,
-    // is_drag: RwSignal<bool>,
     delta: Vec2,
     index: usize,
-    view_key: Option<SyncCell<OnDrop<Box<dyn FnOnce() + Send>>>>,
+    view_key: Option<ViewRemoveOnDrop>,
 }
 
 impl DraggingInventoryItem {
@@ -272,17 +329,22 @@ impl SchemaElementView<BevyRenderer> for InventoryItemView {
                                 ),
                                  move |_| parent
                             );
-                            let cmd_sender = world.resource::<CmdSender>().clone();
                             *world.resource_mut::<DraggingInventoryItem>() = DraggingInventoryItem {
                                 delta: Vec2::default(),
                                 index,
-                                view_key: Some(SyncCell::new(OnDrop::new(Box::new(move || {
-                                    cmd_sender.add(|world:&mut World| {
-                                        view_key.remove(world)
-                                    });
-                                }))))
+                                view_key: Some(world.remove_on_drop(view_key))
                             };
                         }
+                    })
+
+                    .on_pointer_over({
+                        let item = item.clone();
+                        move |mut hovered_inventory_item: ResMut<HoveredInventoryItem>| {
+                            hovered_inventory_item.item = Some((index,item.clone()));
+                        }
+                    })
+                    .on_pointer_out(move |mut hovered_inventory_item: ResMut<HoveredInventoryItem>| {
+                        hovered_inventory_item.item = None;
                     })
                     ;
                 into_view(item_view(item,false)

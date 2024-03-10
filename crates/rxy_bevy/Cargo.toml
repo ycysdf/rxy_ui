@@ -41,6 +41,7 @@ bevy_tasks.workspace = true
 bevy_utils.workspace = true
 bevy_a11y.workspace = true
 bevy_input.workspace = true
+bevy_window.workspace = true
 
 futures-lite.workspace = true
 
