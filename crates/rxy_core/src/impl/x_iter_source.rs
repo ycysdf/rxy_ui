@@ -14,7 +14,7 @@ use core::future::Future;
 use core::hash::{Hash, Hasher};
 use core::marker::PhantomData;
 use core::pin::pin;
-use std::cmp::Ordering;
+use core::cmp::Ordering;
 use futures_lite::stream::Map;
 use futures_lite::{FutureExt, StreamExt};
 use hooked_collection::{

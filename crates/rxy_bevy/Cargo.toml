@@ -8,7 +8,7 @@ version = "0.1.0"
 [dependencies]
 #rxy_bevy_element.workspace = true
 rxy_bevy_macro.workspace = true
-rxy_core = { workspace = true, features = ["common_renderer", "async-channel", "bevy", "xy_reactive", "bevy_reflect"] }
+rxy_core = { workspace = true, features = ["common_renderer", "async-channel", "bevy", "xy_reactive", "bevy_reflect", "x_iter_source"] }
 xy_reactive = { workspace = true, optional = true, features = ["bevy"] }
 rxy_macro.workspace = true
 hooked_collection.workspace = true

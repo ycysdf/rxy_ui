@@ -1,10 +1,17 @@
 use crate::{NodeTree, Renderer, RendererWorld, ViewKey};
-use bevy_utils::synccell::SyncCell;
-use bevy_utils::OnDrop;
+use crate::utils::SyncCell;
 use crate::renderer::DeferredNodeTreeScoped;
+use alloc::boxed::Box;
+use crate::utils::OnDrop;
 
 #[allow(dead_code)]
-pub struct ViewRemoveOnDrop(SyncCell<OnDrop<Box<dyn FnOnce() + Send>>>);
+#[cfg(feature = "send_sync")]
+pub struct ViewRemoveOnDrop(
+    SyncCell<OnDrop<Box<dyn FnOnce() + crate::MaybeSend>>>
+);
+#[allow(dead_code)]
+#[cfg(not(feature = "send_sync"))]
+pub struct ViewRemoveOnDrop(SyncCell<OnDrop<Box<dyn FnOnce()>>>);
 
 pub trait RemoveOnDropWorldExt<R>
 where

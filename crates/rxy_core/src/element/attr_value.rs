@@ -5,6 +5,7 @@ use alloc::borrow::Cow;
 use alloc::string::String;
 use core::fmt::Debug;
 use core::ops::Deref;
+use alloc::vec::Vec;
 
 pub trait AttrValue: MaybeReflect + MaybeSend + MaybeSync + Debug + 'static {
     fn clone_att_value(&self) -> SmallBox<dyn AttrValue, S1>;

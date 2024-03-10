@@ -50,6 +50,7 @@ pub mod prelude {
 
     pub use crate::renderer::common_renderer::*;
     pub use crate::renderer::BevyElement;
+    #[cfg(feature = "style")]
     pub use crate::renderer::style::ElementViewStyleExt;
 
     pub use super::all_attrs::{CommonAttrsElementViewBuilder, CommonAttrsViewBuilder};
