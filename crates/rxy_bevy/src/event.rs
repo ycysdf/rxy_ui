@@ -8,7 +8,7 @@ use std::iter::once;
 
 use bevy_app::PreUpdate;
 use bevy_ecs::{
-    prelude::{Commands, Entity, Res, Resource, World},
+    prelude::{Commands, Res, Resource, World},
     system::SystemId,
 };
 use bevy_ecs::entity::EntityHashMap;

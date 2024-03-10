@@ -9,7 +9,6 @@ use bevy_utils::tracing::error;
 use rxy_core::{MemberOwner, ViewMember, ViewMemberCtx, ViewMemberOrigin};
 
 use crate::event::*;
-use crate::prelude::FocusInputEventIterator;
 use crate::BevyRenderer;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

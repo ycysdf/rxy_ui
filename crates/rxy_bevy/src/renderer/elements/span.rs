@@ -104,7 +104,6 @@ pub mod attrs {
     use bevy_text::TextStyle;
     use std::borrow::Cow;
 
-    use rxy_core::ElementAttrType;
 
     use super::*;
 

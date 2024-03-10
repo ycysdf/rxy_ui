@@ -142,7 +142,7 @@ pub(crate) fn trigger_click_end(keyboard_input: Res<ButtonInput<KeyCode>>) -> bo
 
 /// Reset the clicked state.
 pub(crate) fn end_keyboard_click(mut interactions: Query<&mut Interaction>) {
-    interactions.for_each_mut(|mut interaction| {
+    interactions.iter_mut().for_each(|mut interaction| {
         if *interaction == Interaction::Pressed {
             // The click was triggered by the keyboard, so it doesn't make sense to go to `Interaction::Hovered`.
             *interaction = Interaction::None;
