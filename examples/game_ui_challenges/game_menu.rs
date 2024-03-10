@@ -9,15 +9,9 @@ use bevy::app::AppExit;
 
 use std::fmt::Debug;
 
-mod checkbox;
-mod select;
-mod slider;
-
-use checkbox::*;
-use select::*;
-use slider::*;
-
-pub const COLOR_PRIMARY: Color = Color::BLUE;
+mod components;
+use components::*;
+use rxy_bevy::style::DefaultStyleDef;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, States)]
 enum GameState {
@@ -43,20 +37,12 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
-    commands.spawn_rxy_ui(game_ui);
+    commands.spawn_view_on_root(game_ui());
 }
-
-#[derive(TypedStyle)]
-struct FocusStyle;
 
 fn game_ui() -> impl IntoView<BevyRenderer> {
     (
-        FocusStyle::def(
-            x_focus()
-                .outline_width(2)
-                .outline_offset(2)
-                .outline_color(COLOR_PRIMARY),
-        ),
+        FocusStyle::def_default(),
         x_res(|state: &State<GameState>| match state.get() {
             GameState::MainMenu => main_menu().into_dynamic(),
             GameState::Setting => setting().into_dynamic(),

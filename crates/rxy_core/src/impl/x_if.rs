@@ -3,7 +3,7 @@ use core::marker::PhantomData;
 
 use crate::{
     ConstIndex, Either, EitherExt, FnSchema, IntoSchemaProp, IntoView, MaybeSend, RebuildFnReceiver,
-    Renderer, schema_view, SchemaView, ToMutableWrapper, VirtualContainer,
+    Renderer, schema_view, RendererSchemaView, ToMutableWrapper, VirtualContainer,
 };
 
 pub struct XIf<R, C, V, V2 = ()>
@@ -85,7 +85,7 @@ where
     IV: IntoView<R> + MaybeSend + Clone,
     EV: IntoView<R> + MaybeSend + Clone,
 {
-    type View = SchemaView<
+    type View = RendererSchemaView<
         R,
         FnSchema<BoxedRebuildFnReceiver<R, IV, EV>, (RebuildFnReceiver<R, bool>,)>,
         (ConstIndex<0, C::Prop>,),
@@ -115,7 +115,7 @@ pub fn x_if_else<R, V, EV, C>(
     condition: C,
     v: V,
     else_view: EV,
-) -> SchemaView<
+) -> RendererSchemaView<
     R,
     FnSchema<
         impl FnOnce(RebuildFnReceiver<R, bool>) -> IfResultView<R, V, EV> + MaybeSend,

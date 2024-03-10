@@ -244,15 +244,7 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
         false
     }
 
-    fn build_attr<A: ElementAttrType<WebRenderer>>(
-        &mut self,
-        node_id: RendererNodeId<WebRenderer>,
-        value: A::Value,
-    ) {
-        A::first_set_value(self, node_id, value);
-    }
-
-    fn rebuild_attr<A: ElementAttrType<WebRenderer>>(
+    fn set_attr<A: ElementAttrType<WebRenderer>>(
         &mut self,
         node_id: RendererNodeId<WebRenderer>,
         value: A::Value,
@@ -260,7 +252,7 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
         A::update_value(self, node_id, value);
     }
 
-    fn unbuild_attr<A: ElementAttrType<WebRenderer>>(
+    fn unset_attr<A: ElementAttrType<WebRenderer>>(
         &mut self,
         node_id: RendererNodeId<WebRenderer>,
     ) {
@@ -270,7 +262,7 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
         }
     }
 
-    fn deferred_world_scoped(&mut self) -> impl DeferredNodeTreeScoped<WebRenderer> {
+    fn deferred_world_scoped(&self) -> impl DeferredNodeTreeScoped<WebRenderer> {
         WebDomScoped
     }
 

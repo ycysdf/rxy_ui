@@ -3,8 +3,8 @@ use bevy_ecs::prelude::Component;
 use rxy_core::{AttrIndex, ElementTypeUnTyped};
 use crate::BevyRenderer;
 
-pub type AttrSetBits = u64;
-pub type AttrInitBits = u64;
+pub type AttrSetBits = u128;
+pub type AttrInitBits = u128;
 
 #[derive(Component, Clone)]
 pub struct ElementEntityExtraData {

@@ -6,14 +6,9 @@ use bevy_reflect::Reflect;
 use bevy_text::Text;
 use bevy_ui::prelude::TextBundle;
 
-use rxy_core::{
-    ElementAttrType, ElementType, ElementTypeUnTyped, RendererNodeId,
-    RendererWorld,
-};
+use rxy_core::{ElementAttrType, ElementType, ElementTypeUnTyped, RendererNodeId, RendererWorld};
 
-use crate::{
-    all_attrs, BevyRenderer, BevyWorldExt, ReflectTextStyledElementType, TextStyledElementType,
-};
+use crate::{all_attrs, BevyRenderer, BevyWorldExt, ReflectTextStyledElementType, TextStyledElementType};
 
 #[derive(Reflect, Debug, Default, Clone, Copy)]
 #[reflect(TextStyledElementType)]
@@ -100,7 +95,7 @@ impl TextStyledElementType for element_span {
     }
 }
 
-pub mod attrs {
+pub mod element_span_attrs {
     use bevy_text::TextStyle;
     use std::borrow::Cow;
 

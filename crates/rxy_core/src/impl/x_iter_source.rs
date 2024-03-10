@@ -1,16 +1,20 @@
-use alloc::boxed::Box;
-use alloc::vec::Vec;
-use alloc::vec;
 use crate::diff::diff;
-use crate::{virtual_container, Either, EitherExt, IntoView, MutableView, MutableViewKey, NodeTree, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, VirtualContainer, MaybeSend};
-use alloc::borrow::Cow;
-use async_channel::{Receiver, Recv, RecvError, Sender, TryRecvError};
 use crate::utils::SyncCell;
+use crate::{
+    virtual_container, Either, EitherExt, IntoView, MaybeSend, MutableView, MutableViewKey,
+    NodeTree, Renderer, RendererNodeId, RendererWorld, View, ViewCtx, ViewKey, VirtualContainer,
+};
+use alloc::borrow::Cow;
+use alloc::boxed::Box;
+use alloc::vec;
+use alloc::vec::Vec;
+use async_channel::{Receiver, Recv, RecvError, Sender, TryRecvError};
 use core::fmt::Debug;
 use core::future::Future;
 use core::hash::{Hash, Hasher};
 use core::marker::PhantomData;
 use core::pin::pin;
+use std::cmp::Ordering;
 use futures_lite::stream::Map;
 use futures_lite::{FutureExt, StreamExt};
 use hooked_collection::{
@@ -18,7 +22,7 @@ use hooked_collection::{
 };
 
 pub enum UseListOperation<T> {
-    WatchCount(Sender<usize>),
+    // WatchCount(Sender<usize>),
     Ops(VecOperation<T>),
     #[cfg(feature = "send_sync")]
     Callback(Box<dyn FnOnce(&mut HookedVec<T, VecOperationRecord<T>>) + MaybeSend>),
@@ -35,14 +39,14 @@ pub trait ListOperator {
     fn update(&self, index: usize, item: Self::Item);
     fn clear(&self);
     fn move_item(&self, from: usize, to: usize);
-    fn watch_count(&self) -> Receiver<usize>;
+    // fn watch_count(&self) -> Receiver<usize>;
     fn callback(
         &self,
         f: impl FnOnce(&mut HookedVec<Self::Item, VecOperationRecord<Self::Item>>) + MaybeSend + 'static,
     );
     fn patch(&self, index: usize, f: impl FnOnce(&mut Self::Item) + MaybeSend + 'static)
-    where
-        Self::Item: Clone;
+        where
+            Self::Item: Clone;
 }
 
 #[derive(Clone)]
@@ -59,15 +63,18 @@ impl<T> ListOperator for UseList<T> {
             .send_blocking(UseListOperation::Ops(VecOperation::Push { item }));
     }
 
-    fn callback(&self, f: impl FnOnce(&mut HookedVec<T, VecOperationRecord<T>>) + MaybeSend + 'static) {
+    fn callback(
+        &self,
+        f: impl FnOnce(&mut HookedVec<T, VecOperationRecord<T>>) + MaybeSend + 'static,
+    ) {
         let _ = self
             .op_sender
             .send_blocking(UseListOperation::Callback(Box::new(f)));
     }
 
     fn patch(&self, index: usize, f: impl FnOnce(&mut T) + MaybeSend + 'static)
-    where
-        T: Clone,
+        where
+            T: Clone,
     {
         self.callback(move |vec: &mut HookedVec<T, VecOperationRecord<T>>| {
             vec.patch(index, f);
@@ -110,22 +117,32 @@ impl<T> ListOperator for UseList<T> {
             .send_blocking(UseListOperation::Ops(VecOperation::Move { from, to }));
     }
 
-    fn watch_count(&self) -> Receiver<usize> {
-        todo!()
-        // let (sender, receiver) = async_channel::unbounded();
-        // let _ = self
-        //     .op_sender
-        //     .send_blocking(UseListOperation::WatchCount(sender));
-        // receiver
-    }
+    // fn watch_count(&self) -> Receiver<usize> {
+    // let (sender, receiver) = async_channel::unbounded();
+    // let _ = self
+    //     .op_sender
+    //     .send_blocking(UseListOperation::WatchCount(sender));
+    // receiver
+    // }
 }
 
 #[allow(dead_code)]
 pub struct UseListSource<T> {
     vec: Vec<T>,
     op_receiver: Receiver<UseListOperation<T>>,
-    op_handlers: Vec<Box<dyn OperatorHandler<Op = VecOperation<T>>>>,
+    op_handlers: Vec<Box<dyn OperatorHandler<Op=VecOperation<T>>>>,
 }
+
+impl<T> UseListSource<T> {
+    pub fn new(vec: Vec<T>, op_receiver: Receiver<UseListOperation<T>>) -> Self {
+        Self {
+            vec,
+            op_receiver,
+            op_handlers: vec![],
+        }
+    }
+}
+
 pub trait OperatorHandler: MaybeSend + 'static {
     type Op;
     fn handle(&mut self, op: &Self::Op);
@@ -161,20 +178,20 @@ impl<T: Clone + MaybeSend + 'static> OperatorHandler for ListCountSender<T> {
     }
 }
 
-impl<T: Clone + MaybeSend + 'static> UseListSource<T> {
-    // #[inline(always)]
+impl<T> UseListSource<T> {
+    // #[inline]
     // pub fn add_op_handler(&mut self, op_handler: impl OperatorHandler<Op = VecOperation<T>>) {
     //     self.op_handlers.push(Box::new(op_handler));
     // }
 
-    // #[inline(always)]
+    // #[inline]
     // pub fn handle_handlers(&mut self, op: &VecOperation<T>) {
     //     for op_handler in self.op_handlers.iter_mut() {
     //         op_handler.handle(op);
     //     }
     // }
 
-    // #[inline(always)]
+    // #[inline]
     // pub fn commit_handlers(&mut self) {
     //     for op_handler in self.op_handlers.iter_mut() {
     //         op_handler.commit();
@@ -233,45 +250,35 @@ impl<T: Clone + MaybeSend + 'static> UseListSource<T> {
     }
 }
 
-pub fn use_list<T>(init: impl IntoIterator<Item = T>) -> (UseList<T>, UseListSource<T>) {
+pub fn use_list<T>(init: impl IntoIterator<Item=T>) -> (UseList<T>, UseListSource<T>) {
     let (op_sender, op_receiver) = async_channel::unbounded();
     let vec = init.into_iter().collect::<Vec<_>>();
-    (
-        UseList { op_sender },
-        UseListSource {
-            vec,
-            op_receiver,
-            op_handlers: vec![],
-        },
-    )
+    (UseList { op_sender }, UseListSource::new(vec, op_receiver))
 }
 
-pub fn x_iter_source<R, T, F, IV>(source: UseListSource<T>, view_f: F) -> ForSource<T, F>
-where
-    R: Renderer,
-    T: Clone + MaybeSend + 'static,
-    IV: IntoView<R>,
-    F: Fn(Cow<T>) -> IV + Clone + MaybeSend + 'static,
+pub fn x_iter_source<R, S, F, IV>(source: S, view_f: F) -> ForSource<S, F>
+    where
+        R: Renderer,
+        S: VecDataSource<R>,
+        S::Item: Clone + Debug + MaybeSend + 'static,
+        IV: IntoView<R>,
+        F: Fn(Cow<S::Item>, usize) -> IV + Clone + MaybeSend + 'static,
 {
-    ForSource {
-        source,
-        view_f,
-        _marker: PhantomData,
-    }
+    ForSource { source, view_f }
 }
 
-pub struct ForSource<T, F> {
-    source: UseListSource<T>,
+pub struct ForSource<S, F> {
+    source: S,
     view_f: F,
-    _marker: PhantomData<T>,
 }
 
-impl<R, T, F, IV> IntoView<R> for ForSource<T, F>
-where
-    R: Renderer,
-    T: Clone + Debug + MaybeSend + 'static,
-    IV: IntoView<R>,
-    F: Fn(Cow<T>) -> IV + Clone + MaybeSend + 'static,
+impl<R, S, F, IV> IntoView<R> for ForSource<S, F>
+    where
+        R: Renderer,
+        S: VecDataSource<R>,
+        S::Item: Clone + Debug + MaybeSend + 'static,
+        IV: IntoView<R>,
+        F: Fn(Cow<S::Item>, usize) -> IV + Clone + MaybeSend + 'static,
 {
     type View = VirtualContainer<R, Self>;
 
@@ -281,11 +288,11 @@ where
 }
 
 pub struct ForSourceState<R, K>
-where
-    R: Renderer,
+    where
+        R: Renderer,
 {
     view_keys: Vec<K>,
-    task: SyncCell<R::Task<()>>,
+    task: Option<SyncCell<R::Task<()>>>,
 }
 
 #[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
@@ -294,14 +301,14 @@ pub struct ForSourceViewKey<R, K>(
     DataOrPlaceholderNodeId<R>,
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))] PhantomData<K>,
 )
-where
-    R: Renderer,
-    K: ViewKey<R>;
+    where
+        R: Renderer,
+        K: ViewKey<R>;
 
 impl<R, K> ForSourceViewKey<R, K>
-where
-    R: Renderer,
-    K: ViewKey<R>,
+    where
+        R: Renderer,
+        K: ViewKey<R>,
 {
     pub fn new(state_node_id: DataOrPlaceholderNodeId<R>) -> Self {
         Self(state_node_id, Default::default())
@@ -313,9 +320,9 @@ pub fn get_for_source_view_keys_scoped<R, K, U>(
     state_node_id: &RendererNodeId<R>,
     f: impl for<'a, 'b> FnOnce(&'a mut Vec<K>, &'b mut RendererWorld<R>) -> U,
 ) -> U
-where
-    R: Renderer,
-    K: ViewKey<R>,
+    where
+        R: Renderer,
+        K: ViewKey<R>,
 {
     let mut view_keys = core::mem::take(
         &mut world
@@ -332,9 +339,9 @@ where
 }
 
 impl<R, K> MutableViewKey<R> for ForSourceViewKey<R, K>
-where
-    R: Renderer,
-    K: ViewKey<R>,
+    where
+        R: Renderer,
+        K: ViewKey<R>,
 {
     fn remove(self, world: &mut RendererWorld<R>) {
         let state = world
@@ -395,16 +402,16 @@ where
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
 pub enum DataOrPlaceholderNodeId<R>
-where
-    R: Renderer,
+    where
+        R: Renderer,
 {
     Data(RendererNodeId<R>),
     Placeholder(RendererNodeId<R>),
 }
 
 impl<R> DataOrPlaceholderNodeId<R>
-where
-    R: Renderer,
+    where
+        R: Renderer,
 {
     pub fn state_node_id(&self) -> &RendererNodeId<R> {
         match self {
@@ -414,37 +421,153 @@ where
     }
 }
 
-pub fn build_for_source<R, T, F, IV>(
-    mut for_source: ForSource<T, F>,
+pub trait VecDataSource<R>: MaybeSend + 'static
+    where
+        R: Renderer,
+{
+    type Item: MaybeSend + Clone + 'static;
+    type InitState: MaybeSend + 'static;
+    type State: MaybeSend + 'static;
+    type Op: MaybeSend + 'static;
+    fn map_and_init_state<U>(
+        self,
+        world: &mut RendererWorld<R>,
+        map_f: impl FnMut(&Self::Item, &mut RendererWorld<R>, usize) -> U,
+    ) -> (Vec<U>, Option<(Self::InitState, Receiver<Self::Op>)>);
+    fn ready_state(state: &mut Self::InitState) -> Self::State;
+    fn apply_ops(
+        state: Self::State,
+        ops: Vec<Self::Op>,
+        world: &mut RendererWorld<R>,
+        state_node_id: DataOrPlaceholderNodeId<R>,
+        f: impl FnMut(VecOperation<Cow<Self::Item>>, &[Self::Item], &mut RendererWorld<R>),
+    );
+}
+
+impl<R, T> VecDataSource<R> for UseListSource<T>
+    where
+        T: Clone + MaybeSend + 'static,
+        R: Renderer,
+{
+    type Item = T;
+    type InitState = Option<Either<Vec<T>, oneshot::Receiver<Vec<T>>>>;
+    type State = (Self::InitState, oneshot::Sender<Vec<T>>);
+    type Op = UseListOperation<Self::Item>;
+
+    fn map_and_init_state<U>(
+        mut self,
+        world: &mut RendererWorld<R>,
+        mut map_f: impl FnMut(&Self::Item, &mut RendererWorld<R>, usize) -> U,
+    ) -> (Vec<U>, Option<(Self::InitState, Receiver<Self::Op>)>) {
+        self.try_apply_ops();
+        let vec = self
+            .vec
+            .iter()
+            .enumerate()
+            .map(|(i, n)| map_f(n, world, i))
+            .collect::<Vec<_>>();
+        let vec_or_receiver = Some(self.vec.either_left());
+        (vec, Some((vec_or_receiver, self.op_receiver)))
+    }
+
+    fn ready_state(state: &mut Self::InitState) -> Self::State {
+        let (sender, receiver) = oneshot::channel();
+        let taken_vec_or_receiver = state.take();
+        *state = Some(receiver.either_right());
+        (taken_vec_or_receiver, sender)
+    }
+
+    fn apply_ops(
+        state: Self::State,
+        ops: Vec<Self::Op>,
+        world: &mut RendererWorld<R>,
+        _state_node_id: DataOrPlaceholderNodeId<R>,
+        mut f: impl FnMut(VecOperation<Cow<Self::Item>>, &[Self::Item], &mut RendererWorld<R>),
+    ) {
+        let (mut taken_vec_or_receiver, sender) = state;
+        let mut vec = taken_vec_or_receiver
+            .take()
+            .unwrap()
+            .map_right(|n| n.try_recv().unwrap())
+            .into_inner();
+        for op in ops {
+            match op {
+                // UseListOperation::WatchCount(_) => {}
+                UseListOperation::Ops(op) => {
+                    f(op.as_ref().map(|n| Cow::Borrowed(n)), &vec, world);
+                    vec.apply_op(op);
+                }
+                UseListOperation::Callback(callback) => {
+                    let mut hooked_vec =
+                        HookedVec::from_vec(core::mem::take(&mut vec), VecOperationRecord::new());
+                    callback(&mut hooked_vec);
+                    let (mut vec_result, record) = hooked_vec.into_inner();
+                    for op in record {
+                        f(op.map(|n| Cow::Owned(n)), &vec, world);
+                    }
+                    core::mem::swap(&mut vec_result, &mut vec);
+                }
+            }
+        }
+        sender.send(vec).unwrap();
+    }
+}
+
+pub enum RecvManyError {
+    Closed,
+    RecvError,
+}
+
+pub trait ReceiverExt<T> {
+    fn recv_many(
+        &self,
+        vec: &mut Vec<T>,
+    ) -> impl Future<Output=Result<(), RecvManyError>> + MaybeSend;
+}
+
+impl<T> ReceiverExt<T> for Receiver<T>
+    where
+        T: MaybeSend,
+{
+    fn recv_many(
+        &self,
+        vec: &mut Vec<T>,
+    ) -> impl Future<Output=Result<(), RecvManyError>> + MaybeSend {
+        async {
+            vec.push(self.recv().await.map_err(|_| RecvManyError::RecvError)?);
+            loop {
+                match self.try_recv() {
+                    Ok(op) => {
+                        vec.push(op);
+                    }
+                    Err(TryRecvError::Closed) => {
+                        return Err(RecvManyError::Closed);
+                    }
+                    Err(TryRecvError::Empty) => {
+                        break;
+                    }
+                }
+            }
+            Ok(())
+        }
+    }
+}
+
+pub fn build_for_source<R, S, F, IV>(
+    for_source: ForSource<S, F>,
     ctx: ViewCtx<R>,
+    // will_rebuild when state_node_id is Some, todo: Semantization Option<RendererNodeId<R>>
     state_node_id: Option<RendererNodeId<R>>,
 ) -> DataOrPlaceholderNodeId<R>
-where
-    R: Renderer,
-    T: Clone + MaybeSend + Debug + 'static,
-    IV: IntoView<R>,
-    F: Fn(Cow<T>) -> IV + Clone + MaybeSend + 'static,
+    where
+        R: Renderer,
+        S: VecDataSource<R>,
+        S::Item: Clone + MaybeSend + Debug + 'static,
+        IV: IntoView<R>,
+        F: Fn(Cow<S::Item>, usize) -> IV + Clone + MaybeSend + 'static,
 {
-    for_source.source.try_apply_ops();
-
-    let UseListSource {
-        vec, op_receiver, ..
-    } = for_source.source;
-
-    let view_keys = vec
-        .iter()
-        .map(|n| {
-            let view = (for_source.view_f)(Cow::Borrowed(n)).into_view();
-            view.build(
-                ViewCtx {
-                    world: &mut *ctx.world,
-                    parent: ctx.parent.clone(),
-                },
-                None,
-                true,
-            )
-        })
-        .collect::<Vec<_>>();
+    let source = for_source.source;
+    let view_f = for_source.view_f;
 
     let world_scoped = ctx.world.deferred_world_scoped();
     let state_node_id = if let Some(state_node_id) = state_node_id {
@@ -453,124 +576,72 @@ where
         DataOrPlaceholderNodeId::Data(ctx.world.spawn_data_node())
     };
 
-    let task = R::spawn_task({
-        use crate::renderer::DeferredNodeTreeScoped;
-        let parent = ctx.parent;
-        let view_f = for_source.view_f;
-        let state_node_id = state_node_id.clone();
-        async move {
-            let mut ops = vec![];
+    let (view_keys, state) = source.map_and_init_state(ctx.world, |n, world, index| {
+        let view = view_f(Cow::Borrowed(n), index).into_view();
+        view.build(
+            ViewCtx {
+                world,
+                parent: ctx.parent.clone(),
+            },
+            None,
+            true,
+        )
+    });
+    let task = state.map(|(mut init_state, op_receiver)| {
+        R::spawn_task({
+            use crate::renderer::DeferredNodeTreeScoped;
+            let parent = ctx.parent;
+            let state_node_id = state_node_id.clone();
+            async move {
+                let mut ops = vec![];
 
-            fn handle_op<T>(op: UseListOperation<T>) -> Option<UseListOperation<T>> {
-                match op {
-                    UseListOperation::Ops(op) => Some(UseListOperation::Ops(op)),
-                    UseListOperation::WatchCount(_sender) => {
-                        // let count = self.vec.len();
-                        // let _ = sender.send(count).await;
-                        // self.add_op_handler(ListCountSender {
-                        //     sender,
-                        //     count,
-                        //     _marker: PhantomData,
-                        // });
-                        None
-                    }
-                    UseListOperation::Callback(f) => Some(UseListOperation::Callback(f)),
-                }
-            }
-
-            let mut vec_or_receiver = Some(vec.either_left());
-
-            'r: loop {
-                let Ok(op) = op_receiver.recv().await else {
-                    break 'r;
-                };
-                if let Some(op) = handle_op(op) {
-                    ops.push(op);
-                }
                 loop {
-                    match op_receiver.try_recv() {
-                        Ok(op) => {
-                            if let Some(op) = handle_op(op) {
-                                ops.push(op);
-                            }
-                        }
-                        Err(TryRecvError::Closed) => {
-                            break 'r;
-                        }
-                        Err(TryRecvError::Empty) => {
-                            break;
-                        }
-                    }
-                }
-                let parent = parent.clone();
-                let (sender, receiver) = oneshot::channel();
-                let mut taken_vec_or_receiver = vec_or_receiver.take();
-                vec_or_receiver = Some(receiver.either_right());
+                    if op_receiver.recv_many(&mut ops).await.is_err() {
+                        break;
+                    };
+                    let parent = parent.clone();
 
-                world_scoped.scoped({
-                    let ops = core::mem::take(&mut ops);
-                    let view_f = view_f.clone();
-                    let state_node_id = state_node_id.clone();
-                    move |world| {
-                        get_for_source_view_keys_scoped(
-                            world,
-                            state_node_id.state_node_id(),
-                            |view_keys: &mut Vec<<IV::View as View<R>>::Key>, world| {
-                                let mut vec = taken_vec_or_receiver
-                                    .take()
-                                    .unwrap()
-                                    .map_right(|n| n.try_recv().unwrap())
-                                    .into_inner();
-                                for op in ops {
-                                    match op {
-                                        UseListOperation::WatchCount(_) => {}
-                                        UseListOperation::Ops(op) => {
+                    let state = S::ready_state(&mut init_state);
+
+                    world_scoped.scoped({
+                        let ops = core::mem::take(&mut ops);
+                        let view_f = view_f.clone();
+                        let state_node_id = state_node_id.clone();
+                        move |world| {
+                            get_for_source_view_keys_scoped(
+                                world,
+                                state_node_id.state_node_id(),
+                                |view_keys: &mut Vec<<IV::View as View<R>>::Key>, world| {
+                                    S::apply_ops(
+                                        state,
+                                        ops,
+                                        world,
+                                        state_node_id.clone(),
+                                        |op, items, world| {
                                             apply_op_to_view_keys(
                                                 world,
                                                 parent.clone(),
                                                 view_f.clone(),
-                                                op.as_ref().map(|n| Cow::Borrowed(n)),
+                                                op,
                                                 &state_node_id,
                                                 view_keys,
-                                                &vec,
-                                            );
-                                            vec.apply_op(op);
-                                        }
-                                        UseListOperation::Callback(f) => {
-                                            let mut hooked_vec = HookedVec::from_vec(
-                                                core::mem::take(&mut vec),
-                                                VecOperationRecord::new(),
-                                            );
-                                            f(&mut hooked_vec);
-                                            let (mut vec_result, record) = hooked_vec.into_inner();
-                                            for op in record {
-                                                apply_op_to_view_keys(
-                                                    world,
-                                                    parent.clone(),
-                                                    view_f.clone(),
-                                                    op.map(|n| Cow::Owned(n)),
-                                                    &state_node_id,
-                                                    view_keys,
-                                                    &vec_result,
-                                                );
-                                            }
-                                            core::mem::swap(&mut vec_result, &mut vec);
-                                        }
-                                    }
-                                }
-                                sender.send(vec).unwrap();
-                            },
-                        );
-                    }
-                });
+                                                items,
+                                            )
+                                        },
+                                    );
+                                },
+                            );
+                        }
+                    });
+                }
             }
-        }
+        })
     });
     ctx.world.set_node_state(
         state_node_id.state_node_id(),
         ForSourceState::<R, _> {
             view_keys,
-            task: SyncCell::new(task),
+            task: task.map(SyncCell::new),
         },
     );
     state_node_id
@@ -588,11 +659,11 @@ fn apply_op_to_view_keys<R, T, F, IV>(
     R: Renderer,
     T: Clone + MaybeSend + Debug + 'static,
     IV: IntoView<R>,
-    F: Fn(Cow<T>) -> IV + Clone + MaybeSend + 'static,
+    F: Fn(Cow<T>, usize) -> IV + Clone + MaybeSend + 'static,
 {
     match op {
         VecOperation::Push { item } => {
-            let view = view_f(item).into_view();
+            let view = view_f(item, view_keys.len()).into_view();
             let view_key = view.build(
                 ViewCtx {
                     world,
@@ -616,7 +687,7 @@ fn apply_op_to_view_keys<R, T, F, IV>(
             }
         }
         VecOperation::Insert { index, item } => {
-            let view = view_f(item).into_view();
+            let view = view_f(item, index).into_view();
             let view_key = view.build(
                 ViewCtx {
                     world,
@@ -638,7 +709,7 @@ fn apply_op_to_view_keys<R, T, F, IV>(
             view_keys.insert(index, view_key);
         }
         VecOperation::Update { index, item } => {
-            let view = view_f(item).into_view();
+            let view = view_f(item, index).into_view();
             view.rebuild(
                 ViewCtx {
                     world,
@@ -656,6 +727,9 @@ fn apply_op_to_view_keys<R, T, F, IV>(
             }
         }
         VecOperation::Move { from, to } => {
+            if from == to {
+                return;
+            }
             let before_node_id = view_keys[to].first_node_id(world).unwrap();
             view_keys[from].insert_before(world, Some(&parent), Some(&before_node_id));
 
@@ -667,7 +741,7 @@ fn apply_op_to_view_keys<R, T, F, IV>(
             }
         }
         VecOperation::Patch { index } => {
-            let view = view_f(Cow::Borrowed(&vec[index])).into_view();
+            let view = view_f(Cow::Borrowed(&vec[index]), index).into_view();
             view.rebuild(
                 ViewCtx {
                     world,
@@ -676,15 +750,38 @@ fn apply_op_to_view_keys<R, T, F, IV>(
                 view_keys[index].clone(),
             );
         }
+        // VecOperation::Swap { from, to } => {
+        //     let (to, from) = match from.cmp(&to) {
+        //         Ordering::Less => {
+        //             (to, from)
+        //         }
+        //         Ordering::Greater => {
+        //             (from, to)
+        //         }
+        //         Ordering::Equal => {
+        //             return;
+        //         }
+        //     };
+        //     // todo: index
+        //     if to - from == 1 {
+        //         view_keys[to].insert_before(world, Some(&parent), Some(&view_keys[from].first_node_id(world).unwrap()));
+        //     } else {
+        //         let before_node_id = view_keys[to].first_node_id(world).unwrap();
+        //         view_keys[from].insert_before(world, Some(&parent), Some(&before_node_id));
+        //         view_keys[to].insert_before(world, Some(&parent), Some(&view_keys[from + 1].first_node_id(world).unwrap()));
+        //     }
+        //     view_keys.swap(from, to);
+        // }
     }
 }
 
-impl<R, T, F, IV> MutableView<R> for ForSource<T, F>
-where
-    R: Renderer,
-    T: Clone + MaybeSend + Debug + 'static,
-    IV: IntoView<R>,
-    F: Fn(Cow<T>) -> IV + Clone + MaybeSend + 'static,
+impl<R, S, F, IV> MutableView<R> for ForSource<S, F>
+    where
+        R: Renderer,
+        S: VecDataSource<R>,
+        S::Item: Clone + MaybeSend + Debug + 'static,
+        IV: IntoView<R>,
+        F: Fn(Cow<S::Item>, usize) -> IV + Clone + MaybeSend + 'static,
 {
     type Key = ForSourceViewKey<R, <IV::View as View<R>>::Key>;
 

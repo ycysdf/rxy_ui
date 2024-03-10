@@ -432,11 +432,7 @@ When the value of the signal changes, the associated `View` or `ViewMember` will
 
 If the closure's return value implements `IntoView`, then the `Reactive` type implements `View`, and the `rx` function can be directly used in view,
 
-If the closure's return value implements `IntoViewAttrMember`, then the `Reactive` type implements `ViewMember`, and the `rx` function can be directly used in view member.
-
-If the signal types `RwSignal<T>` or `ReadSignal`, where `T` implements `IntoView` or `IntoViewAttrMember`, then the signal also implements `View` or `ViewMember`.
-
-> `IntoViewAttrMember` represents types that can be converted to `ViewMember`. For example, the width attribute value requires a type of [Val](https://docs.rs/bevy/latest/bevy/ui/enum.Val.html), but you can pass an `i32`, and `IntoViewAttrMember` will internally convert it to `Val::Px(100)` for you.
+If the signal types `RwSignal<T>` or `ReadSignal<T>`, where `T` implements `IntoView`, then the signal also implements `View`.
 
 ```rust
 fn signal_example() -> impl IntoView<BevyRenderer> {
@@ -457,9 +453,17 @@ fn signal_example() -> impl IntoView<BevyRenderer> {
 
 ### Option、Either、Stream、Future
 
-`Option<T>`,`Either<A,B>`,`Stream<T>`、`Future<T>`, and similar types all implement `IntoView` or `IntoViewAttrMember`. Thereforce, they can be used directly as views or view members.
+`Option<T>`,`Either<A,B>`,`Stream<T>`、`Future<T>`, and similar types all implement `IntoView`. Thereforce, they can be used directly as views.
 
-For examples:
+For example, `String` and `&'static str` implement `IntoView`, and so do `Option<String>`, `Future<Option<String>>`, and others; they can be nested.
+
+The same logic applies to view members (or the values they can accept). If T itself can be a view member, then `Option<T>`, `Future<Option<T>>`, and similar types can also be used directly as view members.
+
+For example, code: `div().width(10)`, the value `10` is accepted by the `width` member. Therefore, `Some(10)`, `async {Some(10)}`, and the like can also be used directly as values for the member.
+
+> width can directly accept values: `10` (equivalent to `Val::Px(10.)`), `10.` (equivalent to `Val::Px(10.)`), `Val::Percent(100)`, etc.
+
+Use case examples:
 
 Use case for `Option`: Controlling whether to build a view or view member
 
@@ -771,7 +775,7 @@ fn ui() -> impl IntoView<BevyRenderer> {
             )),
             div().flex_col().gap(8).children((
                 "--Header--",
-                x_iter_source(source, |n| n.to_string()),
+                x_iter_source(source, |n,_| n.to_string()),
                 "--Footer--",
             )),
         )),

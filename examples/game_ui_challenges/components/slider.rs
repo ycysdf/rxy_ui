@@ -8,7 +8,7 @@ use bevy::{
 use bevy_mod_picking::prelude::On;
 use std::fmt::Debug;
 
-use crate::{FocusStyle, XConfirm, COLOR_PRIMARY};
+use super::{FocusStyle, XConfirm, COLOR_PRIMARY};
 #[derive(TypedStyle)]
 pub struct SliderRootStyle;
 #[derive(TypedStyle)]

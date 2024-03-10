@@ -1,8 +1,8 @@
-use super::rxy_bevy_crate::BevyRenderer;
+use crate::BevyRenderer;
 use rxy_core::style::{ElementStyleMember, StyleSheets};
 use rxy_core::{rx, ElementView, MapToStyleSheetsMarker, MaybeSend, Reactive, XNest};
 
-pub trait ElementStyleExt: ElementView<BevyRenderer> {
+pub trait ElementViewStyleExt: ElementView<BevyRenderer> {
     #[inline]
     fn style<VM, SS>(
         self,
@@ -30,4 +30,4 @@ pub trait ElementStyleExt: ElementView<BevyRenderer> {
     }
 }
 
-impl<T> ElementStyleExt for T where T: ElementView<BevyRenderer> {}
+impl<T> ElementViewStyleExt for T where T: ElementView<BevyRenderer> {}

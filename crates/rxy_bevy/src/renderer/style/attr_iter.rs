@@ -35,7 +35,7 @@ pub(crate) trait StateOwner<'a, 's>: Sized {
             })
     }
 
-    #[inline(always)]
+    #[inline]
     fn get_style_item_value(
         &'s self,
         entity: Entity,
@@ -84,7 +84,7 @@ pub(crate) trait StateOwnerWithNodeId<'a, 's>: StateOwner<'a, 's> {
     //     self.get_style_item_attr_id(self.get_current_entity(), style_item_id)
     // }
 
-    #[inline(always)]
+    #[inline]
     fn get_current_style_item_value(
         &'s self,
         style_item_id: impl Into<NodeStyleItemId>,

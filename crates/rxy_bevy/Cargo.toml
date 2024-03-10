@@ -11,6 +11,7 @@ rxy_bevy_macro.workspace = true
 rxy_core = { workspace = true, features = ["common_renderer", "async-channel", "bevy", "xy_reactive", "bevy_reflect"] }
 xy_reactive = { workspace = true, optional = true, features = ["bevy"] }
 rxy_macro.workspace = true
+hooked_collection.workspace = true
 
 glam.workspace = true
 serde.workspace = true
@@ -19,6 +20,8 @@ count-macro.workspace = true
 paste.workspace = true
 
 async-channel.workspace = true
+async-broadcast.workspace = true
+
 smallvec.workspace = true
 
 bevy_app.workspace = true
@@ -38,6 +41,7 @@ bevy_tasks.workspace = true
 bevy_utils.workspace = true
 bevy_a11y.workspace = true
 bevy_input.workspace = true
+bevy_window.workspace = true
 
 futures-lite.workspace = true
 

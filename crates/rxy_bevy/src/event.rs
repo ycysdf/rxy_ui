@@ -226,7 +226,7 @@ impl FocusEventWorldExt for World {
                 add_bubble_event::<Pointer<Over>>(self, node_id, system_id, stop_propagation, None)
             }
             BubblePointerEvent::Out => {
-                add_bubble_event::<Pointer<Over>>(self, node_id, system_id, stop_propagation, None)
+                add_bubble_event::<Pointer<Out>>(self, node_id, system_id, stop_propagation, None)
             }
             BubblePointerEvent::Down(data) => {
                 add_bubble_event::<Pointer<Down>>(self, node_id, system_id, stop_propagation, data)

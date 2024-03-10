@@ -51,7 +51,7 @@ impl EntityAttrSyncer for NodeStyleItemId {
 }
 
 impl EntityAttrSyncer for NodeInterStyleItemId {
-    #[inline(always)]
+    #[inline]
     fn sync_attr_value_to_element(self, entity_world_mut: &mut EntityWorldMut) -> Result {
         self.style_item_id
             .sync_attr_value_to_element(entity_world_mut)

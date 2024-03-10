@@ -1,3 +1,4 @@
+use crate::VecExt;
 use alloc::collections::TryReserveError;
 use alloc::vec::Vec;
 use core::cmp::{Ord, Ordering};
@@ -8,22 +9,24 @@ use core::slice::SliceIndex;
 pub trait HookVec {
     type Item;
 
-    #[inline(always)]
-    fn on_push<'a>(&'a mut self, _items: impl Iterator<Item = &'a Self::Item>) {}
-    #[inline(always)]
-    fn on_pop<'a>(&'a mut self, _items: impl Iterator<Item = &'a Self::Item>) {}
-    #[inline(always)]
-    fn on_insert<'a>(&'a mut self, _index: usize, _items: impl Iterator<Item = &'a Self::Item>) {}
-    #[inline(always)]
+    #[inline]
+    fn on_push<'a>(&'a mut self, _items: impl Iterator<Item=&'a Self::Item>) {}
+    #[inline]
+    fn on_pop<'a>(&'a mut self, _items: impl Iterator<Item=&'a Self::Item>) {}
+    #[inline]
+    fn on_insert<'a>(&'a mut self, _index: usize, _items: impl Iterator<Item=&'a Self::Item>) {}
+    #[inline]
     fn on_update(&mut self, _index: usize, _item: &Self::Item) {}
-    #[inline(always)]
+    #[inline]
     fn on_patch(&mut self, _index: usize) {}
-    #[inline(always)]
-    fn on_remove<'a>(&'a mut self, _index: usize, _items: impl Iterator<Item = &'a Self::Item>) {}
-    #[inline(always)]
+    #[inline]
+    fn on_remove<'a>(&'a mut self, _index: usize, _items: impl Iterator<Item=&'a Self::Item>) {}
+    #[inline]
     fn on_clear(&mut self) {}
-    #[inline(always)]
+    #[inline]
     fn on_move(&mut self, _from: usize, _to: usize) {}
+    // #[inline]
+    // fn on_swap(&mut self, _from: usize, _to: usize) {}
 }
 
 pub struct HookedVec<T, O> {
@@ -54,40 +57,40 @@ impl<T, O> HookedVec<T, O> {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn reserve(&mut self, additional: usize) {
         self.vec.reserve(additional);
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn reserve_exact(&mut self, additional: usize) {
         self.vec.reserve_exact(additional);
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn shrink_to(&mut self, min_capacity: usize) {
         self.vec.shrink_to(min_capacity);
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn shrink_to_fit(&mut self) {
         self.vec.shrink_to_fit();
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn try_reserve(&mut self, additional: usize) -> Result<(), TryReserveError> {
         self.vec.try_reserve(additional)
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn try_reserve_exact(&mut self, additional: usize) -> Result<(), TryReserveError> {
         self.vec.try_reserve_exact(additional)
     }
 }
 
 impl<T, I, O> Index<I> for HookedVec<T, O>
-where
-    I: SliceIndex<[T], Output = T>,
+    where
+        I: SliceIndex<[T], Output=T>,
 {
     type Output = T;
 
@@ -105,10 +108,10 @@ impl<T, O> Deref for HookedVec<T, O> {
 }
 
 impl<T, O> Extend<T> for HookedVec<T, O>
-where
-    O: HookVec<Item = T>,
+    where
+        O: HookVec<Item=T>,
 {
-    fn extend<II: IntoIterator<Item = T>>(&mut self, iter: II) {
+    fn extend<II: IntoIterator<Item=T>>(&mut self, iter: II) {
         let prev_len = self.vec.len();
         self.vec.extend(iter);
         self.observer.on_push(self.vec.iter().skip(prev_len));
@@ -116,8 +119,8 @@ where
 }
 
 impl<T, O> HookedVec<T, O>
-where
-    O: HookVec<Item = T>,
+    where
+        O: HookVec<Item=T>,
 {
     pub fn push(&mut self, item: T) {
         self.observer.on_push(once(&item));
@@ -162,8 +165,8 @@ where
     }
 
     pub fn resize(&mut self, new_len: usize, value: T)
-    where
-        T: Clone,
+        where
+            T: Clone,
     {
         let prev_len = self.vec.len();
         let is_push = match new_len.cmp(&prev_len) {
@@ -208,7 +211,9 @@ where
         self.vec.truncate(len);
     }
 
-    // pub fn swap(&mut self, a: usize, b: usize) {
-    //     self.data.swap(a, b);
-    // }
+    pub fn swap(&mut self, a: usize, b: usize) {
+        self.observer.on_update(a, &self.vec[b]);
+        self.observer.on_update(b, &self.vec[a]);
+        self.vec.swap(a, b);
+    }
 }

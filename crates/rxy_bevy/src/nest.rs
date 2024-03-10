@@ -1,7 +1,7 @@
 use crate::prelude::ElementEventIds;
-use crate::{EventViewMember, XBundle};
-use bevy_ecs::prelude::{Bundle, IntoSystem};
-use rxy_core::{XNest, XNestMapper};
+use crate::{EventViewMember, x_res, XBundle, XRes};
+use bevy_ecs::prelude::{Bundle, IntoSystem, Resource};
+use rxy_core::{InnerIvmToVm, MaybeSend, XNest, XNestMapper};
 
 impl<T> XNest for XBundle<T>
 where
@@ -66,5 +66,44 @@ where
         f: impl FnOnce(Self::Inner) -> U + Send + Clone + 'static,
     ) -> Self::MapInnerTo {
         f(self)
+    }
+}
+
+impl<T, F, X> XNest for XRes<T, F>
+where
+    T: Resource,
+    F: Fn(&T) -> X + Send + 'static,
+    X: XNest + MaybeSend + 'static,
+{
+    type Inner = X::Inner;
+    type MapInner<M> = InnerIvmToVm<Self, M>;
+
+    fn map_inner<M>(self) -> Self::MapInner<M> {
+        InnerIvmToVm::new(self)
+    }
+
+    fn is_static() -> bool {
+        X::is_static()
+    }
+}
+
+impl<T, F, X, U> XNestMapper<U> for XRes<T, F>
+where
+    T: Resource,
+    F: Fn(&T) -> X + Send + 'static,
+    U: 'static,
+    X: XNestMapper<U> + MaybeSend + 'static,
+    X::MapInnerTo: Send,
+{
+    type MapInnerTo = XRes<T, Box<dyn Fn(&T) -> X::MapInnerTo + Send>>;
+
+    fn map_inner_to(
+        self,
+        f: impl FnOnce(Self::Inner) -> U + Send + Clone + 'static,
+    ) -> Self::MapInnerTo {
+        x_res(Box::new(move |r: &T| {
+            let x = (self.f)(r);
+            x.map_inner_to(f.clone())
+        }))
     }
 }

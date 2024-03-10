@@ -69,14 +69,14 @@ where
         if view_removed {
             return;
         }
-        ctx.world.unbuild_attr::<EA>(ctx.node_id);
+        ctx.world.unset_attr::<EA>(ctx.node_id);
     }
 
     fn build(self, ctx: ViewMemberCtx<R>, _will_rebuild: bool) {
-        ctx.world.build_attr::<EA>(ctx.node_id, self.0);
+        ctx.world.set_attr::<EA>(ctx.node_id, self.0);
     }
 
     fn rebuild(self, ctx: ViewMemberCtx<R>) {
-        ctx.world.rebuild_attr::<EA>(ctx.node_id, self.0);
+        ctx.world.set_attr::<EA>(ctx.node_id, self.0);
     }
 }

@@ -10,13 +10,13 @@ pub trait HookMap {
     type Key;
     type Value;
 
-    #[inline(always)]
+    #[inline]
     fn on_insert<'a>(&'a mut self, _key: &'a Self::Key, _value: &'a Self::Value) {}
-    #[inline(always)]
+    #[inline]
     fn on_remove<'a>(&'a mut self, _key: &'a Self::Key, _value: &'a Self::Value) {}
-    #[inline(always)]
+    #[inline]
     fn on_clear(&mut self) {}
-    #[inline(always)]
+    #[inline]
     fn on_patch(&mut self, _key: &'_ Self::Key) {}
 }
 
@@ -43,22 +43,22 @@ where
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn shrink_to(&mut self, min_capacity: usize) {
         self.map.shrink_to(min_capacity);
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn shrink_to_fit(&mut self) {
         self.map.shrink_to_fit();
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn reserve(&mut self, additional: usize) {
         self.map.reserve(additional);
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn try_reserve(&mut self, additional: usize) -> Result<(), TryReserveError> {
         self.map.try_reserve(additional)
     }

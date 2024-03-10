@@ -43,7 +43,7 @@ macro_rules! define_html_elements {
     ($($ty:ident)*) => {
         count_macro::count! {
             $(
-                paste! {
+                paste::paste! {
 
                     pub struct [<element_ $ty:snake>];
                     impl ElementType<WebRenderer> for [<element_ $ty:snake>]  {
@@ -101,7 +101,7 @@ define_html_elements! {
 macro_rules! define_view_fns {
     ($($ty:ident)*) => {
         $(
-            paste! {
+            paste::paste! {
                 #[inline]
                 pub fn $ty() -> crate::WebElement<[<element_ $ty:snake>], ()> {
                     crate::WebElement::default()
@@ -117,7 +117,7 @@ pub type WebElementWithContent<E, VM> =
 macro_rules! define_view_fns_with_content {
     ($($ty:ident)*) => {
         $(
-            paste! {
+            paste::paste! {
                 #[inline]
                 pub fn $ty<VM>(
                     str: impl XNest<MapInner<MapToAttrMarker<node_value>> = VM>,

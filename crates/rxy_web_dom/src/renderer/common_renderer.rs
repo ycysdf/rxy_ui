@@ -1,4 +1,4 @@
-use crate::elements::{element_button, element_div, element_text};
+use crate::elements::{element_button, element_div, element_img, element_text};
 use crate::renderer::WebRenderer;
 use crate::WebElement;
 use rxy_core::common_renderer::CommonRenderer;
@@ -11,6 +11,7 @@ impl CommonRenderer for WebRenderer {
     type DivView = WebElement<element_div, ()>;
     type TextView<T: ElementAttrMember<Self, Self::TextContentEA>> = WebElement<element_text, (T,)>;
     type ButtonView = WebElement<element_button, ()>;
+    type ImgView = WebElement<element_img, ()>;
     type TextContentEA = node_value;
 
     fn crate_text<T>(
@@ -27,6 +28,10 @@ impl CommonRenderer for WebRenderer {
     }
 
     fn crate_button() -> Self::ButtonView {
+        WebElement::default()
+    }
+
+    fn crate_img() -> Self::ImgView {
         WebElement::default()
     }
 }

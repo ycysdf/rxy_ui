@@ -69,7 +69,7 @@ where
     }
 }
 
-#[inline(always)]
+#[inline]
 pub fn view_to_dynamic<R, V>(view: V) -> BoxedDynamicView<R>
 where
     R: Renderer,

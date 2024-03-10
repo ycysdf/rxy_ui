@@ -28,7 +28,7 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
-    commands.spawn_rxy_ui(sample2);
+    commands.spawn_view_on_root(sample2());
 }
 
 #[schema]

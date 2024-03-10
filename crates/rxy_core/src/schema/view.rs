@@ -7,7 +7,7 @@ use core::marker::PhantomData;
 use rxy_macro::IntoView;
 
 #[derive(IntoView)]
-pub struct SchemaView<R, U, P = (), M = ()>
+pub struct RendererSchemaView<R, U, P = (), M = ()>
 where
     R: Renderer,
     U: Schema<R>,
@@ -18,12 +18,11 @@ where
     props: Option<P>,
     static_values: HashMap<TypeId, BoxedPropValue>,
     slots: HashMap<TypeId, BoxedErasureView<R>>,
-    param_index_to_prop_type_id: HashMap<usize, TypeId>,
     cloneable_slots: HashMap<TypeId, BoxedCloneableErasureView<R>>,
     _marker: PhantomData<M>,
 }
 
-impl<R, U, M> Default for SchemaView<R, U, (), M>
+impl<R, U, M> Default for RendererSchemaView<R, U, (), M>
 where
     R: Renderer,
     U: Schema<R> + Default,
@@ -36,13 +35,12 @@ where
             static_values: Default::default(),
             slots: Default::default(),
             cloneable_slots: Default::default(),
-            param_index_to_prop_type_id: Default::default(),
             _marker: Default::default(),
         }
     }
 }
 
-impl<R, U, M> SchemaView<R, U, (), M>
+impl<R, U, M> RendererSchemaView<R, U, (), M>
 where
     R: Renderer,
     U: Schema<R>,
@@ -50,42 +48,40 @@ where
 {
     #[inline]
     pub fn new(u: U) -> Self {
-        SchemaView {
+        RendererSchemaView {
             u,
             props: Some(()),
             static_values: Default::default(),
             slots: Default::default(),
             cloneable_slots: Default::default(),
-            param_index_to_prop_type_id: Default::default(),
             _marker: Default::default(),
         }
     }
 }
 
-impl<R, U, P, M> SchemaView<R, U, P, M>
+impl<R, U, P, M> RendererSchemaView<R, U, P, M>
 where
     R: Renderer,
     U: Schema<R>,
     P: SchemaProps<R>,
     M: MaybeSend + 'static,
 {
-    #[inline(always)]
-    pub fn map<MU>(self, f: impl FnOnce(U) -> MU) -> SchemaView<R, MU, P, M>
+    #[inline]
+    pub fn map<MU>(self, f: impl FnOnce(U) -> MU) -> RendererSchemaView<R, MU, P, M>
     where
         MU: Schema<R>,
     {
-        SchemaView {
+        RendererSchemaView {
             u: f(self.u),
             props: self.props,
             static_values: self.static_values,
             slots: self.slots,
             cloneable_slots: self.cloneable_slots,
-            param_index_to_prop_type_id: self.param_index_to_prop_type_id,
             _marker: Default::default(),
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn indexed_slot<const I: usize>(mut self, view: impl IntoView<R>) -> Self {
         let type_id = TypeId::of::<ConstIndex<I>>();
         self.slots
@@ -93,7 +89,7 @@ where
         self
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn cloneable_indexed_slot<const I: usize>(
         mut self,
         view: impl IntoCloneableView<R>,
@@ -105,30 +101,29 @@ where
         self
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn set_indexed_prop<const I: usize, ISP, IT>(
         self,
         value: ISP,
-    ) -> SchemaView<R, U, P::Props<ConstIndex<I, ISP::Prop>>, M>
+    ) -> RendererSchemaView<R, U, P::Props<ConstIndex<I, ISP::Prop>>, M>
     where
         P::Props<ConstIndex<I, ISP::Prop>>: SchemaProps<R>,
         ISP: IntoSchemaProp<R, IT>,
         IT: MaybeSend + 'static,
     {
-        SchemaView {
+        RendererSchemaView {
             u: self.u,
             props: self
                 .props
                 .map(|n| n.add(ConstIndex::<I, ISP::Prop>(value.into_schema_prop::<I>()))),
             static_values: self.static_values,
             slots: self.slots,
-            param_index_to_prop_type_id: self.param_index_to_prop_type_id,
             cloneable_slots: self.cloneable_slots,
             _marker: Default::default(),
         }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn set_static_indexed_prop<const I: usize, ISP, IT>(mut self, value: ISP) -> Self
     where
         ISP: IntoSchemaProp<R, IT>,
@@ -228,7 +223,7 @@ where
 }
 
 pub fn schema_view_build<R, U, P, M>(
-    mut schema_view: SchemaView<R, U, P, M>,
+    mut schema_view: RendererSchemaView<R, U, P, M>,
     ctx: ViewCtx<R>,
     reserve_key: Option<ViewKeyOrDataNodeId<R, <U::View as View<R>>::Key>>,
     will_rebuild: bool,
@@ -310,7 +305,7 @@ where
     ViewKeyOrDataNodeId { data_node_id, key }
 }
 
-impl<R, U, P, M> View<R> for SchemaView<R, U, P, M>
+impl<R, U, P, M> View<R> for RendererSchemaView<R, U, P, M>
 where
     R: Renderer,
     U: Schema<R>,

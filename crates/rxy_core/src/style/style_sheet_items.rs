@@ -15,7 +15,7 @@ where
     R: Renderer,
     EA: ElementAttrType<R>,
 {
-    #[inline(always)]
+    #[inline]
     fn iter(self, _ctx: StyleSheetCtx<R>) -> impl Iterator<Item = StyleItemValue> + 'static {
         once(StyleItemValue {
             attr_id: EA::INDEX,
@@ -32,7 +32,7 @@ macro_rules! impl_style_sheet_items_for_tuple {
             R: Renderer,
             $($t: StyleSheetItems<R>),*
         {
-            #[inline(always)]
+            #[inline]
             fn iter(
                 self,
                 _ctx: StyleSheetCtx<R>,

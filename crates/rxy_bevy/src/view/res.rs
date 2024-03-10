@@ -5,42 +5,58 @@ use bevy_ecs::system::Resource;
 
 use rxy_core::{
     prelude::{ViewMember, ViewMemberCtx},
-    DeferredNodeTreeScoped, InnerIvmToVm, MaybeSend, NodeTree, Renderer, View, ViewCtx, ViewKey,
-    ViewMemberIndex, ViewMemberOrigin,
+    DeferredNodeTreeScoped, EitherExt, InnerIvmToVm, MaybeSend, NodeTree, Renderer, View, ViewCtx,
+    ViewKey, ViewMemberIndex, ViewMemberOrigin,
 };
 use rxy_core::{IntoView, XNest};
 
 use crate::{BevyRenderer, ResChangeWorldExt, TaskState};
 
-pub struct XRes<T, F, V> {
+pub struct XRes<T, F> {
     pub f: F,
-    _marker: PhantomData<(T, V)>,
+    _marker: PhantomData<T>,
+}
+
+impl<T, F> Clone for XRes<T, F>
+where
+    F: Clone,
+{
+    fn clone(&self) -> Self {
+        XRes {
+            f: self.f.clone(),
+            _marker: Default::default(),
+        }
+    }
 }
 
 fn x_res_view_build<T, F, IV>(
-    res: XRes<T, F, IV>,
+    res: XRes<T, F>,
     key: <IV::View as View<BevyRenderer>>::Key,
     state_node_id: &Entity,
     ctx: ViewCtx<BevyRenderer>,
 ) where
     T: Resource,
-    F: Fn(&T) -> IV + Clone + Send + Sync + 'static,
+    F: Fn(&T) -> IV + Send + 'static,
     IV: IntoView<BevyRenderer> + Send,
 {
     let world_scoped = ctx.world.deferred_world_scoped();
 
     let task = BevyRenderer::spawn_task({
-        let res_change_receiver = ctx.world.get_res_change_receiver::<T>();
+        let mut res_change_receiver = ctx.world.get_res_change_receiver::<T>();
         let parent = ctx.parent;
-        let f = res.f;
+        let mut f2 = Some(res.f.either_left());
         let key = key.clone();
         async move {
             while let Ok(()) = res_change_receiver.recv().await {
-                let f = f.clone();
+                let (f_sender, f_receiver) = oneshot::channel();
+                let f = f2.take().unwrap();
+                f2 = Some(f_receiver.either_right());
                 let key = key.clone();
                 world_scoped.scoped(move |world| {
                     let resource = world.resource::<T>();
+                    let f = f.map_right(|n| n.recv().unwrap()).into_inner();
                     let view = f(resource).into_view();
+                    let _ = f_sender.send(f);
                     view.rebuild(ViewCtx { world, parent }, key);
                 })
             }
@@ -50,10 +66,10 @@ fn x_res_view_build<T, F, IV>(
         .set_node_state(state_node_id, TaskState::new(task));
 }
 
-impl<T, F, IV> View<BevyRenderer> for XRes<T, F, IV>
+impl<T, F, IV> View<BevyRenderer> for XRes<T, F>
 where
     T: Resource,
-    F: Fn(&T) -> IV + Clone + Send + Sync + 'static,
+    F: Fn(&T) -> IV + Send + 'static,
     IV: IntoView<BevyRenderer> + Send,
 {
     type Key = <IV::View as View<BevyRenderer>>::Key;
@@ -99,21 +115,21 @@ where
     }
 }
 
-impl<T, F, IV> IntoView<BevyRenderer> for XRes<T, F, IV>
+impl<T, F, IV> IntoView<BevyRenderer> for XRes<T, F>
 where
     T: Resource,
-    F: Fn(&T) -> IV + Clone + Send + Sync + 'static,
+    F: Fn(&T) -> IV + Send + 'static,
     IV: IntoView<BevyRenderer> + Send,
 {
-    type View = XRes<T, F, IV>;
+    type View = XRes<T, F>;
     fn into_view(self) -> Self::View {
         self
     }
 }
 
-pub fn x_res<T, U, F>(f: F) -> XRes<T, F, U>
+pub fn x_res<T, U, F>(f: F) -> XRes<T, F>
 where
-    F: Fn(&T) -> U + Clone + Send + Sync + 'static,
+    F: Fn(&T) -> U + Send + 'static,
     T: Resource,
     U: Send + 'static,
 {
@@ -123,10 +139,10 @@ where
     }
 }
 
-fn x_res_view_member_build<T, F, VM>(res: XRes<T, F, VM>, mut ctx: ViewMemberCtx<BevyRenderer>)
+fn x_res_view_member_build<T, F, VM>(res: XRes<T, F>, mut ctx: ViewMemberCtx<BevyRenderer>)
 where
     T: Resource,
-    F: Fn(&T) -> VM + Clone + Send + Sync + 'static,
+    F: Fn(&T) -> VM + Send + 'static,
     VM: ViewMember<BevyRenderer>,
 {
     let world_scoped = ctx.world.deferred_world_scoped();
@@ -137,14 +153,19 @@ where
             world: &mut *ctx.world,
             node_id: ctx.node_id,
         };
-        let res_change_receiver = ctx.world.get_res_change_receiver::<T>();
-        let f = res.f;
+        let mut res_change_receiver = ctx.world.get_res_change_receiver::<T>();
+        let mut f2 = Some(res.f.either_left());
         async move {
             while let Ok(()) = res_change_receiver.recv().await {
-                let f = f.clone();
+                // todo: 封装、重用
+                let (f_sender, f_receiver) = oneshot::channel();
+                let f = f2.take().unwrap();
+                f2 = Some(f_receiver.either_right());
                 world_scoped.scoped(move |world| {
                     let resource = world.resource::<T>();
+                    let f = f.map_right(|n| n.recv().unwrap()).into_inner();
                     let vm = f(resource);
+                    let _ = f_sender.send(f);
                     vm.rebuild(ViewMemberCtx {
                         index: ctx.index,
                         world,
@@ -157,21 +178,21 @@ where
     ctx.set_indexed_view_member_state(TaskState::new(task));
 }
 
-impl<T, F, VM, X, M> ViewMemberOrigin<BevyRenderer> for InnerIvmToVm<XRes<T, F, X>, M>
+impl<T, F, VM, X, M> ViewMemberOrigin<BevyRenderer> for InnerIvmToVm<XRes<T, F>, M>
 where
     T: Resource,
-    F: Fn(&T) -> X + Clone + Send + Sync + 'static,
-    VM: ViewMember<BevyRenderer> + ViewMemberOrigin<BevyRenderer>,
+    F: Fn(&T) -> X + Send + 'static,
+    VM: ViewMemberOrigin<BevyRenderer>,
     X: XNest<MapInner<M> = VM> + Send + 'static,
     M: MaybeSend + 'static,
 {
     type Origin = VM::Origin;
 }
 
-impl<T, F, VM, X, M> ViewMember<BevyRenderer> for InnerIvmToVm<XRes<T, F, X>, M>
+impl<T, F, VM, X, M> ViewMember<BevyRenderer> for InnerIvmToVm<XRes<T, F>, M>
 where
     T: Resource,
-    F: Fn(&T) -> X + Clone + Send + Sync + 'static,
+    F: Fn(&T) -> X + Send + 'static,
     VM: ViewMember<BevyRenderer>,
     X: XNest<MapInner<M> = VM> + Send + 'static,
     M: MaybeSend + 'static,
@@ -195,19 +216,19 @@ where
     }
 }
 
-impl<T, F, VM> ViewMemberOrigin<BevyRenderer> for XRes<T, F, VM>
+impl<T, F, VM> ViewMemberOrigin<BevyRenderer> for XRes<T, F>
 where
     T: Resource,
-    F: Fn(&T) -> VM + Clone + Send + Sync + 'static,
+    F: Fn(&T) -> VM + Send + 'static,
     VM: ViewMember<BevyRenderer> + ViewMemberOrigin<BevyRenderer>,
 {
     type Origin = VM::Origin;
 }
 
-impl<T, F, VM> ViewMember<BevyRenderer> for XRes<T, F, VM>
+impl<T, F, VM> ViewMember<BevyRenderer> for XRes<T, F>
 where
     T: Resource,
-    F: Fn(&T) -> VM + Clone + Send + Sync + 'static,
+    F: Fn(&T) -> VM + Send + 'static,
     VM: ViewMember<BevyRenderer>,
 {
     fn count() -> ViewMemberIndex {

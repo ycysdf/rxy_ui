@@ -258,7 +258,7 @@ where
     }
 }
 
-#[inline(always)]
+#[inline]
 pub fn x_stream<S>(stream: S) -> XStream<S>
 where
     S: Stream + MaybeSend + 'static,
@@ -269,7 +269,7 @@ where
         already_end: false,
     }
 }
-#[inline(always)]
+#[inline]
 pub fn x_stream_immediate<S>(mut stream: S) -> XStream<S>
 where
     S: Stream + Unpin + 'static,

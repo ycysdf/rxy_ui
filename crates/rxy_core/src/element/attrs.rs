@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use paste::paste;
 
 #[macro_export]
@@ -56,7 +57,7 @@ macro_rules! attrs_fn_define {
             })*
         ]
     ) => {
-        paste! {
+        paste::paste! {
             pub trait [<$name:camel ViewBuilder>]: $crate::MemberOwner<$renderer> + Sized {
                 $(
                     #[inline]
@@ -72,6 +73,25 @@ macro_rules! attrs_fn_define {
 
             impl<T> [<$name:camel ViewBuilder>] for T
                 where T: $crate::MemberOwner<$renderer$(,E=$element)?>
+            {}
+        }
+
+        paste::paste! {
+            pub trait [<$name:camel ElementViewBuilder>]: $crate::ElementView<$renderer> + Sized {
+                $(
+                    #[inline]
+                    fn [<$attr_name:snake>]<T>(self, value: impl $crate::XNest<MapInner<$crate::MapToAttrMarker<$attr_ty>> = T>) -> Self::AddMember<T>
+                    where
+                        T: $crate::ElementAttrMember<$renderer, $attr_ty>,
+                        (Self::VM, T): $crate::ViewMember<$renderer>
+                    {
+                        self.member(value.map_inner::<$crate::MapToAttrMarker<$attr_ty>>())
+                    }
+                )*
+            }
+
+            impl<T> [<$name:camel ElementViewBuilder>] for T
+                where T: $crate::ElementView<$renderer$(,E=$element)?>
             {}
         }
     };
@@ -130,12 +150,14 @@ macro_rules! impl_attrs_for_element_type {
             $($attr:ident)*
         ]
     ) => {
-        impl $crate::ElementTypeAttrs<$renderer> for $element {
-            const ATTRS: &'static [&'static dyn $crate::ElementAttrUntyped<$renderer>] = &[
-                $(
-                    &all_attrs::$attr,
-                )*
-            ];
+        paste::paste! {
+            impl $crate::ElementTypeAttrs<$renderer> for $element {
+                const ATTRS: &'static [&'static dyn $crate::ElementAttrUntyped<$renderer>] = &[
+                    $(
+                        &[<$element _attrs>]::$attr
+                    ),*
+                ];
+            }
         }
     };
 }

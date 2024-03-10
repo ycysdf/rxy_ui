@@ -83,7 +83,7 @@ pub fn impl_into_view(input: TokenStream) -> TokenStream {
         impl #impl_generics IntoView<#r> for #ty #where_clause {
             type View = #ty;
 
-            #[inline(always)]
+            #[inline]
             fn into_view(self) -> Self::View{
                 self
             }

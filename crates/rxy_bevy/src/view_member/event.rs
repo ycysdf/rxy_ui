@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 
 use bevy_ecs::prelude::IntoSystem;
 use bevy_ecs::system::SystemId;
-use bevy_input::prelude::KeyCode;
+use bevy_input::keyboard::KeyCode;
 use bevy_utils::tracing::error;
 
 use rxy_core::{MemberOwner, ViewMember, ViewMemberCtx, ViewMemberOrigin};
@@ -15,9 +15,9 @@ use crate::BevyRenderer;
 pub struct FocusInputEventMemberState<T>(pub SystemId, pub T);
 
 pub struct EventViewMember<T, S, M> {
-    element_event_ids: T,
-    system: S,
-    _marker: PhantomData<M>,
+    pub element_event_ids: T,
+    pub system: S,
+    pub _marker: PhantomData<M>,
 }
 
 impl<T, S, M> ViewMemberOrigin<BevyRenderer> for EventViewMember<T, S, M>
