@@ -38,7 +38,7 @@ pub fn schema_common<'a, U>(
         proc_macro2::TokenStream,
         Option<&WhereClause>,
         Punctuated<&Ident, Comma>,
-        proc_macro2::TokenStream,
+        (proc_macro2::TokenStream,Ident),
     ) -> U,
 ) -> (proc_macro2::TokenStream, U) {
     let schema_snack_name = schema_name.to_case(Case::Snake);
@@ -69,10 +69,10 @@ pub fn schema_common<'a, U>(
         Some(quote! { #schema_generic_params_with_bound , })
     };
     let ty_generics_turbofish = ty_generics.as_turbofish();
+    let schema_ident = Ident::new(&schema_pascal_name, Span::call_site());
     let schema_id = {
-        let ident = Ident::new(&schema_pascal_name, Span::call_site());
         quote! {
-            #ident #ty_generics_turbofish
+            #schema_ident #ty_generics_turbofish
         }
     };
 
@@ -426,7 +426,7 @@ pub fn schema_common<'a, U>(
         renderer,
         where_clause,
         schema_generic_params,
-        schema_id,
+        (schema_id,schema_ident),
     );
 
     (
@@ -465,7 +465,7 @@ pub fn struct_schema(
          renderer,
          where_clause,
          schema_generic_params,
-         schema_id| {
+         (schema_id,_)| {
             let fields_assign = input_item
                 .fields
                 .iter()
@@ -553,7 +553,7 @@ pub fn fn_schema(_input: TokenStream, item: TokenStream) -> TokenStream {
          renderer,
          where_clause,
          schema_generic_params,
-         schema_id| {
+         (_,schema_id)| {
             quote! {
                 #[allow(unused_parens)]
                 #[derive(Clone, Copy, Default, Debug)]
