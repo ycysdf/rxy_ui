@@ -15,6 +15,7 @@ pub use virtual_container::*;
 pub use x_if::*;
 // pub use r#static::*;
 pub use x_iter::*;
+pub use x_world::*;
 // pub use reflect::*;
 #[cfg(feature = "x_iter_source")]
 pub use x_iter_source::*;
@@ -46,4 +47,5 @@ mod x_iter_source;
 pub use reactive::*;
 #[cfg(all(feature = "xy_reactive", feature = "send_sync"))]
 mod reactive;
+mod x_world;
 // mod x_if2;

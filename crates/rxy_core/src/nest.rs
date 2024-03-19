@@ -771,3 +771,92 @@ pub mod builder {
         }
     }
 }
+pub mod world {
+    use crate::{InnerIvmToVm, MaybeSend, Renderer, ViewMember, ViewMemberCtx, XWorld, XNest, XNestMapper, RendererWorld, x_world, ViewMemberOrigin, ViewMemberIndex};
+    use alloc::boxed::Box;
+
+    impl<R, F, X> XNest for XWorld<R, F>
+    where
+        F: FnOnce(&mut RendererWorld<R>) -> X + MaybeSend + 'static,
+        R: Renderer,
+        X: XNest,
+    {
+        type Inner = X::Inner;
+        type MapInner<M> = InnerIvmToVm<Self, M>;
+
+        fn map_inner<M>(self) -> Self::MapInner<M> {
+            InnerIvmToVm::new(self)
+        }
+
+        fn is_static() -> bool {
+            X::is_static()
+        }
+    }
+    impl<R, F, X, U> XNestMapper<U> for XWorld<R, F>
+    where
+        U: 'static,
+        F: FnOnce(&mut RendererWorld<R>) -> X + MaybeSend + 'static,
+        R: Renderer,
+        X: XNestMapper<U>,
+    {
+        #[cfg(feature = "send_sync")]
+        type MapInnerTo = XWorld<
+            R,
+            Box<dyn FnOnce(&mut RendererWorld<R>) -> X::MapInnerTo + MaybeSend + 'static>,
+        >;
+        #[cfg(not(feature = "send_sync"))]
+        type MapInnerTo =
+            XWorld<R, Box<dyn FnOnce(&mut RendererWorld<R>) -> X::MapInnerTo + 'static>>;
+
+        #[inline]
+        fn map_inner_to(
+            self,
+            f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
+        ) -> Self::MapInnerTo {
+            x_world(Box::new(move |world| {
+                self.0(world).map_inner_to(f.clone())
+            }))
+        }
+    }
+
+    impl<R, F, VM, X, M> ViewMemberOrigin<R> for InnerIvmToVm<XWorld<R, F>, M>
+    where
+        F: FnOnce(&mut RendererWorld<R>) -> X + MaybeSend + 'static,
+        R: Renderer,
+        X: XNest<MapInner<M> = VM>,
+        VM: ViewMemberOrigin<R>,
+        M: MaybeSend + 'static,
+    {
+        type Origin = VM::Origin;
+    }
+
+    impl<R, F, M, VM, X> ViewMember<R> for InnerIvmToVm<XWorld<R, F>, M>
+    where
+        F: FnOnce(&mut RendererWorld<R>) -> X + MaybeSend + 'static,
+        R: Renderer,
+        X: XNest<MapInner<M> = VM>,
+        VM: ViewMember<R>,
+        M: MaybeSend + 'static,
+    {
+        #[inline]
+        fn count() -> ViewMemberIndex {
+            VM::count()
+        }
+
+        #[inline]
+        fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
+            VM::unbuild(ctx, view_removed)
+        }
+
+        #[inline]
+        fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool) {
+            x_world(|world| self.0 .0(world).map_inner::<M>())
+                .build(ctx, will_rebuild)
+        }
+
+        #[inline]
+        fn rebuild(self, ctx: ViewMemberCtx<R>) {
+            x_world(|world| self.0 .0(world).map_inner::<M>()).rebuild(ctx)
+        }
+    }
+}

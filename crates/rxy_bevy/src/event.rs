@@ -5,14 +5,17 @@ use core::{
     ops::{Deref, DerefMut},
 };
 use std::iter::once;
+use std::sync::Arc;
 
 use bevy_app::PreUpdate;
+use bevy_ecs::entity::EntityHashMap;
 use bevy_ecs::{
     prelude::{Commands, Res, Resource, World},
     system::SystemId,
 };
-use bevy_ecs::entity::EntityHashMap;
-use bevy_input::{gamepad::GamepadButton, keyboard::KeyCode, mouse::MouseButton, InputSystem, ButtonInput};
+use bevy_input::{
+    gamepad::GamepadButton, keyboard::KeyCode, mouse::MouseButton, ButtonInput, InputSystem,
+};
 use bevy_mod_picking::prelude::*;
 use bevy_reflect::Reflect;
 use bevy_utils::tracing::error;
@@ -417,7 +420,7 @@ where
     }
 }
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Reflect, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum ElementEventId {
     NoBubble {
         focus_input_event: FocusInputEvent,
@@ -464,7 +467,7 @@ impl BubblePointerEvent {
     }
 }
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Reflect, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum FocusInputTriggerWay {
     JustPressed,
     JustReleased,
@@ -600,6 +603,30 @@ impl ElementEventIds for ElementEventId {
         once(self)
     }
 }
+impl ElementEventIds for Vec<ElementEventId> {
+    fn iter_event_ids(self) -> impl Iterator<Item = ElementEventId> + Send + 'static {
+        self.into_iter()
+    }
+}
+impl ElementEventIds for Arc<Vec<ElementEventId>> {
+    fn iter_event_ids(self) -> impl Iterator<Item = ElementEventId> + Send + 'static {
+        pub struct IteratorWrapper(Arc<Vec<ElementEventId>>, usize);
+
+        impl Iterator for IteratorWrapper {
+            type Item = ElementEventId;
+
+            fn next(&mut self) -> Option<Self::Item> {
+                let r = self.0.get(self.1).map(|n| *n);
+                if r.is_some() {
+                    self.1 += 1;
+                }
+                r
+            }
+        }
+
+        IteratorWrapper(self, 0)
+    }
+}
 
 impl ElementEventIds for BubblePointerEvent {
     fn iter_event_ids(self) -> impl Iterator<Item = ElementEventId> + Send + 'static {
@@ -610,7 +637,7 @@ impl ElementEventIds for BubblePointerEvent {
     }
 }
 
-#[derive(Clone, Debug, PartialEq,Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IntoIteratorWrapper<T>(pub T);
 
 impl<T> ElementEventIds for IntoIteratorWrapper<T>

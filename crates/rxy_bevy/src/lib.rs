@@ -29,6 +29,9 @@ pub mod vec_data_source;
 mod view;
 mod view_member;
 mod world_ext;
+mod res;
+
+pub use res::*;
 
 pub type FnSchemaView<F, P = ()> =
     RendererSchemaView<BevyRenderer, FnSchema<IntoViewSchemaFnWrapper<F, BevyRenderer>, P>, (), ()>;
@@ -45,6 +48,7 @@ pub mod all_attrs {
 }
 
 pub mod prelude {
+    pub use crate::x_res_once;
     pub use bevy_ui::prelude::Val;
     pub use rxy_bevy_macro::{ElementSchema, Schema};
 
