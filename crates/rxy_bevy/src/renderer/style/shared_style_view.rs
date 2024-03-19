@@ -37,8 +37,8 @@ impl SchemaCtxExt for SchemaCtx {
     }
 }
 
-pub trait TypedStlyeWorldExt {
-    fn spawn_tpyed_style<SS>(
+pub trait TypedStyleWorldExt {
+    fn spawn_typed_style<SS>(
         &mut self,
         reserve_key: Option<RendererNodeId<BevyRenderer>>,
         type_id: TypeId,
@@ -55,8 +55,8 @@ pub trait TypedStlyeWorldExt {
         SS: StyleSheets<BevyRenderer>;
 }
 
-impl TypedStlyeWorldExt for World {
-    fn spawn_tpyed_style<SS>(
+impl TypedStyleWorldExt for World {
+    fn spawn_typed_style<SS>(
         &mut self,
         reserve_key: Option<RendererNodeId<BevyRenderer>>,
         type_id: TypeId,
@@ -105,7 +105,7 @@ impl TypedStlyeWorldExt for World {
         }
         (
             true,
-            self.spawn_tpyed_style(None, typed_style.type_id(), style_f()),
+            self.spawn_typed_style(None, typed_style.type_id(), style_f()),
         )
     }
 }
@@ -132,7 +132,7 @@ where
         _will_rebuild: bool,
     ) -> Self::Key {
         ctx.world
-            .spawn_tpyed_style(None, self.type_id, self.style_sheets);
+            .spawn_typed_style(None, self.type_id, self.style_sheets);
     }
 
     fn rebuild(self, _ctx: ViewCtx<BevyRenderer>, _key: Self::Key) {
