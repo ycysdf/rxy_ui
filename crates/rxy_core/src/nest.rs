@@ -751,7 +751,7 @@ pub mod builder {
     {
         #[inline]
         fn count() -> ViewMemberIndex {
-            1
+            VM::count()
         }
 
         #[inline]

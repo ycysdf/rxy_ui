@@ -109,7 +109,7 @@ where
     VM: ViewMember<R>,
 {
     fn count() -> ViewMemberIndex {
-        1
+        VM::count()
     }
 
     fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool) {
