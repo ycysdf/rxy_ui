@@ -1,6 +1,5 @@
 use bevy::prelude::Color;
 use rxy_bevy::event::{ElementEventId, ElementEventIds};
-use rxy_macro::TypedStyle;
 
 mod checkbox;
 mod select;
