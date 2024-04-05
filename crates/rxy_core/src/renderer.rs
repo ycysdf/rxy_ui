@@ -2,6 +2,7 @@ use crate::utils::{HashMap, SyncCell};
 use alloc::borrow::Cow;
 use core::fmt::Debug;
 use core::future::Future;
+use core::any::TypeId;
 
 use crate::element::{AttrIndex, ElementAttrType};
 use crate::{ElementType, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, ViewKey};
@@ -74,22 +75,13 @@ pub trait NodeTree<R>
 where
     R: Renderer<NodeTree = Self>,
 {
-    fn reserve_node_id_or_spawn(&mut self, parent: RendererNodeId<R>, spawn: bool)-> RendererNodeId<R> {
-        if spawn {
-            self.spawn_placeholder("[Reserve]", Some(&parent), None)
-        } else {
-            self.reserve_node_id()
-        }
-    }
-    fn prepare_set_attr_and_get_is_init(
-        &mut self,
-        node_id: &RendererNodeId<R>,
-        attr_index: AttrIndex,
-    ) -> bool;
+    fn recycle_node<K: ViewKey<R>>(&mut self, key: &K);
+    fn cancel_recycle_node<K: ViewKey<R>>(&mut self, key: &K);
 
     fn set_attr<A: ElementAttrType<R>>(&mut self, node_id: RendererNodeId<R>, value: A::Value);
     fn unset_attr<A: ElementAttrType<R>>(&mut self, node_id: RendererNodeId<R>);
 
+    // TODO: rename
     fn deferred_world_scoped(&self) -> impl DeferredNodeTreeScoped<R>;
     fn get_node_state_mut<S: MaybeSend + MaybeSync + 'static>(
         &mut self,
@@ -112,8 +104,17 @@ where
         state: S,
     );
 
+    fn scoped_type_state<S: Send + Sync + Clone + 'static, U>(
+        &self,
+        type_id: TypeId,
+        f: impl FnOnce(Option<&S>) -> U,
+    ) -> U;
+
+    // fn set_type_state_ref<S: MaybeSend + MaybeSync + 'static>(&mut self, type_id: TypeId, state: S);
+
     fn exist_node_id(&mut self, node_id: &RendererNodeId<R>) -> bool;
 
+    // TODO: delete
     fn reserve_node_id(&mut self) -> RendererNodeId<R>;
 
     fn spawn_placeholder(
@@ -123,8 +124,10 @@ where
         reserve_node_id: Option<RendererNodeId<R>>,
     ) -> RendererNodeId<R>;
 
+    // TODO: delete
     fn ensure_spawn(&mut self, reserve_node_id: RendererNodeId<R>);
 
+    // TODO: delete
     fn spawn_empty_node(
         &mut self,
         parent: Option<&RendererNodeId<R>>,
@@ -155,6 +158,23 @@ where
     fn set_visibility(&mut self, hidden: bool, node_id: &RendererNodeId<R>);
 
     fn get_visibility(&self, node_id: &RendererNodeId<R>) -> bool;
+
+    fn reserve_node_id_or_spawn(
+        &mut self,
+        parent: RendererNodeId<R>,
+        spawn: bool,
+    ) -> RendererNodeId<R> {
+        if spawn {
+            self.spawn_placeholder("[Reserve]", Some(&parent), None)
+        } else {
+            self.reserve_node_id()
+        }
+    }
+    fn prepare_set_attr_and_get_is_init(
+        &mut self,
+        node_id: &RendererNodeId<R>,
+        attr_index: AttrIndex,
+    ) -> bool;
 
     fn node_state_scoped<S: MaybeSend + MaybeSync + 'static, U>(
         &mut self,
@@ -190,6 +210,10 @@ where
             self.set_node_state(node_id, S::default());
         }
         self.get_node_state_mut::<S>(node_id).unwrap()
+    }
+
+    fn get_type_state<S: Send + Sync + Clone + 'static>(&self, type_id: TypeId) -> Option<S> {
+        self.scoped_type_state(type_id, |n| n.cloned())
     }
 }
 

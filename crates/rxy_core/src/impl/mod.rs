@@ -48,4 +48,5 @@ pub use reactive::*;
 #[cfg(all(feature = "xy_reactive", feature = "send_sync"))]
 mod reactive;
 mod x_world;
+mod recyclable;
 // mod x_if2;
