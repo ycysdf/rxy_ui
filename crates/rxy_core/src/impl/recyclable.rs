@@ -32,7 +32,7 @@ where
     R: Renderer,
     K: ViewKey<R>,
 {
-    fn remove(mut self, world: &mut RendererWorld<R>) {
+    fn remove(self, world: &mut RendererWorld<R>) {
         world.recycle_node(&self.key);
         if let Some(key) = self.key.state_node_id() {
             let _ = SyncCell::to_inner(
@@ -128,7 +128,7 @@ where
     type Key = RecyclableViewKey<R, V::Key>;
 
     fn build(
-        mut self,
+        self,
         ctx: ViewCtx<R>,
         reserve_key: Option<Self::Key>,
         will_rebuild: bool,

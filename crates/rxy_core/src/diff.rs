@@ -5,7 +5,6 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::clone::Clone;
 use core::cmp::Eq;
-use core::default::Default;
 use core::fmt::Debug;
 use core::{
     hash::{BuildHasherDefault, Hash},

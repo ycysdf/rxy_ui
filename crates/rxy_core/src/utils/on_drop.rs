@@ -6,6 +6,7 @@ pub struct OnDrop<F: FnOnce()> {
 
 impl<F: FnOnce()> OnDrop<F> {
     /// Returns an object that will invoke the specified callback when dropped.
+    #[allow(dead_code)]
     pub fn new(callback: F) -> Self {
         Self {
             callback: ManuallyDrop::new(callback),

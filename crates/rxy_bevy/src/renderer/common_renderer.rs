@@ -1,9 +1,13 @@
-use crate::elements::{element_div, element_img, element_span, element_span_attrs};
-use crate::{x_bundle, BevyElement, BevyRenderer, Focusable, XBundle};
-use bevy_ui::prelude::Button;
 use bevy_ui::{FocusPolicy, Interaction};
-use rxy_core::common_renderer::CommonRenderer;
+use bevy_ui::prelude::Button;
+
 use rxy_core::{define_common_view_fns, ElementAttrMember, ElementView, MapToAttrMarker, XNest};
+use rxy_core::common_renderer::CommonRenderer;
+
+use crate::{BevyRenderer, Focusable, x_bundle};
+#[cfg(feature = "dynamic_element")]
+use crate::DynamicBevyElement;
+use crate::elements::{element_div, element_img, element_span, element_span_attrs};
 
 define_common_view_fns!(BevyRenderer);
 
@@ -43,8 +47,6 @@ impl CommonRenderer for BevyRenderer {
         BevyElement::default()
     }
 }
-#[cfg(feature = "dynamic_element")]
-use crate::DynamicBevyElement;
 
 #[cfg(feature = "dynamic_element")]
 impl CommonRenderer for BevyRenderer {

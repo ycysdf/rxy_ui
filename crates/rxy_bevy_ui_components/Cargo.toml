@@ -1,0 +1,12 @@
+[package]
+name = "rxy_bevy_ui_components"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rxy_ui = { path = "../..", default-features = false, features = ["bevy", "signal"] }
+#rxy_bevy_macro.wrokspace =true
+bevy_ui.workspace = true
+bevy_render.workspace = true
+bevy_ecs.workspace = true
+bevy_reflect.workspace = true

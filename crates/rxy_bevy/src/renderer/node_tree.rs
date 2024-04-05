@@ -10,7 +10,6 @@ use bevy_ecs::system::Resource;
 use bevy_ecs::world::FromWorld;
 use bevy_hierarchy::{BuildWorldChildren, DespawnRecursiveExt};
 use bevy_hierarchy::{Children, Parent};
-use bevy_reflect::TypeRegistry;
 use bevy_render::prelude::Visibility;
 use bevy_ui::prelude::NodeBundle;
 use bevy_ui::Display;
