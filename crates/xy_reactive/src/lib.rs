@@ -15,6 +15,9 @@ pub mod signal_traits;
 mod source;
 pub mod spawn;
 pub mod store;
+mod signal_get_ext;
+pub use signal_get_ext::*;
+
 use crate::source::AnySubscriber;
 pub use arena::{Owner, Root};
 use futures::{Future, Stream};
@@ -33,6 +36,7 @@ pub mod prelude {
         signal_traits::*,
         store::{StoreField, StoreFieldIndex, StoreFieldIterator},
         Root,
+        BoolSignalExt
     };
 }
 
