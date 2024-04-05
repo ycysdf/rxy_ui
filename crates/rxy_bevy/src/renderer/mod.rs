@@ -8,10 +8,7 @@ use bevy_reflect::Reflect;
 use bevy_tasks::Task;
 
 pub use composite_attrs::*;
-use rxy_core::{
-    DeferredNodeTreeScoped, Element, ElementAttr, ElementTypeUnTyped, ElementViewChildren,
-    Renderer, RendererWorld,
-};
+use rxy_core::{DeferredNodeTreeScoped, Element, ElementAttr, ElementTypeUnTyped, ElementViewChildren, Renderer, RendererWorld};
 pub use text_styled_element::*;
 
 use crate::elements::element_div;
@@ -41,6 +38,8 @@ pub fn view_element_type() -> &'static dyn ElementTypeUnTyped<BevyRenderer> {
 }
 
 pub type BevyElement<E, VM> = Element<BevyRenderer, E, VM>;
+#[cfg(feature = "dynamic_element")]
+pub type DynamicBevyElement<E> = rxy_core::DynamicElement<BevyRenderer,E>;
 
 pub type BevyElementViewChildren<CV, E, VM> =
     ElementViewChildren<BevyRenderer, Element<BevyRenderer, E, VM>, CV>;

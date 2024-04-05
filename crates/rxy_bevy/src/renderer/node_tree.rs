@@ -1,11 +1,16 @@
 use core::cmp::Ordering;
+use std::any::TypeId;
 use std::borrow::Cow;
 
 use bevy_core::Name;
-use bevy_ecs::prelude::Entity;
+use bevy_ecs::component::Component;
 use bevy_ecs::prelude::World;
+use bevy_ecs::prelude::{AppTypeRegistry, Entity};
+use bevy_ecs::system::Resource;
+use bevy_ecs::world::FromWorld;
 use bevy_hierarchy::{BuildWorldChildren, DespawnRecursiveExt};
 use bevy_hierarchy::{Children, Parent};
+use bevy_reflect::TypeRegistry;
 use bevy_render::prelude::Visibility;
 use bevy_ui::prelude::NodeBundle;
 use bevy_ui::Display;
@@ -13,6 +18,7 @@ use bevy_ui::Style;
 
 use rxy_core::{
     AttrIndex, DeferredNodeTreeScoped, ElementAttrType, ElementType, NodeTree, RendererNodeId,
+    ViewKey,
 };
 
 use crate::{
@@ -21,6 +27,17 @@ use crate::{
 };
 
 impl NodeTree<BevyRenderer> for World {
+    fn scoped_type_state<S: Send + Sync + Clone + 'static, U>(
+        &self,
+        type_id: TypeId,
+        f: impl FnOnce(Option<&S>) -> U,
+    ) -> U {
+        f(self
+            .resource::<AppTypeRegistry>()
+            .read()
+            .get_type_data::<S>(type_id))
+    }
+
     fn prepare_set_attr_and_get_is_init(
         &mut self,
         node_id: &RendererNodeId<BevyRenderer>,
@@ -244,5 +261,64 @@ impl NodeTree<BevyRenderer> for World {
     fn get_visibility(&self, node_id: &RendererNodeId<BevyRenderer>) -> bool {
         self.get::<Visibility>(*node_id)
             .is_some_and(|n| *n == Visibility::Hidden)
+    }
+
+    fn recycle_node<K: ViewKey<BevyRenderer>>(&mut self, key: &K) {
+        let Some(first_node) = key.first_node_id(self) else {
+            return;
+        };
+        let parent = self.get_parent(&first_node).unwrap();
+        let placeholder = self
+            .spawn((
+                NodeBundle {
+                    visibility: Visibility::Hidden,
+                    ..NodeBundle::default()
+                },
+                Name::new("[Recycle Node Placeholder]"),
+            ))
+            .id();
+
+        self.insert_before(Some(&parent), Some(&first_node), &[placeholder]);
+        self.init_resource::<RecycleNodeContainer>();
+        let recycle_node_container = self.resource::<RecycleNodeContainer>().0;
+        self.set_node_state(&first_node, RecycledNode { placeholder });
+        key.set_visibility(self, true);
+        key.insert_before(self, Some(&recycle_node_container), None);
+    }
+
+    fn cancel_recycle_node<K: ViewKey<BevyRenderer>>(&mut self, key: &K) {
+        let Some(first_node) = key.first_node_id(self) else {
+            return;
+        };
+        let placeholder = self
+            .take_node_state::<RecycledNode>(&first_node)
+            .unwrap()
+            .placeholder;
+        key.insert_before(self, None, Some(&placeholder));
+        key.set_visibility(self, false);
+    }
+}
+
+#[derive(Component)]
+pub struct RecycledNode {
+    placeholder: Entity,
+}
+
+#[derive(Resource, Copy, Clone)]
+pub struct RecycleNodeContainer(Entity);
+
+impl FromWorld for RecycleNodeContainer {
+    fn from_world(world: &mut World) -> Self {
+        Self(
+            world
+                .spawn((
+                    NodeBundle {
+                        visibility: Visibility::Hidden,
+                        ..NodeBundle::default()
+                    },
+                    Name::new("[Recycle Node Container]"),
+                ))
+                .id(),
+        )
     }
 }

@@ -143,10 +143,10 @@ where
         Self(Some(value), self.1)
     }
 
-    pub fn map<U>(self, map_f: impl Fn(T) -> U + MaybeSend + 'static) -> RebuildFnReceiver<R, U> {
+    pub fn map<U>(self, mut map_f: impl FnMut(T) -> U + MaybeSend + 'static) -> RebuildFnReceiver<R, U> {
         let rebuild_fn_sender_fn = self.1;
         RebuildFnReceiver(
-            self.0.map(&map_f),
+            self.0.map(&mut map_f),
             Box::new(move |mut f| {
                 rebuild_fn_sender_fn(Box::new(move |iv, world| f(map_f(iv), world)))
             }),

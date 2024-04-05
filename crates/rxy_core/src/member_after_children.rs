@@ -1,6 +1,6 @@
 use crate::{
-    member_builder, BuildFlags, ElementView, MaybeSend, MemberOwner,
-    Renderer, RendererNodeId, SoloView, View, ViewCtx, ViewMember, ViewMemberCtx, XBuilder,
+    member_builder, BuildFlags, ElementView, MaybeSend, MemberOwner, Renderer, RendererNodeId,
+    SoloView, View, ViewCtx, ViewMember, ViewMemberCtx, ViewMemberIndex, XBuilder,
 };
 use rxy_macro::IntoView;
 
@@ -30,6 +30,7 @@ where
         reserve_key: Option<Self::Key>,
         will_rebuild: bool,
     ) -> Self::Key {
+        let member_count = self.element_view.member_count();
         let key = self.element_view.build(
             ViewCtx {
                 world: &mut *ctx.world,
@@ -40,7 +41,7 @@ where
         );
         self.view_members.build(
             ViewMemberCtx {
-                index: <EV::VM as ViewMember<R>>::count(),
+                index: member_count,
                 world: ctx.world,
                 node_id: EV::element_node_id(&key).clone(),
             },
@@ -51,7 +52,7 @@ where
 
     fn rebuild(self, ctx: ViewCtx<R>, key: Self::Key) {
         self.view_members.rebuild(ViewMemberCtx {
-            index: <EV::VM as ViewMember<R>>::count(),
+            index: self.element_view.member_count(),
             world: &mut *ctx.world,
             node_id: EV::element_node_id(&key).clone(),
         });
@@ -77,10 +78,13 @@ where
     VM: ViewMember<R>,
 {
     type E = EV::E;
-    type VM = EV::VM;
     type AddMember<T: ViewMember<R>> = MemberAfterChildren<R, EV::AddMember<T>, VM>;
     type SetMembers<T: ViewMember<R> + MemberOwner<R>> =
         MemberAfterChildren<R, EV::SetMembers<T>, VM>;
+
+    fn member_count(&self) -> ViewMemberIndex {
+        self.element_view.member_count()
+    }
 
     fn member<T>(self, member: T) -> Self::AddMember<T>
     where

@@ -1,16 +1,20 @@
 use alloc::boxed::Box;
+use core::default::Default;
 use core::marker::PhantomData;
+use oneshot::TryRecvError;
 
+use crate::r#impl::recyclable::{RecyclableView, RecyclableViewKey};
 use crate::{
-    ConstIndex, Either, EitherExt, FnSchema, IntoSchemaProp, IntoView, MaybeSend, RebuildFnReceiver,
-    Renderer, schema_view, RendererSchemaView, ToMutableWrapper, VirtualContainer,
+    into_view, schema_view, ConstIndex, Either, EitherExt, FnSchema, IntoSchemaProp, IntoView,
+    MaybeSend, RebuildFnReceiver, Renderer, RendererSchemaView, ToIntoView, ToMutableWrapper, View,
+    ViewKey, VirtualContainer,
 };
 
 pub struct XIf<R, C, V, V2 = ()>
 where
     R: Renderer,
-    V: IntoView<R> + Clone,
-    V2: IntoView<R> + Clone,
+    V: IntoView<R>,  /* + Clone*/
+    V2: IntoView<R>, /* + Clone*/
 {
     view: V,
     else_view: V2,
@@ -22,9 +26,9 @@ impl<R, C, V> XIf<R, C, V, ()>
 where
     R: Renderer,
     C: MaybeSend + 'static,
-    V: IntoView<R> + Clone,
+    V: IntoView<R>, /* + Clone*/
 {
-    pub fn else_view<V2: IntoView<R> + Clone>(self, else_view: V2) -> XIf<R, C, V, V2> {
+    pub fn else_view<V2: IntoView<R> /* + Clone*/>(self, else_view: V2) -> XIf<R, C, V, V2> {
         XIf {
             view: self.view,
             else_view,
@@ -60,13 +64,20 @@ pub fn else_if<EV, EC>(self, view: EV, c: EC) -> IfView<R, C, V, IfView<R, EC, E
     }
 */
 
+pub type IfRecyclableView<R, V> = VirtualContainer<
+    R,
+    Either<
+        ToMutableWrapper<RecyclableView<R, V>>,
+        ToMutableWrapper<RecyclableViewKey<R, <V as View<R>>::Key>>,
+    >,
+>;
 pub type IfResultView<R, V, EV> = RebuildFnReceiver<
     R,
     VirtualContainer<
         R,
         Either<
-            ToMutableWrapper<<V as IntoView<R>>::View>,
-            ToMutableWrapper<<EV as IntoView<R>>::View>,
+            ToMutableWrapper<RecyclableView<R, <V as IntoView<R>>::View>>,
+            ToMutableWrapper<RecyclableView<R, <EV as IntoView<R>>::View>>,
         >,
     >,
 >;
@@ -82,8 +93,8 @@ impl<R, C, IV, EV> IntoView<R> for XIf<R, C, IV, EV>
 where
     R: Renderer,
     C: IntoSchemaProp<R, bool> + MaybeSend + 'static,
-    IV: IntoView<R> + MaybeSend + Clone,
-    EV: IntoView<R> + MaybeSend + Clone,
+    IV: IntoView<R> + MaybeSend, /* + Clone*/
+    EV: IntoView<R> + MaybeSend, /* + Clone*/
 {
     type View = RendererSchemaView<
         R,
@@ -101,7 +112,7 @@ pub fn x_if<R, IV, C>(condition: C, v: IV) -> XIf<R, C, IV>
 where
     R: Renderer,
     C: IntoSchemaProp<R, bool> + MaybeSend + 'static,
-    IV: IntoView<R> + MaybeSend + Clone,
+    IV: IntoView<R> + MaybeSend, /* + Clone*/
 {
     XIf {
         view: v,
@@ -113,7 +124,7 @@ where
 
 pub fn x_if_else<R, V, EV, C>(
     condition: C,
-    v: V,
+    view: V,
     else_view: EV,
 ) -> RendererSchemaView<
     R,
@@ -125,17 +136,60 @@ pub fn x_if_else<R, V, EV, C>(
 >
 where
     R: Renderer,
-    V: IntoView<R> + Clone + MaybeSend,
-    EV: IntoView<R> + Clone + MaybeSend,
+    V: IntoView<R> /* + Clone*/ + MaybeSend,
+    EV: IntoView<R> /* + Clone*/ + MaybeSend,
     C: IntoSchemaProp<R, bool> + 'static,
 {
     schema_view(
         move |condition: RebuildFnReceiver<R, bool>| {
+            let mut view_receiver: Option<oneshot::Receiver<<V::View as View<R>>::Key>> = None;
+            let mut else_view_receiver: Option<oneshot::Receiver<<EV::View as View<R>>::Key>> =
+                None;
+            let mut view = Some(view);
+            let mut else_view = Some(else_view);
             condition.map(move |condition| {
                 (if condition {
-                    v.clone().either_left()
+                    into_view({
+                        let (sender, receiver) = oneshot::channel();
+                        let either = match view.take() {
+                            Some(view) => view.into_view().either_left(),
+                            None => RecyclableViewKey::new(
+                                view_receiver
+                                    .take()
+                                    .unwrap()
+                                    .try_recv()
+                                    .ok()
+                                    .or(<V::View as View<R>>::Key::new_with_no_state_node())
+                                    .unwrap(),
+                            )
+                            .either_right(),
+                        };
+                        view_receiver = Some(receiver);
+                        RecyclableView::new(either, sender)
+                    })
+                    .either_left()
                 } else {
-                    else_view.clone().either_right()
+                    into_view({
+                        let (sender, receiver) = oneshot::channel();
+                        let either = match else_view.take() {
+                            Some(view) => view.into_view().either_left(),
+                            None => RecyclableViewKey::new(
+                                else_view_receiver
+                                    .take()
+                                    .unwrap()
+                                    .try_recv()
+                                    .ok()
+                                    .or(<EV::View as View<R>>::Key::new_with_no_state_node())
+                                    .unwrap(),
+                            )
+                            .either_right(),
+                        };
+                        else_view_receiver = Some(receiver);
+                        RecyclableView::new(either, sender)
+                    })
+                    .either_right()
+                    // unreachable!()
+                    // else_view.take().unwrap().either_right()
                 })
                 .into_view()
             })

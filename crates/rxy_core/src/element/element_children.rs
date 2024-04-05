@@ -1,6 +1,9 @@
 use core::marker::PhantomData;
 
-use crate::{BoxedErasureView, ElementView, IntoView, IntoViewErasureExt, MemberOwner, NodeTree, Renderer, RendererNodeId, SoloView, View, ViewCtx, ViewMember};
+use crate::{
+    BoxedErasureView, ElementView, IntoView, IntoViewErasureExt, MemberOwner, NodeTree, Renderer,
+    RendererNodeId, SoloView, View, ViewCtx, ViewMember, ViewMemberIndex,
+};
 
 pub fn view_children<R, V, CV>(view: V, children: CV) -> ElementViewChildren<R, V, CV::View>
 where
@@ -159,34 +162,35 @@ where
     }
 }
 
-impl<R, VM, CV, V> ElementView<R> for ElementViewChildren<R, V, CV>
+impl<R, CV, V> ElementView<R> for ElementViewChildren<R, V, CV>
 where
-    V: ElementView<R, VM = VM>,
+    V: ElementView<R>,
     CV: View<R>,
     R: Renderer,
-    VM: ViewMember<R>,
 {
     fn element_node_id(key: &Self::Key) -> &RendererNodeId<R> {
         V::node_id(key)
     }
 
-
     type E = V::E;
-    type VM = VM;
     type AddMember<T: ViewMember<R>> = ElementViewChildren<R, V::AddMember<T>, CV>;
     type SetMembers<T: ViewMember<R> + MemberOwner<R>> =
-    ElementViewChildren<R, V::SetMembers<T>, CV>;
+        ElementViewChildren<R, V::SetMembers<T>, CV>;
+
+    fn member_count(&self) -> ViewMemberIndex {
+        self.view.member_count()
+    }
+
     fn member<T>(self, member: T) -> Self::AddMember<T>
-        where
-            (VM, T): ViewMember<R>,
-            T: ViewMember<R>,
+    where
+        T: ViewMember<R>,
     {
         ElementViewChildren::new(self.view.member(member), self.children)
     }
 
-    fn members<T>(self, members:  T) -> Self::SetMembers<(T,)>
-        where
-            T: ViewMember<R>,
+    fn members<T>(self, members: T) -> Self::SetMembers<(T,)>
+    where
+        T: ViewMember<R>,
     {
         ElementViewChildren::new(self.view.members(members), self.children)
     }

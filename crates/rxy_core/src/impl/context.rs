@@ -1,7 +1,4 @@
-use crate::{
-    ElementView, IntoView, MaybeSend, MaybeSync, MemberOwner, NodeTree, Renderer, RendererNodeId,
-    SoloView, View, ViewCtx, ViewKey, ViewMember, XNest,
-};
+use crate::{ElementView, IntoView, MaybeSend, MaybeSync, MemberOwner, NodeTree, Renderer, RendererNodeId, SoloView, View, ViewCtx, ViewKey, ViewMember, ViewMemberIndex, XNest};
 use core::marker::PhantomData;
 use rxy_macro::IntoView;
 
@@ -152,13 +149,15 @@ where
     }
 
     type E = V::E;
-    type VM = V::VM;
     type AddMember<VM: ViewMember<R>> = ProvideContext<R, T, V::AddMember<VM>>;
     type SetMembers<VM: ViewMember<R> + MemberOwner<R>> = ProvideContext<R, T, V::SetMembers<VM>>;
 
+    fn member_count(&self) -> ViewMemberIndex {
+        self.view.member_count()
+    }
+
     fn member<VM>(self, member: VM) -> Self::AddMember<VM>
     where
-        (Self::VM, VM): ViewMember<R>,
         VM: ViewMember<R>,
     {
         ProvideContext {

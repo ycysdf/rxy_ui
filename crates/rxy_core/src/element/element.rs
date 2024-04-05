@@ -2,7 +2,7 @@ use core::fmt::Debug;
 use core::marker::PhantomData;
 
 use crate::element::{view_children, ElementType, ElementViewChildren};
-use crate::{ElementView, IntoView, MemberOwner, NodeTree, Renderer, RendererNodeId, RendererWorld, SoloView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx};
+use crate::{ElementView, IntoView, MemberOwner, NodeTree, Renderer, RendererNodeId, RendererWorld, SoloView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex};
 
 #[derive(Clone)]
 pub struct Element<R, E, VM> {
@@ -104,13 +104,15 @@ where
 
 
     type E = E;
-    type VM = VM;
     type AddMember<T: ViewMember<R>> = Element<R, E, (VM, T)>;
     type SetMembers<T: ViewMember<R> + MemberOwner<R>> = Element<R, E, T>;
 
+    fn member_count(&self) -> ViewMemberIndex {
+        VM::count()
+    }
+
     fn member<T>(self, member: T) -> Self::AddMember<T>
         where
-            (VM, T): ViewMember<R>,
             T: ViewMember<R>,
     {
         Element {
@@ -180,7 +182,7 @@ where
     VM: ViewMember<R>,
 {
     #[inline]
-    fn remove(self, world: &mut crate::RendererWorld<R>) {
+    fn remove(self, world: &mut RendererWorld<R>) {
         VM::unbuild(
             ViewMemberCtx {
                 index: 0,
@@ -195,14 +197,14 @@ where
     #[inline]
     fn insert_before(
         &self,
-        world: &mut crate::RendererWorld<R>,
+        world: &mut RendererWorld<R>,
         parent: Option<&RendererNodeId<R>>,
         before_node_id: Option<&RendererNodeId<R>>,
     ) {
         self.0.insert_before(world, parent, before_node_id);
     }
 
-    fn set_visibility(&self, world: &mut crate::RendererWorld<R>, hidden: bool) {
+    fn set_visibility(&self, world: &mut RendererWorld<R>, hidden: bool) {
         self.0.set_visibility(world, hidden);
     }
 
@@ -217,7 +219,7 @@ where
         )
     }
 
-    fn first_node_id(&self, world: &crate::RendererWorld<R>) -> Option<RendererNodeId<R>> {
+    fn first_node_id(&self, world: &RendererWorld<R>) -> Option<RendererNodeId<R>> {
         self.0.first_node_id(world)
     }
 }
@@ -321,13 +323,13 @@ const _: () = {
             static CELL: bevy_reflect::utility::GenericTypePathCell =
                 bevy_reflect::utility::GenericTypePathCell::new();
             CELL.get_or_insert::<Self, _>(|| {
-                ::std::string::ToString::to_string(::std::concat!(
-                ::std::concat!(
-                ::std::concat!(::std::module_path!(), "::"),
+                ToString::to_string(concat!(
+                concat!(
+                concat!(module_path!(), "::"),
                 "ElementViewKey"
                 ),
                 "<"
-                )) + &::std::string::ToString::to_string(<R as bevy_reflect::TypePath>::type_path())
+                )) + &ToString::to_string(<R as bevy_reflect::TypePath>::type_path())
                     + ", "
                     // + <VM as bevy_reflect::TypePath>::type_path()
                     + "VM"
@@ -338,8 +340,8 @@ const _: () = {
             static CELL: bevy_reflect::utility::GenericTypePathCell =
                 bevy_reflect::utility::GenericTypePathCell::new();
             CELL.get_or_insert::<Self, _>(|| {
-                ::std::string::ToString::to_string("ElementViewKey<")
-                    + &::std::string::ToString::to_string(
+                ToString::to_string("ElementViewKey<")
+                    + &ToString::to_string(
                     <R as bevy_reflect::TypePath>::short_type_path(),
                 )
                     + ", "
@@ -349,13 +351,13 @@ const _: () = {
             })
         }
         fn type_ident() -> Option<&'static str> {
-            ::std::option::Option::Some("ElementViewKey")
+            Some("ElementViewKey")
         }
         fn crate_name() -> Option<&'static str> {
-            ::std::option::Option::Some(::std::module_path!().split(':').next().unwrap())
+            Some(module_path!().split(':').next().unwrap())
         }
         fn module_path() -> Option<&'static str> {
-            ::std::option::Option::Some(::std::module_path!())
+            Some(module_path!())
         }
     }
     impl<R, VM> bevy_reflect::TupleStruct for ElementViewKey<R, VM>
@@ -365,21 +367,21 @@ const _: () = {
         RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
         R: bevy_reflect::TypePath,
     {
-        fn field(&self, index: usize) -> ::std::option::Option<&dyn bevy_reflect::Reflect> {
+        fn field(&self, index: usize) -> Option<&dyn bevy_reflect::Reflect> {
             match index {
-                0usize => ::std::option::Option::Some(&self.0),
-                1usize => ::std::option::Option::None,
-                _ => ::std::option::Option::None,
+                0usize => Some(&self.0),
+                1usize => None,
+                _ => None,
             }
         }
         fn field_mut(
             &mut self,
             index: usize,
-        ) -> ::std::option::Option<&mut dyn bevy_reflect::Reflect> {
+        ) -> Option<&mut dyn bevy_reflect::Reflect> {
             match index {
-                0usize => ::std::option::Option::Some(&mut self.0),
-                1usize => ::std::option::Option::None,
-                _ => ::std::option::Option::None,
+                0usize => Some(&mut self.0),
+                1usize => None,
+                _ => None,
             }
         }
         fn field_len(&self) -> usize {
@@ -389,7 +391,7 @@ const _: () = {
             bevy_reflect::TupleStructFieldIter::new(self)
         }
         fn clone_dynamic(&self) -> bevy_reflect::DynamicTupleStruct {
-            let mut dynamic: bevy_reflect::DynamicTupleStruct = ::std::default::Default::default();
+            let mut dynamic: bevy_reflect::DynamicTupleStruct = Default::default();
             dynamic.set_represented_type(bevy_reflect::Reflect::get_represented_type_info(self));
             dynamic.insert_boxed(bevy_reflect::Reflect::clone_value(&self.0));
             // dynamic.insert_boxed(bevy_reflect::Reflect::clone_value(&self.1));
@@ -406,25 +408,25 @@ const _: () = {
         #[inline]
         fn get_represented_type_info(
             &self,
-        ) -> ::std::option::Option<&'static bevy_reflect::TypeInfo> {
-            ::std::option::Option::Some(<Self as bevy_reflect::Typed>::type_info())
+        ) -> Option<&'static bevy_reflect::TypeInfo> {
+            Some(<Self as bevy_reflect::Typed>::type_info())
         }
         #[inline]
-        fn into_any(self: ::std::boxed::Box<Self>) -> ::std::boxed::Box<dyn ::std::any::Any> {
+        fn into_any(self: Box<Self>) -> Box<dyn std::any::Any> {
             self
         }
         #[inline]
-        fn as_any(&self) -> &dyn ::std::any::Any {
+        fn as_any(&self) -> &dyn std::any::Any {
             self
         }
         #[inline]
-        fn as_any_mut(&mut self) -> &mut dyn ::std::any::Any {
+        fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
             self
         }
         #[inline]
         fn into_reflect(
-            self: ::std::boxed::Box<Self>,
-        ) -> ::std::boxed::Box<dyn bevy_reflect::Reflect> {
+            self: Box<Self>,
+        ) -> Box<dyn bevy_reflect::Reflect> {
             self
         }
         #[inline]
@@ -436,23 +438,23 @@ const _: () = {
             self
         }
         #[inline]
-        fn clone_value(&self) -> ::std::boxed::Box<dyn bevy_reflect::Reflect> {
-            ::std::boxed::Box::new(bevy_reflect::TupleStruct::clone_dynamic(self))
+        fn clone_value(&self) -> Box<dyn bevy_reflect::Reflect> {
+            Box::new(bevy_reflect::TupleStruct::clone_dynamic(self))
         }
         #[inline]
         fn set(
             &mut self,
-            value: ::std::boxed::Box<dyn bevy_reflect::Reflect>,
-        ) -> ::std::result::Result<(), ::std::boxed::Box<dyn bevy_reflect::Reflect>> {
+            value: Box<dyn bevy_reflect::Reflect>,
+        ) -> Result<(), Box<dyn bevy_reflect::Reflect>> {
             *self = <dyn bevy_reflect::Reflect>::take(value)?;
-            ::std::result::Result::Ok(())
+            Ok(())
         }
         #[inline]
         fn apply(&mut self, value: &dyn bevy_reflect::Reflect) {
             if let bevy_reflect::ReflectRef::TupleStruct(struct_value) =
                 bevy_reflect::Reflect::reflect_ref(value)
             {
-                for (i, value) in ::std::iter::Iterator::enumerate(
+                for (i, value) in Iterator::enumerate(
                     bevy_reflect::TupleStruct::iter_fields(struct_value),
                 ) {
                     bevy_reflect::TupleStruct::field_mut(self, i).map(|v| v.apply(value));
@@ -467,13 +469,13 @@ const _: () = {
         fn reflect_mut(&mut self) -> bevy_reflect::ReflectMut {
             bevy_reflect::ReflectMut::TupleStruct(self)
         }
-        fn reflect_owned(self: ::std::boxed::Box<Self>) -> bevy_reflect::ReflectOwned {
+        fn reflect_owned(self: Box<Self>) -> bevy_reflect::ReflectOwned {
             bevy_reflect::ReflectOwned::TupleStruct(self)
         }
         fn reflect_partial_eq(
             &self,
             value: &dyn bevy_reflect::Reflect,
-        ) -> ::std::option::Option<bool> {
+        ) -> Option<bool> {
             bevy_reflect::tuple_struct_partial_eq(self, value)
         }
     }
@@ -484,11 +486,11 @@ const _: () = {
         RendererNodeId<R>: bevy_reflect::FromReflect + bevy_reflect::TypePath,
         R: bevy_reflect::TypePath,
     {
-        fn from_reflect(reflect: &dyn bevy_reflect::Reflect) -> ::std::option::Option<Self> {
+        fn from_reflect(reflect: &dyn bevy_reflect::Reflect) -> Option<Self> {
             if let bevy_reflect::ReflectRef::TupleStruct(__ref_struct) =
                 bevy_reflect::Reflect::reflect_ref(reflect)
             {
-                ::std::option::Option::Some(Self {
+                Some(Self {
                     0: (|| {
                         <RendererNodeId<R> as bevy_reflect::FromReflect>::from_reflect(
                             bevy_reflect::TupleStruct::field(__ref_struct, 0)?,
@@ -497,7 +499,7 @@ const _: () = {
                     1: Default::default(),
                 })
             } else {
-                ::std::option::Option::None
+                None
             }
         }
     }

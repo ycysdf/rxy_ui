@@ -1,6 +1,9 @@
 use core::fmt::Debug;
 
-use crate::{MaybeFromReflect, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, NodeTree, Renderer, RendererNodeId, RendererWorld, ViewCtx};
+use crate::{
+    MaybeFromReflect, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, NodeTree, Renderer,
+    RendererNodeId, RendererWorld, ViewCtx,
+};
 
 // impl MutableView for tuple ?
 
@@ -22,14 +25,7 @@ pub trait MutableView<R: Renderer>: MaybeSend + 'static {
 }
 
 pub trait MutableViewKey<R: Renderer>:
-    MaybeReflect
-    + MaybeFromReflect
-    + MaybeTypePath
-    + MaybeSend
-    + MaybeSync
-    + Clone
-    + Debug
-    + 'static
+    MaybeReflect + MaybeFromReflect + MaybeTypePath + MaybeSend + MaybeSync + Clone + Debug + 'static
 {
     fn remove(self, world: &mut RendererWorld<R>);
 
@@ -46,6 +42,9 @@ pub trait MutableViewKey<R: Renderer>:
 
     // Unlike ViewKey, you can change it
     fn state_node_id(&self) -> Option<RendererNodeId<R>>;
+    fn new_with_no_state_node() -> Option<Self> {
+        None
+    }
 }
 
 #[allow(unused_variables)]
@@ -72,9 +71,13 @@ where
     fn state_node_id(&self) -> Option<RendererNodeId<R>> {
         None
     }
+
+    fn new_with_no_state_node() -> Option<Self> {
+        Some(())
+    }
 }
 
-#[derive(Clone, Debug, PartialEq,Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MutableKeySelfStatedWrapper<T>(pub T);
 
 pub fn mutable_view_rebuild<R: Renderer, V: MutableView<R>>(

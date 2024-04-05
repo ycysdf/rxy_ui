@@ -1,6 +1,4 @@
-use crate::{
-    IntoView, MaybeSend, MemberOwner, Renderer, RendererNodeId, SoloView, View, ViewMember,
-};
+use crate::{IntoView, MaybeSend, MemberOwner, Renderer, RendererNodeId, SoloView, View, ViewMember, ViewMemberIndex};
 
 /*
 pub trait ElementSoloView<R>: ElementView<R> + SoloView<R>
@@ -35,12 +33,11 @@ where
     }
 
     type E: MaybeSend + 'static;
-    type VM: ViewMember<R>;
     type AddMember<VM: ViewMember<R>>: ElementView<R>;
     type SetMembers<VM: ViewMember<R> + MemberOwner<R>>: ElementView<R>;
+    fn member_count(&self)-> ViewMemberIndex;
     fn member<VM>(self, member: VM) -> Self::AddMember<VM>
     where
-        (Self::VM, VM): ViewMember<R>,
         VM: ViewMember<R>;
     fn members<VM: ViewMember<R>>(self, members: VM) -> Self::SetMembers<(VM,)>
     where

@@ -1,8 +1,10 @@
-use crate::BevyRenderer;
 use bevy_ecs::prelude::Resource;
+
 use rxy_core::{
-    x_world, BuildFlags, MaybeSend, Renderer, RendererWorld, ViewMemberCtx, XBuilder, XWorld,
+    MaybeSend, RendererWorld, x_world, XWorld,
 };
+
+use crate::BevyRenderer;
 
 #[inline]
 pub fn x_res_once<T, F, RES>(

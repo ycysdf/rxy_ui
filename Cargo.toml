@@ -17,7 +17,7 @@ bevy_mod_picking = { workspace = true, optional = true }
 rxy_web_dom = { workspace = true, optional = true }
 
 [features]
-default = ["std", "x_iter_source", "signal"]
+default = ["std", "dynamic_element", "x_iter_source", "signal"]
 
 #web = ["std", "rxy_web_dom"]
 
@@ -32,6 +32,7 @@ bevy = [
     "std", "rxy_bevy", "bevy_mod_picking", "rxy_bevy_macro", "style", "tailwind_aliases",
     "xy_reactive?/bevy", "rxy_core/bevy"
 ]
+dynamic_element = ["rxy_bevy/dynamic_element", "rxy_core/dynamic_element"]
 
 [workspace]
 members = ["crates/*"]
@@ -83,7 +84,7 @@ bevy_ui = { version = "0.13", features = ["bevy_text"] }
 bevy_utils = "0.13"
 bevy_a11y = "0.13"
 bevy_input = "0.13"
-bevy_window = { version = "0.13"}
+bevy_window = { version = "0.13" }
 
 count-macro = "0.2.2"
 paste = "1"

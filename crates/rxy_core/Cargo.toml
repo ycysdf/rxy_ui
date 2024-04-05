@@ -38,7 +38,7 @@ count-macro.workspace = true
 paste.workspace = true
 
 [features]
-default = ["std", "async-channel", "either_future", "send_sync"]
+default = ["std", "dynamic_element", "async-channel", "either_future", "send_sync"]
 send_sync = []
 std = []
 web_dom = []
@@ -59,6 +59,7 @@ x_iter_source = ["hooked_collection", "async-channel"]
 either_future = ["pin-project"]
 common_renderer = []
 attr_index_u16 = []
+dynamic_element = []
 
 [dev-dependencies]
 static_assertions = "1.1"

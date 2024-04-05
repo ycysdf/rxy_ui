@@ -2,9 +2,9 @@ use rxy_macro::IntoView;
 
 use crate::schema::view::RendererSchemaView;
 use crate::{
-    ConstIndex, ElementView, IntoCloneableView, IntoSchemaProp, IntoView,
+    schema_view_build, ConstIndex, ElementView, IntoCloneableView, IntoSchemaProp, IntoView,
     MaybeSend, MemberOwner, Renderer, RendererNodeId, Schema, SchemaProps, SoloView, View, ViewCtx,
-    ViewKeyOrDataNodeId, ViewMember, ViewMemberCtx,
+    ViewKeyOrDataNodeId, ViewMember, ViewMemberCtx, ViewMemberIndex,
 };
 
 #[derive(IntoView)]
@@ -119,15 +119,19 @@ where
     }
 
     type E = <U::View as ElementView<R>>::E;
-    type VM = VM;
-    type AddMember<AddedMember: ViewMember<R>> = RendererSchemaElementView<R, U, (VM, AddedMember), P, M>;
+    type AddMember<AddedMember: ViewMember<R>> =
+        RendererSchemaElementView<R, U, (VM, AddedMember), P, M>;
     type SetMembers<Members: ViewMember<R> + MemberOwner<R>> =
-    RendererSchemaElementView<R, U, Members, P, M>;
+        RendererSchemaElementView<R, U, Members, P, M>;
+
+    fn member_count(&self) -> ViewMemberIndex {
+        VM::count()
+    }
 
     fn member<T>(self, member: T) -> Self::AddMember<T>
-        where
-            (VM, T): ViewMember<R>,
-            T: ViewMember<R>,
+    where
+        (VM, T): ViewMember<R>,
+        T: ViewMember<R>,
     {
         RendererSchemaElementView {
             members: (self.members, member),
@@ -136,8 +140,8 @@ where
     }
 
     fn members<T>(self, members: T) -> Self::SetMembers<(T,)>
-        where
-            T: ViewMember<R>,
+    where
+        T: ViewMember<R>,
     {
         RendererSchemaElementView {
             members: (members,),
@@ -177,7 +181,7 @@ where
         reserve_key: Option<Self::Key>,
         will_rebuild: bool,
     ) -> Self::Key {
-        let key = View::build(
+        let (key, member_count) = schema_view_build(
             self.schema_view,
             ViewCtx {
                 world: &mut *ctx.world,
@@ -185,10 +189,11 @@ where
             },
             reserve_key,
             will_rebuild,
+            Some(|n: &U::View| n.member_count()),
         );
         self.members.build(
             ViewMemberCtx {
-                index: <U::View as ElementView<R>>::VM::count(),
+                index: member_count.unwrap(),
                 world: ctx.world,
                 node_id: U::View::element_node_id(&key.key).clone(),
             },

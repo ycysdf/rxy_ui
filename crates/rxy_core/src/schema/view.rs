@@ -1,7 +1,12 @@
-use crate::{into_view, BoxedCloneableErasureView, BoxedErasureView, BoxedPropValue, ConstIndex, DataNodeId, InnerSchemaCtx, IntoCloneableView, IntoSchemaProp, IntoView, IntoViewCloneableErasureExt, IntoViewErasureExt, NodeTree, PropHashMap, Renderer, RendererNodeId, RendererWorld, Schema, SchemaProp, SchemaProps, View, ViewCtx, ViewKey, MaybeSend};
-use alloc::boxed::Box;
-use crate::utils::SyncCell;
 use crate::utils::HashMap;
+use crate::utils::SyncCell;
+use crate::{
+    into_view, BoxedCloneableErasureView, BoxedErasureView, BoxedPropValue, ConstIndex, DataNodeId,
+    InnerSchemaCtx, IntoCloneableView, IntoSchemaProp, IntoView, IntoViewCloneableErasureExt,
+    IntoViewErasureExt, MaybeSend, NodeTree, PropHashMap, Renderer, RendererNodeId, RendererWorld,
+    Schema, SchemaProp, SchemaProps, View, ViewCtx, ViewKey,
+};
+use alloc::boxed::Box;
 use core::any::TypeId;
 use core::marker::PhantomData;
 use rxy_macro::IntoView;
@@ -152,11 +157,13 @@ pub fn scheme_state_scoped<R, U>(
 where
     R: Renderer,
 {
-    let mut taken_map = world.get_node_state_mut::<SchemaViewState<R>>(node_id)
+    let mut taken_map = world
+        .get_node_state_mut::<SchemaViewState<R>>(node_id)
         .and_then(|n| n.prop_state.get().take())?;
     let u = f(&mut *world, &mut taken_map);
 
-    let option = world.get_node_state_mut::<SchemaViewState<R>>(node_id)
+    let option = world
+        .get_node_state_mut::<SchemaViewState<R>>(node_id)
         .unwrap()
         .prop_state
         .get();
@@ -175,7 +182,6 @@ where
     pub data_node_id: Option<DataNodeId<R>>,
     pub key: K,
 }
-
 
 impl<R, K> ViewKey<R> for ViewKeyOrDataNodeId<R, K>
 where
@@ -206,14 +212,19 @@ where
         self.key.state_node_id()
     }
 
-    fn reserve_key(world: &mut RendererWorld<R>, will_rebuild: bool, parent: RendererNodeId<R>, spawn: bool) -> Self {
+    fn reserve_key(
+        world: &mut RendererWorld<R>,
+        will_rebuild: bool,
+        parent: RendererNodeId<R>,
+        spawn: bool,
+    ) -> Self {
         Self {
             data_node_id: if TypeId::of::<K>() == TypeId::of::<()>() {
                 Some(DataNodeId(world.spawn_data_node()))
             } else {
                 None
             },
-            key: K::reserve_key(world, will_rebuild, parent,spawn ),
+            key: K::reserve_key(world, will_rebuild, parent, spawn),
         }
     }
 
@@ -222,13 +233,16 @@ where
     }
 }
 
-pub fn schema_view_build<R, U, P, M>(
+pub fn schema_view_build<R, U, P, M, VU>(
     mut schema_view: RendererSchemaView<R, U, P, M>,
     ctx: ViewCtx<R>,
     reserve_key: Option<ViewKeyOrDataNodeId<R, <U::View as View<R>>::Key>>,
     will_rebuild: bool,
-    // view_build_f: impl FnOnce(U::View, ViewCtx<R>, Option<<U::View as View<R>>::Key>) -> <U::View as View<R>>::Key,
-) -> ViewKeyOrDataNodeId<R, <<U as Schema<R>>::View as View<R>>::Key>
+    view_f: Option<impl FnOnce(&U::View) -> VU>,
+) -> (
+    ViewKeyOrDataNodeId<R, <<U as Schema<R>>::View as View<R>>::Key>,
+    Option<VU>,
+)
 where
     R: Renderer,
     U: Schema<R>,
@@ -253,6 +267,7 @@ where
         effect_state: &mut _effect_state,
         _marker: Default::default(),
     });
+    let vu = view_f.map(|n| n(&view));
     let (data_node_id, reserve_key) = reserve_key.map(|k| (k.data_node_id, k.key)).unzip();
     let key = view.build(
         ViewCtx {
@@ -302,7 +317,7 @@ where
         },
     );
 
-    ViewKeyOrDataNodeId { data_node_id, key }
+    (ViewKeyOrDataNodeId { data_node_id, key }, vu)
 }
 
 impl<R, U, P, M> View<R> for RendererSchemaView<R, U, P, M>
@@ -320,7 +335,14 @@ where
         reserve_key: Option<Self::Key>,
         will_rebuild: bool,
     ) -> Self::Key {
-        schema_view_build(self, ctx, reserve_key, will_rebuild)
+        schema_view_build(
+            self,
+            ctx,
+            reserve_key,
+            will_rebuild,
+            None::<Box<dyn FnOnce(&U::View) -> ()>>,
+        )
+        .0
     }
 
     fn rebuild(mut self, ctx: ViewCtx<R>, key: Self::Key) {

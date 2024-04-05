@@ -35,6 +35,11 @@ pub trait ViewKey<R: Renderer>:
     // You need to make sure that it doesn't change
     fn state_node_id(&self) -> Option<RendererNodeId<R>>;
 
+    // Implements it and returns Some(Self) when state_node_id returns None
+    fn new_with_no_state_node()-> Option<Self>{
+        None
+    }
+
     fn reserve_key(world: &mut RendererWorld<R>, will_rebuild: bool, parent: RendererNodeId<R>, spawn: bool) -> Self;
     fn first_node_id(&self, world: &RendererWorld<R>) -> Option<RendererNodeId<R>>;
 }
@@ -77,6 +82,10 @@ where
 
     fn state_node_id(&self) -> Option<RendererNodeId<R>> {
         None
+    }
+
+    fn new_with_no_state_node() -> Option<Self> {
+        Some(())
     }
 
     fn reserve_key(_world: &mut RendererWorld<R>, _will_rebuild: bool, _parent: RendererNodeId<R>, _spawn: bool) -> Self {}

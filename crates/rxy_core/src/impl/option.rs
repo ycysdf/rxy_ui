@@ -92,6 +92,10 @@ where
             None => None,
         }
     }
+
+    fn new_with_no_state_node() -> Option<Self> {
+        Some(None)
+    }
 }
 
 impl<R, IV> IntoView<R> for Option<IV>
@@ -181,6 +185,10 @@ where
             Some(n) => n.state_node_id(),
             None => None,
         }
+    }
+
+    fn new_with_no_state_node() -> Option<Self> {
+        Some(None)
     }
 
     fn reserve_key(world: &mut RendererWorld<R>, will_rebuild: bool, parent: RendererNodeId<R>, spawn: bool) -> Self {
