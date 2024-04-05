@@ -635,13 +635,11 @@ fn sample_x_if() -> impl IntoView<BevyRenderer> {
         x_if(is_show, span("Show1").padding(10).text_color(Color::RED)),
         x_if(
             is_show,
-            view_builder(|_, _| div().padding(10).flex().center().children("Show2")),
+            div().padding(10).flex().center().children("Show2"),
         ),
     )
 }
 ```
-
-> The second use of `x_if` with `view_buillder` is because currently, views with children are not `Clone` (due to certain reasons that might be improved later). However, `x_if` requires views to implement `Clone`. Thereforce, in this case, `view_builder` is used, and a callback function is passed to make it cloneable.
 
 `x_iter` is used to build list views, It takes an `IntoIterator`, and the `Item` needs to implement `IntoView`. It uses the item's index as the key.
 

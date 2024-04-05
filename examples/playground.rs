@@ -312,7 +312,7 @@ fn sample_x_if() -> impl IntoView<BevyRenderer> {
         x_if(is_show, span("Show1").padding(10).text_color(Color::RED)),
         x_if(
             is_show,
-            view_builder(|_, _| div().padding(10).flex().center().children("Show2")),
+            div().padding(10).flex().center().children("Show2"),
         ),
     )
 }

@@ -639,14 +639,11 @@ fn sample_x_if() -> impl IntoView<BevyRenderer> {
         x_if(is_show, span("Show1").padding(10).text_color(Color::RED)),
         x_if(
             is_show,
-            view_builder(|_, _| div().padding(10).flex().center().children("Show2")),
+            div().padding(10).flex().center().children("Show2"),
         ),
     )
 }
 ```
-
-> 第二个 x_if 使用 view_builder 是因为目前 带有孩子的视图都不是 Clone 的 （由于一些原因，后面可能回改善），但是 x_if 要求视图实现
-> Clone 的，所以此处使用 view_builder 并传入一个回调函数，使得它 Clone
 
 `x_iter` 用于构建列表视图，它接收`IntoIterator`，并且`Item` 需要实现 `IntoView`，它将项的索引作为 key
 
