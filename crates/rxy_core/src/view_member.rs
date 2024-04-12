@@ -1,41 +1,42 @@
 use crate::utils::all_tuples;
 use crate::{MaybeSend, Renderer, ViewMemberCtx, ViewMemberIndex};
+
 pub trait ViewMemberOrigin<R>: MaybeSend + 'static
 where
-    R: Renderer,
+   R: Renderer,
 {
-    type Origin;
+   type Origin;
 }
 
 pub trait ViewMember<R>: MaybeSend + 'static
 where
-    R: Renderer,
+   R: Renderer,
 {
-    fn count() -> ViewMemberIndex;
-    fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool);
-    fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool);
-    fn rebuild(self, ctx: ViewMemberCtx<R>);
+   fn count() -> ViewMemberIndex;
+   fn unbuild(ctx: ViewMemberCtx<R>, view_removed: bool);
+   fn build(self, ctx: ViewMemberCtx<R>, will_rebuild: bool);
+   fn rebuild(self, ctx: ViewMemberCtx<R>);
 }
 
 impl<R> ViewMemberOrigin<R> for ()
 where
-    R: Renderer,
+   R: Renderer,
 {
-    type Origin = ();
+   type Origin = ();
 }
 
 impl<R> ViewMember<R> for ()
 where
-    R: Renderer,
+   R: Renderer,
 {
-    fn count() -> ViewMemberIndex {
-        0
-    }
+   fn count() -> ViewMemberIndex {
+      0
+   }
 
-    fn unbuild(_ctx: ViewMemberCtx<R>, _view_removed: bool) {}
+   fn unbuild(_ctx: ViewMemberCtx<R>, _view_removed: bool) {}
 
-    fn build(self, _ctx: ViewMemberCtx<R>, _will_rebuild: bool) {}
-    fn rebuild(self, _ctx: ViewMemberCtx<R>) {}
+   fn build(self, _ctx: ViewMemberCtx<R>, _will_rebuild: bool) {}
+   fn rebuild(self, _ctx: ViewMemberCtx<R>) {}
 }
 
 /*impl<R, T, F> ViewMember<R> for F

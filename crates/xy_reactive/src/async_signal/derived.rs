@@ -21,6 +21,7 @@ use std::{
     sync::{Arc, Weak},
     task::{Context, Poll, Waker},
 };
+
 pub struct ArcAsyncDerived<T> {
     #[cfg(debug_assertions)]
     defined_at: &'static Location<'static>,
@@ -180,9 +181,9 @@ impl<T> DefinedAt for ArcAsyncDerived<T> {
 impl<T: 'static> ArcAsyncDerived<T> {
     #[track_caller]
     pub fn new<Fut>(fun: impl Fn() -> Fut + Send + Sync + 'static) -> Self
-    where
-        T: Send + Sync + 'static,
-        Fut: Future<Output = T> + Send + Sync + 'static,
+        where
+            T: Send + Sync + 'static,
+            Fut: Future<Output=T> + Send + Sync + 'static,
     {
         Self::new_with_initial(AsyncState::Loading, fun)
     }
@@ -192,18 +193,18 @@ impl<T: 'static> ArcAsyncDerived<T> {
         initial_value: AsyncState<T>,
         fun: impl Fn() -> Fut + Send + Sync + 'static,
     ) -> Self
-    where
-        T: Send + Sync + 'static,
-        Fut: Future<Output = T> + Send + Sync + 'static,
+        where
+            T: Send + Sync + 'static,
+            Fut: Future<Output=T> + Send + Sync + 'static,
     {
         spawn_derived!(spawn, initial_value, fun)
     }
 
     #[track_caller]
     pub fn new_unsync<Fut>(fun: impl Fn() -> Fut + 'static) -> Self
-    where
-        T: 'static,
-        Fut: Future<Output = T> + 'static,
+        where
+            T: 'static,
+            Fut: Future<Output=T> + 'static,
     {
         Self::new_unsync_with_initial(AsyncState::Loading, fun)
     }
@@ -213,9 +214,9 @@ impl<T: 'static> ArcAsyncDerived<T> {
         initial_value: AsyncState<T>,
         fun: impl Fn() -> Fut + 'static,
     ) -> Self
-    where
-        T: 'static,
-        Fut: Future<Output = T> + 'static,
+        where
+            T: 'static,
+            Fut: Future<Output=T> + 'static,
     {
         spawn_derived!(spawn_local, initial_value, fun)
     }
@@ -426,13 +427,13 @@ impl<T: Send + Sync + 'static> StoredData for AsyncDerived<T> {
 
 impl<T: Send + Sync + 'static> AsyncDerived<T> {
     #[cfg_attr(
-        feature = "tracing",
-        tracing::instrument(level = "debug", skip_all,)
+    feature = "tracing",
+    tracing::instrument(level = "debug", skip_all, )
     )]
     pub fn new<Fut>(fun: impl Fn() -> Fut + Send + Sync + 'static) -> Self
-    where
-        T: Send + Sync + 'static,
-        Fut: Future<Output = T> + Send + Sync + 'static,
+        where
+            T: Send + Sync + 'static,
+            Fut: Future<Output=T> + Send + Sync + 'static,
     {
         Self {
             inner: Stored::new(ArcAsyncDerived::new(fun)),
@@ -440,16 +441,16 @@ impl<T: Send + Sync + 'static> AsyncDerived<T> {
     }
 
     #[cfg_attr(
-        feature = "tracing",
-        tracing::instrument(level = "debug", skip_all,)
+    feature = "tracing",
+    tracing::instrument(level = "debug", skip_all, )
     )]
     pub fn new_with_initial<Fut>(
         initial_value: AsyncState<T>,
         fun: impl Fn() -> Fut + Send + Sync + 'static,
     ) -> Self
-    where
-        T: Send + Sync + 'static,
-        Fut: Future<Output = T> + Send + Sync + 'static,
+        where
+            T: Send + Sync + 'static,
+            Fut: Future<Output=T> + Send + Sync + 'static,
     {
         Self {
             inner: Stored::new(ArcAsyncDerived::new_with_initial(
@@ -460,13 +461,13 @@ impl<T: Send + Sync + 'static> AsyncDerived<T> {
     }
 
     #[cfg_attr(
-        feature = "tracing",
-        tracing::instrument(level = "debug", skip_all,)
+    feature = "tracing",
+    tracing::instrument(level = "debug", skip_all, )
     )]
     pub fn new_unsync<Fut>(fun: impl Fn() -> Fut + 'static) -> Self
-    where
-        T: 'static,
-        Fut: Future<Output = T> + 'static,
+        where
+            T: 'static,
+            Fut: Future<Output=T> + 'static,
     {
         Self {
             inner: Stored::new(ArcAsyncDerived::new_unsync(fun)),
@@ -474,16 +475,16 @@ impl<T: Send + Sync + 'static> AsyncDerived<T> {
     }
 
     #[cfg_attr(
-        feature = "tracing",
-        tracing::instrument(level = "debug", skip_all,)
+    feature = "tracing",
+    tracing::instrument(level = "debug", skip_all, )
     )]
     pub fn new_unsync_with_initial<Fut>(
         initial_value: AsyncState<T>,
         fun: impl Fn() -> Fut + 'static,
     ) -> Self
-    where
-        T: 'static,
-        Fut: Future<Output = T> + 'static,
+        where
+            T: 'static,
+            Fut: Future<Output=T> + 'static,
     {
         Self {
             inner: Stored::new(ArcAsyncDerived::new_unsync_with_initial(

@@ -2,18 +2,18 @@ use crate::utils::all_tuples;
 use crate::MaybeSend;
 
 pub trait SchemaFn<P>: MaybeSend + 'static {
-    type View;
-    fn call(self, param: P) -> Self::View;
+   type View;
+   fn call(self, param: P) -> Self::View;
 }
 
 impl<V, F> SchemaFn<()> for F
 where
-    F: FnOnce() -> V + MaybeSend + 'static,
+   F: FnOnce() -> V + MaybeSend + 'static,
 {
-    type View = V;
-    fn call(self, _p: ()) -> Self::View {
-        self()
-    }
+   type View = V;
+   fn call(self, _p: ()) -> Self::View {
+      self()
+   }
 }
 
 macro_rules! impl_schema_fn {

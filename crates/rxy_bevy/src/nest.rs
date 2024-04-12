@@ -1,109 +1,111 @@
-use crate::prelude::ElementEventIds;
-use crate::{EventViewMember, x_res, XBundle, XRes};
 use bevy_ecs::prelude::{Bundle, IntoSystem, Resource};
+
 use rxy_core::{InnerIvmToVm, MaybeSend, XNest, XNestMapper};
+
+use crate::prelude::ElementEventIds;
+use crate::{x_res, EventViewMember, XBundle, XRes};
 
 impl<T> XNest for XBundle<T>
 where
-    T: Bundle,
+   T: Bundle,
 {
-    type Inner = Self;
-    type MapInner<M> = Self;
+   type Inner = Self;
+   type MapInner<M> = Self;
 
-    fn map_inner<M>(self) -> Self::MapInner<M> {
-        self
-    }
+   fn map_inner<M>(self) -> Self::MapInner<M> {
+      self
+   }
 
-    fn is_static() -> bool {
-        true
-    }
+   fn is_static() -> bool {
+      true
+   }
 }
 
 impl<T, U> XNestMapper<U> for XBundle<T>
 where
-    U: 'static,
-    T: Bundle,
+   U: 'static,
+   T: Bundle,
 {
-    type MapInnerTo = U;
+   type MapInnerTo = U;
 
-    fn map_inner_to(
-        self,
-        f: impl FnOnce(Self::Inner) -> U + Send + Clone + 'static,
-    ) -> Self::MapInnerTo {
-        f(self)
-    }
+   fn map_inner_to(
+      self,
+      f: impl FnOnce(Self::Inner) -> U + Send + Clone + 'static,
+   ) -> Self::MapInnerTo {
+      f(self)
+   }
 }
 
 impl<T, S, TM> XNest for EventViewMember<T, S, TM>
 where
-    T: ElementEventIds,
-    S: IntoSystem<(), (), TM> + Send + 'static,
-    TM: Send + 'static,
+   T: ElementEventIds,
+   S: IntoSystem<(), (), TM> + Send + 'static,
+   TM: Send + 'static,
 {
-    type Inner = Self;
-    type MapInner<M> = Self;
+   type Inner = Self;
+   type MapInner<M> = Self;
 
-    fn map_inner<U>(self) -> Self::MapInner<U> {
-        self
-    }
+   fn map_inner<U>(self) -> Self::MapInner<U> {
+      self
+   }
 
-    fn is_static() -> bool {
-        true
-    }
+   fn is_static() -> bool {
+      true
+   }
 }
 
 impl<T, S, TM, U> XNestMapper<U> for EventViewMember<T, S, TM>
 where
-    U: 'static,
-    T: ElementEventIds,
-    S: IntoSystem<(), (), TM> + Send + 'static,
-    TM: Send + 'static,
+   U: 'static,
+   T: ElementEventIds,
+   S: IntoSystem<(), (), TM> + Send + 'static,
+   TM: Send + 'static,
 {
-    type MapInnerTo = U;
+   type MapInnerTo = U;
 
-    fn map_inner_to(
-        self,
-        f: impl FnOnce(Self::Inner) -> U + Send + Clone + 'static,
-    ) -> Self::MapInnerTo {
-        f(self)
-    }
+   fn map_inner_to(
+      self,
+      f: impl FnOnce(Self::Inner) -> U + Send + Clone + 'static,
+   ) -> Self::MapInnerTo {
+      f(self)
+   }
 }
 
 impl<T, F, X> XNest for XRes<T, F>
 where
-    T: Resource,
-    F: Fn(&T) -> X + Send + 'static,
-    X: XNest + MaybeSend + 'static,
+   T: Resource,
+   F: Fn(&T) -> X + Send + 'static,
+   X: XNest + MaybeSend + 'static,
 {
-    type Inner = X::Inner;
-    type MapInner<M> = InnerIvmToVm<Self, M>;
+   type Inner = X::Inner;
+   type MapInner<M> = InnerIvmToVm<Self, M>;
 
-    fn map_inner<M>(self) -> Self::MapInner<M> {
-        InnerIvmToVm::new(self)
-    }
+   fn map_inner<M>(self) -> Self::MapInner<M> {
+      InnerIvmToVm::new(self)
+   }
 
-    fn is_static() -> bool {
-        X::is_static()
-    }
+   fn is_static() -> bool {
+      X::is_static()
+   }
 }
 
 impl<T, F, X, U> XNestMapper<U> for XRes<T, F>
 where
-    T: Resource,
-    F: Fn(&T) -> X + Send + 'static,
-    U: 'static,
-    X: XNestMapper<U> + MaybeSend + 'static,
-    X::MapInnerTo: Send,
+   T: Resource,
+   F: Fn(&T) -> X + Send + 'static,
+   U: 'static,
+   X: XNestMapper<U> + MaybeSend + 'static,
+   X::MapInnerTo: Send,
 {
-    type MapInnerTo = XRes<T, Box<dyn Fn(&T) -> X::MapInnerTo + Send>>;
+   type MapInnerTo = XRes<T, Box<dyn Fn(&T) -> X::MapInnerTo + Send>>;
 
-    fn map_inner_to(
-        self,
-        f: impl FnOnce(Self::Inner) -> U + Send + Clone + 'static,
-    ) -> Self::MapInnerTo {
-        x_res(Box::new(move |r: &T| {
-            let x = (self.f)(r);
-            x.map_inner_to(f.clone())
-        }))
-    }
+   fn map_inner_to(
+      self,
+      f: impl FnOnce(Self::Inner) -> U + Send + Clone + 'static,
+   ) -> Self::MapInnerTo {
+      x_res(Box::new(move |r: &T| {
+         let x = (self.f)(r);
+         x.map_inner_to(f.clone())
+      }))
+   }
 }

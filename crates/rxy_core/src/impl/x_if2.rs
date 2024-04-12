@@ -1,18 +1,19 @@
-use crate::renderer::DeferredNodeTreeScoped;
-use alloc::boxed::Box;
 use core::marker::PhantomData;
 
+use alloc::boxed::Box;
+
 use crate::{
-    member_builder, schema_view, ConstIndex, Either, EitherExt, FnSchema, IntoSchemaProp, IntoView,
-    MaybeSend, MutableView, NodeTree, RebuildFnReceiver, Renderer, SchemaView, ToMutableWrapper,
+    ConstIndex, Either, EitherExt, FnSchema, IntoSchemaProp, IntoView, MaybeSend, member_builder,
+    MutableView, NodeTree, RebuildFnReceiver, Renderer, schema_view, SchemaView, ToMutableWrapper,
     View, ViewCtx, ViewMember, ViewMemberCtx, VirtualContainer, XNest, XNestMapper,
 };
+use crate::renderer::DeferredNodeTreeScoped;
 
 pub struct XIf<R, C, V, V2 = ()>
-where
-    R: Renderer,
-    V: IntoView<R> + Clone,
-    V2: IntoView<R> + Clone,
+    where
+        R: Renderer,
+        V: IntoView<R> + Clone,
+        V2: IntoView<R> + Clone,
 {
     view: V,
     else_view: V2,
@@ -21,10 +22,10 @@ where
 }
 
 impl<R, C, V> XIf<R, C, V, ()>
-where
-    R: Renderer,
-    C: MaybeSend + 'static,
-    V: IntoView<R> + Clone,
+    where
+        R: Renderer,
+        C: MaybeSend + 'static,
+        V: IntoView<R> + Clone,
 {
     pub fn else_view<V2: IntoView<R> + Clone>(self, else_view: V2) -> XIf<R, C, V, V2> {
         XIf {
@@ -37,12 +38,12 @@ where
 }
 
 impl<R, V, V2, X> View<R> for XIf<R, X, V, V2>
-where
-    R: Renderer,
-    V: IntoView<R> + Clone + MaybeSend,
-    V2: IntoView<R> + Clone + MaybeSend,
-    X: XNestMapper<(), Inner = bool> + MaybeSend + 'static,
-    X::MapInnerTo: ViewMember<R>,
+    where
+        R: Renderer,
+        V: IntoView<R> + Clone + MaybeSend,
+        V2: IntoView<R> + Clone + MaybeSend,
+        X: XNestMapper<(), Inner=bool> + MaybeSend + 'static,
+        X::MapInnerTo: ViewMember<R>,
 {
     type Key = ();
 
@@ -62,7 +63,7 @@ where
             } else {
                 self.else_view.clone().either_right()
             }
-            .into_view();
+                .into_view();
             world_scoped.scoped(move |world| {
                 let key = view.build(ViewCtx { world, parent }, None, will_rebuild);
             });
@@ -83,10 +84,10 @@ where
 }
 
 pub fn x_if<R, IV, C>(condition: C, v: IV) -> XIf<R, C, IV>
-where
-    R: Renderer,
-    C: IntoSchemaProp<R, bool> + MaybeSend + 'static,
-    IV: IntoView<R> + MaybeSend + Clone,
+    where
+        R: Renderer,
+        C: IntoSchemaProp<R, bool> + MaybeSend + 'static,
+        IV: IntoView<R> + MaybeSend + Clone,
 {
     XIf {
         view: v,

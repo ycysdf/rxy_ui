@@ -3,30 +3,24 @@ use crate::{MaybeSend, Renderer, ViewMember};
 
 #[macro_export]
 macro_rules! define_member_owner {
-    ($ty:ident) => {
-        pub trait $ty<R>
-        where
-            R: Renderer,
-        {
-            type E: MaybeSend + 'static;
-            type VM: ViewMember<R>;
-            type AddMember<VM: ViewMember<R>>: $ty<R>;
-            type SetMembers<VM: ViewMember<R> + MemberOwner<R>>: $ty<R>;
-            fn member<VM>(
-                self,
-                member: VM,
-            ) -> Self::AddMember<VM>
-            where
-                (Self::VM, VM): ViewMember<R>,
-                VM: ViewMember<R>;
-            fn members<VM: ViewMember<R>>(
-                self,
-                members: VM,
-            ) -> Self::SetMembers<(VM,)>
-            where
-                VM: ViewMember<R>;
-        }
-    };
+   ($ty:ident) => {
+      pub trait $ty<R>
+      where
+         R: Renderer,
+      {
+         type E: MaybeSend + 'static;
+         type VM: ViewMember<R>;
+         type AddMember<VM: ViewMember<R>>: $ty<R>;
+         type SetMembers<VM: ViewMember<R> + MemberOwner<R>>: $ty<R>;
+         fn member<VM>(self, member: VM) -> Self::AddMember<VM>
+         where
+            (Self::VM, VM): ViewMember<R>,
+            VM: ViewMember<R>;
+         fn members<VM: ViewMember<R>>(self, members: VM) -> Self::SetMembers<(VM,)>
+         where
+            VM: ViewMember<R>;
+      }
+   };
 }
 
 define_member_owner!(MemberOwner);

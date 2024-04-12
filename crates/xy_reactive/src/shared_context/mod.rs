@@ -2,6 +2,7 @@
 mod hydrate;
 mod islands;
 mod ssr;
+
 use crate::{PinnedFuture, PinnedStream};
 #[cfg(feature = "web")]
 pub use hydrate::*;
@@ -50,7 +51,7 @@ pub trait SharedContext: Debug {
 }
 
 #[derive(
-    Clone, Debug, PartialEq, Eq, Hash, Default, Deserialize, Serialize,
+Clone, Debug, PartialEq, Eq, Hash, Default, Deserialize, Serialize,
 )]
 #[serde(transparent)]
 pub struct SerializedDataId(usize);

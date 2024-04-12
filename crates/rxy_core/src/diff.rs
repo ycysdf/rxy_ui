@@ -1,260 +1,258 @@
 // Much of the code was copied from https://github.com/gbj/tachys/blob/main/tachydom/src/view/keyed.rs
 
-use crate::utils::AHasher;
 use alloc::vec;
 use alloc::vec::Vec;
 use core::clone::Clone;
 use core::cmp::Eq;
 use core::fmt::Debug;
-use core::{
-    hash::{BuildHasherDefault, Hash},
-};
+use core::hash::{BuildHasherDefault, Hash};
+
 use indexmap::IndexSet;
+
+use crate::utils::AHasher;
 
 type FxIndexSet<T> = IndexSet<T, BuildHasherDefault<AHasher>>;
 
 pub fn diff<K: Eq + Debug + Hash>(from: &FxIndexSet<K>, to: &FxIndexSet<K>) -> Diff {
-    if from.is_empty() && to.is_empty() {
-        return Diff::NoChanged;
-    }
-    if to.is_empty() {
-        return Diff::Cleared;
-    }
-    if from.is_empty() {
-        return Diff::Replaced;
-    }
+   if from.is_empty() && to.is_empty() {
+      return Diff::NoChanged;
+   }
+   if to.is_empty() {
+      return Diff::Cleared;
+   }
+   if from.is_empty() {
+      return Diff::Replaced;
+   }
 
-    let mut removed = vec![];
-    let mut moved = vec![];
-    let mut added = vec![];
-    let mut no_changed = vec![];
-    let max_len = core::cmp::max(from.len(), to.len());
+   let mut removed = vec![];
+   let mut moved = vec![];
+   let mut added = vec![];
+   let mut no_changed = vec![];
+   let max_len = core::cmp::max(from.len(), to.len());
 
-    for index in 0..max_len {
-        let from_item = from.get_index(index);
-        let to_item = to.get_index(index);
+   for index in 0..max_len {
+      let from_item = from.get_index(index);
+      let to_item = to.get_index(index);
 
-        // if they're the same, do nothing
-        if from_item == to_item {
-            if from_item.is_some() {
-                no_changed.push(index);
-            }
-            continue;
-        }
+      // if they're the same, do nothing
+      if from_item == to_item {
+         if from_item.is_some() {
+            no_changed.push(index);
+         }
+         continue;
+      }
 
-        // if it's only in old, not new, remove it
-        if let Some(from_item) = from_item {
-            if !to.contains(from_item) {
-                removed.push(index);
-            }
-        }
-        // if it's only in new, not old, add it
-        if let Some(to_item) = to_item {
-            if !from.contains(to_item) {
-                added.push(index);
-            }
-        }
-        // if it's in both old and new, it can either
-        // 1) be moved (and need to move in the DOM)
-        // 2) be moved (but not need to move in the DOM)
-        //    * this would happen if, for example, 2 items
-        //      have been added before it, and it has moved by 2
-        if let Some(from_item) = from_item {
-            if let Some(to_item) = to.get_full(from_item) {
-                let moves_forward_by = (to_item.0 as i32) - (index as i32);
+      // if it's only in old, not new, remove it
+      if let Some(from_item) = from_item {
+         if !to.contains(from_item) {
+            removed.push(index);
+         }
+      }
+      // if it's only in new, not old, add it
+      if let Some(to_item) = to_item {
+         if !from.contains(to_item) {
+            added.push(index);
+         }
+      }
+      // if it's in both old and new, it can either
+      // 1) be moved (and need to move in the DOM)
+      // 2) be moved (but not need to move in the DOM)
+      //    * this would happen if, for example, 2 items
+      //      have been added before it, and it has moved by 2
+      if let Some(from_item) = from_item {
+         if let Some(to_item) = to.get_full(from_item) {
+            let moves_forward_by = (to_item.0 as i32) - (index as i32);
 
-                moved.push(DiffOpMove {
-                    from: index,
-                    len: 1,
-                    to: to_item.0,
-                    can_ignored: moves_forward_by == (added.len() as i32) - (removed.len() as i32),
-                });
-            }
-        }
-    }
+            moved.push(DiffOpMove {
+               from: index,
+               len: 1,
+               to: to_item.0,
+               can_ignored: moves_forward_by == (added.len() as i32) - (removed.len() as i32),
+            });
+         }
+      }
+   }
 
-    Diff::PartDiff {
-        removed,
-        moved_sum_count: moved.len(),
-        moved,
-        added,
-        no_changed,
-    }
+   Diff::PartDiff {
+      removed,
+      moved_sum_count: moved.len(),
+      moved,
+      added,
+      no_changed,
+   }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct DiffOpMove {
-    pub from: usize,
-    pub to: usize,
-    pub len: usize,
-    pub can_ignored: bool,
+   pub from: usize,
+   pub to: usize,
+   pub len: usize,
+   pub can_ignored: bool,
 }
 
 impl Default for DiffOpMove {
-    fn default() -> Self {
-        Self {
-            from: 0,
-            to: 0,
-            len: 1,
-            can_ignored: true,
-        }
-    }
+   fn default() -> Self {
+      Self {
+         from: 0,
+         to: 0,
+         len: 1,
+         can_ignored: true,
+      }
+   }
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Diff {
-    NoChanged,
-    Cleared,
-    Replaced,
-    PartDiff {
-        removed: Vec<usize>,
-        moved: Vec<DiffOpMove>,
-        moved_sum_count: usize,
-        added: Vec<usize>,
-        no_changed: Vec<usize>,
-    },
+   NoChanged,
+   Cleared,
+   Replaced,
+   PartDiff {
+      removed: Vec<usize>,
+      moved: Vec<DiffOpMove>,
+      moved_sum_count: usize,
+      added: Vec<usize>,
+      no_changed: Vec<usize>,
+   },
 }
 
 impl Default for Diff {
-    fn default() -> Self {
-        Self::NoChanged
-    }
+   fn default() -> Self {
+      Self::NoChanged
+   }
 }
 
 impl Diff {
+   //     pub fn get_no_changed(&self, from_len: usize) -> Vec<usize> {
+   //         if let Diff::NoChanged = self {
+   //             return (0..from_len).into_iter().collect();
+   //         };
+   //         if let Diff::PartDiff { moved, removed, .. } = self {
+   //             let set = IndexSet::new();
+   // let s = 0..1;
+   //
+   //             let indices = (0..from_len).into_iter().collect::<Vec<_>>();
+   //             for item in moved {
+   //                 for i in item.from..(item.from + item.len) {
+   //
+   //                 }
+   //             }
+   //
+   //         };
+   //         Default::default()
+   //     }
 
-
-    //     pub fn get_no_changed(&self, from_len: usize) -> Vec<usize> {
-//         if let Diff::NoChanged = self {
-//             return (0..from_len).into_iter().collect();
-//         };
-//         if let Diff::PartDiff { moved, removed, .. } = self {
-//             let set = IndexSet::new();
-// let s = 0..1;
-//
-//             let indices = (0..from_len).into_iter().collect::<Vec<_>>();
-//             for item in moved {
-//                 for i in item.from..(item.from + item.len) {
-//
-//                 }
-//             }
-//
-//         };
-//         Default::default()
-//     }
-
-    /// Group adjacent items that are being moved as a group.
-    /// For example from `[2, 3, 5, 6]` to `[1, 2, 3, 4, 5, 6]` should result
-    /// in a move for `2,3` and `5,6` rather than 4 individual moves.
-    pub fn combine_move(&mut self) {
-        let Diff::PartDiff {
-            moved,
-            moved_sum_count,
-            ..
-        } = self
-        else {
-            return;
-        };
-        let mut prev: Option<DiffOpMove> = None;
-        let mut new_moved = Vec::with_capacity(*moved_sum_count);
-        for m in moved.drain(..) {
-            match prev {
-                Some(mut p) => {
-                    if (m.from == p.from + p.len) && (m.to == p.to + p.len) {
-                        p.len += 1;
-                        prev = Some(p);
-                    } else {
-                        new_moved.push(prev.take().unwrap());
-                        prev = Some(m);
-                    }
-                }
-                None => prev = Some(m),
+   /// Group adjacent items that are being moved as a group.
+   /// For example from `[2, 3, 5, 6]` to `[1, 2, 3, 4, 5, 6]` should result
+   /// in a move for `2,3` and `5,6` rather than 4 individual moves.
+   pub fn combine_move(&mut self) {
+      let Diff::PartDiff {
+         moved,
+         moved_sum_count,
+         ..
+      } = self
+      else {
+         return;
+      };
+      let mut prev: Option<DiffOpMove> = None;
+      let mut new_moved = Vec::with_capacity(*moved_sum_count);
+      for m in moved.drain(..) {
+         match prev {
+            Some(mut p) => {
+               if (m.from == p.from + p.len) && (m.to == p.to + p.len) {
+                  p.len += 1;
+                  prev = Some(p);
+               } else {
+                  new_moved.push(prev.take().unwrap());
+                  prev = Some(m);
+               }
             }
-        }
-        if let Some(prev) = prev {
-            new_moved.push(prev)
-        }
-        *moved = new_moved;
-    }
+            None => prev = Some(m),
+         }
+      }
+      if let Some(prev) = prev {
+         new_moved.push(prev)
+      }
+      *moved = new_moved;
+   }
 
-    pub fn unpack_moves(&self) -> (Vec<DiffOpMove>, Vec<usize>) {
-        let Diff::PartDiff {
-            moved,
-            moved_sum_count,
-            added,
-            removed,
-            ..
-        } = self
-        else {
-            return (Default::default(), Default::default());
-        };
+   pub fn unpack_moves(&self) -> (Vec<DiffOpMove>, Vec<usize>) {
+      let Diff::PartDiff {
+         moved,
+         moved_sum_count,
+         added,
+         removed,
+         ..
+      } = self
+      else {
+         return (Default::default(), Default::default());
+      };
 
-        let mut moves = Vec::with_capacity(*moved_sum_count);
-        let mut adds = Vec::with_capacity(added.len());
+      let mut moves = Vec::with_capacity(*moved_sum_count);
+      let mut adds = Vec::with_capacity(added.len());
 
-        let mut removes_iter = removed.iter();
-        let mut adds_iter = added.iter();
-        let mut moves_iter = moved.iter();
+      let mut removes_iter = removed.iter();
+      let mut adds_iter = added.iter();
+      let mut moves_iter = moved.iter();
 
-        let mut removes_next = removes_iter.next();
-        let mut adds_next = adds_iter.next();
-        let mut moves_next = moves_iter.next().copied();
+      let mut removes_next = removes_iter.next();
+      let mut adds_next = adds_iter.next();
+      let mut moves_next = moves_iter.next().copied();
 
-        for i in 0..moved_sum_count + added.len() + removed.len() {
-            if let Some(at) = removes_next {
-                if i == *at {
-                    removes_next = removes_iter.next();
+      for i in 0..moved_sum_count + added.len() + removed.len() {
+         if let Some(at) = removes_next {
+            if i == *at {
+               removes_next = removes_iter.next();
 
-                    continue;
-                }
+               continue;
             }
+         }
 
-            match (adds_next, &mut moves_next) {
-                (Some(add), Some(move_)) => {
-                    if *add == i {
-                        adds.push(*add);
+         match (adds_next, &mut moves_next) {
+            (Some(add), Some(move_)) => {
+               if *add == i {
+                  adds.push(*add);
 
-                        adds_next = adds_iter.next();
-                    } else {
-                        let mut single_move = *move_;
-                        single_move.len = 1;
+                  adds_next = adds_iter.next();
+               } else {
+                  let mut single_move = *move_;
+                  single_move.len = 1;
 
-                        moves.push(single_move);
+                  moves.push(single_move);
 
-                        move_.len -= 1;
-                        move_.from += 1;
-                        move_.to += 1;
+                  move_.len -= 1;
+                  move_.from += 1;
+                  move_.to += 1;
 
-                        if move_.len == 0 {
-                            moves_next = moves_iter.next().copied();
-                        }
-                    }
-                }
-                (Some(add), None) => {
-                    adds.push(*add);
-
-                    adds_next = adds_iter.next();
-                }
-                (None, Some(move_)) => {
-                    let mut single_move = *move_;
-                    single_move.len = 1;
-
-                    moves.push(single_move);
-
-                    move_.len -= 1;
-                    move_.from += 1;
-                    move_.to += 1;
-
-                    if move_.len == 0 {
-                        moves_next = moves_iter.next().copied();
-                    }
-                }
-                (None, None) => break,
+                  if move_.len == 0 {
+                     moves_next = moves_iter.next().copied();
+                  }
+               }
             }
-        }
+            (Some(add), None) => {
+               adds.push(*add);
 
-        (moves, adds)
-    }
+               adds_next = adds_iter.next();
+            }
+            (None, Some(move_)) => {
+               let mut single_move = *move_;
+               single_move.len = 1;
+
+               moves.push(single_move);
+
+               move_.len -= 1;
+               move_.from += 1;
+               move_.to += 1;
+
+               if move_.len == 0 {
+                  moves_next = moves_iter.next().copied();
+               }
+            }
+            (None, None) => break,
+         }
+      }
+
+      (moves, adds)
+   }
 }
 
 // fn apply_diff<V, R>(

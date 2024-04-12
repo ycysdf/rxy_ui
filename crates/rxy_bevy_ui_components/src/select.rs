@@ -5,8 +5,8 @@ use bevy::prelude::*;
 use bevy::render::color::Color;
 use rxy_bevy::FocusedEntity;
 use rxy_bevy::RendererState;
+use rxy_core::{ElementAttr, fn_schema_view, NodeTree, RendererNodeId, SchemaElementView, XNest};
 use rxy_core::utils::SyncCell;
-use rxy_core::{fn_schema_view, ElementAttr, NodeTree, RendererNodeId, SchemaElementView, XNest};
 use rxy_ui::prelude::*;
 
 use super::FocusStyle;

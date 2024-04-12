@@ -6,10 +6,10 @@ use crate::{Renderer, View};
 
 pub trait IntoView<R>: 'static
 where
-    R: Renderer,
+   R: Renderer,
 {
-    type View: View<R>;
-    fn into_view(self) -> Self::View;
+   type View: View<R>;
+   fn into_view(self) -> Self::View;
 }
 
 macro_rules! impl_into_view_for_tuples {
@@ -46,40 +46,40 @@ pub struct ToIntoView<T>(pub T);
 
 impl<R, T> IntoView<R> for ToIntoView<T>
 where
-    R: Renderer,
-    T: View<R>,
+   R: Renderer,
+   T: View<R>,
 {
-    type View = T;
+   type View = T;
 
-    #[inline]
-    fn into_view(self) -> Self::View {
-        self.0
-    }
+   #[inline]
+   fn into_view(self) -> Self::View {
+      self.0
+   }
 }
 
 #[inline]
 pub fn into_view<R: Renderer, V: View<R>>(view: V) -> ToIntoView<V> {
-    ToIntoView(view)
+   ToIntoView(view)
 }
 
 pub trait IntoCloneableView<R>: 'static
 where
-    R: Renderer,
+   R: Renderer,
 {
-    type View: View<R> + Clone;
-    fn into_cloneable_view(self) -> Self::View;
+   type View: View<R> + Clone;
+   fn into_cloneable_view(self) -> Self::View;
 }
 
 impl<R, T> IntoCloneableView<R> for T
 where
-    R: Renderer,
-    T: IntoView<R>,
-    T::View: Clone,
+   R: Renderer,
+   T: IntoView<R>,
+   T::View: Clone,
 {
-    type View = T::View;
+   type View = T::View;
 
-    #[inline]
-    fn into_cloneable_view(self) -> Self::View {
-        self.into_view()
-    }
+   #[inline]
+   fn into_cloneable_view(self) -> Self::View {
+      self.into_view()
+   }
 }

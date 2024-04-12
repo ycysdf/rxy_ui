@@ -11,11 +11,12 @@ mod serde;
 pub mod serialization;
 // pub mod shared_context;
 pub mod signal;
+mod signal_get_ext;
 pub mod signal_traits;
 mod source;
 pub mod spawn;
 pub mod store;
-mod signal_get_ext;
+
 pub use signal_get_ext::*;
 
 use crate::source::AnySubscriber;
@@ -24,20 +25,20 @@ use futures::{Future, Stream};
 use std::{cell::RefCell, pin::Pin};
 
 pub mod prelude {
-    pub use crate::{
-        // async_signal::{AsyncDerived, Resource},
-        // context::{provide_context, use_context},
-        effect::{create_effect, Effect},
-        memo::{use_memo, ArcMemo, Memo},
-        render_effect::create_render_effect,
-        signal::{
-            use_rw_signal, use_signal, ArcRwSignal, ArcWriteSignal, ReadSignal, RwSignal, WriteSignal,
-        },
-        signal_traits::*,
-        store::{StoreField, StoreFieldIndex, StoreFieldIterator},
-        Root,
-        BoolSignalExt
-    };
+   pub use crate::{
+      // async_signal::{AsyncDerived, Resource},
+      // context::{provide_context, use_context},
+      effect::{create_effect, Effect},
+      memo::{use_memo, ArcMemo, Memo},
+      render_effect::create_render_effect,
+      signal::{
+         use_rw_signal, use_signal, ArcRwSignal, ArcWriteSignal, ReadSignal, RwSignal, WriteSignal,
+      },
+      signal_traits::*,
+      store::{StoreField, StoreFieldIndex, StoreFieldIterator},
+      BoolSignalExt,
+      Root,
+   };
 }
 
 thread_local! {
@@ -50,36 +51,36 @@ pub type PinnedStream<T> = Pin<Box<dyn Stream<Item = T> + Send + Sync>>;
 pub(crate) struct Observer {}
 
 impl Observer {
-    fn get() -> Option<AnySubscriber> {
-        OBSERVER.with(|o| o.borrow().clone())
-    }
+   fn get() -> Option<AnySubscriber> {
+      OBSERVER.with(|o| o.borrow().clone())
+   }
 
-    fn is(observer: &AnySubscriber) -> bool {
-        OBSERVER.with(|o| o.borrow().as_ref() == Some(observer))
-    }
+   fn is(observer: &AnySubscriber) -> bool {
+      OBSERVER.with(|o| o.borrow().as_ref() == Some(observer))
+   }
 
-    fn take() -> Option<AnySubscriber> {
-        OBSERVER.with(|o| o.borrow_mut().take())
-    }
+   fn take() -> Option<AnySubscriber> {
+      OBSERVER.with(|o| o.borrow_mut().take())
+   }
 
-    fn set(observer: Option<AnySubscriber>) {
-        OBSERVER.with(|o| *o.borrow_mut() = observer);
-    }
+   fn set(observer: Option<AnySubscriber>) {
+      OBSERVER.with(|o| *o.borrow_mut() = observer);
+   }
 }
 
 pub fn untrack<T>(fun: impl FnOnce() -> T) -> T {
-    let prev = Observer::take();
-    let value = fun();
-    Observer::set(prev);
-    value
+   let prev = Observer::take();
+   let value = fun();
+   Observer::set(prev);
+   value
 }
 
 #[cfg(feature = "web")]
 pub fn log(s: &str) {
-    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(s));
+   web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(s));
 }
 
 #[cfg(not(feature = "web"))]
 pub fn log(s: &str) {
-    println!("{s}");
+   println!("{s}");
 }

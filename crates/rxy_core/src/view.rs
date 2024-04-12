@@ -2,130 +2,143 @@ use core::fmt::Debug;
 
 use crate::utils::all_tuples;
 
-use crate::{MaybeFromReflect, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, NodeTree, Renderer, RendererNodeId, RendererWorld, ViewCtx};
-
+use crate::{
+   MaybeFromReflect, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, NodeTree, Renderer,
+   RendererNodeId, RendererWorld, ViewCtx,
+};
 
 pub trait View<R: Renderer>: Sized + MaybeSend + 'static {
-    type Key: ViewKey<R>;
+   type Key: ViewKey<R>;
 
-    fn build(
-        self,
-        ctx: ViewCtx<R>,
-        reserve_key: Option<Self::Key>,
-        will_rebuild: bool,
-    ) -> Self::Key;
+   fn build(self, ctx: ViewCtx<R>, reserve_key: Option<Self::Key>, will_rebuild: bool)
+      -> Self::Key;
 
-    fn rebuild(self, ctx: ViewCtx<R>, key: Self::Key);
+   fn rebuild(self, ctx: ViewCtx<R>, key: Self::Key);
 }
 
 pub trait ViewKey<R: Renderer>:
-    MaybeReflect + MaybeFromReflect + MaybeTypePath + MaybeSend + MaybeSync + Clone + Debug + 'static
+   MaybeReflect + MaybeFromReflect + MaybeTypePath + MaybeSend + MaybeSync + Clone + Debug + 'static
 {
-    fn remove(self, world: &mut RendererWorld<R>);
+   fn remove(self, world: &mut RendererWorld<R>);
 
-    fn insert_before(
-        &self,
-        world: &mut RendererWorld<R>,
-        parent: Option<&RendererNodeId<R>>,
-        before_node_id: Option<&RendererNodeId<R>>,
-    );
+   fn insert_before(
+      &self,
+      world: &mut RendererWorld<R>,
+      parent: Option<&RendererNodeId<R>>,
+      before_node_id: Option<&RendererNodeId<R>>,
+   );
 
-    fn set_visibility(&self, world: &mut RendererWorld<R>, hidden: bool);
+   fn set_visibility(&self, world: &mut RendererWorld<R>, hidden: bool);
 
-    // You need to make sure that it doesn't change
-    fn state_node_id(&self) -> Option<RendererNodeId<R>>;
+   // You need to make sure that it doesn't change
+   fn state_node_id(&self) -> Option<RendererNodeId<R>>;
 
-    // Implements it and returns Some(Self) when state_node_id returns None
-    fn new_with_no_state_node()-> Option<Self>{
-        None
-    }
+   // Implements it and returns Some(Self) when state_node_id returns None
+   fn new_with_no_state_node() -> Option<Self> {
+      None
+   }
 
-    fn reserve_key(world: &mut RendererWorld<R>, will_rebuild: bool, parent: RendererNodeId<R>, spawn: bool) -> Self;
-    fn first_node_id(&self, world: &RendererWorld<R>) -> Option<RendererNodeId<R>>;
+   fn reserve_key(
+      world: &mut RendererWorld<R>,
+      will_rebuild: bool,
+      parent: RendererNodeId<R>,
+      spawn: bool,
+   ) -> Self;
+   fn first_node_id(&self, world: &RendererWorld<R>) -> Option<RendererNodeId<R>>;
 }
 
 pub trait SoloView<R: Renderer>: View<R> {
-    fn node_id(key: &Self::Key) -> &RendererNodeId<R>;
+   fn node_id(key: &Self::Key) -> &RendererNodeId<R>;
 }
 
 impl<R> View<R> for ()
 where
-    R: Renderer,
+   R: Renderer,
 {
-    type Key = ();
+   type Key = ();
 
-    fn build(
-        self,
-        _ctx: ViewCtx<R>,
-        _reserve_key: Option<Self::Key>,
-        _will_rebuild: bool,
-    ) -> Self::Key {
-    }
+   fn build(
+      self,
+      _ctx: ViewCtx<R>,
+      _reserve_key: Option<Self::Key>,
+      _will_rebuild: bool,
+   ) -> Self::Key {
+   }
 
-    fn rebuild(self, _ctx: ViewCtx<R>, _key: Self::Key) {}
+   fn rebuild(self, _ctx: ViewCtx<R>, _key: Self::Key) {}
 }
 
 impl<R> ViewKey<R> for ()
 where
-    R: Renderer,
+   R: Renderer,
 {
-    fn remove(self, _world: &mut RendererWorld<R>) {}
-    fn insert_before(
-        &self,
-        _world: &mut RendererWorld<R>,
-        _parent: Option<&RendererNodeId<R>>,
-        _before_node_id: Option<&RendererNodeId<R>>,
-    ) {
-    }
+   fn remove(self, _world: &mut RendererWorld<R>) {}
+   fn insert_before(
+      &self,
+      _world: &mut RendererWorld<R>,
+      _parent: Option<&RendererNodeId<R>>,
+      _before_node_id: Option<&RendererNodeId<R>>,
+   ) {
+   }
 
-    fn set_visibility(&self, _world: &mut RendererWorld<R>, _hidden: bool) {}
+   fn set_visibility(&self, _world: &mut RendererWorld<R>, _hidden: bool) {}
 
-    fn state_node_id(&self) -> Option<RendererNodeId<R>> {
-        None
-    }
+   fn state_node_id(&self) -> Option<RendererNodeId<R>> {
+      None
+   }
 
-    fn new_with_no_state_node() -> Option<Self> {
-        Some(())
-    }
+   fn new_with_no_state_node() -> Option<Self> {
+      Some(())
+   }
 
-    fn reserve_key(_world: &mut RendererWorld<R>, _will_rebuild: bool, _parent: RendererNodeId<R>, _spawn: bool) -> Self {}
+   fn reserve_key(
+      _world: &mut RendererWorld<R>,
+      _will_rebuild: bool,
+      _parent: RendererNodeId<R>,
+      _spawn: bool,
+   ) -> Self {
+   }
 
-    fn first_node_id(&self, _world: &RendererWorld<R>) -> Option<RendererNodeId<R>> {
-        None
-    }
+   fn first_node_id(&self, _world: &RendererWorld<R>) -> Option<RendererNodeId<R>> {
+      None
+   }
 }
 
 #[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
 #[derive(Clone, Debug)]
 pub struct DataNodeId<R: Renderer>(pub RendererNodeId<R>);
 
-
 impl<R> ViewKey<R> for DataNodeId<R>
 where
-    R: Renderer,
+   R: Renderer,
 {
-    fn remove(self, _world: &mut RendererWorld<R>) {}
-    fn insert_before(
-        &self,
-        _world: &mut RendererWorld<R>,
-        _parent: Option<&RendererNodeId<R>>,
-        _before_node_id: Option<&RendererNodeId<R>>,
-    ) {
-    }
+   fn remove(self, _world: &mut RendererWorld<R>) {}
+   fn insert_before(
+      &self,
+      _world: &mut RendererWorld<R>,
+      _parent: Option<&RendererNodeId<R>>,
+      _before_node_id: Option<&RendererNodeId<R>>,
+   ) {
+   }
 
-    fn set_visibility(&self, _world: &mut RendererWorld<R>, _hidden: bool) {}
+   fn set_visibility(&self, _world: &mut RendererWorld<R>, _hidden: bool) {}
 
-    fn state_node_id(&self) -> Option<RendererNodeId<R>> {
-        Some(self.0.clone())
-    }
+   fn state_node_id(&self) -> Option<RendererNodeId<R>> {
+      Some(self.0.clone())
+   }
 
-    fn reserve_key(world: &mut RendererWorld<R>, _will_rebuild: bool, _parent: RendererNodeId<R>, _spawn: bool) -> Self {
-        DataNodeId(world.reserve_node_id())
-    }
+   fn reserve_key(
+      world: &mut RendererWorld<R>,
+      _will_rebuild: bool,
+      _parent: RendererNodeId<R>,
+      _spawn: bool,
+   ) -> Self {
+      DataNodeId(world.reserve_node_id())
+   }
 
-    fn first_node_id(&self, _world: &RendererWorld<R>) -> Option<RendererNodeId<R>> {
-        None
-    }
+   fn first_node_id(&self, _world: &RendererWorld<R>) -> Option<RendererNodeId<R>> {
+      None
+   }
 }
 
 macro_rules! impl_view_key_for_tuples {

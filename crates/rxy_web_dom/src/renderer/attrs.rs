@@ -1,12 +1,15 @@
 #![allow(non_camel_case_types)]
 
+use super::elements::*;
 use crate::renderer::WebRenderer;
-use rxy_core::{AttrIndex, ElementAttrType, HasIndex, RendererNodeId, RendererWorld, count_macro, paste, ElementAttr, attrs_fn_define, impl_index_for_tys, XNest};
+use rxy_core::{
+   attrs_fn_define, count_macro, impl_index_for_tys, paste, AttrIndex, ElementAttr,
+   ElementAttrType, HasIndex, RendererNodeId, RendererWorld, XNest,
+};
 use std::borrow::Cow;
+use wasm_bindgen::intern;
 use web_sys::wasm_bindgen::JsCast;
 use web_sys::{Element, HtmlElement};
-use wasm_bindgen::intern;
-use super::elements::*;
 
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct WebRendererElementAttr<const INDEX: AttrIndex>;
@@ -252,18 +255,18 @@ define_element_attr_fns! {
 
 pub struct node_value;
 
-impl ElementAttrType<WebRenderer> for node_value{
-    type Value = Cow<'static, str>;
+impl ElementAttrType<WebRenderer> for node_value {
+   type Value = Cow<'static, str>;
 
-    const NAME: &'static str = stringify!(node-value);
+   const NAME: &'static str = stringify!(node - value);
 
-    fn update_value(
-        _world: &mut RendererWorld<WebRenderer>,
-        node_id: RendererNodeId<WebRenderer>,
-        value: impl Into<Self::Value>,
-    ) {
-        node_id.set_node_value(Some(&*value.into()));
-    }
+   fn update_value(
+      _world: &mut RendererWorld<WebRenderer>,
+      node_id: RendererNodeId<WebRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      node_id.set_node_value(Some(&*value.into()));
+   }
 }
 
 // define_element_attr!(@attribute value);

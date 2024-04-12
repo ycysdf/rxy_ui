@@ -8,7 +8,12 @@ use bevy_reflect::Reflect;
 use bevy_tasks::Task;
 
 pub use composite_attrs::*;
-use rxy_core::{DeferredNodeTreeScoped, Element, ElementAttr, ElementTypeUnTyped, ElementViewChildren, Renderer, RendererWorld};
+use rxy_core::{
+   DeferredNodeTreeScoped, Element, ElementAttr, ElementTypeUnTyped, ElementViewChildren, Renderer,
+   RendererWorld,
+};
+#[cfg(feature = "tailwind_aliases")]
+pub use tailwind_attrs::*;
 pub use text_styled_element::*;
 
 use crate::elements::element_div;
@@ -22,27 +27,24 @@ mod node_tree;
 mod text_styled_element;
 mod view_key;
 
+pub mod event;
 #[cfg(feature = "style")]
 pub mod style;
 #[cfg(feature = "tailwind_aliases")]
 mod tailwind_attrs;
-pub mod event;
 pub mod view_builder_ext;
-
-#[cfg(feature = "tailwind_aliases")]
-pub use tailwind_attrs::*;
 
 #[inline]
 pub fn view_element_type() -> &'static dyn ElementTypeUnTyped<BevyRenderer> {
-    &element_div
+   &element_div
 }
 
 pub type BevyElement<E, VM> = Element<BevyRenderer, E, VM>;
 #[cfg(feature = "dynamic_element")]
-pub type DynamicBevyElement<E> = rxy_core::DynamicElement<BevyRenderer,E>;
+pub type DynamicBevyElement<E> = rxy_core::DynamicElement<BevyRenderer, E>;
 
 pub type BevyElementViewChildren<CV, E, VM> =
-    ElementViewChildren<BevyRenderer, Element<BevyRenderer, E, VM>, CV>;
+   ElementViewChildren<BevyRenderer, Element<BevyRenderer, E, VM>, CV>;
 
 pub type BevyElementAttrMember<EA> = ElementAttr<BevyRenderer, EA>;
 
@@ -55,35 +57,35 @@ pub struct RendererState<T: Send + Sync + 'static>(pub T);
 pub struct BevyRenderer;
 
 impl Renderer for BevyRenderer {
-    type NodeId = Entity;
-    type NodeTree = World;
+   type NodeId = Entity;
+   type NodeTree = World;
 
-    #[cfg(not(target_arch = "wasm32"))]
-    type Task<T: Send + 'static> = Task<T>;
+   #[cfg(not(target_arch = "wasm32"))]
+   type Task<T: Send + 'static> = Task<T>;
 
-    #[cfg(target_arch = "wasm32")]
-    type Task<T: Send + 'static> = ();
+   #[cfg(target_arch = "wasm32")]
+   type Task<T: Send + 'static> = ();
 
-    #[cfg(any(target_arch = "wasm32", not(feature = "multi-threaded")))]
-    fn spawn_task<T: Send + 'static>(
-        future: impl Future<Output = T> + Send + 'static,
-    ) -> Self::Task<T> {
-        bevy_tasks::AsyncComputeTaskPool::get().spawn(future)
-    }
+   #[cfg(any(target_arch = "wasm32", not(feature = "multi-threaded")))]
+   fn spawn_task<T: Send + 'static>(
+      future: impl Future<Output = T> + Send + 'static,
+   ) -> Self::Task<T> {
+      bevy_tasks::AsyncComputeTaskPool::get().spawn(future)
+   }
 
-    #[cfg(target_arch = "wasm32")]
-    fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) -> Self::Task<T> {
-        bevy_tasks::AsyncComputeTaskPool::get().spawn(future);
-    }
+   #[cfg(target_arch = "wasm32")]
+   fn spawn<T: Send + 'static>(future: impl Future<Output = T> + Send + 'static) -> Self::Task<T> {
+      bevy_tasks::AsyncComputeTaskPool::get().spawn(future);
+   }
 }
 
 #[derive(Clone)]
 pub struct BevyDeferredWorldScoped {
-    cmd_sender: CmdSender,
+   cmd_sender: CmdSender,
 }
 
 impl DeferredNodeTreeScoped<BevyRenderer> for BevyDeferredWorldScoped {
-    fn scoped(&self, f: impl FnOnce(&mut RendererWorld<BevyRenderer>) + Send + 'static) {
-        self.cmd_sender.add(move |world: &mut World| f(world))
-    }
+   fn scoped(&self, f: impl FnOnce(&mut RendererWorld<BevyRenderer>) + Send + 'static) {
+      self.cmd_sender.add(move |world: &mut World| f(world))
+   }
 }

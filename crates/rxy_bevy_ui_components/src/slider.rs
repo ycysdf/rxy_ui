@@ -1,24 +1,21 @@
-use bevy::prelude::*;
-use rxy_ui::prelude::*;
-
-use bevy::{
-   app::AppExit,
-   prelude::{Color, Res},
-};
-use bevy_mod_picking::prelude::On;
 use std::fmt::Debug;
 
-use super::{FocusStyle, XConfirm, COLOR_PRIMARY};
+use bevy::{
+    app::AppExit,
+    prelude::{Color, Res},
+};
+use bevy::prelude::*;
+use bevy_mod_picking::prelude::On;
+use rxy_ui::prelude::*;
+
+use super::{COLOR_PRIMARY, FocusStyle, XConfirm};
 
 #[derive(TypedStyle)]
 pub struct SliderRootStyle;
-
 #[derive(TypedStyle)]
 pub struct SliderBgStyle;
-
 #[derive(TypedStyle)]
 pub struct SliderIndicatorStyle;
-
 #[derive(TypedStyle)]
 pub struct SliderThumbStyle;
 

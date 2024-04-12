@@ -2,20 +2,20 @@ use bevy::prelude::*;
 use rxy_ui::prelude::*;
 
 fn main() {
-    let mut app = App::new();
-    app.add_plugins((
-        DefaultPlugins,
-        RxyPlugin::default(),
-        RxyStyleSheetPlugin::default(),
-    ))
-    .add_systems(Startup, setup);
+   let mut app = App::new();
+   app.add_plugins((
+      DefaultPlugins,
+      RxyPlugin::default(),
+      RxyStyleSheetPlugin::default(),
+   ))
+   .add_systems(Startup, setup);
 
-    app.run();
+   app.run();
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
-    commands.spawn_view_on_root(ui());
+   commands.spawn(Camera2dBundle::default());
+   commands.spawn_view_on_root(ui());
 }
 
 // fn ui() -> impl IntoView<BevyRenderer> {
@@ -80,22 +80,22 @@ fn setup(mut commands: Commands) {
 // }
 
 fn ui() -> impl IntoView<BevyRenderer> {
-    let signal = use_rw_signal(false);
-    div().style(x().gap(3).flex_col()).children((
-        "--Header--",
-        div()
-            .on_pointer_click(move || {
-                signal.update(|n| *n = !*n);
-            })
-            .style(Some((
-                x().bg_color(Color::BLUE).height(100.).width(100.),
-                // hover().bg_color(Color::WHITE),
-            )))
-            .rx_style(move || {
-                signal
-                    .get()
-                    .then_some((x().bg_color(Color::RED), x_hover().bg_color(Color::WHITE)))
-            }),
-        "--Footer--",
-    ))
+   let signal = use_rw_signal(false);
+   div().style(x().gap(3).flex_col()).children((
+      "--Header--",
+      div()
+         .on_pointer_click(move || {
+            signal.update(|n| *n = !*n);
+         })
+         .style(Some((
+            x().bg_color(Color::BLUE).height(100.).width(100.),
+            // hover().bg_color(Color::WHITE),
+         )))
+         .rx_style(move || {
+            signal
+               .get()
+               .then_some((x().bg_color(Color::RED), x_hover().bg_color(Color::WHITE)))
+         }),
+      "--Footer--",
+   ))
 }

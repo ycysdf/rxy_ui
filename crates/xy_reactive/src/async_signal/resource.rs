@@ -29,30 +29,30 @@ impl<T, Ser> Deref for ArcResource<T, Ser> {
 }
 
 impl<T> ArcResource<T, Str>
-where
-    T: SerializableData<Str>,
-    T::SerErr: Debug,
-    T::DeErr: Debug,
+    where
+        T: SerializableData<Str>,
+        T::SerErr: Debug,
+        T::DeErr: Debug,
 {
     pub fn new<Fut>(fun: impl Fn() -> Fut + Send + Sync + 'static) -> Self
-    where
-        T: Send + Sync + 'static,
-        Fut: Future<Output = T> + Send + Sync + 'static,
+        where
+            T: Send + Sync + 'static,
+            Fut: Future<Output=T> + Send + Sync + 'static,
     {
         ArcResource::new_with_encoding(fun)
     }
 }
 
 impl<T> ArcResource<T, SerdeJson>
-where
-    T: SerializableData<SerdeJson>,
-    T::SerErr: Debug,
-    T::DeErr: Debug,
+    where
+        T: SerializableData<SerdeJson>,
+        T::SerErr: Debug,
+        T::DeErr: Debug,
 {
     pub fn new_serde<Fut>(fun: impl Fn() -> Fut + Send + Sync + 'static) -> Self
-    where
-        T: Send + Sync + 'static,
-        Fut: Future<Output = T> + Send + Sync + 'static,
+        where
+            T: Send + Sync + 'static,
+            Fut: Future<Output=T> + Send + Sync + 'static,
     {
         ArcResource::new_with_encoding(fun)
     }
@@ -60,17 +60,17 @@ where
 
 #[cfg(feature = "miniserde")]
 impl<T> ArcResource<T, Miniserde>
-where
-    T: SerializableData<Miniserde>,
-    T::SerErr: Debug,
-    T::DeErr: Debug,
+    where
+        T: SerializableData<Miniserde>,
+        T::SerErr: Debug,
+        T::DeErr: Debug,
 {
     pub fn new_miniserde<Fut>(
         fun: impl Fn() -> Fut + Send + Sync + 'static,
     ) -> Self
-    where
-        T: Send + Sync + 'static,
-        Fut: Future<Output = T> + Send + Sync + 'static,
+        where
+            T: Send + Sync + 'static,
+            Fut: Future<Output=T> + Send + Sync + 'static,
     {
         ArcResource::new_with_encoding(fun)
     }
@@ -78,17 +78,17 @@ where
 
 #[cfg(feature = "serde-lite")]
 impl<T> ArcResource<T, SerdeLite>
-where
-    T: SerializableData<SerdeLite>,
-    T::SerErr: Debug,
-    T::DeErr: Debug,
+    where
+        T: SerializableData<SerdeLite>,
+        T::SerErr: Debug,
+        T::DeErr: Debug,
 {
     pub fn new_serde_lite<Fut>(
         fun: impl Fn() -> Fut + Send + Sync + 'static,
     ) -> Self
-    where
-        T: Send + Sync + 'static,
-        Fut: Future<Output = T> + Send + Sync + 'static,
+        where
+            T: Send + Sync + 'static,
+            Fut: Future<Output=T> + Send + Sync + 'static,
     {
         ArcResource::new_with_encoding(fun)
     }
@@ -96,33 +96,33 @@ where
 
 #[cfg(feature = "rkyv")]
 impl<T> ArcResource<T, SerdeLite>
-where
-    T: SerializableData<SerdeLite>,
-    T::SerErr: Debug,
-    T::DeErr: Debug,
+    where
+        T: SerializableData<SerdeLite>,
+        T::SerErr: Debug,
+        T::DeErr: Debug,
 {
     pub fn new_rkyv<Fut>(fun: impl Fn() -> Fut + Send + Sync + 'static) -> Self
-    where
-        T: Send + Sync + 'static,
-        Fut: Future<Output = T> + Send + Sync + 'static,
+        where
+            T: Send + Sync + 'static,
+            Fut: Future<Output=T> + Send + Sync + 'static,
     {
         ArcResource::new_with_encoding(fun)
     }
 }
 
 impl<T, Ser> ArcResource<T, Ser>
-where
-    Ser: Serializer,
-    T: SerializableData<Ser>,
-    T::SerErr: Debug,
-    T::DeErr: Debug,
+    where
+        Ser: Serializer,
+        T: SerializableData<Ser>,
+        T::SerErr: Debug,
+        T::DeErr: Debug,
 {
     pub fn new_with_encoding<Fut>(
         fun: impl Fn() -> Fut + Send + Sync + 'static,
     ) -> ArcResource<T, Ser>
-    where
-        T: Send + Sync + 'static,
-        Fut: Future<Output = T> + Send + Sync + 'static,
+        where
+            T: Send + Sync + 'static,
+            Fut: Future<Output=T> + Send + Sync + 'static,
     {
         let id = Owner::shared_context()
             .map(|sc| sc.next_id())
@@ -179,8 +179,8 @@ where
 }
 
 impl<T, Ser> IntoFuture for ArcResource<T, Ser>
-where
-    T: Clone + 'static,
+    where
+        T: Clone + 'static,
 {
     type Output = T;
     type IntoFuture = AsyncDerivedFuture<T>;
@@ -191,8 +191,8 @@ where
 }
 
 pub struct Resource<T, Ser>
-where
-    T: Send + Sync + 'static,
+    where
+        T: Send + Sync + 'static,
 {
     ser: PhantomData<Ser>,
     data: AsyncDerived<T>,
@@ -207,8 +207,8 @@ impl<T: Send + Sync + 'static, Ser> Clone for Resource<T, Ser> {
 }
 
 impl<T, Ser> Deref for Resource<T, Ser>
-where
-    T: Send + Sync + 'static,
+    where
+        T: Send + Sync + 'static,
 {
     type Target = AsyncDerived<T>;
 
@@ -218,30 +218,30 @@ where
 }
 
 impl<T> Resource<T, Str>
-where
-    T: SerializableData<Str> + Send + Sync + 'static,
-    T::SerErr: Debug,
-    T::DeErr: Debug,
+    where
+        T: SerializableData<Str> + Send + Sync + 'static,
+        T::SerErr: Debug,
+        T::DeErr: Debug,
 {
     pub fn new<Fut>(fun: impl Fn() -> Fut + Send + Sync + 'static) -> Self
-    where
-        T: Send + Sync + 'static,
-        Fut: Future<Output = T> + Send + Sync + 'static,
+        where
+            T: Send + Sync + 'static,
+            Fut: Future<Output=T> + Send + Sync + 'static,
     {
         Resource::new_with_encoding(fun)
     }
 }
 
 impl<T> Resource<T, SerdeJson>
-where
-    T: SerializableData<SerdeJson> + Send + Sync + 'static,
-    T::SerErr: Debug,
-    T::DeErr: Debug,
+    where
+        T: SerializableData<SerdeJson> + Send + Sync + 'static,
+        T::SerErr: Debug,
+        T::DeErr: Debug,
 {
     pub fn new_serde<Fut>(fun: impl Fn() -> Fut + Send + Sync + 'static) -> Self
-    where
-        T: Send + Sync + 'static,
-        Fut: Future<Output = T> + Send + Sync + 'static,
+        where
+            T: Send + Sync + 'static,
+            Fut: Future<Output=T> + Send + Sync + 'static,
     {
         Resource::new_with_encoding(fun)
     }
@@ -249,17 +249,17 @@ where
 
 #[cfg(feature = "miniserde")]
 impl<T> Resource<T, Miniserde>
-where
-    T: SerializableData<Miniserde> + Send + Sync + 'static,
-    T::SerErr: Debug,
-    T::DeErr: Debug,
+    where
+        T: SerializableData<Miniserde> + Send + Sync + 'static,
+        T::SerErr: Debug,
+        T::DeErr: Debug,
 {
     pub fn new_miniserde<Fut>(
         fun: impl Fn() -> Fut + Send + Sync + 'static,
     ) -> Self
-    where
-        T: Send + Sync + 'static,
-        Fut: Future<Output = T> + Send + Sync + 'static,
+        where
+            T: Send + Sync + 'static,
+            Fut: Future<Output=T> + Send + Sync + 'static,
     {
         Resource::new_with_encoding(fun)
     }
@@ -267,17 +267,17 @@ where
 
 #[cfg(feature = "serde-lite")]
 impl<T> Resource<T, SerdeLite>
-where
-    T: SerializableData<SerdeLite> + Send + Sync + 'static,
-    T::SerErr: Debug,
-    T::DeErr: Debug,
+    where
+        T: SerializableData<SerdeLite> + Send + Sync + 'static,
+        T::SerErr: Debug,
+        T::DeErr: Debug,
 {
     pub fn new_serde_lite<Fut>(
         fun: impl Fn() -> Fut + Send + Sync + 'static,
     ) -> Self
-    where
-        T: Send + Sync + 'static,
-        Fut: Future<Output = T> + Send + Sync + 'static,
+        where
+            T: Send + Sync + 'static,
+            Fut: Future<Output=T> + Send + Sync + 'static,
     {
         Resource::new_with_encoding(fun)
     }
@@ -285,33 +285,33 @@ where
 
 #[cfg(feature = "rkyv")]
 impl<T> Resource<T, Rkyv>
-where
-    T: SerializableData<Rkyv> + Send + Sync + 'static,
-    T::SerErr: Debug,
-    T::DeErr: Debug,
+    where
+        T: SerializableData<Rkyv> + Send + Sync + 'static,
+        T::SerErr: Debug,
+        T::DeErr: Debug,
 {
     pub fn new_rkyv<Fut>(fun: impl Fn() -> Fut + Send + Sync + 'static) -> Self
-    where
-        T: Send + Sync + 'static,
-        Fut: Future<Output = T> + Send + Sync + 'static,
+        where
+            T: Send + Sync + 'static,
+            Fut: Future<Output=T> + Send + Sync + 'static,
     {
         Resource::new_with_encoding(fun)
     }
 }
 
 impl<T, Ser> Resource<T, Ser>
-where
-    Ser: Serializer,
-    T: SerializableData<Ser> + Send + Sync + 'static,
-    T::SerErr: Debug,
-    T::DeErr: Debug,
+    where
+        Ser: Serializer,
+        T: SerializableData<Ser> + Send + Sync + 'static,
+        T::SerErr: Debug,
+        T::DeErr: Debug,
 {
     pub fn new_with_encoding<Fut>(
         fun: impl Fn() -> Fut + Send + Sync + 'static,
     ) -> Resource<T, Ser>
-    where
-        T: Send + Sync + 'static,
-        Fut: Future<Output = T> + Send + Sync + 'static,
+        where
+            T: Send + Sync + 'static,
+            Fut: Future<Output=T> + Send + Sync + 'static,
     {
         let id = Owner::shared_context()
             .map(|sc| sc.next_id())
@@ -368,8 +368,8 @@ where
 }
 
 impl<T, Ser> IntoFuture for Resource<T, Ser>
-where
-    T: Clone + Send + Sync + 'static,
+    where
+        T: Clone + Send + Sync + 'static,
 {
     type Output = T;
     type IntoFuture = AsyncDerivedFuture<T>;

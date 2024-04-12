@@ -1,27 +1,28 @@
+use std::iter::once;
+
 use crate::style::{StyleItemValue, StyleSheetCtx};
 use crate::utils::all_tuples;
-use crate::{smallbox, ElementAttrType, ElementAttr, Renderer};
-use std::iter::once;
+use crate::{smallbox, ElementAttr, ElementAttrType, Renderer};
 
 pub trait StyleSheetItems<R>: Send + 'static
 where
-    R: Renderer,
+   R: Renderer,
 {
-    fn iter(self, ctx: StyleSheetCtx<R>) -> impl Iterator<Item = StyleItemValue> + 'static;
+   fn iter(self, ctx: StyleSheetCtx<R>) -> impl Iterator<Item = StyleItemValue> + 'static;
 }
 
 impl<R, EA> StyleSheetItems<R> for ElementAttr<R, EA>
 where
-    R: Renderer,
-    EA: ElementAttrType<R>,
+   R: Renderer,
+   EA: ElementAttrType<R>,
 {
-    #[inline]
-    fn iter(self, _ctx: StyleSheetCtx<R>) -> impl Iterator<Item = StyleItemValue> + 'static {
-        once(StyleItemValue {
-            attr_id: EA::INDEX,
-            value: smallbox!(self.0),
-        })
-    }
+   #[inline]
+   fn iter(self, _ctx: StyleSheetCtx<R>) -> impl Iterator<Item = StyleItemValue> + 'static {
+      once(StyleItemValue {
+         attr_id: EA::INDEX,
+         value: smallbox!(self.0),
+      })
+   }
 }
 
 macro_rules! impl_style_sheet_items_for_tuple {

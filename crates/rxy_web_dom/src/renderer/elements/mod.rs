@@ -1,39 +1,39 @@
+use crate::attrs::node_value;
 use crate::renderer::{body, document, WebRenderer};
 use crate::{span, WebElement};
 use rxy_core::MapToAttrMarker;
 use rxy_core::MemberOwner;
 use rxy_core::{count_macro, paste, view_children, ElementAttrMember, ElementViewChildren, XNest};
 use rxy_core::{
-    ElementAttrUntyped, ElementType, ElementTypeUnTyped, RendererNodeId, RendererWorld,
+   ElementAttrUntyped, ElementType, ElementTypeUnTyped, RendererNodeId, RendererWorld,
 };
 use wasm_bindgen::intern;
 use web_sys::wasm_bindgen::JsValue;
 use web_sys::Node;
-use crate::attrs::node_value;
 
 pub fn replace_placeholder(placeholder: &Node, new_node: &Node) -> Result<(), JsValue> {
-    placeholder
-        .parent_node()
-        .unwrap()
-        .replace_child(new_node, placeholder)?;
-    Ok(())
+   placeholder
+      .parent_node()
+      .unwrap()
+      .replace_child(new_node, placeholder)?;
+   Ok(())
 }
 
 pub fn spawn_element(
-    name: &str,
-    parent: Option<&RendererNodeId<WebRenderer>>,
-    reserve_node_id: Option<RendererNodeId<WebRenderer>>,
+   name: &str,
+   parent: Option<&RendererNodeId<WebRenderer>>,
+   reserve_node_id: Option<RendererNodeId<WebRenderer>>,
 ) -> RendererNodeId<WebRenderer> {
-    let element = document().create_element(name).unwrap();
-    if let Some(reserve_node_id) = reserve_node_id {
-        replace_placeholder(&reserve_node_id, &element).unwrap();
-    }
-    if let Some(parent) = parent {
-        parent.append_child(&element).unwrap();
-    } else {
-        body().append_child(&element).unwrap();
-    }
-    element.into()
+   let element = document().create_element(name).unwrap();
+   if let Some(reserve_node_id) = reserve_node_id {
+      replace_placeholder(&reserve_node_id, &element).unwrap();
+   }
+   if let Some(parent) = parent {
+      parent.append_child(&element).unwrap();
+   } else {
+      body().append_child(&element).unwrap();
+   }
+   element.into()
 }
 
 #[derive(Default, Debug, Clone, Copy)]
@@ -112,7 +112,7 @@ macro_rules! define_view_fns {
 }
 
 pub type WebElementWithContent<E, VM> =
-    ElementViewChildren<WebRenderer, WebElement<E, ()>, WebElement<element_text, (VM,)>>;
+   ElementViewChildren<WebRenderer, WebElement<E, ()>, WebElement<element_text, (VM,)>>;
 
 macro_rules! define_view_fns_with_content {
     ($($ty:ident)*) => {
@@ -169,27 +169,27 @@ define_view_fns! {
 pub struct element_text;
 
 impl ElementType<WebRenderer> for element_text {
-    const TAG_NAME: &'static str = stringify!(text);
+   const TAG_NAME: &'static str = stringify!(text);
 
-    fn get() -> &'static dyn ElementTypeUnTyped<WebRenderer> {
-        &Self
-    }
+   fn get() -> &'static dyn ElementTypeUnTyped<WebRenderer> {
+      &Self
+   }
 
-    #[inline]
-    fn spawn(
-        _world: &mut RendererWorld<WebRenderer>,
-        parent: Option<&RendererNodeId<WebRenderer>>,
-        reserve_node_id: Option<RendererNodeId<WebRenderer>>,
-    ) -> RendererNodeId<WebRenderer> {
-        let element = document().create_text_node("");
-        if let Some(reserve_node_id) = reserve_node_id {
-            replace_placeholder(&reserve_node_id, &element).unwrap();
-        }
-        if let Some(parent) = parent {
-            parent.append_child(&element).unwrap();
-        } else {
-            body().append_child(&element).unwrap();
-        }
-        element.into()
-    }
+   #[inline]
+   fn spawn(
+      _world: &mut RendererWorld<WebRenderer>,
+      parent: Option<&RendererNodeId<WebRenderer>>,
+      reserve_node_id: Option<RendererNodeId<WebRenderer>>,
+   ) -> RendererNodeId<WebRenderer> {
+      let element = document().create_text_node("");
+      if let Some(reserve_node_id) = reserve_node_id {
+         replace_placeholder(&reserve_node_id, &element).unwrap();
+      }
+      if let Some(parent) = parent {
+         parent.append_child(&element).unwrap();
+      } else {
+         body().append_child(&element).unwrap();
+      }
+      element.into()
+   }
 }

@@ -1,131 +1,139 @@
-mod attr_style_owner;
-mod style_sheet_definition;
-mod style_sheet_items;
-mod view_member;
-
-use crate::utils::all_tuples;
-use crate::{AttrIndex, AttrValue, Either, EitherExt, MemberOwner, NodeTree, Renderer, RendererNodeId, RendererWorld, SmallBox, ViewMember, XValueWrapper, S1, ViewMemberOrigin};
-pub use attr_style_owner::*;
-use bevy_utils::HashMap;
-use derive_more::{Deref, DerefMut, From, IntoIterator};
 use std::any::TypeId;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::iter::{once, Chain};
 use std::ops::{AddAssign, Deref};
+
+use bevy_utils::HashMap;
+use derive_more::{Deref, DerefMut, From, IntoIterator};
+
+pub use attr_style_owner::*;
 pub use style_sheet_definition::*;
 pub use style_sheet_items::*;
 pub use view_member::*;
 
+use crate::utils::all_tuples;
+use crate::{
+   AttrIndex, AttrValue, Either, EitherExt, MemberOwner, NodeTree, Renderer, RendererNodeId,
+   RendererWorld, SmallBox, ViewMember, ViewMemberOrigin, XValueWrapper, S1,
+};
+
+mod attr_style_owner;
+mod style_sheet_definition;
+mod style_sheet_items;
+mod view_member;
+
 pub trait StyledNodeTree<R>: NodeTree<R>
 where
-    R: Renderer<NodeTree = Self>,
+   R: Renderer<NodeTree = Self>,
 {
-    fn unbuild_style_sheet(
-        &mut self,
-        node_id: RendererNodeId<R>,
-        state: ApplyStyleSheetsMemberState,
-    ) -> Result<R>;
+   fn unbuild_style_sheet(
+      &mut self,
+      node_id: RendererNodeId<R>,
+      state: ApplyStyleSheetsMemberState,
+   ) -> Result<R>;
 
-    fn build_style_sheets<T>(
-        &mut self,
-        node_id: RendererNodeId<R>,
-        style_sheets: T,
-        state: Option<ApplyStyleSheetsMemberState>,
-    ) -> Result<R, ApplyStyleSheetsMemberState>
-    where
-        T: StyleSheets<R>;
+   fn build_style_sheets<T>(
+      &mut self,
+      node_id: RendererNodeId<R>,
+      style_sheets: T,
+      state: Option<ApplyStyleSheetsMemberState>,
+   ) -> Result<R, ApplyStyleSheetsMemberState>
+   where
+      T: StyleSheets<R>;
 
-    fn rebuild_style_sheet<T>(
-        &mut self,
-        node_id: RendererNodeId<R>,
-        style_sheets: T,
-        state: ApplyStyleSheetsMemberState,
-    ) -> Result<R>
-    where
-        T: StyleSheets<R>;
+   fn rebuild_style_sheet<T>(
+      &mut self,
+      node_id: RendererNodeId<R>,
+      style_sheets: T,
+      state: ApplyStyleSheetsMemberState,
+   ) -> Result<R>
+   where
+      T: StyleSheets<R>;
 }
 
 pub type Result<R, T = ()> = core::result::Result<T, StyleError<R>>;
 pub type StyleAttrValue = SmallBox<dyn AttrValue, S1>;
 
 pub mod prelude {
-    pub use super::{x, x_active, x_focus, x_hover};
-    pub use rxy_macro::TypedStyle;
+   pub use rxy_macro::TypedStyle;
+
+   pub use super::{x, x_active, x_focus, x_hover};
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub struct NodeStyleItemId {
-    pub item_index: StyleItemIndex,
-    pub sheet_id: NodeStyleSheetId,
+   pub item_index: StyleItemIndex,
+   pub sheet_id: NodeStyleSheetId,
 }
 
 impl PartialOrd for NodeStyleItemId {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
+   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+      Some(self.cmp(other))
+   }
 }
 
 impl Ord for NodeStyleItemId {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.sheet_id
-            .location
-            .cmp(&other.sheet_id.location)
-            .then_with(|| self.sheet_id.index.cmp(&other.sheet_id.index))
-            .then_with(|| self.item_index.cmp(&other.item_index))
-    }
+   fn cmp(&self, other: &Self) -> Ordering {
+      self
+         .sheet_id
+         .location
+         .cmp(&other.sheet_id.location)
+         .then_with(|| self.sheet_id.index.cmp(&other.sheet_id.index))
+         .then_with(|| self.item_index.cmp(&other.item_index))
+   }
 }
 
 impl From<NodeStyleItemId> for NodeStyleSheetId {
-    fn from(val: NodeStyleItemId) -> Self {
-        val.sheet_id
-    }
+   fn from(val: NodeStyleItemId) -> Self {
+      val.sheet_id
+   }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub struct NodeInterStyleItemId {
-    pub style_interaction: StyleInteraction,
-    pub style_item_id: NodeAttrStyleItemId,
+   pub style_interaction: StyleInteraction,
+   pub style_item_id: NodeAttrStyleItemId,
 }
 
 impl From<NodeInterStyleItemId> for NodeStyleItemId {
-    fn from(val: NodeInterStyleItemId) -> Self {
-        val.style_item_id.item_id
-    }
+   fn from(val: NodeInterStyleItemId) -> Self {
+      val.style_item_id.item_id
+   }
 }
 
 impl From<NodeInterStyleItemId> for NodeAttrStyleItemId {
-    fn from(val: NodeInterStyleItemId) -> Self {
-        val.style_item_id
-    }
+   fn from(val: NodeInterStyleItemId) -> Self {
+      val.style_item_id
+   }
 }
 
 impl Deref for NodeInterStyleItemId {
-    type Target = NodeAttrStyleItemId;
+   type Target = NodeAttrStyleItemId;
 
-    fn deref(&self) -> &Self::Target {
-        &self.style_item_id
-    }
+   fn deref(&self) -> &Self::Target {
+      &self.style_item_id
+   }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub struct NodeAttrStyleItemId {
-    pub attr_id: AttrIndex,
-    pub item_id: NodeStyleItemId,
+   pub attr_id: AttrIndex,
+   pub item_id: NodeStyleItemId,
 }
 
 impl From<NodeAttrStyleItemId> for NodeStyleSheetId {
-    fn from(val: NodeAttrStyleItemId) -> Self {
-        val.item_id.into()
-    }
+   fn from(val: NodeAttrStyleItemId) -> Self {
+      val.item_id.into()
+   }
 }
 
 impl Deref for NodeAttrStyleItemId {
-    type Target = NodeStyleItemId;
+   type Target = NodeStyleItemId;
 
-    fn deref(&self) -> &Self::Target {
-        &self.item_id
-    }
+   fn deref(&self) -> &Self::Target {
+      &self.item_id
+   }
 }
 
 pub type SharedStyleSheetId = TypeId;
@@ -134,145 +142,145 @@ pub type SharedStyleSheetId = TypeId;
 pub struct StyleSheetOwner<T>(pub Option<StyleInteraction>, pub T);
 
 pub fn x() -> StyleSheetOwner<()> {
-    StyleSheetOwner(None, ())
+   StyleSheetOwner(None, ())
 }
 
 pub fn x_hover() -> StyleSheetOwner<()> {
-    StyleSheetOwner(Some(StyleInteraction::Hover), ())
+   StyleSheetOwner(Some(StyleInteraction::Hover), ())
 }
 
 pub fn x_active() -> StyleSheetOwner<()> {
-    StyleSheetOwner(Some(StyleInteraction::Active), ())
+   StyleSheetOwner(Some(StyleInteraction::Active), ())
 }
 
 pub fn x_focus() -> StyleSheetOwner<()> {
-    StyleSheetOwner(Some(StyleInteraction::Focus), ())
+   StyleSheetOwner(Some(StyleInteraction::Focus), ())
 }
 
 impl<R, T> MemberOwner<R> for StyleSheetOwner<T>
 where
-    R: Renderer,
-    T: MemberOwner<R>,
+   R: Renderer,
+   T: MemberOwner<R>,
 {
-    type E = T::E;
-    type VM = T::VM;
-    type AddMember<VM: ViewMember<R>> = StyleSheetOwner<T::AddMember<VM>>;
-    type SetMembers<VM: ViewMember<R> + MemberOwner<R>> = StyleSheetOwner<T::SetMembers<VM>>;
+   type E = T::E;
+   type VM = T::VM;
+   type AddMember<VM: ViewMember<R>> = StyleSheetOwner<T::AddMember<VM>>;
+   type SetMembers<VM: ViewMember<R> + MemberOwner<R>> = StyleSheetOwner<T::SetMembers<VM>>;
 
-    fn member<VM>(self, member: VM) -> Self::AddMember<VM>
-    where
-        (Self::VM, VM): ViewMember<R>,
-        VM: ViewMember<R>,
-    {
-        StyleSheetOwner(self.0, self.1.member(member))
-    }
+   fn member<VM>(self, member: VM) -> Self::AddMember<VM>
+   where
+      (Self::VM, VM): ViewMember<R>,
+      VM: ViewMember<R>,
+   {
+      StyleSheetOwner(self.0, self.1.member(member))
+   }
 
-    fn members<VM: ViewMember<R>>(self, members: VM) -> Self::SetMembers<(VM,)>
-    where
-        VM: ViewMember<R>,
-    {
-        StyleSheetOwner(self.0, self.1.members(members))
-    }
+   fn members<VM: ViewMember<R>>(self, members: VM) -> Self::SetMembers<(VM,)>
+   where
+      VM: ViewMember<R>,
+   {
+      StyleSheetOwner(self.0, self.1.members(members))
+   }
 }
 
 #[derive(Clone, Debug)]
 pub struct StyleSheetId<R>
 where
-    R: Renderer,
+   R: Renderer,
 {
-    pub node_style_sheet_id: NodeStyleSheetId,
-    pub node_id: RendererNodeId<R>,
+   pub node_style_sheet_id: NodeStyleSheetId,
+   pub node_id: RendererNodeId<R>,
 }
 
 impl<R> AsRef<NodeStyleSheetId> for StyleSheetId<R>
 where
-    R: Renderer,
+   R: Renderer,
 {
-    fn as_ref(&self) -> &NodeStyleSheetId {
-        &self.node_style_sheet_id
-    }
+   fn as_ref(&self) -> &NodeStyleSheetId {
+      &self.node_style_sheet_id
+   }
 }
 
 impl<R> From<StyleSheetId<R>> for NodeStyleSheetId
 where
-    R: Renderer,
+   R: Renderer,
 {
-    fn from(val: StyleSheetId<R>) -> Self {
-        val.node_style_sheet_id
-    }
+   fn from(val: StyleSheetId<R>) -> Self {
+      val.node_style_sheet_id
+   }
 }
 
 impl<R> Deref for StyleSheetId<R>
 where
-    R: Renderer,
+   R: Renderer,
 {
-    type Target = NodeStyleSheetId;
+   type Target = NodeStyleSheetId;
 
-    fn deref(&self) -> &Self::Target {
-        self.as_ref()
-    }
+   fn deref(&self) -> &Self::Target {
+      self.as_ref()
+   }
 }
 
 #[derive(Deref, DerefMut, From, Clone, Debug)]
 pub struct NodeStyleAttrInfo(pub Either<NodeStyleItemId, BinaryHeap<NodeStyleItemId>>);
 
 impl NodeStyleAttrInfo {
-    #[inline]
-    pub fn top_item_id(&self) -> NodeStyleItemId {
-        *self.as_ref().map_right(|n| n.peek().unwrap()).into_inner()
-    }
+   #[inline]
+   pub fn top_item_id(&self) -> NodeStyleItemId {
+      *self.as_ref().map_right(|n| n.peek().unwrap()).into_inner()
+   }
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub struct NodeStyleSheetId {
-    pub index: StyleSheetIndex,
-    pub location: StyleSheetLocation,
+   pub index: StyleSheetIndex,
+   pub location: StyleSheetLocation,
 }
 
 // #[derive(Error, Clone, Debug)]
 #[derive(Clone, Debug)]
 pub enum StyleError<R>
 where
-    R: Renderer,
+   R: Renderer,
 {
-    // #[error("no found inter attr infos: {item_id:?}")]
-    NoFoundInterAttrInfos { item_id: NodeInterStyleItemId },
-    // #[error("no found style item: {attr_id:?}")]
-    NoFoundAttrId { attr_id: AttrIndex },
-    // #[error("no found style item: {item_id:?}")]
-    NoFoundStyleItemId { item_id: NodeStyleItemId },
-    // #[error("style sheets is none")]
-    StyleSheetIsNone,
+   // #[error("no found inter attr infos: {item_id:?}")]
+   NoFoundInterAttrInfos { item_id: NodeInterStyleItemId },
+   // #[error("no found style item: {attr_id:?}")]
+   NoFoundAttrId { attr_id: AttrIndex },
+   // #[error("no found style item: {item_id:?}")]
+   NoFoundStyleItemId { item_id: NodeStyleItemId },
+   // #[error("style sheets is none")]
+   StyleSheetIsNone,
 
-    // #[error("no found style sheet: {node_id:?}")]
-    NoFoundStyleState { node_id: RendererNodeId<R> },
+   // #[error("no found style sheet: {node_id:?}")]
+   NoFoundStyleState { node_id: RendererNodeId<R> },
 
-    // #[error("no found interaction style state: {node_id:?}")]
-    NoFoundInterStyleState { node_id: RendererNodeId<R> },
+   // #[error("no found interaction style state: {node_id:?}")]
+   NoFoundInterStyleState { node_id: RendererNodeId<R> },
 
-    // #[error("no found style sheet: {0:?}")]
-    NoFoundStyleSheetOnNode(NodeStyleSheetId),
+   // #[error("no found style sheet: {0:?}")]
+   NoFoundStyleSheetOnNode(NodeStyleSheetId),
 
-    // #[error("no found style sheet: {node_id:?}")]
-    NoFoundSharedStyleSheet { node_id: RendererNodeId<R> },
+   // #[error("no found style sheet: {node_id:?}")]
+   NoFoundSharedStyleSheet { node_id: RendererNodeId<R> },
 
-    // #[error("removed style sheet: {0:?}")]
-    RemovedStyleSheet(NodeStyleSheetId),
+   // #[error("removed style sheet: {0:?}")]
+   RemovedStyleSheet(NodeStyleSheetId),
 
-    // #[error("style sheet type incorrect")]
-    StyleSheetTypeIncorrect,
+   // #[error("style sheet type incorrect")]
+   StyleSheetTypeIncorrect,
 
-    // #[error("no found style sheet: {node_id:?}")]
-    NoFoundStyleSheetsState { node_id: RendererNodeId<R> },
+   // #[error("no found style sheet: {node_id:?}")]
+   NoFoundStyleSheetsState { node_id: RendererNodeId<R> },
 
-    // #[error("shared style sheet not exists")]
-    SharedEntityNotExists,
+   // #[error("shared style sheet not exists")]
+   SharedEntityNotExists,
 
-    // #[error("no found style sheet: {node_id:?}")]
-    NoFoundElementEntityExtraData { node_id: RendererNodeId<R> },
+   // #[error("no found style sheet: {node_id:?}")]
+   NoFoundElementEntityExtraData { node_id: RendererNodeId<R> },
 
-    // #[error("no found node: {node_id:?}")]
-    NoFoundNode { node_id: RendererNodeId<R> },
+   // #[error("no found node: {node_id:?}")]
+   NoFoundNode { node_id: RendererNodeId<R> },
 }
 
 #[derive(Default, Deref, DerefMut, Debug, IntoIterator, From)]
@@ -282,136 +290,141 @@ pub struct NodeStyleAttrInfos(pub HashMap<AttrIndex, NodeStyleAttrInfo>);
 pub struct NodeInterStyleAttrInfos(pub HashMap<StyleInteraction, NodeStyleAttrInfos>);
 
 impl NodeInterStyleAttrInfos {
-    pub fn remove_attr_info(
-        &mut self,
-        attr_id: &AttrIndex,
-    ) -> Option<(StyleInteraction, NodeStyleAttrInfo)> {
-        self.iter_mut()
-            .find_map(|(interaction, n)| n.remove(attr_id).map(|n| (*interaction, n)))
-    }
-    pub fn get_attr_info(
-        &self,
-        interaction: StyleInteraction,
-        attr_id: AttrIndex,
-    ) -> Option<&NodeStyleAttrInfo> {
-        self.get(&interaction).and_then(|n| n.get(&attr_id))
-    }
-    pub fn match_attr(
-        &self,
-        attr_id: AttrIndex,
-        interaction: StyleInteraction,
-        strict: bool,
-    ) -> Option<&NodeStyleAttrInfo> {
-        match interaction {
-            StyleInteraction::Active => self
-                .get(&StyleInteraction::Active)
-                .and_then(|n| n.get(&attr_id))
-                .condition(strict, |n| {
-                    n.or_else(|| {
-                        self.get(&StyleInteraction::Hover)
-                            .and_then(|n| n.get(&attr_id))
-                    })
-                }),
-            interaction => self.get(&interaction).and_then(|n| n.get(&attr_id)),
-        }
-    }
+   pub fn remove_attr_info(
+      &mut self,
+      attr_id: &AttrIndex,
+   ) -> Option<(StyleInteraction, NodeStyleAttrInfo)> {
+      self
+         .iter_mut()
+         .find_map(|(interaction, n)| n.remove(attr_id).map(|n| (*interaction, n)))
+   }
+   pub fn get_attr_info(
+      &self,
+      interaction: StyleInteraction,
+      attr_id: AttrIndex,
+   ) -> Option<&NodeStyleAttrInfo> {
+      self.get(&interaction).and_then(|n| n.get(&attr_id))
+   }
+   pub fn match_attr(
+      &self,
+      attr_id: AttrIndex,
+      interaction: StyleInteraction,
+      strict: bool,
+   ) -> Option<&NodeStyleAttrInfo> {
+      match interaction {
+         StyleInteraction::Active => self
+            .get(&StyleInteraction::Active)
+            .and_then(|n| n.get(&attr_id))
+            .condition(strict, |n| {
+               n.or_else(|| {
+                  self
+                     .get(&StyleInteraction::Hover)
+                     .and_then(|n| n.get(&attr_id))
+               })
+            }),
+         interaction => self.get(&interaction).and_then(|n| n.get(&attr_id)),
+      }
+   }
 
-    /// There are repeated AttrId
-    pub fn iter_match_attr(
-        &self,
-        interaction: Option<StyleInteraction>,
-        strict: bool,
-    ) -> impl Iterator<Item = (AttrIndex, &NodeStyleAttrInfo, StyleInteraction)> + '_ {
-        let Some(interaction) = interaction else {
-            return core::iter::empty().either_left();
-        };
-        if strict {
-            self.get(&interaction)
-                .into_iter()
-                .map(|n| &n.0)
-                .flatten()
-                .map(move |(attr_id, attr_info)| (*attr_id, attr_info, interaction))
-                .either_left()
-        } else {
-            StyleInteraction::priority_iter()
-                .filter(move |n| interaction.is_match(*n, false))
-                .flat_map(|interaction| {
-                    self.get(&interaction)
-                        .into_iter()
-                        .map(|n| &n.0)
-                        .flatten()
-                        .map(move |(attr_id, attr_info)| (*attr_id, attr_info, interaction))
-                })
-                .either_right()
-        }
-        .either_right()
-    }
+   /// There are repeated AttrId
+   pub fn iter_match_attr(
+      &self,
+      interaction: Option<StyleInteraction>,
+      strict: bool,
+   ) -> impl Iterator<Item = (AttrIndex, &NodeStyleAttrInfo, StyleInteraction)> + '_ {
+      let Some(interaction) = interaction else {
+         return core::iter::empty().either_left();
+      };
+      if strict {
+         self
+            .get(&interaction)
+            .into_iter()
+            .map(|n| &n.0)
+            .flatten()
+            .map(move |(attr_id, attr_info)| (*attr_id, attr_info, interaction))
+            .either_left()
+      } else {
+         StyleInteraction::priority_iter()
+            .filter(move |n| interaction.is_match(*n, false))
+            .flat_map(|interaction| {
+               self
+                  .get(&interaction)
+                  .into_iter()
+                  .map(|n| &n.0)
+                  .flatten()
+                  .map(move |(attr_id, attr_info)| (*attr_id, attr_info, interaction))
+            })
+            .either_right()
+      }
+      .either_right()
+   }
 
-    /// There are repeated AttrId
-    #[inline]
-    pub fn iter_match_attr_ids(
-        &self,
-        interaction: Option<StyleInteraction>,
-        strict: bool,
-    ) -> impl Iterator<Item = (AttrIndex, StyleInteraction)> + '_ {
-        self.iter_match_attr(interaction, strict)
-            .map(|(attr_id, _, interaction)| (attr_id, interaction))
-    }
+   /// There are repeated AttrId
+   #[inline]
+   pub fn iter_match_attr_ids(
+      &self,
+      interaction: Option<StyleInteraction>,
+      strict: bool,
+   ) -> impl Iterator<Item = (AttrIndex, StyleInteraction)> + '_ {
+      self
+         .iter_match_attr(interaction, strict)
+         .map(|(attr_id, _, interaction)| (attr_id, interaction))
+   }
 }
 
 // todo: extract to lib
 pub trait PipeOp: Sized {
-    #[inline]
-    fn pipe<S, U>(self, state: S, f: fn(Self, S) -> U) -> U {
-        f(self, state)
-    }
-    #[inline]
-    fn condition(self, condition: bool, f: impl FnOnce(Self) -> Self) -> Self {
-        if condition {
-            f(self)
-        } else {
-            self
-        }
-    }
-    #[inline]
-    fn condition_map<U>(self, condition: bool, f: impl FnOnce(Self) -> U) -> Either<Self, U> {
-        if condition {
-            f(self).either_right()
-        } else {
-            self.either_left()
-        }
-    }
-    #[inline]
-    fn option_map<T, U>(self, option: Option<T>, f: impl FnOnce(Self, T) -> U) -> Either<Self, U> {
-        match option {
-            Some(n) => f(self, n).either_right(),
-            None => self.either_left(),
-        }
-    }
-    #[inline]
-    fn option_map_else<T, U, U2>(
-        self,
-        option: Option<T>,
-        f: impl FnOnce(Self, T) -> U,
-        else_f: impl FnOnce(Self) -> U2,
-    ) -> Either<U, U2> {
-        match option {
-            Some(n) => f(self, n).either_left(),
-            None => else_f(self).either_right(),
-        }
-    }
+   #[inline]
+   fn pipe<S, U>(self, state: S, f: fn(Self, S) -> U) -> U {
+      f(self, state)
+   }
+   #[inline]
+   fn condition(self, condition: bool, f: impl FnOnce(Self) -> Self) -> Self {
+      if condition {
+         f(self)
+      } else {
+         self
+      }
+   }
+   #[inline]
+   fn condition_map<U>(self, condition: bool, f: impl FnOnce(Self) -> U) -> Either<Self, U> {
+      if condition {
+         f(self).either_right()
+      } else {
+         self.either_left()
+      }
+   }
+   #[inline]
+   fn option_map<T, U>(self, option: Option<T>, f: impl FnOnce(Self, T) -> U) -> Either<Self, U> {
+      match option {
+         Some(n) => f(self, n).either_right(),
+         None => self.either_left(),
+      }
+   }
+   #[inline]
+   fn option_map_else<T, U, U2>(
+      self,
+      option: Option<T>,
+      f: impl FnOnce(Self, T) -> U,
+      else_f: impl FnOnce(Self) -> U2,
+   ) -> Either<U, U2> {
+      match option {
+         Some(n) => f(self, n).either_left(),
+         None => else_f(self).either_right(),
+      }
+   }
 }
 
 impl<T> PipeOp for T where T: Sized {}
 
 pub trait IterExt: Iterator + Sized {
-    #[inline]
-    fn chain_option<I>(self, option: Option<I>) -> Either<Self, Chain<Self, I>>
-    where
-        I: Iterator<Item = Self::Item>,
-    {
-        self.option_map(option, |n, i| n.chain(i))
-    }
+   #[inline]
+   fn chain_option<I>(self, option: Option<I>) -> Either<Self, Chain<Self, I>>
+   where
+      I: Iterator<Item = Self::Item>,
+   {
+      self.option_map(option, |n, i| n.chain(i))
+   }
 }
 
 impl<T> IterExt for T where T: Iterator + Sized {}
@@ -419,121 +432,121 @@ impl<T> IterExt for T where T: Iterator + Sized {}
 pub struct ApplyStyleSheets<T>(pub T);
 
 pub trait ElementStyleMember<R, SS>:
-    ViewMember<R> + ViewMemberOrigin<R, Origin = ApplyStyleSheets<SS>>
+   ViewMember<R> + ViewMemberOrigin<R, Origin = ApplyStyleSheets<SS>>
 where
-    R: Renderer,
-    SS: StyleSheets<R>,
+   R: Renderer,
+   SS: StyleSheets<R>,
 {
 }
 
 impl<T, R, SS> ElementStyleMember<R, SS> for T
 where
-    T: ViewMember<R> + ViewMemberOrigin<R, Origin = ApplyStyleSheets<SS>>,
-    R: Renderer,
-    SS: StyleSheets<R>,
+   T: ViewMember<R> + ViewMemberOrigin<R, Origin = ApplyStyleSheets<SS>>,
+   R: Renderer,
+   SS: StyleSheets<R>,
 {
 }
 
 #[derive(Debug, Clone)]
 pub struct StyleItemValue {
-    pub attr_id: AttrIndex,
-    pub value: StyleAttrValue,
+   pub attr_id: AttrIndex,
+   pub value: StyleAttrValue,
 }
 
 pub struct StyleSheetsInfo {
-    pub inline_style_sheet_count: u8,
-    pub shared_style_sheet_count: u8,
+   pub inline_style_sheet_count: u8,
+   pub shared_style_sheet_count: u8,
 }
 
 impl AddAssign for StyleSheetsInfo {
-    fn add_assign(&mut self, rhs: Self) {
-        self.inline_style_sheet_count += rhs.inline_style_sheet_count;
-        self.shared_style_sheet_count += rhs.shared_style_sheet_count;
-    }
+   fn add_assign(&mut self, rhs: Self) {
+      self.inline_style_sheet_count += rhs.inline_style_sheet_count;
+      self.shared_style_sheet_count += rhs.shared_style_sheet_count;
+   }
 }
 
 pub struct StyleSheetCtx<'a, R>
 where
-    R: Renderer,
+   R: Renderer,
 {
-    pub inline_style_sheet_index: StyleSheetIndex,
-    pub shared_style_sheet_index: StyleSheetIndex,
-    pub world: &'a mut RendererWorld<R>,
-    pub node_id: RendererNodeId<R>,
+   pub inline_style_sheet_index: StyleSheetIndex,
+   pub shared_style_sheet_index: StyleSheetIndex,
+   pub world: &'a mut RendererWorld<R>,
+   pub node_id: RendererNodeId<R>,
 }
 
 impl<'a, R> StyleSheetCtx<'a, R>
 where
-    R: Renderer,
+   R: Renderer,
 {
-    pub fn add_style_sheet(&mut self) {}
+   pub fn add_style_sheet(&mut self) {}
 }
 
 #[derive(Debug, Clone)]
 pub enum AppliedStyleSheet<R>
 where
-    R: Renderer,
+   R: Renderer,
 {
-    None,
-    Inline(StyleSheetDefinition),
-    Shared(StyleSheetId<R>),
+   None,
+   Inline(StyleSheetDefinition),
+   Shared(StyleSheetId<R>),
 }
 
 impl<R> AppliedStyleSheet<R>
 where
-    R: Renderer,
+   R: Renderer,
 {
-    pub fn style_sheet_location(&self) -> Option<StyleSheetLocation> {
-        match self {
-            AppliedStyleSheet::None => None,
-            AppliedStyleSheet::Inline(_) => Some(StyleSheetLocation::Inline),
-            AppliedStyleSheet::Shared(_) => Some(StyleSheetLocation::Shared),
-        }
-    }
+   pub fn style_sheet_location(&self) -> Option<StyleSheetLocation> {
+      match self {
+         AppliedStyleSheet::None => None,
+         AppliedStyleSheet::Inline(_) => Some(StyleSheetLocation::Inline),
+         AppliedStyleSheet::Shared(_) => Some(StyleSheetLocation::Shared),
+      }
+   }
 }
 
 pub trait StyleSheets<R>: Send + 'static
 where
-    R: Renderer,
+   R: Renderer,
 {
-    fn style_sheets(
-        self,
-        ctx: StyleSheetCtx<R>,
-    ) -> (
-        impl Iterator<Item = AppliedStyleSheet<R>> + Send + 'static,
-        StyleSheetsInfo,
-    );
+   fn style_sheets(
+      self,
+      ctx: StyleSheetCtx<R>,
+   ) -> (
+      impl Iterator<Item = AppliedStyleSheet<R>> + Send + 'static,
+      StyleSheetsInfo,
+   );
 }
 
 impl<T> Into<XValueWrapper<Self>> for StyleSheetOwner<T> {
-    fn into(self) -> XValueWrapper<Self> {
-        XValueWrapper(self)
-    }
+   fn into(self) -> XValueWrapper<Self> {
+      XValueWrapper(self)
+   }
 }
 
 impl<R, T> StyleSheets<R> for StyleSheetOwner<T>
 where
-    R: Renderer,
-    T: StyleSheetItems<R>,
+   R: Renderer,
+   T: StyleSheetItems<R>,
 {
-    fn style_sheets(
-        self,
-        ctx: StyleSheetCtx<R>,
-    ) -> (
-        impl Iterator<Item = AppliedStyleSheet<R>> + Send + 'static,
-        StyleSheetsInfo,
-    ) {
-        (
-            once(AppliedStyleSheet::Inline(StyleSheetDefinition {
-                interaction: self.0,
-                items: T::iter(self.1, ctx).collect(),
-            })),
-            StyleSheetsInfo {
-                inline_style_sheet_count: 1,
-                shared_style_sheet_count: 0,
-            },
-        )
-    }
+   fn style_sheets(
+      self,
+      ctx: StyleSheetCtx<R>,
+   ) -> (
+      impl Iterator<Item = AppliedStyleSheet<R>> + Send + 'static,
+      StyleSheetsInfo,
+   ) {
+      (
+         once(AppliedStyleSheet::Inline(StyleSheetDefinition {
+            interaction: self.0,
+            items: T::iter(self.1, ctx).collect(),
+         })),
+         StyleSheetsInfo {
+            inline_style_sheet_count: 1,
+            shared_style_sheet_count: 0,
+         },
+      )
+   }
 }
 
 // impl<T> StyleSheets<BevyRenderer> for BevyWrapper<T>
