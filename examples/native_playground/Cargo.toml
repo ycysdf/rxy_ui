@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 rxy_ui = { path = "../..", default-features = false, features = ["native"] }
+tokio = { version = "1", features = ["full"] }

@@ -1,202 +1,199 @@
 use core::marker::PhantomData;
 
-use crate::{BoxedErasureView, ElementView, IntoView, IntoViewErasureExt, MemberOwner, NodeTree, Renderer, RendererNodeId, SoloView, View, ViewCtx, ViewMember};
+use crate::{
+   BoxedErasureView, ElementView, IntoView, IntoViewErasureExt, MemberOwner, NodeTree, Renderer,
+   RendererNodeId, SoloView, View, ViewCtx, ViewMember, ViewMemberIndex,
+};
 
 pub fn view_children<R, V, CV>(view: V, children: CV) -> ElementViewChildren<R, V, CV::View>
 where
-    R: Renderer,
-    V: SoloView<R>,
-    CV: IntoView<R>,
+   R: Renderer,
+   V: SoloView<R>,
+   CV: IntoView<R>,
 {
-    ElementViewChildren {
-        view,
-        children: children.into_view(),
-        _marker: Default::default(),
-    }
+   ElementViewChildren {
+      view,
+      children: children.into_view(),
+      _marker: Default::default(),
+   }
 }
 
 #[derive(Clone)]
 pub struct ElementViewChildrenState<K> {
-    pub children_key: K,
+   pub children_key: K,
 }
 
 #[derive(Clone)]
 pub struct ElementViewChildren<R, V, CV> {
-    pub view: V,
-    pub children: CV,
-    pub _marker: PhantomData<R>,
+   pub view: V,
+   pub children: CV,
+   pub _marker: PhantomData<R>,
 }
 
 impl<R, V, CV> ElementViewChildren<R, V, CV>
 where
-    R: Renderer,
+   R: Renderer,
 {
-    pub fn new(view: V, children: CV) -> Self {
-        Self {
-            view,
-            children,
-            _marker: Default::default(),
-        }
-    }
+   pub fn new(view: V, children: CV) -> Self {
+      Self {
+         view,
+         children,
+         _marker: Default::default(),
+      }
+   }
 
-    #[inline]
-    #[cfg(not(feature = "view_children_erasure"))]
-    pub fn children<CV2>(self, children: CV2) -> ElementViewChildren<R, V, CV2::View>
-    where
-        CV2: IntoView<R>,
-    {
-        ElementViewChildren {
-            view: self.view,
-            children: children.into_view(),
-            _marker: Default::default(),
-        }
-    }
+   #[inline]
+   #[cfg(not(feature = "view_children_erasure"))]
+   pub fn children<CV2>(self, children: CV2) -> ElementViewChildren<R, V, CV2::View>
+   where
+      CV2: IntoView<R>,
+   {
+      ElementViewChildren {
+         view: self.view,
+         children: children.into_view(),
+         _marker: Default::default(),
+      }
+   }
 
-    #[inline]
-    #[cfg(feature = "view_children_erasure")]
-    pub fn children<CV2>(self, children: CV2) -> ElementViewChildren<R, V, BoxedErasureView<R>>
-    where
-        CV2: IntoView<R>,
-    {
-        self.erasure_children(children)
-    }
+   #[inline]
+   #[cfg(feature = "view_children_erasure")]
+   pub fn children<CV2>(self, children: CV2) -> ElementViewChildren<R, V, BoxedErasureView<R>>
+   where
+      CV2: IntoView<R>,
+   {
+      self.erasure_children(children)
+   }
 
-    #[inline]
-    pub fn erasure_children<CV2>(
-        self,
-        children: CV2,
-    ) -> ElementViewChildren<R, V, BoxedErasureView<R>>
-    where
-        CV2: IntoView<R>,
-    {
-        ElementViewChildren {
-            view: self.view,
-            children: unsafe { children.into_erasure_view() },
-            _marker: Default::default(),
-        }
-    }
+   #[inline]
+   pub fn erasure_children<CV2>(
+      self,
+      children: CV2,
+   ) -> ElementViewChildren<R, V, BoxedErasureView<R>>
+   where
+      CV2: IntoView<R>,
+   {
+      ElementViewChildren {
+         view: self.view,
+         children: unsafe { children.into_erasure_view() },
+         _marker: Default::default(),
+      }
+   }
 }
 
 impl<R, V, CV> SoloView<R> for ElementViewChildren<R, V, CV>
 where
-    V: SoloView<R>,
-    CV: View<R>,
-    R: Renderer,
+   V: SoloView<R>,
+   CV: View<R>,
+   R: Renderer,
 {
-    fn node_id(key: &Self::Key) -> &RendererNodeId<R> {
-        V::node_id(key)
-    }
+   fn node_id(key: &Self::Key) -> &RendererNodeId<R> {
+      V::node_id(key)
+   }
 }
 
 impl<R, V, CV> View<R> for ElementViewChildren<R, V, CV>
 where
-    V: SoloView<R>,
-    CV: View<R>,
-    R: Renderer,
+   V: SoloView<R>,
+   CV: View<R>,
+   R: Renderer,
 {
-    type Key = V::Key;
+   type Key = V::Key;
 
-    fn build(
-        self,
-        ctx: ViewCtx<R>,
-        reserve_key: Option<Self::Key>,
-        will_rebuild: bool,
-    ) -> Self::Key {
-        let key = self.view.build(
-            ViewCtx {
-                world: &mut *ctx.world,
-                parent: ctx.parent,
-            },
-            reserve_key,
-            will_rebuild,
-        );
+   fn build(
+      self,
+      ctx: ViewCtx<R>,
+      reserve_key: Option<Self::Key>,
+      will_rebuild: bool,
+   ) -> Self::Key {
+      let key = self.view.build(
+         ViewCtx {
+            world: &mut *ctx.world,
+            parent: ctx.parent,
+         },
+         reserve_key,
+         will_rebuild,
+      );
 
-        let children_key = self.children.build(
-            ViewCtx {
-                world: ctx.world,
-                parent: V::node_id(&key).clone(),
-            },
-            None,
-            will_rebuild,
-        );
-        if will_rebuild {
-            ctx.world
-                .set_node_state(V::node_id(&key), ElementViewChildrenState { children_key });
-        }
-        key
-    }
+      let children_key = self.children.build(
+         ViewCtx {
+            world: ctx.world,
+            parent: V::node_id(&key).clone(),
+         },
+         None,
+         will_rebuild,
+      );
+      if will_rebuild {
+         ctx.world
+            .set_node_state(V::node_id(&key), ElementViewChildrenState { children_key });
+      }
+      key
+   }
 
-    fn rebuild(self, ctx: ViewCtx<R>, state_key: Self::Key) {
-        {
-            let Some(children_key) = ctx
-                .world
-                .get_node_state_ref::<ElementViewChildrenState<CV::Key>>(V::node_id(&state_key))
-                .map(|n| n.children_key.clone())
-            else {
-                panic!("children_key not found!")
-            };
-            let children_ctx = ViewCtx {
-                world: &mut *ctx.world,
-                parent: V::node_id(&state_key).clone(),
-            };
-            self.children.rebuild(children_ctx, children_key);
-        }
+   fn rebuild(self, ctx: ViewCtx<R>, state_key: Self::Key) {
+      {
+         let Some(children_key) = ctx
+            .world
+            .get_node_state_ref::<ElementViewChildrenState<CV::Key>>(V::node_id(&state_key))
+            .map(|n| n.children_key.clone())
+         else {
+            panic!("children_key not found!")
+         };
+         let children_ctx = ViewCtx {
+            world: &mut *ctx.world,
+            parent: V::node_id(&state_key).clone(),
+         };
+         self.children.rebuild(children_ctx, children_key);
+      }
 
-        self.view.rebuild(ctx, state_key);
-    }
+      self.view.rebuild(ctx, state_key);
+   }
 }
 
 impl<R, V, CV> IntoView<R> for ElementViewChildren<R, V, CV>
 where
-    V: SoloView<R>,
-    CV: View<R>,
-    R: Renderer,
+   V: SoloView<R>,
+   CV: View<R>,
+   R: Renderer,
 {
-    type View = Self;
+   type View = Self;
 
-    fn into_view(self) -> Self::View {
-        self
-    }
+   fn into_view(self) -> Self::View {
+      self
+   }
 }
 
-impl<R, VM, CV, V> MemberOwner<R> for ElementViewChildren<R, V, CV>
+impl<R, CV, V> ElementView<R> for ElementViewChildren<R, V, CV>
 where
-    R: Renderer,
-    VM: ViewMember<R>,
-    CV: View<R>,
-    V: MemberOwner<R, VM = VM>,
+   V: ElementView<R>,
+   CV: View<R>,
+   R: Renderer,
 {
-    type E = V::E;
-    type VM = VM;
-    type AddMember<T: ViewMember<R>> = ElementViewChildren<R, V::AddMember<T>, CV>;
-    type SetMembers<T: ViewMember<R> + MemberOwner<R>> =
-        ElementViewChildren<R, V::SetMembers<T>, CV>;
-    fn member<T>(self, member: T) -> Self::AddMember<T>
-    where
-        (VM, T): ViewMember<R>,
-        T: ViewMember<R>,
-    {
-        ElementViewChildren::new(self.view.member(member), self.children)
-    }
+   fn element_node_id(key: &Self::Key) -> &RendererNodeId<R> {
+      V::node_id(key)
+   }
 
-    fn members<T>(self, members:  T) -> Self::SetMembers<(T,)>
-    where
-        T: ViewMember<R>,
-    {
-        ElementViewChildren::new(self.view.members(members), self.children)
-    }
-}
+   type E = V::E;
+   type AddMember<T: ViewMember<R>> = ElementViewChildren<R, V::AddMember<T>, CV>;
+   type SetMembers<T: ViewMember<R> + MemberOwner<R>> =
+      ElementViewChildren<R, V::SetMembers<T>, CV>;
 
-impl<R, VM, CV, V> ElementView<R> for ElementViewChildren<R, V, CV>
-where
-    V: SoloView<R> + MemberOwner<R, VM = VM>,
-    CV: View<R>,
-    R: Renderer,
-    VM: ViewMember<R>,
-{
-    fn element_node_id(key: &Self::Key) -> &RendererNodeId<R> {
-        V::node_id(key)
-    }
+   fn member_count(&self) -> ViewMemberIndex {
+      self.view.member_count()
+   }
+
+   fn member<T>(self, member: T) -> Self::AddMember<T>
+   where
+      T: ViewMember<R>,
+   {
+      ElementViewChildren::new(self.view.member(member), self.children)
+   }
+
+   fn members<T>(self, members: T) -> Self::SetMembers<(T,)>
+   where
+      T: ViewMember<R>,
+   {
+      ElementViewChildren::new(self.view.members(members), self.children)
+   }
 }
 
 // #[derive(Clone)]

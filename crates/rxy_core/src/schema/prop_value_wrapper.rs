@@ -1,30 +1,31 @@
-use alloc::boxed::Box;
-use core::sync::atomic::*;
-use alloc::vec::Vec;
-use alloc::string::String;
-use core::any::Any;
-use crate::{IntoSchemaProp, MaybeSend, Renderer, SchemaPropValue};
 use alloc::borrow::Cow;
-use crate::utils::all_tuples;
+use alloc::boxed::Box;
+use alloc::string::String;
+use alloc::vec::Vec;
+use core::any::Any;
+use core::sync::atomic::*;
 
-#[derive(Clone, Debug, PartialEq,Eq)]
+use crate::utils::all_tuples;
+use crate::{IntoSchemaProp, MaybeSend, Renderer, SchemaPropValue};
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IntoSchemaPropValueWrapper<T>(pub T);
 
 pub trait IntoSchemaPropValue<T> {
-    fn into(self) -> T;
+   fn into(self) -> T;
 }
 
 impl<R, T, IT> IntoSchemaProp<R, T> for IT
 where
-    R: Renderer,
-    IT: IntoSchemaPropValue<IntoSchemaPropValueWrapper<T>>,
-    T: MaybeSend + 'static,
+   R: Renderer,
+   IT: IntoSchemaPropValue<IntoSchemaPropValueWrapper<T>>,
+   T: MaybeSend + 'static,
 {
-    type Prop = SchemaPropValue<T>;
+   type Prop = SchemaPropValue<T>;
 
-    fn into_schema_prop<const I: usize>(self) -> Self::Prop {
-        SchemaPropValue::new(self.into().0)
-    }
+   fn into_schema_prop<const I: usize>(self) -> Self::Prop {
+      SchemaPropValue::new(self.into().0)
+   }
 }
 
 #[macro_export]
@@ -85,27 +86,27 @@ impl_schema_prop_value_wrapper_into! {
 }
 
 impl<T: Clone> IntoSchemaPropValue<IntoSchemaPropValueWrapper<Self>> for Cow<'static, T> {
-    fn into(self) -> IntoSchemaPropValueWrapper<Self> {
-        IntoSchemaPropValueWrapper(self)
-    }
+   fn into(self) -> IntoSchemaPropValueWrapper<Self> {
+      IntoSchemaPropValueWrapper(self)
+   }
 }
 
 impl<T> IntoSchemaPropValue<IntoSchemaPropValueWrapper<Self>> for Vec<T> {
-    fn into(self) -> IntoSchemaPropValueWrapper<Self> {
-        IntoSchemaPropValueWrapper(self)
-    }
+   fn into(self) -> IntoSchemaPropValueWrapper<Self> {
+      IntoSchemaPropValueWrapper(self)
+   }
 }
 
 impl<T> IntoSchemaPropValue<IntoSchemaPropValueWrapper<Self>> for AtomicPtr<T> {
-    fn into(self) -> IntoSchemaPropValueWrapper<Self> {
-        IntoSchemaPropValueWrapper(self)
-    }
+   fn into(self) -> IntoSchemaPropValueWrapper<Self> {
+      IntoSchemaPropValueWrapper(self)
+   }
 }
 
 impl<T, const SIZE: usize> IntoSchemaPropValue<IntoSchemaPropValueWrapper<Self>> for [T; SIZE] {
-    fn into(self) -> IntoSchemaPropValueWrapper<Self> {
-        IntoSchemaPropValueWrapper(self)
-    }
+   fn into(self) -> IntoSchemaPropValueWrapper<Self> {
+      IntoSchemaPropValueWrapper(self)
+   }
 }
 
 #[macro_export]

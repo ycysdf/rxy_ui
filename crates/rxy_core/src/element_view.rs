@@ -1,11 +1,9 @@
 use crate::{
-    IntoView, MemberOwner, Renderer, RendererNodeId, SoloView, View, ViewCtx,
-    ViewMember, ViewMemberCtx,
+   IntoView, MaybeSend, MemberOwner, Renderer, RendererNodeId, SoloView, View, ViewMember,
+   ViewMemberIndex,
 };
-use rxy_macro::IntoView;
 
-// todo: ElementSoloView , ElementView ?
-
+/*
 pub trait ElementSoloView<R>: ElementView<R> + SoloView<R>
 where
     R: Renderer,
@@ -18,114 +16,68 @@ where
     A: ElementView<R> + SoloView<R>,
 {
 }
-/*
 impl<R, A> ElementView<R> for A
 where
     R: Renderer,
     A: MemberOwner<R> + SoloView<R>,
 {
-    #[inline(always)]
+    #[inline]
     fn element_node_id(key: &Self::Key) -> &RendererNodeId<R> {
         A::node_id(key)
     }
 }*/
 
-pub trait ElementView<R>: MemberOwner<R> + View<R>
+pub trait ElementView<R>: SoloView<R> + View<R>
 where
-    R: Renderer,
+   R: Renderer,
 {
-    fn element_node_id(key: &Self::Key) -> &RendererNodeId<R>;
+   fn element_node_id(key: &Self::Key) -> &RendererNodeId<R> {
+      Self::node_id(key)
+   }
+
+   type E: MaybeSend + 'static;
+   type AddMember<VM: ViewMember<R>>: ElementView<R>;
+   type SetMembers<VM: ViewMember<R> + MemberOwner<R>>: ElementView<R>;
+   fn member_count(&self) -> ViewMemberIndex;
+   fn member<VM>(self, member: VM) -> Self::AddMember<VM>
+   where
+      VM: ViewMember<R>;
+   fn members<VM: ViewMember<R>>(self, members: VM) -> Self::SetMembers<(VM,)>
+   where
+      VM: ViewMember<R>;
 }
 
 pub trait IntoElementView<R>: 'static
 where
-    R: Renderer,
+   R: Renderer,
 {
-    type View: ElementView<R>;
-    fn into_element_view(self) -> Self::View;
+   type View: ElementView<R>;
+   fn into_element_view(self) -> Self::View;
 }
 
 impl<R, T> IntoElementView<R> for T
 where
-    R: Renderer,
-    T: IntoView<R>,
-    T::View: ElementView<R>,
+   R: Renderer,
+   T: IntoView<R>,
+   T::View: ElementView<R>,
 {
-    type View = T::View;
+   type View = T::View;
 
-    #[inline(always)]
-    fn into_element_view(self) -> Self::View {
-        self.into_view()
-    }
+   #[inline]
+   fn into_element_view(self) -> Self::View {
+      self.into_view()
+   }
 }
+/*
 
-#[derive(IntoView, Clone, Debug)]
-pub struct ElementViewExtraMembers<R, EV, VM>
+impl<R, EV, VM> ElementView<R> for ElementViewExtraMembers<R, EV, VM>
 where
     R: Renderer,
     EV: ElementView<R>,
     VM: ViewMember<R>,
 {
-    pub element_view: EV,
-    pub view_members: VM,
-    _marker: core::marker::PhantomData<R>,
-}
-
-pub fn add_members<R, EV, VM>(
-    element_view: EV,
-    view_members: VM,
-) -> ElementViewExtraMembers<R, EV::View, VM>
-where
-    R: Renderer,
-    EV: IntoElementView<R>,
-    VM: ViewMember<R>,
-{
-    ElementViewExtraMembers {
-        element_view: element_view.into_element_view(),
-        view_members,
-        _marker: Default::default(),
+    fn element_node_id(key: &Self::Key) -> &RendererNodeId<R> {
+        EV::element_node_id(key)
     }
 }
-
-impl<R, EV, VM> View<R> for ElementViewExtraMembers<R, EV, VM>
-where
-    R: Renderer,
-    EV: ElementView<R>,
-    VM: ViewMember<R>,
-{
-    type Key = EV::Key;
-
-    fn build(
-        self,
-        ctx: ViewCtx<R>,
-        reserve_key: Option<Self::Key>,
-        will_rebuild: bool,
-    ) -> Self::Key {
-        let key = self.element_view.build(
-            ViewCtx {
-                world: &mut *ctx.world,
-                parent: ctx.parent,
-            },
-            reserve_key,
-            will_rebuild,
-        );
-        self.view_members.build(
-            ViewMemberCtx {
-                index: <EV::VM as ViewMember<R>>::count(),
-                world: ctx.world,
-                node_id: EV::element_node_id(&key).clone(),
-            },
-            will_rebuild,
-        );
-        key
-    }
-
-    fn rebuild(self, ctx: ViewCtx<R>, key: Self::Key) {
-        self.view_members.rebuild(ViewMemberCtx {
-            index: <EV::VM as ViewMember<R>>::count(),
-            world: &mut *ctx.world,
-            node_id: EV::element_node_id(&key).clone(),
-        });
-        self.element_view.rebuild(ctx, key);
-    }
-}
+*/

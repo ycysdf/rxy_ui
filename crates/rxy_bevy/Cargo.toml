@@ -8,9 +8,10 @@ version = "0.1.0"
 [dependencies]
 #rxy_bevy_element.workspace = true
 rxy_bevy_macro.workspace = true
-rxy_core = { workspace = true, features = ["common_renderer", "async-channel", "bevy", "xy_reactive", "bevy_reflect"] }
+rxy_core = { workspace = true, features = ["common_renderer", "async-channel", "bevy", "xy_reactive", "bevy_reflect", "x_iter_source"] }
 xy_reactive = { workspace = true, optional = true, features = ["bevy"] }
 rxy_macro.workspace = true
+hooked_collection.workspace = true
 
 glam.workspace = true
 serde.workspace = true
@@ -19,6 +20,8 @@ count-macro.workspace = true
 paste.workspace = true
 
 async-channel.workspace = true
+async-broadcast.workspace = true
+
 smallvec.workspace = true
 
 bevy_app.workspace = true
@@ -38,6 +41,7 @@ bevy_tasks.workspace = true
 bevy_utils.workspace = true
 #bevy_a11y.workspace = true
 bevy_input.workspace = true
+bevy_window.workspace = true
 
 futures-lite.workspace = true
 
@@ -46,6 +50,7 @@ futures-lite.workspace = true
 oneshot.workspace = true
 
 [features]
-default = ["xy_reactive", "tailwind_aliases"]
+default = ["xy_reactive", "tailwind_aliases", "dynamic_element"]
 tailwind_aliases = []
+dynamic_element = []
 style = ["rxy_core/style"]

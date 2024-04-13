@@ -9,7 +9,7 @@ version = "0.1.0"
 ahash.workspace = true
 async-channel.workspace = true
 hashbrown.workspace = true
-serde = {workspace = true, optional = true}
+serde = { workspace = true, optional = true }
 smallvec.workspace = true
 
 [features]

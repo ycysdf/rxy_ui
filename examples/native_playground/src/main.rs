@@ -1,7 +1,8 @@
 use rxy_ui::prelude::div;
 use rxy_ui::prelude::*;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let mut app = XyApp::default();
     app.add_view(div().children((
         "SDFDSFSDF",
@@ -13,5 +14,7 @@ fn main() {
         "SDFSDFSD",
         "SDFSDFSD",
     )));
-    app.run();
+    tokio::task::block_in_place(|| {
+        app.run();
+    });
 }

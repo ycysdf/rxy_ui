@@ -1,31 +1,35 @@
-use crate::{BoxedPropValue, MaybeSend, PropHashMap, Renderer, RendererNodeId, RendererWorld, SchemaProp, SchemaPropCtx};
-use crate::utils::{all_tuples, HashMap};
 use alloc::boxed::Box;
+
+use crate::utils::{all_tuples, HashMap};
+use crate::{
+   BoxedPropValue, MaybeSend, PropHashMap, Renderer, RendererNodeId, RendererWorld, SchemaProp,
+   SchemaPropCtx,
+};
 
 pub trait SchemaProps<R>: Sized + MaybeSend + 'static
 where
-    R: Renderer,
+   R: Renderer,
 {
-    type Props<P: SchemaProp<R>>: SchemaProps<R>;
-    fn add<P>(self, p: P) -> Self::Props<P>
-    where
-        P: SchemaProp<R>,
-        Self::Props<P>: SchemaProps<R>;
-    fn get_init_values(&mut self) -> HashMap<core::any::TypeId, BoxedPropValue>;
+   type Props<P: SchemaProp<R>>: SchemaProps<R>;
+   fn add<P>(self, p: P) -> Self::Props<P>
+   where
+      P: SchemaProp<R>,
+      Self::Props<P>: SchemaProps<R>;
+   fn get_init_values(&mut self) -> HashMap<core::any::TypeId, BoxedPropValue>;
 
-    fn build(
-        self,
-        world: &mut RendererWorld<R>,
-        state_node_id: RendererNodeId<R>,
-        state: &mut PropHashMap<R>,
-        will_rebuild: bool,
-    );
-    fn rebuild(
-        self,
-        world: &mut RendererWorld<R>,
-        state_node_id: RendererNodeId<R>,
-        state: &mut PropHashMap<R>,
-    );
+   fn build(
+      self,
+      world: &mut RendererWorld<R>,
+      state_node_id: RendererNodeId<R>,
+      state: &mut PropHashMap<R>,
+      will_rebuild: bool,
+   );
+   fn rebuild(
+      self,
+      world: &mut RendererWorld<R>,
+      state_node_id: RendererNodeId<R>,
+      state: &mut PropHashMap<R>,
+   );
 }
 
 macro_rules! impl_schema_props_for_tuples {

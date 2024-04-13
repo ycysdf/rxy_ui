@@ -1,18 +1,18 @@
-use alloc::vec;
-use alloc::vec::Vec;
 use core::{
     hash::{BuildHasherDefault, Hash},
     marker::PhantomData,
 };
 
-use crate::utils::AHasher;
+use alloc::vec;
+use alloc::vec::Vec;
 use drain_filter_polyfill::VecExt as VecDrainFilterExt;
 use indexmap::IndexSet;
 
 use crate::{
-    virtual_container, IntoView, MutableView, MutableViewKey, Renderer, RendererNodeId,
-    RendererViewExt, RendererWorld, View, ViewCtx, ViewKey, VirtualContainer,
+    IntoView, MutableView, MutableViewKey, Renderer, RendererNodeId, RendererViewExt,
+    RendererWorld, View, ViewCtx, ViewKey, virtual_container, VirtualContainer,
 };
+use crate::utils::AHasher;
 
 type FxIndexSet<T> = IndexSet<T, BuildHasherDefault<AHasher>>;
 
@@ -21,13 +21,13 @@ pub fn for_keyed<T, I, K, KF, VF, V, R>(
     key_fn: KF,
     view_fn: VF,
 ) -> Keyed<T, I, K, KF, VF, V, R>
-where
-    I: IntoIterator<Item = T>,
-    K: Eq + Hash + 'static,
-    KF: Fn(&T) -> K,
-    V: IntoView<R>,
-    VF: Fn(T) -> V,
-    R: Renderer,
+    where
+        I: IntoIterator<Item=T>,
+        K: Eq + Hash + 'static,
+        KF: Fn(&T) -> K,
+        V: IntoView<R>,
+        VF: Fn(T) -> V,
+        R: Renderer,
 {
     Keyed {
         items,
@@ -38,13 +38,13 @@ where
 }
 
 pub struct Keyed<T, I, K, KF, VF, IV, R>
-where
-    I: IntoIterator<Item = T>,
-    K: Eq + Hash + 'static,
-    KF: Fn(&T) -> K,
-    IV: IntoView<R>,
-    VF: Fn(T) -> IV,
-    R: Renderer,
+    where
+        I: IntoIterator<Item=T>,
+        K: Eq + Hash + 'static,
+        KF: Fn(&T) -> K,
+        IV: IntoView<R>,
+        VF: Fn(T) -> IV,
+        R: Renderer,
 {
     items: I,
     key_fn: KF,
@@ -99,14 +99,14 @@ impl<R: Renderer, K: ViewKey<R>> MutableViewKey<R> for Vec<Option<K>> {
 }
 
 impl<T, I, K, KF, VF, IV, R> MutableView<R> for Keyed<T, I, K, KF, VF, IV, R>
-where
-    T: 'static,
-    I: IntoIterator<Item = T> + MaybeSend + 'static,
-    K: Eq + Hash + MaybeSend + MaybeSync + 'static,
-    KF: Fn(&T) -> K + MaybeSend + 'static,
-    IV: IntoView<R> + MaybeSend + 'static,
-    VF: Fn(T) -> IV + MaybeSend + 'static,
-    R: Renderer,
+    where
+        T: 'static,
+        I: IntoIterator<Item=T> + MaybeSend + 'static,
+        K: Eq + Hash + MaybeSend + MaybeSync + 'static,
+        KF: Fn(&T) -> K + MaybeSend + 'static,
+        IV: IntoView<R> + MaybeSend + 'static,
+        VF: Fn(T) -> IV + MaybeSend + 'static,
+        R: Renderer,
 {
     type Key = Vec<Option<<IV::View as View<R>>::Key>>;
 
@@ -161,9 +161,9 @@ where
         }
         let cmds = {
             let Some(state) = R::get_view_state_ref::<KeyedState<K>>(&ctx.world, &state_node_id)
-            else {
-                panic!("no found keyd state!")
-            };
+                else {
+                    panic!("no found keyd state!")
+                };
 
             diff(&state.data_keys, &new_data_keys)
         };
@@ -192,14 +192,14 @@ where
 }
 
 impl<T, I, K, KF, VF, IV, R> IntoView<R> for Keyed<T, I, K, KF, VF, IV, R>
-where
-    T: 'static,
-    I: IntoIterator<Item = T> + MaybeSend + 'static,
-    K: Eq + Hash + MaybeSend + MaybeSync + 'static,
-    KF: Fn(&T) -> K + MaybeSend + 'static,
-    IV: IntoView<R> + MaybeSend + 'static,
-    VF: Fn(T) -> IV + MaybeSend + 'static,
-    R: Renderer,
+    where
+        T: 'static,
+        I: IntoIterator<Item=T> + MaybeSend + 'static,
+        K: Eq + Hash + MaybeSend + MaybeSync + 'static,
+        KF: Fn(&T) -> K + MaybeSend + 'static,
+        IV: IntoView<R> + MaybeSend + 'static,
+        VF: Fn(T) -> IV + MaybeSend + 'static,
+        R: Renderer,
 {
     type View = VirtualContainer<R, Self>;
 
@@ -378,9 +378,9 @@ fn apply_diff<T, IV, R>(
     view_fn: impl Fn(T) -> IV,
     mut items: Vec<Option<T>>,
 ) -> Vec<Option<<IV::View as View<R>>::Key>>
-where
-    IV: IntoView<R>,
-    R: Renderer,
+    where
+        IV: IntoView<R>,
+        R: Renderer,
 {
     // The order of cmds needs to be:
     // 1. Clear
@@ -424,7 +424,7 @@ where
     let get_next_some_node_id = |world: &R::World,
                                  children_keys: &mut Vec<Option<<IV::View as View<R>>::Key>>,
                                  to: usize|
-     -> Option<R::NodeId> {
+                                 -> Option<R::NodeId> {
         Some(
             children_keys[to..]
                 .iter()

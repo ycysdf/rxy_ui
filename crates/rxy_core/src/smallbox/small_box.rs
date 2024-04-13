@@ -13,29 +13,27 @@ use core::ops;
 use core::ops::CoerceUnsized;
 use core::ptr;
 
-use ::alloc::alloc::Layout;
 use ::alloc::alloc;
-
-
+use ::alloc::alloc::Layout;
 
 use crate::element::AttrValue;
 
 impl<Space> SmallBox<dyn AttrValue, Space> {
-    #[inline]
-    pub fn downcast<T: Any>(self) -> Result<SmallBox<T, Space>, Self> {
-        use core::ops::Deref;
-        let x:&dyn AttrValue = self.deref();
-        if x.as_any().is::<T>() {
-            unsafe { Ok(self.downcast_unchecked()) }
-        } else {
-            Err(self)
-        }
-    }
+   #[inline]
+   pub fn downcast<T: Any>(self) -> Result<SmallBox<T, Space>, Self> {
+      use core::ops::Deref;
+      let x: &dyn AttrValue = self.deref();
+      if x.as_any().is::<T>() {
+         unsafe { Ok(self.downcast_unchecked()) }
+      } else {
+         Err(self)
+      }
+   }
 }
 
 #[cfg(feature = "coerce")]
 impl<T: ?Sized + Unsize<U>, U: ?Sized, Space> CoerceUnsized<SmallBox<U, Space>>
-for SmallBox<T, Space>
+   for SmallBox<T, Space>
 {
 }
 
@@ -69,398 +67,408 @@ for SmallBox<T, Space>
 /// ```
 #[macro_export]
 macro_rules! smallbox {
-    ( $e: expr ) => {{
-        let val = $e;
-        let ptr = &val as *const _;
-        #[allow(unsafe_code)]
-        unsafe {
-            $crate::SmallBox::new_unchecked(val, ptr)
-        }
-    }};
+   ( $e: expr ) => {{
+      let val = $e;
+      let ptr = &val as *const _;
+      #[allow(unsafe_code)]
+      unsafe {
+         $crate::SmallBox::new_unchecked(val, ptr)
+      }
+   }};
 }
 
 /// An optimized box that store value on stack or on heap depending on its size
 pub struct SmallBox<T: ?Sized, Space> {
-    space: MaybeUninit<Space>,
-    ptr: *const T,
-    _phantom: PhantomData<T>,
+   space: MaybeUninit<Space>,
+   ptr: *const T,
+   _phantom: PhantomData<T>,
 }
 
 impl<T: ?Sized, Space> SmallBox<T, Space> {
-    /// Box value on stack or on heap depending on its size.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use smallbox::space::*;
-    /// use smallbox::SmallBox;
-    ///
-    /// let small: SmallBox<_, S4> = SmallBox::new([0usize; 2]);
-    /// let large: SmallBox<_, S4> = SmallBox::new([1usize; 8]);
-    ///
-    /// assert_eq!(small.len(), 2);
-    /// assert_eq!(large[7], 1);
-    ///
-    /// assert!(large.is_heap() == true);
-    /// ```
-    #[inline(always)]
-    pub fn new(val: T) -> SmallBox<T, Space>
-        where T: Sized {
-        smallbox!(val)
-    }
+   /// Box value on stack or on heap depending on its size.
+   ///
+   /// # Example
+   ///
+   /// ```
+   /// use smallbox::space::*;
+   /// use smallbox::SmallBox;
+   ///
+   /// let small: SmallBox<_, S4> = SmallBox::new([0usize; 2]);
+   /// let large: SmallBox<_, S4> = SmallBox::new([1usize; 8]);
+   ///
+   /// assert_eq!(small.len(), 2);
+   /// assert_eq!(large[7], 1);
+   ///
+   /// assert!(large.is_heap() == true);
+   /// ```
+   #[inline]
+   pub fn new(val: T) -> SmallBox<T, Space>
+   where
+      T: Sized,
+   {
+      smallbox!(val)
+   }
 
-    #[doc(hidden)]
-    #[inline]
-    pub unsafe fn new_unchecked<U>(val: U, ptr: *const T) -> SmallBox<T, Space>
-        where U: Sized {
-        let result = Self::new_copy(&val, ptr);
-        mem::forget(val);
-        result
-    }
+   #[doc(hidden)]
+   #[inline]
+   pub unsafe fn new_unchecked<U>(val: U, ptr: *const T) -> SmallBox<T, Space>
+   where
+      U: Sized,
+   {
+      let result = Self::new_copy(&val, ptr);
+      mem::forget(val);
+      result
+   }
 
-    /// Change the capacity of `SmallBox`.
-    ///
-    /// This method may move stack-allocated data from stack to heap
-    /// when inline space is not sufficient. And once the data
-    /// is moved to heap, it'll never be moved again.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use smallbox::space::S2;
-    /// use smallbox::space::S4;
-    /// use smallbox::SmallBox;
-    ///
-    /// let s: SmallBox<_, S4> = SmallBox::new([0usize; 4]);
-    /// let m: SmallBox<_, S2> = s.resize();
-    /// ```
-    pub fn resize<ToSpace>(self) -> SmallBox<T, ToSpace> {
-        unsafe {
-            let result = if self.is_heap() {
-                // don't change anything if data is already on heap
-                let space = MaybeUninit::<ToSpace>::uninit();
-                SmallBox {
-                    space,
-                    ptr: self.ptr,
-                    _phantom: PhantomData,
-                }
-            } else {
-                let val: &T = &*self;
-                SmallBox::<T, ToSpace>::new_copy(val, val as *const T)
-            };
-
-            mem::forget(self);
-
-            result
-        }
-    }
-
-    /// Returns true if data is allocated on heap.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use smallbox::space::S1;
-    /// use smallbox::SmallBox;
-    ///
-    /// let stacked: SmallBox<usize, S1> = SmallBox::new(0usize);
-    /// assert!(!stacked.is_heap());
-    ///
-    /// let heaped: SmallBox<(usize, usize), S1> = SmallBox::new((0usize, 1usize));
-    /// assert!(heaped.is_heap());
-    /// ```
-    #[inline]
-    pub fn is_heap(&self) -> bool {
-        !self.ptr.is_null()
-    }
-
-    unsafe fn new_copy<U>(val: &U, ptr: *const T) -> SmallBox<T, Space>
-        where U: ?Sized {
-        let size = mem::size_of_val::<U>(val);
-        let align = mem::align_of_val::<U>(val);
-
-        let mut space = MaybeUninit::<Space>::uninit();
-
-        let (ptr_addr, ptr_copy): (*const u8, *mut u8) = if size == 0 {
-            (ptr::null(), align as *mut u8)
-        } else if size > mem::size_of::<Space>() || align > mem::align_of::<Space>() {
-            // Heap
-            let layout = Layout::for_value::<U>(val);
-            let heap_ptr = alloc::alloc(layout);
-
-            (heap_ptr, heap_ptr)
-        } else {
-            // Stack
-            (ptr::null(), space.as_mut_ptr() as *mut u8)
-        };
-
-        // Overwrite the pointer but retain any extra data inside the fat pointer.
-        let mut ptr = ptr;
-        let ptr_ptr = &mut ptr as *mut _ as *mut usize;
-        ptr_ptr.write(ptr_addr as usize);
-
-        ptr::copy_nonoverlapping(val as *const _ as *const u8, ptr_copy, size);
-
-        SmallBox {
-            space,
-            ptr,
-            _phantom: PhantomData,
-        }
-    }
-
-    unsafe fn downcast_unchecked<U: Any>(self) -> SmallBox<U, Space> {
-        let size = mem::size_of::<U>();
-        let mut space = MaybeUninit::<Space>::uninit();
-
-        if !self.is_heap() {
-            ptr::copy_nonoverlapping(
-                self.space.as_ptr() as *const u8,
-                space.as_mut_ptr() as *mut u8,
-                size,
-            );
-        };
-
-        let ptr = self.ptr as *const U;
-
-        mem::forget(self);
-
-        SmallBox {
-            space,
-            ptr,
-            _phantom: PhantomData,
-        }
-    }
-
-    #[inline]
-    unsafe fn as_ptr(&self) -> *const T {
-        let mut ptr = self.ptr;
-
-        if !self.is_heap() {
-            // Overwrite the pointer but retain any extra data inside the fat pointer.
-            let ptr_ptr = &mut ptr as *mut _ as *mut usize;
-            ptr_ptr.write(self.space.as_ptr() as *const () as usize);
-        }
-
-        ptr
-    }
-
-    #[inline]
-    unsafe fn as_mut_ptr(&mut self) -> *mut T {
-        let mut ptr = self.ptr;
-
-        if !self.is_heap() {
-            // Overwrite the pointer but retain any extra data inside the fat pointer.
-            let ptr_ptr = &mut ptr as *mut _ as *mut usize;
-            ptr_ptr.write(self.space.as_mut_ptr() as *mut () as usize);
-        }
-
-        ptr as *mut _
-    }
-
-    /// Consumes the SmallBox and returns ownership of the boxed value
-    ///
-    /// # Examples
-    /// ```
-    /// use smallbox::space::S1;
-    /// use smallbox::SmallBox;
-    ///
-    /// let stacked: SmallBox<_, S1> = SmallBox::new([21usize]);
-    /// let val = stacked.into_inner();
-    /// assert_eq!(val[0], 21);
-    ///
-    /// let boxed: SmallBox<_, S1> = SmallBox::new(vec![21, 56, 420]);
-    /// let val = boxed.into_inner();
-    /// assert_eq!(val[1], 56);
-    /// ```
-    #[inline]
-    pub fn into_inner(self) -> T
-        where T: Sized {
-        let ret_val: T = unsafe { self.as_ptr().read() };
-
-        // Just drops the heap without dropping the boxed value
-        if self.is_heap() {
-            let layout = Layout::new::<T>();
-            unsafe {
-                alloc::dealloc(self.ptr as *mut u8, layout);
+   /// Change the capacity of `SmallBox`.
+   ///
+   /// This method may move stack-allocated data from stack to heap
+   /// when inline space is not sufficient. And once the data
+   /// is moved to heap, it'll never be moved again.
+   ///
+   /// # Example
+   ///
+   /// ```
+   /// use smallbox::space::S2;
+   /// use smallbox::space::S4;
+   /// use smallbox::SmallBox;
+   ///
+   /// let s: SmallBox<_, S4> = SmallBox::new([0usize; 4]);
+   /// let m: SmallBox<_, S2> = s.resize();
+   /// ```
+   pub fn resize<ToSpace>(self) -> SmallBox<T, ToSpace> {
+      unsafe {
+         let result = if self.is_heap() {
+            // don't change anything if data is already on heap
+            let space = MaybeUninit::<ToSpace>::uninit();
+            SmallBox {
+               space,
+               ptr: self.ptr,
+               _phantom: PhantomData,
             }
-        }
-        mem::forget(self);
+         } else {
+            let val: &T = &*self;
+            SmallBox::<T, ToSpace>::new_copy(val, val as *const T)
+         };
 
-        ret_val
-    }
+         mem::forget(self);
+
+         result
+      }
+   }
+
+   /// Returns true if data is allocated on heap.
+   ///
+   /// # Example
+   ///
+   /// ```
+   /// use smallbox::space::S1;
+   /// use smallbox::SmallBox;
+   ///
+   /// let stacked: SmallBox<usize, S1> = SmallBox::new(0usize);
+   /// assert!(!stacked.is_heap());
+   ///
+   /// let heaped: SmallBox<(usize, usize), S1> = SmallBox::new((0usize, 1usize));
+   /// assert!(heaped.is_heap());
+   /// ```
+   #[inline]
+   pub fn is_heap(&self) -> bool {
+      !self.ptr.is_null()
+   }
+
+   unsafe fn new_copy<U>(val: &U, ptr: *const T) -> SmallBox<T, Space>
+   where
+      U: ?Sized,
+   {
+      let size = mem::size_of_val::<U>(val);
+      let align = mem::align_of_val::<U>(val);
+
+      let mut space = MaybeUninit::<Space>::uninit();
+
+      let (ptr_addr, ptr_copy): (*const u8, *mut u8) = if size == 0 {
+         (ptr::null(), align as *mut u8)
+      } else if size > mem::size_of::<Space>() || align > mem::align_of::<Space>() {
+         // Heap
+         let layout = Layout::for_value::<U>(val);
+         let heap_ptr = alloc::alloc(layout);
+
+         (heap_ptr, heap_ptr)
+      } else {
+         // Stack
+         (ptr::null(), space.as_mut_ptr() as *mut u8)
+      };
+
+      // Overwrite the pointer but retain any extra data inside the fat pointer.
+      let mut ptr = ptr;
+      let ptr_ptr = &mut ptr as *mut _ as *mut usize;
+      ptr_ptr.write(ptr_addr as usize);
+
+      ptr::copy_nonoverlapping(val as *const _ as *const u8, ptr_copy, size);
+
+      SmallBox {
+         space,
+         ptr,
+         _phantom: PhantomData,
+      }
+   }
+
+   unsafe fn downcast_unchecked<U: Any>(self) -> SmallBox<U, Space> {
+      let size = mem::size_of::<U>();
+      let mut space = MaybeUninit::<Space>::uninit();
+
+      if !self.is_heap() {
+         ptr::copy_nonoverlapping(
+            self.space.as_ptr() as *const u8,
+            space.as_mut_ptr() as *mut u8,
+            size,
+         );
+      };
+
+      let ptr = self.ptr as *const U;
+
+      mem::forget(self);
+
+      SmallBox {
+         space,
+         ptr,
+         _phantom: PhantomData,
+      }
+   }
+
+   #[inline]
+   unsafe fn as_ptr(&self) -> *const T {
+      let mut ptr = self.ptr;
+
+      if !self.is_heap() {
+         // Overwrite the pointer but retain any extra data inside the fat pointer.
+         let ptr_ptr = &mut ptr as *mut _ as *mut usize;
+         ptr_ptr.write(self.space.as_ptr() as *const () as usize);
+      }
+
+      ptr
+   }
+
+   #[inline]
+   unsafe fn as_mut_ptr(&mut self) -> *mut T {
+      let mut ptr = self.ptr;
+
+      if !self.is_heap() {
+         // Overwrite the pointer but retain any extra data inside the fat pointer.
+         let ptr_ptr = &mut ptr as *mut _ as *mut usize;
+         ptr_ptr.write(self.space.as_mut_ptr() as *mut () as usize);
+      }
+
+      ptr as *mut _
+   }
+
+   /// Consumes the SmallBox and returns ownership of the boxed value
+   ///
+   /// # Examples
+   /// ```
+   /// use smallbox::space::S1;
+   /// use smallbox::SmallBox;
+   ///
+   /// let stacked: SmallBox<_, S1> = SmallBox::new([21usize]);
+   /// let val = stacked.into_inner();
+   /// assert_eq!(val[0], 21);
+   ///
+   /// let boxed: SmallBox<_, S1> = SmallBox::new(vec![21, 56, 420]);
+   /// let val = boxed.into_inner();
+   /// assert_eq!(val[1], 56);
+   /// ```
+   #[inline]
+   pub fn into_inner(self) -> T
+   where
+      T: Sized,
+   {
+      let ret_val: T = unsafe { self.as_ptr().read() };
+
+      // Just drops the heap without dropping the boxed value
+      if self.is_heap() {
+         let layout = Layout::new::<T>();
+         unsafe {
+            alloc::dealloc(self.ptr as *mut u8, layout);
+         }
+      }
+      mem::forget(self);
+
+      ret_val
+   }
 }
 
 impl<Space> SmallBox<dyn Any, Space> {
-    /// Attempt to downcast the box to a concrete type.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// #[macro_use]
-    /// extern crate smallbox;
-    ///
-    /// # fn main() {
-    /// use core::any::Any;
-    ///
-    /// use smallbox::space::*;
-    /// use smallbox::SmallBox;
-    ///
-    /// fn print_if_string(value: SmallBox<dyn Any, S1>) {
-    ///     if let Ok(string) = value.downcast::<String>() {
-    ///         println!("String ({}): {}", string.len(), string);
-    ///     }
-    /// }
-    ///
-    /// fn main() {
-    ///     let my_string = "Hello World".to_string();
-    ///     print_if_string(smallbox!(my_string));
-    ///     print_if_string(smallbox!(0i8));
-    /// }
-    /// # }
-    /// ```
-    #[inline]
-    pub fn downcast<T: Any>(self) -> Result<SmallBox<T, Space>, Self> {
-        if self.is::<T>() {
-            unsafe { Ok(self.downcast_unchecked()) }
-        } else {
-            Err(self)
-        }
-    }
+   /// Attempt to downcast the box to a concrete type.
+   ///
+   /// # Examples
+   ///
+   /// ```
+   /// #[macro_use]
+   /// extern crate smallbox;
+   ///
+   /// # fn main() {
+   /// use core::any::Any;
+   ///
+   /// use smallbox::space::*;
+   /// use smallbox::SmallBox;
+   ///
+   /// fn print_if_string(value: SmallBox<dyn Any, S1>) {
+   ///     if let Ok(string) = value.downcast::<String>() {
+   ///         println!("String ({}): {}", string.len(), string);
+   ///     }
+   /// }
+   ///
+   /// fn main() {
+   ///     let my_string = "Hello World".to_string();
+   ///     print_if_string(smallbox!(my_string));
+   ///     print_if_string(smallbox!(0i8));
+   /// }
+   /// # }
+   /// ```
+   #[inline]
+   pub fn downcast<T: Any>(self) -> Result<SmallBox<T, Space>, Self> {
+      if self.is::<T>() {
+         unsafe { Ok(self.downcast_unchecked()) }
+      } else {
+         Err(self)
+      }
+   }
 }
 
 impl<Space> SmallBox<dyn Any + Send, Space> {
-    /// Attempt to downcast the box to a concrete type.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// #[macro_use]
-    /// extern crate smallbox;
-    ///
-    /// # fn main() {
-    /// use core::any::Any;
-    ///
-    /// use smallbox::space::*;
-    /// use smallbox::SmallBox;
-    ///
-    /// fn print_if_string(value: SmallBox<dyn Any, S1>) {
-    ///     if let Ok(string) = value.downcast::<String>() {
-    ///         println!("String ({}): {}", string.len(), string);
-    ///     }
-    /// }
-    ///
-    /// fn main() {
-    ///     let my_string = "Hello World".to_string();
-    ///     print_if_string(smallbox!(my_string));
-    ///     print_if_string(smallbox!(0i8));
-    /// }
-    /// # }
-    /// ```
-    #[inline]
-    pub fn downcast<T: Any>(self) -> Result<SmallBox<T, Space>, Self> {
-        if self.is::<T>() {
-            unsafe { Ok(self.downcast_unchecked()) }
-        } else {
-            Err(self)
-        }
-    }
+   /// Attempt to downcast the box to a concrete type.
+   ///
+   /// # Examples
+   ///
+   /// ```
+   /// #[macro_use]
+   /// extern crate smallbox;
+   ///
+   /// # fn main() {
+   /// use core::any::Any;
+   ///
+   /// use smallbox::space::*;
+   /// use smallbox::SmallBox;
+   ///
+   /// fn print_if_string(value: SmallBox<dyn Any, S1>) {
+   ///     if let Ok(string) = value.downcast::<String>() {
+   ///         println!("String ({}): {}", string.len(), string);
+   ///     }
+   /// }
+   ///
+   /// fn main() {
+   ///     let my_string = "Hello World".to_string();
+   ///     print_if_string(smallbox!(my_string));
+   ///     print_if_string(smallbox!(0i8));
+   /// }
+   /// # }
+   /// ```
+   #[inline]
+   pub fn downcast<T: Any>(self) -> Result<SmallBox<T, Space>, Self> {
+      if self.is::<T>() {
+         unsafe { Ok(self.downcast_unchecked()) }
+      } else {
+         Err(self)
+      }
+   }
 }
 
 impl<T: ?Sized, Space> ops::Deref for SmallBox<T, Space> {
-    type Target = T;
+   type Target = T;
 
-    fn deref(&self) -> &T {
-        unsafe { &*self.as_ptr() }
-    }
+   fn deref(&self) -> &T {
+      unsafe { &*self.as_ptr() }
+   }
 }
 
 impl<T: ?Sized, Space> ops::DerefMut for SmallBox<T, Space> {
-    fn deref_mut(&mut self) -> &mut T {
-        unsafe { &mut *self.as_mut_ptr() }
-    }
+   fn deref_mut(&mut self) -> &mut T {
+      unsafe { &mut *self.as_mut_ptr() }
+   }
 }
 
 impl<T: ?Sized, Space> ops::Drop for SmallBox<T, Space> {
-    fn drop(&mut self) {
-        unsafe {
-            let layout = Layout::for_value::<T>(&*self);
-            ptr::drop_in_place::<T>(&mut **self);
-            if self.is_heap() {
-                alloc::dealloc(self.ptr as *mut u8, layout);
-            }
-        }
-    }
+   fn drop(&mut self) {
+      unsafe {
+         let layout = Layout::for_value::<T>(&*self);
+         ptr::drop_in_place::<T>(&mut **self);
+         if self.is_heap() {
+            alloc::dealloc(self.ptr as *mut u8, layout);
+         }
+      }
+   }
 }
 
 impl<T: Clone, Space> Clone for SmallBox<T, Space>
-    where T: Sized
+where
+   T: Sized,
 {
-    fn clone(&self) -> Self {
-        let val: &T = &*self;
-        SmallBox::new(val.clone())
-    }
+   fn clone(&self) -> Self {
+      let val: &T = &*self;
+      SmallBox::new(val.clone())
+   }
 }
 
 impl<T: ?Sized + fmt::Display, Space> fmt::Display for SmallBox<T, Space> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(&**self, f)
-    }
+   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+      fmt::Display::fmt(&**self, f)
+   }
 }
 
 impl<T: ?Sized + fmt::Debug, Space> fmt::Debug for SmallBox<T, Space> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Debug::fmt(&**self, f)
-    }
+   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+      fmt::Debug::fmt(&**self, f)
+   }
 }
 
 impl<T: ?Sized, Space> fmt::Pointer for SmallBox<T, Space> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // It's not possible to extract the inner Unique directly from the Box,
-        // instead we cast it to a *const which aliases the Unique
-        let ptr: *const T = &**self;
-        fmt::Pointer::fmt(&ptr, f)
-    }
+   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+      // It's not possible to extract the inner Unique directly from the Box,
+      // instead we cast it to a *const which aliases the Unique
+      let ptr: *const T = &**self;
+      fmt::Pointer::fmt(&ptr, f)
+   }
 }
 
 impl<T: ?Sized + PartialEq, Space> PartialEq for SmallBox<T, Space> {
-    fn eq(&self, other: &SmallBox<T, Space>) -> bool {
-        PartialEq::eq(&**self, &**other)
-    }
+   fn eq(&self, other: &SmallBox<T, Space>) -> bool {
+      PartialEq::eq(&**self, &**other)
+   }
 }
 
 impl<T: ?Sized + PartialOrd, Space> PartialOrd for SmallBox<T, Space> {
-    fn partial_cmp(&self, other: &SmallBox<T, Space>) -> Option<Ordering> {
-        PartialOrd::partial_cmp(&**self, &**other)
-    }
-    fn lt(&self, other: &SmallBox<T, Space>) -> bool {
-        PartialOrd::lt(&**self, &**other)
-    }
-    fn le(&self, other: &SmallBox<T, Space>) -> bool {
-        PartialOrd::le(&**self, &**other)
-    }
-    fn ge(&self, other: &SmallBox<T, Space>) -> bool {
-        PartialOrd::ge(&**self, &**other)
-    }
-    fn gt(&self, other: &SmallBox<T, Space>) -> bool {
-        PartialOrd::gt(&**self, &**other)
-    }
+   fn partial_cmp(&self, other: &SmallBox<T, Space>) -> Option<Ordering> {
+      PartialOrd::partial_cmp(&**self, &**other)
+   }
+   fn lt(&self, other: &SmallBox<T, Space>) -> bool {
+      PartialOrd::lt(&**self, &**other)
+   }
+   fn le(&self, other: &SmallBox<T, Space>) -> bool {
+      PartialOrd::le(&**self, &**other)
+   }
+   fn ge(&self, other: &SmallBox<T, Space>) -> bool {
+      PartialOrd::ge(&**self, &**other)
+   }
+   fn gt(&self, other: &SmallBox<T, Space>) -> bool {
+      PartialOrd::gt(&**self, &**other)
+   }
 }
 
 impl<T: ?Sized + Ord, Space> Ord for SmallBox<T, Space> {
-    fn cmp(&self, other: &SmallBox<T, Space>) -> Ordering {
-        Ord::cmp(&**self, &**other)
-    }
+   fn cmp(&self, other: &SmallBox<T, Space>) -> Ordering {
+      Ord::cmp(&**self, &**other)
+   }
 }
 
 impl<T: ?Sized + Eq, Space> Eq for SmallBox<T, Space> {}
 
 impl<T: ?Sized + Hash, Space> Hash for SmallBox<T, Space> {
-    fn hash<H: hash::Hasher>(&self, state: &mut H) {
-        (**self).hash(state);
-    }
+   fn hash<H: hash::Hasher>(&self, state: &mut H) {
+      (**self).hash(state);
+   }
 }
 
 unsafe impl<T: ?Sized + Send, Space> Send for SmallBox<T, Space> {}
+
 unsafe impl<T: ?Sized + Sync, Space> Sync for SmallBox<T, Space> {}
 
 // #[cfg(test)]

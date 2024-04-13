@@ -1,4 +1,5 @@
 use core::cmp::Ordering;
+use std::any::TypeId;
 use std::borrow::Cow;
 
 use bevy_ecs::prelude::World;
@@ -10,10 +11,7 @@ use bevy_hierarchy::{Children, Parent};
 // use bevy_ui::Display;
 // use bevy_ui::Style;
 
-use rxy_core::{
-    AttrIndex, DeferredNodeTreeScoped, ElementAttrType, ElementType, NodeTree, RendererNodeId,
-    RendererWorld,
-};
+use rxy_core::{AttrIndex, DeferredNodeTreeScoped, ElementAttrType, ElementType, NodeTree, RendererNodeId, RendererWorld, ViewKey};
 
 use crate::renderer::NativeRenderer;
 use crate::renderer::visibility::Visibility;
@@ -40,17 +38,7 @@ impl NodeTree<NativeRenderer> for World {
         true
     }
 
-    fn build_attr<A: ElementAttrType<NativeRenderer>>(
-        &mut self,
-        entity: RendererNodeId<NativeRenderer>,
-        value: A::Value,
-    ) {
-        A::first_set_value(self, entity, value);
-        let Some(mut entity_world_mut) = self.get_entity_mut(entity) else {
-            return;
-        };
-    }
-    fn rebuild_attr<A: ElementAttrType<NativeRenderer>>(
+    fn set_attr<A: ElementAttrType<NativeRenderer>>(
         &mut self,
         entity: RendererNodeId<NativeRenderer>,
         value: A::Value,
@@ -61,7 +49,7 @@ impl NodeTree<NativeRenderer> for World {
         };
     }
 
-    fn unbuild_attr<A: ElementAttrType<NativeRenderer>>(
+    fn unset_attr<A: ElementAttrType<NativeRenderer>>(
         &mut self,
         entity: RendererNodeId<NativeRenderer>,
     ) {
@@ -71,7 +59,7 @@ impl NodeTree<NativeRenderer> for World {
         };
     }
 
-    fn deferred_world_scoped(&mut self) -> impl DeferredNodeTreeScoped<NativeRenderer> {
+    fn deferred_world_scoped(&self) -> impl DeferredNodeTreeScoped<NativeRenderer> {
         self.non_send_resource::<UserEventSender>().clone()
     }
     fn get_node_state_mut<S: Send + Sync + 'static>(
@@ -246,6 +234,18 @@ impl NodeTree<NativeRenderer> for World {
     fn get_visibility(&self, node_id: &RendererNodeId<NativeRenderer>) -> bool {
         self.get::<Visibility>(*node_id)
             .is_some_and(|n| *n == Visibility::Hidden)
+    }
+
+    fn recycle_node<K: ViewKey<NativeRenderer>>(&mut self, key: &K) {
+        todo!()
+    }
+
+    fn cancel_recycle_node<K: ViewKey<NativeRenderer>>(&mut self, key: &K) {
+        todo!()
+    }
+
+    fn scoped_type_state<S: Send + Sync + Clone + 'static, U>(&self, type_id: TypeId, f: impl FnOnce(Option<&S>) -> U) -> U {
+        todo!()
     }
 }
 

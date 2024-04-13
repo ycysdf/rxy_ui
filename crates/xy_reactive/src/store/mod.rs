@@ -1,435 +1,401 @@
 use crate::{
-    arena::{Stored, StoredData},
-    prelude::{SignalUpdateUntracked, SignalWithUntracked, Trigger},
-    signal::trigger::ArcTrigger,
-    signal_traits::{DefinedAt, SignalIsDisposed},
-    source::Track,
+   arena::{Stored, StoredData},
+   prelude::{SignalUpdateUntracked, SignalWithUntracked, Trigger},
+   signal::trigger::ArcTrigger,
+   signal_traits::{DefinedAt, SignalIsDisposed},
+   source::Track,
 };
 use parking_lot::{MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock};
 use rustc_hash::FxHashMap;
 use std::{fmt::Debug, panic::Location, sync::Arc};
+
 mod indexed;
+
 pub use indexed::*;
+
 mod keyed;
+
 pub use keyed::*;
+
 mod path;
+
 pub use path::*;
+
 mod stored;
+
 pub use stored::*;
 
 pub struct Store<T: Send + Sync + 'static> {
-    inner: Stored<ArcStore<T>>,
+   inner: Stored<ArcStore<T>>,
 }
 
 impl<T: Send + Sync + 'static> Store<T> {
-    #[cfg_attr(
-        feature = "tracing",
-        tracing::instrument(level = "debug", skip_all,)
-    )]
-    pub fn new(value: T) -> Self {
-        Self {
-            inner: Stored::new(ArcStore::new(value)),
-        }
-    }
+   #[cfg_attr(feature = "tracing", tracing::instrument(level = "debug", skip_all,))]
+   pub fn new(value: T) -> Self {
+      Self {
+         inner: Stored::new(ArcStore::new(value)),
+      }
+   }
 }
 
 impl<T: Send + Sync + 'static> Copy for Store<T> {}
 
 impl<T: Send + Sync + 'static> Clone for Store<T> {
-    fn clone(&self) -> Self {
-        *self
-    }
+   fn clone(&self) -> Self {
+      *self
+   }
 }
 
 impl<T: Debug + Send + Sync + 'static> Debug for Store<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Store")
-            .field("type", &std::any::type_name::<T>())
-            .field("store", &self.inner)
-            .finish()
-    }
+   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+      f.debug_struct("Store")
+         .field("type", &std::any::type_name::<T>())
+         .field("store", &self.inner)
+         .finish()
+   }
 }
 
 impl<T: Send + Sync + 'static> SignalIsDisposed for Store<T> {
-    fn is_disposed(&self) -> bool {
-        self.inner.exists()
-    }
+   fn is_disposed(&self) -> bool {
+      self.inner.exists()
+   }
 }
 
 impl<T: Send + Sync + 'static> StoredData for Store<T> {
-    type Data = ArcStore<T>;
+   type Data = ArcStore<T>;
 
-    fn get_value(&self) -> Option<Self::Data> {
-        self.inner.get()
-    }
+   fn get_value(&self) -> Option<Self::Data> {
+      self.inner.get()
+   }
 
-    fn dispose(&self) {
-        self.inner.dispose();
-    }
+   fn dispose(&self) {
+      self.inner.dispose();
+   }
 }
 
 pub struct ArcStore<T> {
-    #[cfg(debug_assertions)]
-    defined_at: &'static Location<'static>,
-    pub(crate) value: Arc<RwLock<T>>,
-    signals: Arc<RwLock<TriggerMap>>,
+   #[cfg(debug_assertions)]
+   defined_at: &'static Location<'static>,
+   pub(crate) value: Arc<RwLock<T>>,
+   signals: Arc<RwLock<TriggerMap>>,
 }
 
 #[derive(Debug, Default)]
 struct TriggerMap(FxHashMap<StorePath, ArcTrigger>);
 
 impl TriggerMap {
-    fn get_or_insert(&mut self, key: StorePath) -> ArcTrigger {
-        if let Some(trigger) = self.0.get(&key) {
-            trigger.clone()
-        } else {
-            let new = ArcTrigger::new();
-            self.0.insert(key, new.clone());
-            new
-        }
-    }
+   fn get_or_insert(&mut self, key: StorePath) -> ArcTrigger {
+      if let Some(trigger) = self.0.get(&key) {
+         trigger.clone()
+      } else {
+         let new = ArcTrigger::new();
+         self.0.insert(key, new.clone());
+         new
+      }
+   }
 
-    fn remove(&mut self, key: &StorePath) -> Option<ArcTrigger> {
-        self.0.remove(key)
-    }
+   fn remove(&mut self, key: &StorePath) -> Option<ArcTrigger> {
+      self.0.remove(key)
+   }
 }
 
 impl<T> ArcStore<T> {
-    #[cfg_attr(
-        feature = "tracing",
-        tracing::instrument(level = "trace", skip_all,)
-    )]
-    pub fn new(value: T) -> Self {
-        Self {
-            #[cfg(debug_assertions)]
-            defined_at: Location::caller(),
-            value: Arc::new(RwLock::new(value)),
-            signals: Default::default(),
-            /* inner: Arc::new(RwLock::new(SubscriberSet::new())), */
-        }
-    }
+   #[cfg_attr(feature = "tracing", tracing::instrument(level = "trace", skip_all,))]
+   pub fn new(value: T) -> Self {
+      Self {
+         #[cfg(debug_assertions)]
+         defined_at: Location::caller(),
+         value: Arc::new(RwLock::new(value)),
+         signals: Default::default(),
+         /* inner: Arc::new(RwLock::new(SubscriberSet::new())), */
+      }
+   }
 }
 
 impl<T: Debug> Debug for ArcStore<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut f = f.debug_struct("ArcStore");
-        #[cfg(debug_assertions)]
-        let f = f.field("defined_at", &self.defined_at);
-        f.field("value", &self.value)
-            .field("signals", &self.signals)
-            .finish()
-    }
+   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+      let mut f = f.debug_struct("ArcStore");
+      #[cfg(debug_assertions)]
+      let f = f.field("defined_at", &self.defined_at);
+      f.field("value", &self.value)
+         .field("signals", &self.signals)
+         .finish()
+   }
 }
 
 impl<T> Clone for ArcStore<T> {
-    fn clone(&self) -> Self {
-        Self {
-            #[cfg(debug_assertions)]
-            defined_at: self.defined_at,
-            value: Arc::clone(&self.value),
-            signals: Arc::clone(&self.signals),
-        }
-    }
+   fn clone(&self) -> Self {
+      Self {
+         #[cfg(debug_assertions)]
+         defined_at: self.defined_at,
+         value: Arc::clone(&self.value),
+         signals: Arc::clone(&self.signals),
+      }
+   }
 }
 
 impl<T> SignalWithUntracked for ArcStore<T> {
-    type Value = T;
+   type Value = T;
 
-    fn try_with_untracked<U>(
-        &self,
-        fun: impl FnOnce(&Self::Value) -> U,
-    ) -> Option<U> {
-        Some(fun(&self.value.read()))
-    }
+   fn try_with_untracked<U>(&self, fun: impl FnOnce(&Self::Value) -> U) -> Option<U> {
+      Some(fun(&self.value.read()))
+   }
 }
 
 impl<T> Trigger for ArcStore<T> {
-    fn trigger(&self) {
-        self.get_trigger(self.path().collect()).notify();
-    }
+   fn trigger(&self) {
+      self.get_trigger(self.path().collect()).notify();
+   }
 }
 
 impl<T> SignalUpdateUntracked for ArcStore<T> {
-    type Value = T;
+   type Value = T;
 
-    fn try_update_untracked<U>(
-        &self,
-        fun: impl FnOnce(&mut Self::Value) -> U,
-    ) -> Option<U> {
-        Some(fun(&mut self.value.write()))
-    }
+   fn try_update_untracked<U>(&self, fun: impl FnOnce(&mut Self::Value) -> U) -> Option<U> {
+      Some(fun(&mut self.value.write()))
+   }
 }
 
 impl<T> SignalIsDisposed for ArcStore<T> {
-    fn is_disposed(&self) -> bool {
-        false
-    }
+   fn is_disposed(&self) -> bool {
+      false
+   }
 }
 
 pub struct ArcRwStoreField<Orig, T>
 where
-    T: 'static,
+   T: 'static,
 {
-    #[cfg(debug_assertions)]
-    defined_at: &'static std::panic::Location<'static>,
-    data: Arc<RwLock<Orig>>,
-    trigger: ArcTrigger,
-    read: Arc<
-        dyn for<'a> Fn(&'a RwLock<Orig>) -> MappedRwLockReadGuard<'a, T>
-            + Send
-            + Sync,
-    >,
-    write: Arc<
-        dyn for<'a> Fn(&'a RwLock<Orig>) -> MappedRwLockWriteGuard<'a, T>
-            + Send
-            + Sync,
-    >,
+   #[cfg(debug_assertions)]
+   defined_at: &'static std::panic::Location<'static>,
+   data: Arc<RwLock<Orig>>,
+   trigger: ArcTrigger,
+   read: Arc<dyn for<'a> Fn(&'a RwLock<Orig>) -> MappedRwLockReadGuard<'a, T> + Send + Sync>,
+   write: Arc<dyn for<'a> Fn(&'a RwLock<Orig>) -> MappedRwLockWriteGuard<'a, T> + Send + Sync>,
 }
 
 impl<Orig, T> ArcRwStoreField<Orig, T>
 where
-    T: 'static,
+   T: 'static,
 {
-    #[track_caller]
-    pub fn read_only(&self) -> ArcReadStoreField<Orig, T> {
-        ArcReadStoreField {
+   #[track_caller]
+   pub fn read_only(&self) -> ArcReadStoreField<Orig, T> {
+      ArcReadStoreField {
+         #[cfg(debug_assertions)]
+         defined_at: Location::caller(),
+         data: Arc::clone(&self.data),
+         trigger: self.trigger.clone(),
+         read: Arc::clone(&self.read),
+      }
+   }
+
+   #[track_caller]
+   pub fn write_only(&self) -> ArcWriteStoreField<Orig, T> {
+      ArcWriteStoreField {
+         #[cfg(debug_assertions)]
+         defined_at: Location::caller(),
+         data: Arc::clone(&self.data),
+         trigger: self.trigger.clone(),
+         write: Arc::clone(&self.write),
+      }
+   }
+
+   #[inline(always)]
+   pub fn split(&self) -> (ArcReadStoreField<Orig, T>, ArcWriteStoreField<Orig, T>) {
+      (self.read_only(), self.write_only())
+   }
+
+   pub fn unite(
+      read: ArcReadStoreField<Orig, T>,
+      write: ArcWriteStoreField<Orig, T>,
+   ) -> Option<Self> {
+      if Arc::ptr_eq(&read.trigger.inner, &write.trigger.inner) {
+         let ArcReadStoreField {
             #[cfg(debug_assertions)]
-            defined_at: Location::caller(),
-            data: Arc::clone(&self.data),
-            trigger: self.trigger.clone(),
-            read: Arc::clone(&self.read),
-        }
-    }
-
-    #[track_caller]
-    pub fn write_only(&self) -> ArcWriteStoreField<Orig, T> {
-        ArcWriteStoreField {
+            defined_at,
+            data,
+            trigger,
+            read,
+         } = read;
+         let ArcWriteStoreField { write, .. } = write;
+         Some(Self {
             #[cfg(debug_assertions)]
-            defined_at: Location::caller(),
-            data: Arc::clone(&self.data),
-            trigger: self.trigger.clone(),
-            write: Arc::clone(&self.write),
-        }
-    }
-
-    #[inline(always)]
-    pub fn split(
-        &self,
-    ) -> (ArcReadStoreField<Orig, T>, ArcWriteStoreField<Orig, T>) {
-        (self.read_only(), self.write_only())
-    }
-
-    pub fn unite(
-        read: ArcReadStoreField<Orig, T>,
-        write: ArcWriteStoreField<Orig, T>,
-    ) -> Option<Self> {
-        if Arc::ptr_eq(&read.trigger.inner, &write.trigger.inner) {
-            let ArcReadStoreField {
-                #[cfg(debug_assertions)]
-                defined_at,
-                data,
-                trigger,
-                read,
-            } = read;
-            let ArcWriteStoreField { write, .. } = write;
-            Some(Self {
-                #[cfg(debug_assertions)]
-                defined_at,
-                data,
-                trigger,
-                read,
-                write,
-            })
-        } else {
-            None
-        }
-    }
+            defined_at,
+            data,
+            trigger,
+            read,
+            write,
+         })
+      } else {
+         None
+      }
+   }
 }
 
 impl<Orig, T> Clone for ArcRwStoreField<Orig, T> {
-    fn clone(&self) -> Self {
-        Self {
-            #[cfg(debug_assertions)]
-            defined_at: self.defined_at,
-            data: Arc::clone(&self.data),
-            trigger: self.trigger.clone(),
-            read: Arc::clone(&self.read),
-            write: Arc::clone(&self.write),
-        }
-    }
+   fn clone(&self) -> Self {
+      Self {
+         #[cfg(debug_assertions)]
+         defined_at: self.defined_at,
+         data: Arc::clone(&self.data),
+         trigger: self.trigger.clone(),
+         read: Arc::clone(&self.read),
+         write: Arc::clone(&self.write),
+      }
+   }
 }
 
 impl<Orig, T> DefinedAt for ArcRwStoreField<Orig, T> {
-    fn defined_at(&self) -> Option<&'static Location<'static>> {
-        #[cfg(debug_assertions)]
-        {
-            Some(self.defined_at)
-        }
-        #[cfg(not(debug_assertions))]
-        {
-            None
-        }
-    }
+   fn defined_at(&self) -> Option<&'static Location<'static>> {
+      #[cfg(debug_assertions)]
+      {
+         Some(self.defined_at)
+      }
+      #[cfg(not(debug_assertions))]
+      {
+         None
+      }
+   }
 }
 
 impl<Orig, T> Track for ArcRwStoreField<Orig, T> {
-    fn track(&self) {
-        self.trigger.track();
-    }
+   fn track(&self) {
+      self.trigger.track();
+   }
 }
 
 impl<Orig, T> SignalWithUntracked for ArcRwStoreField<Orig, T> {
-    type Value = T;
+   type Value = T;
 
-    fn try_with_untracked<U>(
-        &self,
-        fun: impl FnOnce(&Self::Value) -> U,
-    ) -> Option<U> {
-        Some(fun(&*(self.read)(&self.data)))
-    }
+   fn try_with_untracked<U>(&self, fun: impl FnOnce(&Self::Value) -> U) -> Option<U> {
+      Some(fun(&*(self.read)(&self.data)))
+   }
 }
 
 impl<Orig, T> Trigger for ArcRwStoreField<Orig, T> {
-    fn trigger(&self) {
-        self.trigger.notify();
-    }
+   fn trigger(&self) {
+      self.trigger.notify();
+   }
 }
 
 impl<Orig, T> SignalUpdateUntracked for ArcRwStoreField<Orig, T> {
-    type Value = T;
+   type Value = T;
 
-    fn try_update_untracked<U>(
-        &self,
-        fun: impl FnOnce(&mut Self::Value) -> U,
-    ) -> Option<U> {
-        Some(fun(&mut *(self.write)(&self.data)))
-    }
+   fn try_update_untracked<U>(&self, fun: impl FnOnce(&mut Self::Value) -> U) -> Option<U> {
+      Some(fun(&mut *(self.write)(&self.data)))
+   }
 }
 
 impl<Orig, T> SignalIsDisposed for ArcRwStoreField<Orig, T> {
-    fn is_disposed(&self) -> bool {
-        false
-    }
+   fn is_disposed(&self) -> bool {
+      false
+   }
 }
 
 pub struct ArcReadStoreField<Orig, T>
 where
-    T: 'static,
+   T: 'static,
 {
-    #[cfg(debug_assertions)]
-    defined_at: &'static std::panic::Location<'static>,
-    data: Arc<RwLock<Orig>>,
-    trigger: ArcTrigger,
-    read: Arc<
-        dyn for<'a> Fn(&'a RwLock<Orig>) -> MappedRwLockReadGuard<'a, T>
-            + Send
-            + Sync,
-    >,
+   #[cfg(debug_assertions)]
+   defined_at: &'static std::panic::Location<'static>,
+   data: Arc<RwLock<Orig>>,
+   trigger: ArcTrigger,
+   read: Arc<dyn for<'a> Fn(&'a RwLock<Orig>) -> MappedRwLockReadGuard<'a, T> + Send + Sync>,
 }
 
 impl<Orig, T> Clone for ArcReadStoreField<Orig, T> {
-    fn clone(&self) -> Self {
-        Self {
-            #[cfg(debug_assertions)]
-            defined_at: self.defined_at,
-            data: Arc::clone(&self.data),
-            trigger: self.trigger.clone(),
-            read: Arc::clone(&self.read),
-        }
-    }
+   fn clone(&self) -> Self {
+      Self {
+         #[cfg(debug_assertions)]
+         defined_at: self.defined_at,
+         data: Arc::clone(&self.data),
+         trigger: self.trigger.clone(),
+         read: Arc::clone(&self.read),
+      }
+   }
 }
 
 impl<Orig, T> DefinedAt for ArcReadStoreField<Orig, T> {
-    fn defined_at(&self) -> Option<&'static Location<'static>> {
-        #[cfg(debug_assertions)]
-        {
-            Some(self.defined_at)
-        }
-        #[cfg(not(debug_assertions))]
-        {
-            None
-        }
-    }
+   fn defined_at(&self) -> Option<&'static Location<'static>> {
+      #[cfg(debug_assertions)]
+      {
+         Some(self.defined_at)
+      }
+      #[cfg(not(debug_assertions))]
+      {
+         None
+      }
+   }
 }
 
 impl<Orig, T> Track for ArcReadStoreField<Orig, T> {
-    fn track(&self) {
-        self.trigger.track();
-    }
+   fn track(&self) {
+      self.trigger.track();
+   }
 }
 
 impl<Orig, T> SignalWithUntracked for ArcReadStoreField<Orig, T> {
-    type Value = T;
+   type Value = T;
 
-    fn try_with_untracked<U>(
-        &self,
-        fun: impl FnOnce(&Self::Value) -> U,
-    ) -> Option<U> {
-        Some(fun(&*(self.read)(&self.data)))
-    }
+   fn try_with_untracked<U>(&self, fun: impl FnOnce(&Self::Value) -> U) -> Option<U> {
+      Some(fun(&*(self.read)(&self.data)))
+   }
 }
 
 pub struct ArcWriteStoreField<Orig, T>
 where
-    T: 'static,
+   T: 'static,
 {
-    #[cfg(debug_assertions)]
-    defined_at: &'static std::panic::Location<'static>,
-    data: Arc<RwLock<Orig>>,
-    trigger: ArcTrigger,
-    write: Arc<
-        dyn for<'a> Fn(&'a RwLock<Orig>) -> MappedRwLockWriteGuard<'a, T>
-            + Send
-            + Sync,
-    >,
+   #[cfg(debug_assertions)]
+   defined_at: &'static std::panic::Location<'static>,
+   data: Arc<RwLock<Orig>>,
+   trigger: ArcTrigger,
+   write: Arc<dyn for<'a> Fn(&'a RwLock<Orig>) -> MappedRwLockWriteGuard<'a, T> + Send + Sync>,
 }
 
 impl<Orig, T> Clone for ArcWriteStoreField<Orig, T> {
-    fn clone(&self) -> Self {
-        Self {
-            #[cfg(debug_assertions)]
-            defined_at: self.defined_at,
-            data: Arc::clone(&self.data),
-            trigger: self.trigger.clone(),
-            write: Arc::clone(&self.write),
-        }
-    }
+   fn clone(&self) -> Self {
+      Self {
+         #[cfg(debug_assertions)]
+         defined_at: self.defined_at,
+         data: Arc::clone(&self.data),
+         trigger: self.trigger.clone(),
+         write: Arc::clone(&self.write),
+      }
+   }
 }
 
 impl<Orig, T> DefinedAt for ArcWriteStoreField<Orig, T> {
-    fn defined_at(&self) -> Option<&'static Location<'static>> {
-        #[cfg(debug_assertions)]
-        {
-            Some(self.defined_at)
-        }
-        #[cfg(not(debug_assertions))]
-        {
-            None
-        }
-    }
+   fn defined_at(&self) -> Option<&'static Location<'static>> {
+      #[cfg(debug_assertions)]
+      {
+         Some(self.defined_at)
+      }
+      #[cfg(not(debug_assertions))]
+      {
+         None
+      }
+   }
 }
 
 impl<Orig, T> Trigger for ArcWriteStoreField<Orig, T> {
-    fn trigger(&self) {
-        self.trigger.notify();
-    }
+   fn trigger(&self) {
+      self.trigger.notify();
+   }
 }
 
 impl<Orig, T> SignalUpdateUntracked for ArcWriteStoreField<Orig, T> {
-    type Value = T;
+   type Value = T;
 
-    fn try_update_untracked<U>(
-        &self,
-        fun: impl FnOnce(&mut Self::Value) -> U,
-    ) -> Option<U> {
-        Some(fun(&mut *(self.write)(&self.data)))
-    }
+   fn try_update_untracked<U>(&self, fun: impl FnOnce(&mut Self::Value) -> U) -> Option<U> {
+      Some(fun(&mut *(self.write)(&self.data)))
+   }
 }
 
 impl<Orig, T> SignalIsDisposed for ArcWriteStoreField<Orig, T> {
-    fn is_disposed(&self) -> bool {
-        false
-    }
+   fn is_disposed(&self) -> bool {
+      false
+   }
 }
 
 /* #[cfg(test)]

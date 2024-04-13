@@ -8,6 +8,8 @@ pub use either::*;
 pub use erasure::*;
 pub use future::*;
 pub use option::*;
+#[cfg(all(feature = "xy_reactive", feature = "send_sync"))]
+pub use reactive::*;
 pub use rebuild_fn_receiver::*;
 pub use stream::*;
 pub use to_mutable::*;
@@ -18,6 +20,7 @@ pub use x_iter::*;
 // pub use reflect::*;
 #[cfg(feature = "x_iter_source")]
 pub use x_iter_source::*;
+pub use x_world::*;
 
 // pub use stream_with_default_value::*;
 
@@ -43,7 +46,7 @@ mod x_iter_source;
 // mod stream_with_default_value;
 
 #[cfg(all(feature = "xy_reactive", feature = "send_sync"))]
-pub use reactive::*;
-#[cfg(all(feature = "xy_reactive", feature = "send_sync"))]
 mod reactive;
+mod recyclable;
+mod x_world;
 // mod x_if2;

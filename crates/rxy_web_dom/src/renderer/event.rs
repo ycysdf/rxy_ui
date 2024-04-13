@@ -1,17 +1,17 @@
 use crate::WebRenderer;
 use rxy_core::MemberOwner;
 use rxy_core::{
-    count_macro,
-    prelude::{ViewMember, ViewMemberCtx},
-    ViewMemberIndex,
+   count_macro,
+   prelude::{ViewMember, ViewMemberCtx},
+   ViewMemberIndex,
 };
 use wasm_bindgen::{
-    intern,
-    prelude::{Closure, JsCast, JsValue},
+   intern,
+   prelude::{Closure, JsCast, JsValue},
 };
 
 pub trait WebRendererEventType {
-    const NAME: &'static str;
+   const NAME: &'static str;
 }
 
 macro_rules! define_events {
@@ -105,54 +105,54 @@ define_events! {
 }
 
 pub struct WebEventState {
-    pub closure: Closure<dyn FnMut(JsValue)>,
+   pub closure: Closure<dyn FnMut(JsValue)>,
 }
 
 pub struct WebEventViewMember<const I: usize> {
-    pub closure: Box<dyn FnMut(JsValue)>,
+   pub closure: Box<dyn FnMut(JsValue)>,
 }
 
 impl<const I: usize> ViewMember<WebRenderer> for WebEventViewMember<I>
 where
-    Self: WebRendererEventType,
+   Self: WebRendererEventType,
 {
-    fn count() -> ViewMemberIndex {
-        1
-    }
+   fn count() -> ViewMemberIndex {
+      1
+   }
 
-    fn unbuild(mut ctx: ViewMemberCtx<WebRenderer>, _view_removed: bool) {
-        let state = ctx
-            .take_indexed_view_member_state::<WebEventState>()
-            .unwrap();
+   fn unbuild(mut ctx: ViewMemberCtx<WebRenderer>, _view_removed: bool) {
+      let state = ctx
+         .take_indexed_view_member_state::<WebEventState>()
+         .unwrap();
 
-        ctx.node_id
-            .remove_event_listener_with_callback(
-                intern(<Self as WebRendererEventType>::NAME),
-                state.closure.as_ref().unchecked_ref(),
-            )
-            .unwrap();
-    }
+      ctx.node_id
+         .remove_event_listener_with_callback(
+            intern(<Self as WebRendererEventType>::NAME),
+            state.closure.as_ref().unchecked_ref(),
+         )
+         .unwrap();
+   }
 
-    fn build(self, mut ctx: ViewMemberCtx<WebRenderer>, _will_rebuild: bool) {
-        let closure = wasm_bindgen::closure::Closure::wrap(self.closure);
-        ctx.node_id
-            .add_event_listener_with_callback(
-                intern(<Self as WebRendererEventType>::NAME),
-                closure.as_ref().unchecked_ref(),
-            )
-            .unwrap();
-        ctx.set_indexed_view_member_state(WebEventState { closure });
-    }
+   fn build(self, mut ctx: ViewMemberCtx<WebRenderer>, _will_rebuild: bool) {
+      let closure = wasm_bindgen::closure::Closure::wrap(self.closure);
+      ctx.node_id
+         .add_event_listener_with_callback(
+            intern(<Self as WebRendererEventType>::NAME),
+            closure.as_ref().unchecked_ref(),
+         )
+         .unwrap();
+      ctx.set_indexed_view_member_state(WebEventState { closure });
+   }
 
-    fn rebuild(self, ctx: ViewMemberCtx<WebRenderer>) {
-        Self::unbuild(
-            ViewMemberCtx {
-                index: ctx.index,
-                world: &mut *ctx.world,
-                node_id: ctx.node_id.clone(),
-            },
-            false,
-        );
-        self.build(ctx, true);
-    }
+   fn rebuild(self, ctx: ViewMemberCtx<WebRenderer>) {
+      Self::unbuild(
+         ViewMemberCtx {
+            index: ctx.index,
+            world: &mut *ctx.world,
+            node_id: ctx.node_id.clone(),
+         },
+         false,
+      );
+      self.build(ctx, true);
+   }
 }

@@ -27,8 +27,7 @@ impl ViewKey<NativeRenderer> for Entity {
         Some(*self)
     }
 
-    #[inline]
-    fn reserve_key(world: &mut RendererWorld<NativeRenderer>, _will_rebuild: bool) -> Self {
+    fn reserve_key(world: &mut RendererWorld<NativeRenderer>, _will_rebuild: bool, _parent: RendererNodeId<NativeRenderer>, spawn: bool) -> Self {
         world.reserve_node_id()
     }
 

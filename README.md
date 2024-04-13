@@ -56,7 +56,7 @@ But you can specify git repository dependencies
 ```toml
 [dependencies]
 rxy_ui = {git = "https://github.com/ycysdf/rxy_ui", features = ["bevy"]}
-bevy = {version = "0.12"}
+bevy = {version = "0.13"}
 ```
 
 ## Examples
@@ -144,6 +144,8 @@ pub fn schema_checkbox(
 Game Menu and Setting
 
 ![game_menu](./assets/game_menu.gif)
+
+> https://github.com/ycysdf/rxy_ui/blob/main/examples/game_ui_challenges/game_menu.rs
 
 ```rust
 use bevy::prelude::*;
@@ -358,6 +360,7 @@ fn schema_in_game() -> impl IntoView<BevyRenderer> {
 - Counter：[examples/counter](examples/counter.rs)
 - [10 Challenges for Bevy UI Frameworks](https://github.com/bevyengine/bevy/discussions/11100)
    - 1. Game Menu：[examples/game_ui_challenges/game_menu](examples/game_ui_challenges/game_menu.rs)
+   - 1. Inventory：[examples/game_ui_challenges/inventory](examples/game_ui_challenges/inventory.rs)
    - `todo!()`
 - [7GUIs](https://eugenkiss.github.io/7guis/)
    - `todo!()`
@@ -432,11 +435,7 @@ When the value of the signal changes, the associated `View` or `ViewMember` will
 
 If the closure's return value implements `IntoView`, then the `Reactive` type implements `View`, and the `rx` function can be directly used in view,
 
-If the closure's return value implements `IntoViewAttrMember`, then the `Reactive` type implements `ViewMember`, and the `rx` function can be directly used in view member.
-
-If the signal types `RwSignal<T>` or `ReadSignal`, where `T` implements `IntoView` or `IntoViewAttrMember`, then the signal also implements `View` or `ViewMember`.
-
-> `IntoViewAttrMember` represents types that can be converted to `ViewMember`. For example, the width attribute value requires a type of [Val](https://docs.rs/bevy/latest/bevy/ui/enum.Val.html), but you can pass an `i32`, and `IntoViewAttrMember` will internally convert it to `Val::Px(100)` for you.
+If the signal types `RwSignal<T>` or `ReadSignal<T>`, where `T` implements `IntoView`, then the signal also implements `View`.
 
 ```rust
 fn signal_example() -> impl IntoView<BevyRenderer> {
@@ -457,9 +456,17 @@ fn signal_example() -> impl IntoView<BevyRenderer> {
 
 ### Option、Either、Stream、Future
 
-`Option<T>`,`Either<A,B>`,`Stream<T>`、`Future<T>`, and similar types all implement `IntoView` or `IntoViewAttrMember`. Thereforce, they can be used directly as views or view members.
+`Option<T>`,`Either<A,B>`,`Stream<T>`、`Future<T>`, and similar types all implement `IntoView`. Thereforce, they can be used directly as views.
 
-For examples:
+For example, `String` and `&'static str` implement `IntoView`, and so do `Option<String>`, `Future<Option<String>>`, and others; they can be nested.
+
+The same logic applies to view members (or the values they can accept). If T itself can be a view member, then `Option<T>`, `Future<Option<T>>`, and similar types can also be used directly as view members.
+
+For example, code: `div().width(10)`, the value `10` is accepted by the `width` member. Therefore, `Some(10)`, `async {Some(10)}`, and the like can also be used directly as values for the member.
+
+> width can directly accept values: `10` (equivalent to `Val::Px(10.)`), `10.` (equivalent to `Val::Px(10.)`), `Val::Percent(100)`, etc.
+
+Use case examples:
 
 Use case for `Option`: Controlling whether to build a view or view member
 
@@ -628,13 +635,11 @@ fn sample_x_if() -> impl IntoView<BevyRenderer> {
         x_if(is_show, span("Show1").padding(10).text_color(Color::RED)),
         x_if(
             is_show,
-            view_builder(|_, _| div().padding(10).flex().center().children("Show2")),
+            div().padding(10).flex().center().children("Show2"),
         ),
     )
 }
 ```
-
-> The second use of `x_if` with `view_buillder` is because currently, views with children are not `Clone` (due to certain reasons that might be improved later). However, `x_if` requires views to implement `Clone`. Thereforce, in this case, `view_builder` is used, and a callback function is passed to make it cloneable.
 
 `x_iter` is used to build list views, It takes an `IntoIterator`, and the `Item` needs to implement `IntoView`. It uses the item's index as the key.
 
@@ -771,7 +776,7 @@ fn ui() -> impl IntoView<BevyRenderer> {
             )),
             div().flex_col().gap(8).children((
                 "--Header--",
-                x_iter_source(source, |n| n.to_string()),
+                x_iter_source(source, |n,_| n.to_string()),
                 "--Footer--",
             )),
         )),

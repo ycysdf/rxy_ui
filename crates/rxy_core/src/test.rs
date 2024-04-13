@@ -56,7 +56,7 @@
 //         unsafe { unreachable_unchecked() }
 //     }
 //
-//     fn deferred_world_scoped(&mut self) -> impl DeferredNodeTreeScoped<TestRenderer> {
+//     fn deferred_world_scoped(&self) -> impl DeferredNodeTreeScoped<TestRenderer> {
 //         TestRenderer
 //     }
 //

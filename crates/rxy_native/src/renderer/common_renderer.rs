@@ -1,6 +1,6 @@
 use crate::renderer::{NativeElement, NativeRenderer};
 use rxy_core::common_renderer::CommonRenderer;
-use rxy_core::{define_common_view_fns, ElementAttrMember, MapToAttrMarker, MemberOwner, XNest};
+use rxy_core::{define_common_view_fns, ElementAttrMember, ElementView, MapToAttrMarker, MemberOwner, XNest};
 use crate::all_attrs;
 use crate::renderer::elements::{element_div, element_span};
 
@@ -11,6 +11,7 @@ impl CommonRenderer for NativeRenderer {
     type TextView<T: ElementAttrMember<Self, Self::TextContentEA>> =
         NativeElement<element_span, (T,)>;
     type ButtonView = NativeElement<element_div, ()>;
+    type ImgView = NativeElement<element_div, ()>;
     type TextContentEA = all_attrs::content;
 
     fn crate_text<T>(
@@ -28,5 +29,9 @@ impl CommonRenderer for NativeRenderer {
 
     fn crate_button() -> Self::ButtonView {
         NativeElement::default()
+    }
+
+    fn crate_img() -> Self::ImgView {
+        todo!()
     }
 }

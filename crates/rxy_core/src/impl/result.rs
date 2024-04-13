@@ -1,19 +1,17 @@
-use crate::{
-    Either, IntoView, XNest, Renderer, View, ViewMember, ViewMemberCtx, ViewMemberIndex,
-};
+use crate::{Either, IntoView, Renderer};
 
 impl<R, T, E> IntoView<R> for Result<T, E>
 where
-    R: Renderer,
-    T: IntoView<R>,
-    E: IntoView<R>,
+   R: Renderer,
+   T: IntoView<R>,
+   E: IntoView<R>,
 {
-    type View = <Either<T, E> as IntoView<R>>::View;
+   type View = <Either<T, E> as IntoView<R>>::View;
 
-    fn into_view(self) -> Self::View {
-        let either: Either<T, E> = self.into();
-        IntoView::into_view(either)
-    }
+   fn into_view(self) -> Self::View {
+      let either: Either<T, E> = self.into();
+      IntoView::into_view(either)
+   }
 }
 
 // todo:

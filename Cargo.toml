@@ -18,10 +18,9 @@ rxy_web_dom = { workspace = true, optional = true }
 rxy_native = { workspace = true, optional = true }
 
 [features]
-default = ["std", "x_iter_source", "signal"]
+default = ["std", "dynamic_element", "x_iter_source", "signal"]
 
-#web = ["std", "rxy_web_dom", "tailwind_aliases", "xy_reactive?/web"]
-#web = ["std", "tailwind_aliases", "xy_reactive?/web", "rxy_web_dom"]
+#web = ["std", "rxy_web_dom"]
 
 std = ["rxy_core/async-channel"]
 x_iter_source = ["dep:hooked_collection", "rxy_core/x_iter_source"]
@@ -34,8 +33,9 @@ bevy = [
     "std", "rxy_bevy", "bevy_mod_picking", "rxy_bevy_macro", "style", "tailwind_aliases",
     "xy_reactive?/bevy", "rxy_core/bevy"
 ]
-web = ["std", "rxy_web_dom"]
+#web = ["std", "rxy_web_dom"]
 native = ["std", "rxy_native", "rxy_native/tokio"]
+dynamic_element = ["rxy_bevy/dynamic_element", "rxy_core/dynamic_element"]
 
 [workspace]
 members = ["crates/*", "examples/native_playground"]
@@ -51,7 +51,9 @@ rxy_web_dom = { path = "crates/rxy_web_dom", default-features = false }
 rxy_native = { path = "crates/rxy_native", default-features = false }
 
 async-channel = { version = "2.1" }
-glam = "0.24"
+glam = "0.25"
+async-broadcast = "0.7.0"
+#event-listener = "5.2"
 hashbrown = "0.14"
 indexmap = "2.1"
 once_cell = { version = "1.19", default-features = false }
@@ -60,9 +62,8 @@ pin-project = { version = "1" }
 serde = { version = "1", features = ["derive"] }
 
 ahash = { version = "0.8", default-features = false }
-# bevy-inspector-egui = "0.21"
-bevy_mod_picking = { version = "0.17", default-features = false, features = ["backend_bevy_ui"] }
-#derive_more = "0.99"
+bevy_mod_picking = { version = "0.18", default-features = false, features = ["backend_bevy_ui"] }
+derive_more = "0.99"
 drain_filter_polyfill = "0.1"
 futures-lite = "1.13"
 pin-project-lite = { version = "0.2" }
@@ -71,22 +72,23 @@ thiserror = "1.0"
 smallvec = "1.13"
 slotmap = "1"
 
-bevy_app = "0.12"
-bevy_asset = { version = "0.12", optional = false }
-bevy_core = "0.12"
-bevy_derive = "0.12"
-bevy_ecs = "0.12"
-bevy_hierarchy = "0.12"
-bevy_reflect = { version = "0.12" }
-bevy_render = "0.12"
-#bevy_sprite = "0.12"
-bevy_tasks = { version = "0.12", features = ["multi-threaded"], optional = false }
-bevy_text = { version = "0.12", optional = false }
-bevy_transform = { version = "0.12", optional = false }
-bevy_ui = { version = "0.12", features = ["bevy_text"] }
-bevy_utils = "0.12"
-#bevy_a11y = "0.12"
-bevy_input = "0.12"
+bevy_app = "0.13"
+bevy_asset = { version = "0.13", optional = false }
+bevy_core = "0.13"
+bevy_derive = "0.13"
+bevy_ecs = "0.13"
+bevy_hierarchy = "0.13"
+bevy_reflect = { version = "0.13" }
+bevy_render = "0.13"
+bevy_sprite = "0.13"
+bevy_tasks = { version = "0.13", features = ["multi-threaded"], optional = false }
+bevy_text = { version = "0.13", optional = false }
+bevy_transform = { version = "0.13", optional = false }
+bevy_ui = { version = "0.13", features = ["bevy_text"] }
+bevy_utils = "0.13"
+bevy_a11y = "0.13"
+bevy_input = "0.13"
+bevy_window = { version = "0.13" }
 
 count-macro = "0.2.2"
 paste = "1"
@@ -220,8 +222,8 @@ web-sys = { version = "0.3", features = [
 ] }
 
 [dev-dependencies]
-bevy = { version = "0.12.1", default-features = false, features = [
-    #    "dynamic_linking",
+bevy = { version = "0.13", features = [
+    "dynamic_linking",
     #    "animation",
     "bevy_asset", #    "bevy_audio",  #    "bevy_gilrs",
     #    "bevy_scene",
@@ -234,6 +236,7 @@ bevy = { version = "0.12.1", default-features = false, features = [
     "multi-threaded", #    "png",  #    "hdr",  #    "vorbis",  #    "x11",  #    "bevy_gizmos",  #    "android_shared_stdcxx",  #    "tonemapping_luts",
     "default_font", #    "webgl2",
 ] }
+#bevy-inspector-egui = "0.23"
 rxy_ui = { path = ".", default-features = false }
 oneshot.workspace = true
 ahash.workspace = true
@@ -246,6 +249,12 @@ pin-project-lite.workspace = true
 doc-scrape-examples = true
 name = "game_menu"
 path = "examples/game_ui_challenges/game_menu.rs"
+required-features = ["bevy"]
+
+[[example]]
+doc-scrape-examples = true
+name = "inventory"
+path = "examples/game_ui_challenges/inventory.rs"
 required-features = ["bevy"]
 
 [[example]]

@@ -1,8 +1,9 @@
-use crate::FocusStyle;
-use crate::XConfirm;
-use crate::COLOR_PRIMARY;
-use bevy::prelude::*;
+use bevy_render::prelude::Color;
+
 use rxy_ui::prelude::*;
+
+// use bevy::prelude::*;
+use crate::{x_theme_once, x_ui_setting_once};
 
 #[derive(TypedStyle)]
 pub struct CheckboxStyle;
@@ -23,16 +24,23 @@ pub fn schema_checkbox(
                 .border(1)
                 .border_color(Color::DARK_GRAY),
             x_hover().bg_color(Color::DARK_GRAY),
-            FocusStyle,
+            // FocusStyle,
         )
     });
+
     button()
         .name("checkbox")
         .style(CheckboxStyle)
-        .bg_color(rx(move || is_checked.get().then_some(COLOR_PRIMARY)))
+        .bg_color(rx(move || {
+            is_checked
+                .get()
+                .then_some(x_theme_once(|n| n.primary_color))
+        }))
         .rx_member(move || {
-            (!readonly.get()).then_some(().on(XConfirm, move || {
-                is_checked.update(|is_checked| *is_checked = !*is_checked);
+            readonly.not_then_some(x_ui_setting_once(move |n| {
+                ().on(n.confirm_event_ids.clone(), move || {
+                    is_checked.update(|is_checked| *is_checked = !*is_checked);
+                })
             }))
         })
 }

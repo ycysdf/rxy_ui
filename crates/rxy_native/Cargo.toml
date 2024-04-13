@@ -4,21 +4,24 @@ name = "rxy_native"
 version = "0.1.0"
 
 [dependencies]
-raw-window-handle = "0.5"
+raw-window-handle = "0.6"
 rxy_core = { workspace = true, features = ["common_renderer", "async-channel", "xy_reactive"] }
-vello = { path = "../../../../SourceProjects/vello" }
+vello = { version = "0.1.0" }
 xy_reactive = { workspace = true, optional = true, default-features = false }
-bevy_ecs = { path = "../../../../SourceProjects/bevy/crates/bevy_ecs", default-features = false }
-bevy_hierarchy = { path = "../../../../SourceProjects/bevy/crates/bevy_hierarchy", default-features = false }
+#bevy_ecs = { path = "../../../../SourceProjects/bevy/crates/bevy_ecs", default-features = false }
+#bevy_hierarchy = { path = "../../../../SourceProjects/bevy/crates/bevy_hierarchy", default-features = false }
+
+bevy_ecs = { path = "../../../bevy/crates/bevy_ecs", default-features = false }
+bevy_hierarchy = { path = "../../../bevy/crates/bevy_hierarchy", default-features = false }
 
 smallvec.workspace = true
 #bevy_ecs = { workspace = true, default-features = false }
 bitflags = "2"
-kurbo = "0.10"
+kurbo = "0.11"
 taffy = "0.3"
 tracing = "0.1"
-wgpu = "0.18"
-winit = "0.28"
+wgpu = "0.19"
+winit = "0.29"
 thiserror = "1.0"
 
 serde = { version = "1.0", features = ["derive"], optional = true }
