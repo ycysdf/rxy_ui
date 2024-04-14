@@ -13,8 +13,9 @@ pin-project = { workspace = true, optional = true }
 
 ahash.workspace = true
 hashbrown.workspace = true
-bevy_utils = { workspace = true, optional = true }
 
+# bevy
+bevy_utils = { workspace = true, optional = true }
 glam = { workspace = true, optional = true }
 bevy_asset = { workspace = true, optional = true }
 bevy_text = { workspace = true, optional = true }
@@ -22,6 +23,8 @@ bevy_ui = { workspace = true, optional = true }
 #bevy_transform = { workspace = true, optional = true }
 bevy_render = { workspace = true, optional = true }
 
+# native
+vello = { version = "0.1.0", default-features = false, optional = true }
 
 async-channel = { workspace = true, optional = true }
 hooked_collection = { workspace = true, optional = true }
@@ -42,6 +45,7 @@ default = ["std", "dynamic_element", "async-channel", "either_future", "send_syn
 send_sync = []
 std = []
 web_dom = []
+native = ["vello"]
 bevy = [
     "std", "send_sync", "bevy_utils",
     "dep:glam",

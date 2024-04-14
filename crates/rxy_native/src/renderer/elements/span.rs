@@ -3,33 +3,33 @@
 
 use bevy_ecs::prelude::*;
 
-use rxy_core::{
-    ElementAttrType, ElementType, ElementTypeUnTyped, RendererNodeId,
-    RendererWorld,
-};
-use crate::renderer::NativeRenderer;
+use rxy_core::{ElementAttrType, ElementType, ElementTypeUnTyped, RendererNodeId, RendererWorld};
+
 use crate::renderer::node_tree::NodeTreeWorldExt;
+use crate::renderer::NativeRenderer;
+use crate::TextBundle;
 
 #[derive(Debug, Default, Clone, Copy)]
 // #[reflect(TextStyledElementType)]
+#[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
 pub struct element_span;
 
 impl ElementType<NativeRenderer> for element_span {
-    const TAG_NAME: &'static str = "span";
+   const TAG_NAME: &'static str = "span";
 
-    fn get() -> &'static dyn ElementTypeUnTyped<NativeRenderer> {
-        &element_span
-    }
+   fn get() -> &'static dyn ElementTypeUnTyped<NativeRenderer> {
+      &element_span
+   }
 
-    fn spawn(
-        world: &mut RendererWorld<NativeRenderer>,
-        parent: Option<&RendererNodeId<NativeRenderer>>,
-        reserve_node_id: Option<RendererNodeId<NativeRenderer>>,
-    ) -> RendererNodeId<NativeRenderer> {
-        let mut entity_world_mut = world.get_or_spawn_empty(parent, reserve_node_id);
-        // entity_world_mut.insert(TextBundle::default());
-        entity_world_mut.id()
-    }
+   fn spawn(
+      world: &mut RendererWorld<NativeRenderer>,
+      parent: Option<&RendererNodeId<NativeRenderer>>,
+      reserve_node_id: Option<RendererNodeId<NativeRenderer>>,
+   ) -> RendererNodeId<NativeRenderer> {
+      let mut entity_world_mut = world.get_or_spawn_empty(parent, reserve_node_id);
+      entity_world_mut.insert(TextBundle::default());
+      entity_world_mut.id()
+   }
 }
 
 /*impl TextStyledElementType for element_span {
@@ -96,31 +96,31 @@ impl ElementType<NativeRenderer> for element_span {
 }*/
 
 pub mod attrs {
-    use std::borrow::Cow;
+   use std::borrow::Cow;
 
-    use rxy_core::{AttrIndex, ElementAttrType, HasIndex};
-    use crate::renderer::NativeRenderer;
+   use rxy_core::{AttrIndex, ElementAttrType, HasIndex};
 
-    use super::*;
+   use crate::renderer::NativeRenderer;
 
-    #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
-    pub struct content;
+   use super::*;
 
-    impl HasIndex for content{
-        const INDEX: AttrIndex = 1;
-    }
+   #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+   pub struct content;
 
-    impl ElementAttrType<NativeRenderer> for content
-    {
-        type Value = Cow<'static, str>;
+   impl HasIndex for content {
+      const INDEX: AttrIndex = 1;
+   }
 
-        const NAME: &'static str = stringify!(content);
+   impl ElementAttrType<NativeRenderer> for content {
+      type Value = Cow<'static, str>;
 
-        fn update_value(
-            world: &mut RendererWorld<NativeRenderer>,
-            node_id: RendererNodeId<NativeRenderer>,
-            value: impl Into<Self::Value>,
-        ) {
-        }
-    }
+      const NAME: &'static str = stringify!(content);
+
+      fn update_value(
+         world: &mut RendererWorld<NativeRenderer>,
+         node_id: RendererNodeId<NativeRenderer>,
+         value: impl Into<Self::Value>,
+      ) {
+      }
+   }
 }

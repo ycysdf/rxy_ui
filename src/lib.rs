@@ -24,11 +24,10 @@ pub mod prelude {
    pub use rxy_bevy_macro::schema;
    pub use rxy_core::prelude::*;
    pub use rxy_macro::PropValueWrapper;
+   #[cfg(feature = "native")]
+   pub use rxy_native::prelude::*;
    #[cfg(feature = "web")]
    pub use rxy_web_dom::prelude::*;
    #[cfg(feature = "signal")]
    pub use xy_reactive::prelude::*;
-   #[cfg(feature = "native")]
-   pub use rxy_native::prelude::*;
-
 }

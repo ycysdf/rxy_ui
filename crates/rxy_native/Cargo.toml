@@ -5,20 +5,23 @@ version = "0.1.0"
 
 [dependencies]
 raw-window-handle = "0.6"
-rxy_core = { workspace = true, features = ["common_renderer", "async-channel", "xy_reactive"] }
+rxy_core = { workspace = true, features = ["common_renderer", "native", "async-channel", "xy_reactive"] }
 vello = { version = "0.1.0" }
 xy_reactive = { workspace = true, optional = true, default-features = false }
 #bevy_ecs = { path = "../../../../SourceProjects/bevy/crates/bevy_ecs", default-features = false }
 #bevy_hierarchy = { path = "../../../../SourceProjects/bevy/crates/bevy_hierarchy", default-features = false }
 
+glam = { version = "0.25", features = ["mint", "std"] }
+bevy_reflect = { workspace = true, optional = true, default-features = false, features = ["glam"] }
 bevy_ecs = { path = "../../../bevy/crates/bevy_ecs", default-features = false }
 bevy_hierarchy = { path = "../../../bevy/crates/bevy_hierarchy", default-features = false }
 
+mint = "0.5"
 smallvec.workspace = true
 #bevy_ecs = { workspace = true, default-features = false }
 bitflags = "2"
-kurbo = "0.11"
-taffy = "0.3"
+kurbo = { version = "0.11", features = ["mint"] }
+taffy = { version = "0.4", default-features = false, features = ["taffy_tree", "std"] }
 tracing = "0.1"
 wgpu = "0.19"
 winit = "0.29"
@@ -27,11 +30,13 @@ thiserror = "1.0"
 serde = { version = "1.0", features = ["derive"], optional = true }
 
 cfg-if = "1.0"
-compio = { version = "0.9.0-beta.4", optional = true }
+compio = { version = "0.9", optional = true }
 tokio = { version = "1", default-features = false, optional = true, features = ["rt", "rt-multi-thread"] }
 
 [features]
-default = ["tokio"]
-tokio = ["dep:tokio"]
-compio = ["dep:compio"]
-serialize = ["dep:serde"]
+default = ["tokio", "flexbox"]
+serialize = ["dep:serde", "taffy/serde", "kurbo/serde", "glam/serde"]
+reflect = ["bevy_reflect", "bevy_ecs/bevy_reflect"]
+grid = ["taffy/grid"]
+flexbox = ["taffy/flexbox"]
+block_layout = ["taffy/block_layout"]

@@ -1,63 +1,65 @@
 use bevy_ecs::bundle::Bundle;
-use crate::ui_node::{Node, VelloFragment};
+
+use crate::{GlobalTransform, InheritedVisibility, Style, Transform, ViewVisibility, Visibility};
+use crate::ui_node::Node;
 
 /// The basic UI node.
 ///
 /// Contains the [`Node`] component and other components required to make a container.
 ///
 /// See [`node_bundles`](crate::node_bundles) for more specialized bundles like [`TextBundle`].
-#[derive(Bundle, Clone)]
+#[derive(Bundle, Debug, Clone)]
 pub struct NodeBundle {
-    /// Describes the logical size of the node
-    pub node: Node,
-    pub fragment: VelloFragment,
-    // /// Styles which control the layout (size and position) of the node and it's children
-    // /// In some cases these styles also affect how the node drawn/painted.
-    // pub style: Style,
-    // /// The background color, which serves as a "fill" for this node
-    // pub background_color: BackgroundColor,
-    // /// The color of the Node's border
-    // pub border_color: BorderColor,
-    // /// Whether this node should block interaction with lower nodes
-    // pub focus_policy: FocusPolicy,
-    // /// The transform of the node
-    // ///
-    // /// This component is automatically managed by the UI layout system.
-    // /// To alter the position of the `NodeBundle`, use the properties of the [`Style`] component.
-    // pub transform: Transform,
-    // /// The global transform of the node
-    // ///
-    // /// This component is automatically updated by the [`TransformPropagate`](`bevy_transform::TransformSystem::TransformPropagate`) systems.
-    // /// To alter the position of the `NodeBundle`, use the properties of the [`Style`] component.
-    // pub global_transform: GlobalTransform,
-    // /// Describes the visibility properties of the node
-    // pub visibility: Visibility,
-    // /// Inherited visibility of an entity.
-    // pub inherited_visibility: InheritedVisibility,
-    // /// Algorithmically-computed indication of whether an entity is visible and should be extracted for rendering
-    // pub view_visibility: ViewVisibility,
-    // /// Indicates the depth at which the node should appear in the UI
-    // pub z_index: ZIndex,
+   /// Describes the logical size of the node
+   pub node: Node,
+   // pub fragment: VelloFragment,
+   // /// Styles which control the layout (size and position) of the node and it's children
+   // /// In some cases these styles also affect how the node drawn/painted.
+   pub style: Style,
+   // /// The background color, which serves as a "fill" for this node
+   // pub background_color: BackgroundColor,
+   // /// The color of the Node's border
+   // pub border_color: BorderColor,
+   // /// Whether this node should block interaction with lower nodes
+   // pub focus_policy: FocusPolicy,
+   // /// The transform of the node
+   // ///
+   // /// This component is automatically managed by the UI layout system.
+   // /// To alter the position of the `NodeBundle`, use the properties of the [`Style`] component.
+   pub transform: Transform,
+   // /// The global transform of the node
+   // ///
+   // /// This component is automatically updated by the [`TransformPropagate`](`bevy_transform::TransformSystem::TransformPropagate`) systems.
+   // /// To alter the position of the `NodeBundle`, use the properties of the [`Style`] component.
+   pub global_transform: GlobalTransform,
+   /// Describes the visibility properties of the node
+   pub visibility: Visibility,
+   /// Inherited visibility of an entity.
+   pub inherited_visibility: InheritedVisibility,
+   /// Algorithmically-computed indication of whether an entity is visible and should be extracted for rendering
+   pub view_visibility: ViewVisibility,
+   // /// Indicates the depth at which the node should appear in the UI
+   // pub z_index: ZIndex,
 }
 
 impl Default for NodeBundle {
-    fn default() -> Self {
-        NodeBundle {
-            // Transparent background
-            // background_color: Color::NONE.into(),
-            // border_color: Color::NONE.into(),
-            node: Default::default(),
-            fragment: Default::default(),
-            // style: Default::default(),
-            // focus_policy: Default::default(),
-            // transform: Default::default(),
-            // global_transform: Default::default(),
-            // visibility: Default::default(),
-            // inherited_visibility: Default::default(),
-            // view_visibility: Default::default(),
-            // z_index: Default::default(),
-        }
-    }
+   fn default() -> Self {
+      NodeBundle {
+         // Transparent background
+         // background_color: Color::NONE.into(),
+         // border_color: Color::NONE.into(),
+         node: Default::default(),
+         // fragment: Default::default(),
+         style: Default::default(),
+         // focus_policy: Default::default(),
+         transform: Default::default(),
+         global_transform: Default::default(),
+         visibility: Default::default(),
+         inherited_visibility: Default::default(),
+         view_visibility: Default::default(),
+         // z_index: Default::default(),
+      }
+   }
 }
 //
 // /// A UI node that is an image
@@ -154,62 +156,62 @@ impl Default for NodeBundle {
 
 #[derive(Bundle, Debug)]
 pub struct TextBundle {
-    /// Describes the logical size of the node
-    pub node: Node,
-    // /// Styles which control the layout (size and position) of the node and it's children
-    // /// In some cases these styles also affect how the node drawn/painted.
-    // pub style: Style,
-    // /// Contains the text of the node
-    // pub text: Text,
-    // /// Text layout information
-    // pub text_layout_info: TextLayoutInfo,
-    // /// Text system flags
-    // pub text_flags: TextFlags,
-    // /// The calculated size based on the given image
-    // pub calculated_size: ContentSize,
-    // /// Whether this node should block interaction with lower nodes
-    // pub focus_policy: FocusPolicy,
-    // /// The transform of the node
-    // ///
-    // /// This component is automatically managed by the UI layout system.
-    // /// To alter the position of the `TextBundle`, use the properties of the [`Style`] component.
-    // pub transform: Transform,
-    // /// The global transform of the node
-    // ///
-    // /// This component is automatically updated by the [`TransformPropagate`](`bevy_transform::TransformSystem::TransformPropagate`) systems.
-    // pub global_transform: GlobalTransform,
-    // /// Describes the visibility properties of the node
-    // pub visibility: Visibility,
-    // /// Inherited visibility of an entity.
-    // pub inherited_visibility: InheritedVisibility,
-    // /// Algorithmically-computed indication of whether an entity is visible and should be extracted for rendering
-    // pub view_visibility: ViewVisibility,
-    // /// Indicates the depth at which the node should appear in the UI
-    // pub z_index: ZIndex,
-    // /// The background color that will fill the containing node
-    // pub background_color: BackgroundColor,
+   /// Describes the logical size of the node
+   pub node: Node,
+   // /// Styles which control the layout (size and position) of the node and it's children
+   // /// In some cases these styles also affect how the node drawn/painted.
+   pub style: Style,
+   // /// Contains the text of the node
+   // pub text: Text,
+   // /// Text layout information
+   // pub text_layout_info: TextLayoutInfo,
+   // /// Text system flags
+   // pub text_flags: TextFlags,
+   // /// The calculated size based on the given image
+   // pub calculated_size: ContentSize,
+   // /// Whether this node should block interaction with lower nodes
+   // pub focus_policy: FocusPolicy,
+   // /// The transform of the node
+   // ///
+   // /// This component is automatically managed by the UI layout system.
+   // /// To alter the position of the `TextBundle`, use the properties of the [`Style`] component.
+   pub transform: Transform,
+   // /// The global transform of the node
+   // ///
+   // /// This component is automatically updated by the [`TransformPropagate`](`bevy_transform::TransformSystem::TransformPropagate`) systems.
+   pub global_transform: GlobalTransform,
+   // /// Describes the visibility properties of the node
+   pub visibility: Visibility,
+   // /// Inherited visibility of an entity.
+   pub inherited_visibility: InheritedVisibility,
+   // /// Algorithmically-computed indication of whether an entity is visible and should be extracted for rendering
+   pub view_visibility: ViewVisibility,
+   // /// Indicates the depth at which the node should appear in the UI
+   // pub z_index: ZIndex,
+   // /// The background color that will fill the containing node
+   // pub background_color: BackgroundColor,
 }
 
 impl Default for TextBundle {
-    fn default() -> Self {
-        Self {
-            // text: Default::default(),
-            // text_layout_info: Default::default(),
-            // text_flags: Default::default(),
-            // calculated_size: Default::default(),
-            node: Default::default(),
-            // style: Default::default(),
-            // focus_policy: Default::default(),
-            // transform: Default::default(),
-            // global_transform: Default::default(),
-            // visibility: Default::default(),
-            // inherited_visibility: Default::default(),
-            // view_visibility: Default::default(),
-            // z_index: Default::default(),
-            // // Transparent background
-            // background_color: BackgroundColor(Color::NONE),
-        }
-    }
+   fn default() -> Self {
+      Self {
+         // text: Default::default(),
+         // text_layout_info: Default::default(),
+         // text_flags: Default::default(),
+         // calculated_size: Default::default(),
+         node: Default::default(),
+         style: Default::default(),
+         // focus_policy: Default::default(),
+         transform: Default::default(),
+         global_transform: Default::default(),
+         visibility: Default::default(),
+         inherited_visibility: Default::default(),
+         view_visibility: Default::default(),
+         // z_index: Default::default(),
+         // // Transparent background
+         // background_color: BackgroundColor(Color::NONE),
+      }
+   }
 }
 //
 // #[cfg(feature = "bevy_text")]

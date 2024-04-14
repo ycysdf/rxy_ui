@@ -1,6 +1,7 @@
 use bevy_ecs::bundle::Bundle;
 use bevy_ecs::component::Component;
-
+#[cfg(feature = "reflect")]
+use bevy_reflect::Reflect;
 /// User indication of whether an entity is visible. Propagates down the entity hierarchy.
 ///
 /// If an entity is hidden in this way, all [`Children`] (and all of their children and so on) who
@@ -8,39 +9,39 @@ use bevy_ecs::component::Component;
 ///
 /// This is done by the `visibility_propagate_system` which uses the entity hierarchy and
 /// `Visibility` to set the values of each entity's [`InheritedVisibility`] component.
-#[derive(Component, Clone, Copy/*, Reflect*/, Debug, PartialEq, Eq, Default)]
-// #[reflect(Component, Default)]
+#[derive(Component, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect),reflect(Component, Default))]
 pub enum Visibility {
-    /// An entity with `Visibility::Inherited` will inherit the Visibility of its [`Parent`].
-    ///
-    /// A root-level entity that is set to `Inherited` will be visible.
-    #[default]
-    Inherited,
-    /// An entity with `Visibility::Hidden` will be unconditionally hidden.
-    Hidden,
-    /// An entity with `Visibility::Visible` will be unconditionally visible.
-    ///
-    /// Note that an entity with `Visibility::Visible` will be visible regardless of whether the
-    /// [`Parent`] entity is hidden.
-    Visible,
+   /// An entity with `Visibility::Inherited` will inherit the Visibility of its [`Parent`].
+   ///
+   /// A root-level entity that is set to `Inherited` will be visible.
+   #[default]
+   Inherited,
+   /// An entity with `Visibility::Hidden` will be unconditionally hidden.
+   Hidden,
+   /// An entity with `Visibility::Visible` will be unconditionally visible.
+   ///
+   /// Note that an entity with `Visibility::Visible` will be visible regardless of whether the
+   /// [`Parent`] entity is hidden.
+   Visible,
 }
 
 // Allows `&Visibility == Visibility`
 impl PartialEq<Visibility> for &Visibility {
-    #[inline]
-    fn eq(&self, other: &Visibility) -> bool {
-        // Use the base Visibility == Visibility implementation.
-        <Visibility as PartialEq<Visibility>>::eq(*self, other)
-    }
+   #[inline]
+   fn eq(&self, other: &Visibility) -> bool {
+      // Use the base Visibility == Visibility implementation.
+      <Visibility as PartialEq<Visibility>>::eq(*self, other)
+   }
 }
 
 // Allows `Visibility == &Visibility`
 impl PartialEq<&Visibility> for Visibility {
-    #[inline]
-    fn eq(&self, other: &&Visibility) -> bool {
-        // Use the base Visibility == Visibility implementation.
-        <Visibility as PartialEq<Visibility>>::eq(self, *other)
-    }
+   #[inline]
+   fn eq(&self, other: &&Visibility) -> bool {
+      // Use the base Visibility == Visibility implementation.
+      <Visibility as PartialEq<Visibility>>::eq(self, *other)
+   }
 }
 
 /// Whether or not an entity is visible in the hierarchy.
@@ -49,22 +50,22 @@ impl PartialEq<&Visibility> for Visibility {
 /// If this is false, then [`ViewVisibility`] should also be false.
 ///
 /// [`VisibilityPropagate`]: VisibilitySystems::VisibilityPropagate
-#[derive(Component, Debug, Default, Clone, Copy/*, Reflect*/, PartialEq, Eq)]
-// #[reflect(Component, Default)]
+#[derive(Component, Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect),reflect(Component, Default))]
 pub struct InheritedVisibility(bool);
 
 impl InheritedVisibility {
-    /// An entity that is invisible in the hierarchy.
-    pub const HIDDEN: Self = Self(false);
-    /// An entity that is visible in the hierarchy.
-    pub const VISIBLE: Self = Self(true);
+   /// An entity that is invisible in the hierarchy.
+   pub const HIDDEN: Self = Self(false);
+   /// An entity that is visible in the hierarchy.
+   pub const VISIBLE: Self = Self(true);
 
-    /// Returns `true` if the entity is visible in the hierarchy.
-    /// Otherwise, returns `false`.
-    #[inline]
-    pub fn get(self) -> bool {
-        self.0
-    }
+   /// Returns `true` if the entity is visible in the hierarchy.
+   /// Otherwise, returns `false`.
+   #[inline]
+   pub fn get(self) -> bool {
+      self.0
+   }
 }
 
 /// Algorithmically-computed indication of whether an entity is visible and should be extracted for rendering.
@@ -77,37 +78,37 @@ impl InheritedVisibility {
 ///
 /// [`VisibilityPropagate`]: VisibilitySystems::VisibilityPropagate
 /// [`CheckVisibility`]: VisibilitySystems::CheckVisibility
-#[derive(Component, Debug, Default, Clone, Copy/*, Reflect*/, PartialEq, Eq)]
-// #[reflect(Component, Default)]
+#[derive(Component, Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect),reflect(Component, Default))]
 pub struct ViewVisibility(bool);
 
 impl ViewVisibility {
-    /// An entity that cannot be seen from any views.
-    pub const HIDDEN: Self = Self(false);
+   /// An entity that cannot be seen from any views.
+   pub const HIDDEN: Self = Self(false);
 
-    /// Returns `true` if the entity is visible in any view.
-    /// Otherwise, returns `false`.
-    #[inline]
-    pub fn get(self) -> bool {
-        self.0
-    }
+   /// Returns `true` if the entity is visible in any view.
+   /// Otherwise, returns `false`.
+   #[inline]
+   pub fn get(self) -> bool {
+      self.0
+   }
 
-    /// Sets the visibility to `true`. This should not be considered reversible for a given frame,
-    /// as this component tracks whether or not the entity visible in _any_ view.
-    ///
-    /// This will be automatically reset to `false` every frame in [`VisibilityPropagate`] and then set
-    /// to the proper value in [`CheckVisibility`].
-    ///
-    /// You should only manually set this if you are defining a custom visibility system,
-    /// in which case the system should be placed in the [`CheckVisibility`] set.
-    /// For normal user-defined entity visibility, see [`Visibility`].
-    ///
-    /// [`VisibilityPropagate`]: VisibilitySystems::VisibilityPropagate
-    /// [`CheckVisibility`]: VisibilitySystems::CheckVisibility
-    #[inline]
-    pub fn set(&mut self) {
-        self.0 = true;
-    }
+   /// Sets the visibility to `true`. This should not be considered reversible for a given frame,
+   /// as this component tracks whether or not the entity visible in _any_ view.
+   ///
+   /// This will be automatically reset to `false` every frame in [`VisibilityPropagate`] and then set
+   /// to the proper value in [`CheckVisibility`].
+   ///
+   /// You should only manually set this if you are defining a custom visibility system,
+   /// in which case the system should be placed in the [`CheckVisibility`] set.
+   /// For normal user-defined entity visibility, see [`Visibility`].
+   ///
+   /// [`VisibilityPropagate`]: VisibilitySystems::VisibilityPropagate
+   /// [`CheckVisibility`]: VisibilitySystems::CheckVisibility
+   #[inline]
+   pub fn set(&mut self) {
+      self.0 = true;
+   }
 }
 
 /// A [`Bundle`] of the [`Visibility`], [`InheritedVisibility`], and [`ViewVisibility`]
@@ -119,12 +120,12 @@ impl ViewVisibility {
 ///   * You may use the [`VisibilityBundle`] to guarantee this.
 #[derive(Bundle, Debug, Clone, Default)]
 pub struct VisibilityBundle {
-    /// The visibility of the entity.
-    pub visibility: Visibility,
-    // The inherited visibility of the entity.
-    pub inherited_visibility: InheritedVisibility,
-    // The computed visibility of the entity.
-    pub view_visibility: ViewVisibility,
+   /// The visibility of the entity.
+   pub visibility: Visibility,
+   // The inherited visibility of the entity.
+   pub inherited_visibility: InheritedVisibility,
+   // The computed visibility of the entity.
+   pub view_visibility: ViewVisibility,
 }
 //
 // /// Use this component to opt-out of built-in frustum culling for entities, see

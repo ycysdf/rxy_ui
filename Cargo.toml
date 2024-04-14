@@ -48,7 +48,7 @@ rxy_core = { path = "crates/rxy_core", default-features = false }
 rxy_macro = { path = "crates/rxy_macro", default-features = false }
 xy_reactive = { path = "crates/xy_reactive", default-features = false }
 rxy_web_dom = { path = "crates/rxy_web_dom", default-features = false }
-rxy_native = { path = "crates/rxy_native", default-features = false }
+rxy_native = { path = "crates/rxy_native" }
 
 async-channel = { version = "2.1" }
 glam = "0.25"
