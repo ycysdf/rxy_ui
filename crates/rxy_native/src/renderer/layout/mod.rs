@@ -1,5 +1,5 @@
-use bevy_ecs::entity::{Entity, EntityHashMap};
-use bevy_ecs::prelude::Resource;
+use bevy_ecs::entity::EntityHashMap;
+use bevy_ecs::prelude::{Entity, Resource, World};
 use bevy_hierarchy::Children;
 use glam::Vec2;
 use taffy::{AvailableSpace, print_tree, Size, TaffyTree};
@@ -15,6 +15,8 @@ pub use geometry::*;
 pub use grid::*;
 pub use style::*;
 pub use text::*;
+
+use crate::TextLayoutInfo;
 
 #[cfg(any(feature = "flexbox", feature = "grid"))]
 mod alignment;
@@ -53,17 +55,22 @@ impl LayoutContext {
    }
 }
 
+#[derive(Clone,Debug)]
+pub struct TaffyNodeContext {
+   pub entity: Entity,
+}
+
 #[derive(Resource)]
 pub struct UiLayoutTree {
    pub entity_to_taffy: EntityHashMap<taffy::NodeId>,
-   pub taffy_tree: TaffyTree,
+   pub taffy_tree: TaffyTree<TaffyNodeContext>,
 }
 
 impl UiLayoutTree {
    pub fn new() -> Self {
       Self {
          entity_to_taffy: Default::default(),
-         taffy_tree: Default::default(),
+         taffy_tree: TaffyTree::new(),
       }
    }
 
@@ -80,7 +87,10 @@ impl UiLayoutTree {
       let taffy_node = self.entity_to_taffy.entry(entity).or_insert_with(|| {
          added = true;
          taffy_tree
-            .new_leaf(convert::from_style(context, style))
+            .new_leaf_with_context(
+               convert::from_style(context, style),
+               TaffyNodeContext { entity },
+            )
             .unwrap()
       });
 
@@ -129,14 +139,36 @@ without UI components as a child of an entity with UI components, results may be
    pub fn compute_layout(
       &mut self,
       entity: Entity,
+      world: &mut World,
       available_space: impl Into<Size<AvailableSpace>>,
    ) -> Result<(), LayoutError> {
       let Some(node_id) = self.entity_to_taffy.get(&entity) else {
          return Ok(());
       };
-      Ok(self
-         .taffy_tree
-         .compute_layout(*node_id, available_space.into())?)
+      Ok(self.taffy_tree.compute_layout_with_measure(
+         *node_id,
+         available_space.into(),
+         |known_dimensions, _available_space, _node_id, node_context| {
+            println!(
+               "node_context: {:?}, known_dimensions: {:?}",
+               node_context, known_dimensions
+            );
+            match node_context {
+               None => known_dimensions.unwrap_or(Size::ZERO),
+               Some(node_context) =>{
+                  match world.get::<TextLayoutInfo>(node_context.entity) {
+                     None => {
+                        Size::ZERO
+                     },
+                     Some(text_layout_info) => Size {
+                        width: text_layout_info.logical_size.x,
+                        height: text_layout_info.logical_size.y,
+                     },
+                  }
+               },
+            }
+         },
+      )?)
    }
 
    /// Removes each entity from the internal map and then removes their associated node from taffy

@@ -2,9 +2,9 @@ use bevy::prelude::*;
 
 use rxy_ui::prelude::*;
 
-use super::COLOR_PRIMARY;
 use super::FocusStyle;
 use super::XConfirm;
+use super::COLOR_PRIMARY;
 
 #[derive(TypedStyle)]
 pub struct CheckboxStyle;

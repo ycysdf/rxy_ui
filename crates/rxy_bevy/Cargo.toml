@@ -35,7 +35,7 @@ bevy_derive.workspace = true
 bevy_ecs.workspace = true
 bevy_hierarchy.workspace = true
 bevy_mod_picking.workspace = true
-bevy_reflect.workspace = true
+bevy_reflect = { workspace = true, features = ["bevy"] }
 #bevy_sprite.workspace = true
 bevy_tasks.workspace = true
 bevy_utils.workspace = true

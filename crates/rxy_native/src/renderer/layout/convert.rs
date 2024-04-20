@@ -1,11 +1,8 @@
-use taffy::style_helpers;
-
-#[cfg(any(feature = "flexbox",feature = "grid"))]
+#[cfg(any(feature = "flexbox", feature = "grid"))]
 pub use crate::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
-
+use crate::{Display, PositionType, Style, UiRect, Val};
 #[cfg(feature = "flexbox")]
 pub use crate::{FlexDirection, FlexWrap};
-use crate::{Display, PositionType, Style, UiRect, Val};
 
 use super::LayoutContext;
 
@@ -136,7 +133,6 @@ pub fn from_style(context: &LayoutContext, style: &Style) -> taffy::style::Style
       grid_row: Default::default(),
       #[cfg(feature = "grid")]
       grid_column: Default::default(),
-
       // #[cfg(feature = "grid")]
       // grid_auto_flow: style.grid_auto_flow.into(),
       // grid_template_rows: style
@@ -164,8 +160,6 @@ pub fn from_style(context: &LayoutContext, style: &Style) -> taffy::style::Style
    }
 }
 
-
-
 impl From<Display> for taffy::style::Display {
    fn from(value: Display) -> Self {
       match value {
@@ -188,7 +182,6 @@ impl From<PositionType> for taffy::style::Position {
       }
    }
 }
-
 
 //
 // impl From<GridAutoFlow> for taffy::style::GridAutoFlow {

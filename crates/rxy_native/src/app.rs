@@ -31,8 +31,8 @@ impl XyApp {
             style: Style {
                width: Val::Percent(100.0),
                height: Val::Percent(100.0),
-               row_gap: Val::Px(5.),
-               column_gap: Val::Px(5.),
+               row_gap: Val::Px(12.),
+               column_gap: Val::Px(12.),
                ..Style::default()
             },
             ..NodeBundle::default()

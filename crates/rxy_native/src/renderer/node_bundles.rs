@@ -1,6 +1,13 @@
+use std::borrow::Cow;
+
 use bevy_ecs::bundle::Bundle;
+use bevy_ecs::component::Component;
+#[cfg(feature = "reflect")]
+use bevy_reflect::Reflect;
+use glam::Vec2;
 
 use crate::{GlobalTransform, InheritedVisibility, Style, Transform, ViewVisibility, Visibility};
+use crate::draw_text::TextStyle;
 use crate::ui_node::Node;
 
 /// The basic UI node.
@@ -154,6 +161,39 @@ impl Default for NodeBundle {
 // }
 //
 
+#[derive(Component, Default, Clone, Debug, PartialEq)]
+#[cfg_attr(
+   feature = "bevy_reflect",
+   derive(Reflect),
+   reflect(Component, PartialEq, Default)
+)]
+pub struct Text {
+   pub text: Cow<'static, str>,
+   pub style: TextStyle,
+}
+
+#[derive(Debug, Clone, PartialEq, Default)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(PartialEq, Default))]
+pub struct PositionedGlyph {
+   pub glyph_id: u16,
+   pub position: Vec2,
+   pub size: Vec2,
+   // pub atlas_info: GlyphAtlasInfo,
+   // pub section_index: usize,
+   // pub byte_index: usize,
+}
+
+#[derive(Component, Default, Clone, Debug, PartialEq)]
+#[cfg_attr(
+   feature = "bevy_reflect",
+   derive(Reflect),
+   reflect(Component, PartialEq, Default)
+)]
+pub struct TextLayoutInfo {
+   pub glyphs: Vec<Option<PositionedGlyph>>,
+   pub logical_size: Vec2,
+}
+
 #[derive(Bundle, Debug)]
 pub struct TextBundle {
    /// Describes the logical size of the node
@@ -162,9 +202,9 @@ pub struct TextBundle {
    // /// In some cases these styles also affect how the node drawn/painted.
    pub style: Style,
    // /// Contains the text of the node
-   // pub text: Text,
+   pub text: Text,
    // /// Text layout information
-   // pub text_layout_info: TextLayoutInfo,
+   pub text_layout_info: TextLayoutInfo,
    // /// Text system flags
    // pub text_flags: TextFlags,
    // /// The calculated size based on the given image
@@ -195,8 +235,8 @@ pub struct TextBundle {
 impl Default for TextBundle {
    fn default() -> Self {
       Self {
-         // text: Default::default(),
-         // text_layout_info: Default::default(),
+         text: Default::default(),
+         text_layout_info: Default::default(),
          // text_flags: Default::default(),
          // calculated_size: Default::default(),
          node: Default::default(),

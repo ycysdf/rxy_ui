@@ -1,13 +1,21 @@
 #![allow(non_upper_case_globals)]
 #![allow(non_camel_case_types)]
 
+use std::sync::Arc;
+
 use bevy_ecs::prelude::*;
+use vello::peniko::{Blob, Brush, Color, Font};
 
 use rxy_core::{ElementAttrType, ElementType, ElementTypeUnTyped, RendererNodeId, RendererWorld};
 
-use crate::renderer::node_tree::NodeTreeWorldExt;
+use crate::{Text, TextBundle};
+use crate::draw_text::TextStyle;
 use crate::renderer::NativeRenderer;
-use crate::TextBundle;
+use crate::renderer::node_tree::NodeTreeWorldExt;
+
+
+const ROBOTO_FONT: &[u8] =
+   include_bytes!("C:/Users/Ycy/Projects/vello/examples/assets/roboto/Roboto-Regular.ttf");
 
 #[derive(Debug, Default, Clone, Copy)]
 // #[reflect(TextStyledElementType)]
@@ -26,8 +34,21 @@ impl ElementType<NativeRenderer> for element_span {
       parent: Option<&RendererNodeId<NativeRenderer>>,
       reserve_node_id: Option<RendererNodeId<NativeRenderer>>,
    ) -> RendererNodeId<NativeRenderer> {
+      let font = Font::new(Blob::new(Arc::new(ROBOTO_FONT)), 0);
+
       let mut entity_world_mut = world.get_or_spawn_empty(parent, reserve_node_id);
-      entity_world_mut.insert(TextBundle::default());
+      entity_world_mut.insert(TextBundle {
+         text: Text {
+            text: Default::default(),
+            style: TextStyle {
+               font_size: 28.,
+               color: Color::WHITE.into(),
+               font: Some(font),
+               ..Default::default()
+            },
+         },
+         ..TextBundle::default()
+      });
       entity_world_mut.id()
    }
 }
@@ -101,6 +122,7 @@ pub mod attrs {
    use rxy_core::{AttrIndex, ElementAttrType, HasIndex};
 
    use crate::renderer::NativeRenderer;
+   use crate::Text;
 
    use super::*;
 
@@ -121,6 +143,10 @@ pub mod attrs {
          node_id: RendererNodeId<NativeRenderer>,
          value: impl Into<Self::Value>,
       ) {
+         if let Some(mut text) = world.get_mut::<Text>(node_id) {
+            text.text = value.into();
+            print!("text.text {:?}",text.text);
+         }
       }
    }
 }
