@@ -1,14 +1,14 @@
 use bevy_ecs::entity::{Entity, EntityHashMap};
 use bevy_ecs::prelude::{Or, QueryState, With, World};
-use kurbo::{Insets, Point, Rect, RoundedRect, RoundedRectRadii, Stroke, Vec2};
+use kurbo::{Insets, Join, Point, Rect, RoundedRect, RoundedRectRadii, Stroke, Vec2};
 use vello::glyph::Glyph;
-use vello::peniko::{Brush, Fill, Font};
+use vello::peniko::{Brush, Fill};
 use vello::Scene;
 
 use rxy_core::{Either, EitherExt};
 
 use crate::{GlobalTransform, Style, Text, TextLayoutInfo, UiRect, Val, ViewVisibility};
-use crate::draw_text::{SceneExt, TextStyle};
+use crate::draw_text::SceneExt;
 use crate::ui_node::{BackgroundColor, BorderColor, BorderRadius, Node, Outline};
 
 
@@ -146,7 +146,13 @@ impl DrawState {
                Either::Right(mut shape) => (shape - insets).either_right(),
             };
             scene.stroke(
-               &Stroke::new(width),
+               &Stroke {
+                  width,
+                  join: Join::Miter,
+                  // start_cap: Cap::Square,
+                  // end_cap: Cap::Square,
+                  ..Stroke::default()
+               },
                global_transform.into(),
                &Brush::Solid(border_color.0),
                None,
@@ -160,15 +166,22 @@ impl DrawState {
                return;
             };
             let width = resolve_border_val(outline.width, *calculated_size, viewport, ui_scale);
+            let offset = resolve_border_val(outline.offset, *calculated_size, viewport, ui_scale);
 
             let width_half = width / 2.;
-            let insets = Insets::uniform(width_half);
+            let insets = Insets::uniform(width_half + offset);
             let shape = match shape {
                Either::Left(shape) => shape.sub_inset(-width_half).either_left(),
                Either::Right(mut shape) => (shape + insets).either_right(),
             };
             scene.stroke(
-               &Stroke::new(width),
+               &Stroke {
+                  width,
+                  join: Join::Miter,
+                  // start_cap: Cap::Square,
+                  // end_cap: Cap::Square,
+                  ..Stroke::default()
+               },
                global_transform.into(),
                &Brush::Solid(outline.color),
                None,
@@ -182,6 +195,7 @@ impl DrawState {
             // let Some((shape, calculated_size)) = self.shape_map.get(&entity) else {
             //    return;
             // };
+            // scene.draw_image()
             scene.draw_text(
                text_layout_info
                   .glyphs

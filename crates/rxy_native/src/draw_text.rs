@@ -1,3 +1,7 @@
+#[cfg(feature = "reflect")]
+use bevy_reflect::prelude::*;
+#[cfg(feature = "reflect")]
+use bevy_ecs::prelude::ReflectComponent;
 use kurbo::Affine;
 use vello::glyph::Glyph;
 use vello::peniko::{Brush, Color, Fill, Font};
@@ -13,13 +17,21 @@ pub(crate) fn to_font_ref(font: &Font) -> Option<FontRef<'_>> {
    }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "reflect", derive(Reflect), reflect(Default, PartialEq))]
+#[cfg_attr(feature = "serialize", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(
+   all(feature = "reflect", feature = "serialize"),
+   reflect(Serialize, Deserialize)
+)]
 pub struct TextStyle {
    pub font_size: f32,
+   #[cfg_attr(feature = "reflect", reflect(ignore))]
    pub color: Brush,
    pub brush_alpha: f32,
    pub hint: bool,
    pub line_height: f32,
+   #[cfg_attr(feature = "reflect", reflect(ignore))]
    pub font: Option<Font>,
 }
 

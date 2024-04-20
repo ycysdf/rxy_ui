@@ -11,8 +11,8 @@ xy_reactive = { workspace = true, optional = true, default-features = false }
 #bevy_ecs = { path = "../../../../SourceProjects/bevy/crates/bevy_ecs", default-features = false }
 #bevy_hierarchy = { path = "../../../../SourceProjects/bevy/crates/bevy_hierarchy", default-features = false }
 
-glam = { version = "0.25", features = ["mint", "std"] }
-bevy_reflect = { workspace = true, optional = true, default-features = false, features = ["glam"] }
+glam = { workspace = true }
+bevy_reflect = { path = "../../../bevy/crates/bevy_reflect", optional = true, default-features = false, features = ["glam"] }
 bevy_ecs = { path = "../../../bevy/crates/bevy_ecs", default-features = false }
 bevy_hierarchy = { path = "../../../bevy/crates/bevy_hierarchy", default-features = false }
 
@@ -27,16 +27,21 @@ wgpu = "0.19"
 winit = "0.29"
 thiserror = "1.0"
 
-serde = { version = "1.0", features = ["derive"], optional = true }
+paste.workspace = true
+count-macro.workspace = true
 
+serde = { version = "1.0", features = ["derive"], optional = true }
+image = "0.25"
 cfg-if = "1.0"
 compio = { version = "0.9", optional = true }
 tokio = { version = "1", default-features = false, optional = true, features = ["rt", "rt-multi-thread"] }
 
 [features]
 default = ["tokio", "flexbox"]
+#default = ["tokio", "flexbox", "dynamic_element", "reflect"]
 serialize = ["dep:serde", "taffy/serde", "kurbo/serde", "glam/serde"]
-reflect = ["bevy_reflect", "bevy_ecs/bevy_reflect"]
+reflect = ["bevy_reflect", "rxy_core/bevy_reflect", "bevy_ecs/bevy_reflect"]
 grid = ["taffy/grid"]
 flexbox = ["taffy/flexbox"]
 block_layout = ["taffy/block_layout"]
+dynamic_element = ["rxy_core/dynamic_element"]

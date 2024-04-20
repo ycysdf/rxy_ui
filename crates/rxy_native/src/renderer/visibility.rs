@@ -1,7 +1,10 @@
 use bevy_ecs::bundle::Bundle;
 use bevy_ecs::component::Component;
 #[cfg(feature = "reflect")]
-use bevy_reflect::Reflect;
+use bevy_ecs::prelude::ReflectComponent;
+#[cfg(feature = "reflect")]
+use bevy_reflect::prelude::*;
+
 /// User indication of whether an entity is visible. Propagates down the entity hierarchy.
 ///
 /// If an entity is hidden in this way, all [`Children`] (and all of their children and so on) who
@@ -10,7 +13,11 @@ use bevy_reflect::Reflect;
 /// This is done by the `visibility_propagate_system` which uses the entity hierarchy and
 /// `Visibility` to set the values of each entity's [`InheritedVisibility`] component.
 #[derive(Component, Clone, Copy, Debug, PartialEq, Eq, Default)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect),reflect(Component, Default))]
+#[cfg_attr(
+   feature = "reflect",
+   derive(Reflect),
+   reflect(Component, Default, PartialEq)
+)]
 pub enum Visibility {
    /// An entity with `Visibility::Inherited` will inherit the Visibility of its [`Parent`].
    ///
@@ -51,7 +58,7 @@ impl PartialEq<&Visibility> for Visibility {
 ///
 /// [`VisibilityPropagate`]: VisibilitySystems::VisibilityPropagate
 #[derive(Component, Debug, Default, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect),reflect(Component, Default))]
+#[cfg_attr(feature = "reflect", derive(Reflect), reflect(Component, Default))]
 pub struct InheritedVisibility(bool);
 
 impl InheritedVisibility {
@@ -79,7 +86,7 @@ impl InheritedVisibility {
 /// [`VisibilityPropagate`]: VisibilitySystems::VisibilityPropagate
 /// [`CheckVisibility`]: VisibilitySystems::CheckVisibility
 #[derive(Component, Debug, Default, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect),reflect(Component, Default))]
+#[cfg_attr(feature = "reflect", derive(Reflect), reflect(Component, Default))]
 pub struct ViewVisibility(bool);
 
 impl ViewVisibility {

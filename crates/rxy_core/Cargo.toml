@@ -6,6 +6,7 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+smallvec.workspace = true
 rxy_macro.workspace = true
 xy_reactive = { workspace = true, optional = true }
 bevy_reflect = { workspace = true, optional = true }
@@ -45,7 +46,7 @@ default = ["std", "dynamic_element", "async-channel", "either_future", "send_syn
 send_sync = []
 std = []
 web_dom = []
-native = ["vello"]
+native = ["vello","dep:glam"]
 bevy = [
     "std", "send_sync", "bevy_utils",
     "dep:glam",

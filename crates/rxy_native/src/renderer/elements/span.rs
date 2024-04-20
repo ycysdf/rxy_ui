@@ -19,7 +19,7 @@ const ROBOTO_FONT: &[u8] =
 
 #[derive(Debug, Default, Clone, Copy)]
 // #[reflect(TextStyledElementType)]
-#[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
+#[cfg_attr(feature = "reflect", derive(bevy_reflect::Reflect))]
 pub struct element_span;
 
 impl ElementType<NativeRenderer> for element_span {
@@ -116,7 +116,7 @@ impl ElementType<NativeRenderer> for element_span {
     }
 }*/
 
-pub mod attrs {
+pub mod element_span_attrs {
    use std::borrow::Cow;
 
    use rxy_core::{AttrIndex, ElementAttrType, HasIndex};
@@ -128,10 +128,6 @@ pub mod attrs {
 
    #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
    pub struct content;
-
-   impl HasIndex for content {
-      const INDEX: AttrIndex = 1;
-   }
 
    impl ElementAttrType<NativeRenderer> for content {
       type Value = Cow<'static, str>;

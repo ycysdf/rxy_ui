@@ -149,16 +149,12 @@ without UI components as a child of an entity with UI components, results may be
          *node_id,
          available_space.into(),
          |known_dimensions, _available_space, _node_id, node_context| {
-            println!(
-               "node_context: {:?}, known_dimensions: {:?}",
-               node_context, known_dimensions
-            );
             match node_context {
                None => known_dimensions.unwrap_or(Size::ZERO),
                Some(node_context) =>{
                   match world.get::<TextLayoutInfo>(node_context.entity) {
                      None => {
-                        Size::ZERO
+                        known_dimensions.unwrap_or(Size::ZERO)
                      },
                      Some(text_layout_info) => Size {
                         width: text_layout_info.logical_size.x,

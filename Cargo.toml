@@ -51,7 +51,7 @@ rxy_web_dom = { path = "crates/rxy_web_dom", default-features = false }
 rxy_native = { path = "crates/rxy_native" }
 
 async-channel = { version = "2.1" }
-glam = "0.25"
+glam = { version = "0.25", features = ["mint", "std"] }
 async-broadcast = "0.7.0"
 #event-listener = "5.2"
 hashbrown = "0.14"

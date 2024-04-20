@@ -1,4 +1,6 @@
 use crate::{FlexDirection, FlexWrap};
+#[cfg(feature = "reflect")]
+use bevy_reflect::prelude::*;
 
 /// Used to control how each individual item is aligned by default within the space they're given.
 /// - For Flexbox containers, sets default cross axis alignment of the child items.

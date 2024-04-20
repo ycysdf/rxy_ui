@@ -1,6 +1,8 @@
 use bevy_ecs::prelude::Component;
 #[cfg(feature = "reflect")]
 use bevy_reflect::prelude::*;
+#[cfg(feature = "reflect")]
+use bevy_ecs::prelude::ReflectComponent;
 
 #[cfg(any(feature = "flexbox", feature = "grid"))]
 pub use crate::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};

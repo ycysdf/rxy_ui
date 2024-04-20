@@ -2,14 +2,16 @@ use std::ops::{Deref, DerefMut};
 
 use bevy_ecs::component::Component;
 #[cfg(feature = "reflect")]
-use bevy_ecs::prelude::*;
+use bevy_reflect::prelude::*;
+#[cfg(feature = "reflect")]
+use bevy_ecs::prelude::ReflectComponent;
 use kurbo::{RoundedRectRadii, Vec2};
 use vello::{peniko::Color, Scene};
 
 use crate::Val;
 
 #[derive(Component, Default, Clone, Debug)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(Component, Default))]
+#[cfg_attr(feature = "reflect", derive(Reflect), reflect(Component, Default))]
 pub struct Node {
    pub(crate) stack_index: u32,
    pub(crate) calculated_size: glam::Vec2,
@@ -20,7 +22,7 @@ pub struct Node {
 }
 
 #[derive(Component, Clone, Debug)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(Component, Default))]
+#[cfg_attr(feature = "reflect", derive(Reflect), reflect(Component, Default))]
 pub struct BorderRadius {
    pub top_left: Val,
    pub top_right: Val,
@@ -275,13 +277,28 @@ impl DerefMut for VelloFragment {
 }
 
 #[derive(Component, Copy, Clone, Debug)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(Component, Default))]
+#[cfg_attr(feature = "reflect", derive(Reflect), reflect(Component, Default))]
 #[cfg_attr(
    feature = "serialize",
    derive(serde::Serialize, serde::Deserialize),
    reflect(Serialize, Deserialize)
 )]
-pub struct BackgroundColor(pub Color);
+pub struct BackgroundColor(#[cfg_attr(feature = "reflect", reflect(ignore))] pub Color);
+
+// impl_reflect! {
+//    #[reflect(PartialEq, Default)]
+//    #[type_path = "peniko::color"]
+//    pub struct Color {
+//        /// Red component.
+//        pub r: u8,
+//        /// Green component.
+//        pub g: u8,
+//        /// Blue component.
+//        pub b: u8,
+//        /// Alpha component.
+//        pub a: u8,
+//    }
+// }
 
 impl BackgroundColor {
    pub const DEFAULT: Self = Self(Color::WHITE);
@@ -301,13 +318,13 @@ impl From<Color> for BackgroundColor {
 
 /// The border color of the UI node.
 #[derive(Component, Copy, Clone, Debug)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(Component, Default))]
+#[cfg_attr(feature = "reflect", derive(Reflect), reflect(Component, Default))]
 #[cfg_attr(
    feature = "serialize",
    derive(serde::Serialize, serde::Deserialize),
    reflect(Serialize, Deserialize)
 )]
-pub struct BorderColor(pub Color);
+pub struct BorderColor(#[cfg_attr(feature = "reflect", reflect(ignore))] pub Color);
 
 impl From<Color> for BorderColor {
    fn from(color: Color) -> Self {
@@ -326,7 +343,7 @@ impl Default for BorderColor {
 }
 
 #[derive(Component, Copy, Clone, Default, Debug)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(Component, Default))]
+#[cfg_attr(feature = "reflect", derive(Reflect), reflect(Component, Default))]
 #[cfg_attr(
    feature = "serialize",
    derive(serde::Serialize, serde::Deserialize),
@@ -345,6 +362,7 @@ pub struct Outline {
    ///
    /// If you are frequently toggling outlines for a UI node on and off it is recommended to set `Color::None` to hide the outline.
    /// This avoids the table moves that would occur from the repeated insertion and removal of the `Outline` component.
+   #[cfg_attr(feature = "reflect", reflect(ignore))]
    pub color: Color,
 }
 

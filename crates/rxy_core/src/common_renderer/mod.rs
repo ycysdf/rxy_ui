@@ -1,21 +1,26 @@
+mod composite_attrs;
+mod tailwind_attrs;
+
+pub use composite_attrs::*;
+pub use tailwind_attrs::*;
 use crate::{ElementAttrMember, ElementAttrType, ElementView, MapToAttrMarker, Renderer, XNest};
 use alloc::borrow::Cow;
 
 pub trait CommonRenderer: Renderer {
-   type DivView: ElementView<Self>;
-   type TextView<T: ElementAttrMember<Self, Self::TextContentEA>>: ElementView<Self>;
-   type ButtonView: ElementView<Self>;
-   type ImgView: ElementView<Self>;
-   type TextContentEA: ElementAttrType<Self, Value = Cow<'static, str>>;
+    type DivView: ElementView<Self>;
+    type TextView<T: ElementAttrMember<Self, Self::TextContentEA>>: ElementView<Self>;
+    type ButtonView: ElementView<Self>;
+    type ImgView: ElementView<Self>;
+    type TextContentEA: ElementAttrType<Self, Value = Cow<'static, str>>;
 
-   fn crate_text<T>(
-      str: impl XNest<MapInner<MapToAttrMarker<Self::TextContentEA>> = T>,
-   ) -> Self::TextView<T>
-   where
-      T: ElementAttrMember<Self, Self::TextContentEA>;
-   fn crate_div() -> Self::DivView;
-   fn crate_button() -> Self::ButtonView;
-   fn crate_img() -> Self::ImgView;
+    fn crate_text<T>(
+        str: impl XNest<MapInner<MapToAttrMarker<Self::TextContentEA>> = T>,
+    ) -> Self::TextView<T>
+        where
+            T: ElementAttrMember<Self, Self::TextContentEA>;
+    fn crate_div() -> Self::DivView;
+    fn crate_button() -> Self::ButtonView;
+    fn crate_img() -> Self::ImgView;
 }
 
 #[macro_export]

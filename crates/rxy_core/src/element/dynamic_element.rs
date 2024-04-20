@@ -2,9 +2,7 @@ use alloc::sync::Arc;
 use core::any::{Any, TypeId};
 use core::fmt::Debug;
 use core::marker::PhantomData;
-
-use bevy_utils::smallvec::SmallVec;
-
+use smallvec::SmallVec;
 use crate::element::ElementType;
 use crate::{
    view_children, ElementView, ElementViewChildren, IntoView, MemberOwner, NodeTree, Renderer,

@@ -1,6 +1,9 @@
-use vello::kurbo::{Point, Rect, Shape};
+use vello::kurbo::{Point, Rect, Shape};use crate::{
+   impl_attr_value, impl_x_value_wrappers, smallbox, AttrValue,
+   SmallBox, XValueWrapper, S1,
+};
 
-use crate::{Either, EitherExt};
+use crate::{Either, EitherExt, impl_attr_value_and_wrapper};
 
 impl<T1, T2> Shape for Either<T1, T2>
 where
@@ -45,5 +48,36 @@ where
          Either::Left(n) => n.bounding_box(),
          Either::Right(n) => n.bounding_box(),
       }
+   }
+}
+
+use vello::peniko::Color;
+
+impl_attr_value_and_wrapper! {
+    Color => Color::rgba8(0, 0, 0, 0),
+    // bevy_transform::prelude::Transform,
+    glam::Affine2,
+    glam::Vec2
+}
+
+
+
+impl Into<XValueWrapper<glam::Vec2>> for f32 {
+   fn into(self) -> XValueWrapper<glam::Vec2> {
+      XValueWrapper(glam::Vec2::new(self, self))
+   }
+}
+
+
+
+impl Into<XValueWrapper<i32>> for f32 {
+   fn into(self) -> XValueWrapper<i32> {
+      XValueWrapper(self as _)
+   }
+}
+
+impl Into<XValueWrapper<f32>> for i32 {
+   fn into(self) -> XValueWrapper<f32> {
+      XValueWrapper(self as _)
    }
 }

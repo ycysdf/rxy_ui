@@ -67,7 +67,7 @@ macro_rules! impl_attr_value {
                 *self == *other
             }
 
-            #[cfg(all(not(feature = "bevy_reflect"),not(feature = "bevy")))]
+   #[cfg(not(feature = "bevy_reflect"))]
             fn as_any(&self) -> &dyn core::any::Any {
                 self
             }

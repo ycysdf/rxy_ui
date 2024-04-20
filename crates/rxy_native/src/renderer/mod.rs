@@ -20,11 +20,18 @@ mod transform;
 pub mod ui_node;
 mod view_key;
 mod visibility;
+pub mod attrs;
+mod attr_values;
+mod composite_attrs;
+mod tailwind_attrs;
+
+pub use composite_attrs::*;
+pub use tailwind_attrs::*;
 
 pub type NativeElement<E, VM> = Element<NativeRenderer, E, VM>;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "bevy_reflect", derive(bevy_reflect::Reflect))]
+#[cfg_attr(feature = "reflect", derive(bevy_reflect::Reflect))]
 pub struct NativeRenderer;
 
 impl Renderer for NativeRenderer {

@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-rxy_ui = { path = "../..", default-features = false, features = ["native"] }
+rxy_ui = { path = "../..", default-features = false, features = ["native", "signal"] }
 tokio = { version = "1", features = ["full"] }
 tracing-subscriber = "0.3"

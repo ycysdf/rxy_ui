@@ -8,6 +8,8 @@ use bevy_hierarchy::{BuildWorldChildren, DespawnRecursiveExt};
 use bevy_hierarchy::{Children, Parent};
 #[cfg(feature = "reflect")]
 use bevy_reflect::Reflect;
+#[cfg(feature = "reflect")]
+use bevy_ecs::prelude::AppTypeRegistry;
 // use bevy_render::prelude::Visibility;
 // use bevy_ui::prelude::NodeBundle;
 // use bevy_ui::Display;
@@ -23,7 +25,7 @@ use crate::renderer::NativeRenderer;
 use crate::user_event::UserEventSender;
 
 #[derive(Component)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(feature = "reflect", derive(Reflect))]
 pub struct Name(pub String);
 
 impl Name {
@@ -33,7 +35,7 @@ impl Name {
 }
 
 #[derive(Component, Clone)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(feature = "reflect", derive(Reflect))]
 pub struct RendererState<T: Send + Sync + 'static>(pub T);
 
 impl NodeTree<NativeRenderer> for World {
@@ -108,7 +110,17 @@ impl NodeTree<NativeRenderer> for World {
       type_id: TypeId,
       f: impl FnOnce(Option<&S>) -> U,
    ) -> U {
-      todo!()
+      #[cfg(feature = "reflect")]
+      {
+         f(self
+             .resource::<AppTypeRegistry>()
+             .read()
+             .get_type_data::<S>(type_id))
+      }
+      #[cfg(not(feature = "reflect"))]
+      {
+         todo!()
+      }
    }
 
    fn exist_node_id(&mut self, node_id: &RendererNodeId<NativeRenderer>) -> bool {

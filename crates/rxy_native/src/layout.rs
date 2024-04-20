@@ -6,11 +6,11 @@ use bevy_hierarchy::Children;
 use taffy::AvailableSpace;
 use vello::skrifa::MetadataProvider;
 
-use crate::ui_node::Node;
 use crate::{
-   GlobalTransform, LayoutContext, PositionedGlyph, Style, Text, TextLayoutInfo, Transform,
-   UiLayoutTree, ViewVisibility,
+    GlobalTransform, LayoutContext, PositionedGlyph, Style, Text, TextLayoutInfo, Transform,
+    UiLayoutTree, ViewVisibility,
 };
+use crate::ui_node::Node;
 
 pub struct LayoutState {
    pub text_query_state: QueryState<(
@@ -74,7 +74,7 @@ impl LayoutState {
                      glyph_id: gid.to_u16(),
                      position: glam::Vec2 {
                         x,
-                        y: pen_y + line_height,
+                        y: pen_y + 1.5 * line_height - metrics.ascent,
                      },
                      size: glam::Vec2 {
                         x: advance,

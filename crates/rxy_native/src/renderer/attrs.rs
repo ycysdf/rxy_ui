@@ -1,0 +1,1523 @@
+#![allow(non_camel_case_types)]
+
+use vello::peniko::{Brush, Color};
+
+use rxy_core::{
+    AttrIndex, attrs_fn_define, define_attr_get_fn, ElementAttrType, ElementAttrUntyped,
+    impl_index_for_tys, RendererNodeId, RendererWorld,
+};
+
+pub use crate::{
+    AlignContent, AlignItems, AlignSelf, all_attrs, Direction, Display, FlexDirection, FlexWrap,
+    JustifyContent, JustifyItems, JustifySelf, NativeRenderer, OverflowAxis, PositionType, Text
+    , Val, Visibility,
+};
+use crate::prelude::no_preclude::ALL_ATTRS;
+use crate::ui_node::{BackgroundColor, BorderColor, Outline};
+use crate::world_ext::ElementStyleEntityExt;
+
+macro_rules! common_attrs_fn_define {
+    ($($attr:ident)*) => {
+        impl_index_for_tys! {
+            $($crate::all_attrs::$attr)*
+        }
+
+        pub const COMMON_ATTRS: &'static [&'static dyn rxy_core::ElementAttrUntyped<$crate::NativeRenderer>] = &[
+            $(&$crate::all_attrs::$attr,)*
+        ];
+
+        attrs_fn_define! {
+            renderer = $crate::NativeRenderer;
+            name = CommonAttrs;
+            attrs = [
+                $({
+                    name = $attr,
+                    ty = all_attrs::$attr
+                })*
+            ]
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! element_attrs_fn_define {
+    (
+        $(
+        [$element:ident]
+        attrs = [
+            $($attr:ident)*
+        ]
+        )*
+    ) => {
+        paste::paste!{
+            impl_index_for_tys! {
+                index_start = (COMMON_ATTRS.len() as AttrIndex);
+                types = [
+                    $(
+                        $([<$element _attrs>]::$attr)*
+                    )*
+                ]
+            }
+            pub mod no_preclude {
+                pub const ALL_ATTRS: &'static [&'static [&'static dyn rxy_core::ElementAttrUntyped<super::NativeRenderer>]] = &[
+                    super::COMMON_ATTRS,
+                    &[
+                        $(
+                            $(&super::[<$element _attrs>]::$attr,)*
+                        )*
+                    ]
+                ];
+            }
+
+            $(
+                attrs_fn_define! {
+                    renderer = NativeRenderer;
+                    name = [<$element Attrs>];
+                    element = $element;
+                    attrs = [
+                        $({
+                            name = $attr,
+                            ty = [<$element _attrs>]::$attr
+                        })*
+                    ]
+                }
+
+                impl_attrs_for_element_type! {
+                    renderer = NativeRenderer;
+                    element = $element;
+                    attrs = [
+                        $($attr)*
+                    ]
+                }
+            )*
+        }
+    };
+}
+
+common_attrs_fn_define! {
+    // class
+    // name
+    // z_index
+    bg_color
+    border_left
+    border_right
+    border_top
+    border_bottom
+    border_color
+    display
+    position_type
+    overflow_x
+    overflow_y
+    direction
+    left
+    right
+    top
+    bottom
+    width
+    height
+    min_width
+    min_height
+    max_width
+    max_height
+    margin_left
+    margin_right
+    margin_top
+    margin_bottom
+    padding_left
+    padding_right
+    padding_top
+    padding_bottom
+    aspect_ratio
+    align_items
+    // justify_items TODO: support cfg
+    align_self
+    // justify_self
+    align_content
+    justify_content
+    flex_direction
+    flex_wrap
+    flex_grow
+    flex_shrink
+    flex_basis
+    column_gap
+    row_gap
+    visibility
+    // translation
+    // rotation
+    // scale
+    text_color
+    font_size
+    // text_linebreak
+    // text_align
+    // font
+    outline_width
+    outline_offset
+    outline_color
+    // grid_auto_flow
+    // grid_template_rows
+    // grid_template_columns
+    // grid_auto_rows
+    // grid_auto_columns
+    // grid_row
+    // grid_column
+}
+define_attr_get_fn!(NativeRenderer);
+
+// #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+// pub struct class;
+//
+// impl ElementAttrType<NativeRenderer> for class {
+//     type Value = Cow<'static, str>;
+//
+//     const NAME: &'static str = stringify!(class);
+//
+//     fn update_value(
+//         _world: &mut RendererWorld<NativeRenderer>,
+//         _node_id: RendererNodeId<NativeRenderer>,
+//         _value: impl Into<Self::Value>,
+//     ) {
+//         // todo:
+//         // let value = value.into();
+//         // handle_classes(context, value.as_ref());
+//         // if !context.entity_extra_data().interaction_classes.is_empty()
+//         //     && !world.contains::<Interaction>()
+//         // {
+//         //     world.insert(Interaction::default());
+//         // }
+//     }
+// }
+
+// #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+// pub struct name;
+//
+// impl ElementAttrType<NativeRenderer> for name {
+//    type Value = Cow<'static, str>;
+//
+//    const NAME: &'static str = stringify!(name);
+//
+//    fn update_value(
+//       world: &mut RendererWorld<NativeRenderer>,
+//       node_id: RendererNodeId<NativeRenderer>,
+//       value: impl Into<Self::Value>,
+//    ) {
+//       let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+//          return;
+//       };
+//       entity_world_mut.insert(bevy_core::Name::new(value.into()));
+//    }
+// }
+
+// #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+// pub struct z_index;
+//
+// impl ElementAttrType<NativeRenderer> for z_index {
+//    type Value = ZIndex;
+//
+//    const NAME: &'static str = stringify!(z_index);
+//
+//    fn update_value(
+//       world: &mut RendererWorld<NativeRenderer>,
+//       node_id: RendererNodeId<NativeRenderer>,
+//       value: impl Into<Self::Value>,
+//    ) {
+//       let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+//          return;
+//       };
+//       entity_world_mut.insert(value.into());
+//    }
+// }
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct bg_color;
+
+impl ElementAttrType<NativeRenderer> for bg_color {
+   type Value = Color;
+
+   const NAME: &'static str = stringify!(bg_color);
+
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.insert(BackgroundColor(value.into()));
+      // let entity = world.id();
+      // context.commands.add(move |world| {
+      //     let entity_mut = world.entity_mut(entity);
+      //     match value.into() {
+      //         UiTexture::Color(color) => {
+      //             entity_mut.insert(BackgroundColor(color));
+      //             entity_mut.remove::<(
+      //                 UiImage,
+      //                 UiImageSize,
+      //                 Handle<TextureAtlas>,
+      //                 UiTextureAtlasImage,
+      //             )>();
+      //         }
+      //         UiTexture::Image {
+      //             color,
+      //             flip_x,
+      //             flip_y,
+      //             image: image_handle,
+      //         } => {
+      //             entity_mut.insert((
+      //                 BackgroundColor(color),
+      //                 UiImage {
+      //                     texture: image_handle,
+      //                     flip_y,
+      //                     flip_x,
+      //                 },
+      //                 UiImageSize::default(),
+      //             ));
+      //             context
+      //                 .entity_mut
+      //                 .remove::<(Handle<TextureAtlas>, UiTextureAtlasImage)>();
+      //         }
+      //         UiTexture::Atlas {
+      //             flip_y,
+      //             flip_x,
+      //             color,
+      //             index,
+      //             atlas,
+      //         } => {
+      //             entity_mut.insert((
+      //                 BackgroundColor(color),
+      //                 atlas,
+      //                 UiTextureAtlasImage {
+      //                     index,
+      //                     flip_x,
+      //                     flip_y,
+      //                 },
+      //             ));
+      //             entity_mut.remove::<(UiImage, UiImageSize)>();
+      //         }
+      //     }
+      // })
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct border_left;
+
+impl ElementAttrType<NativeRenderer> for border_left {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(border_left);
+
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         let value = value.into();
+         style.border.left = value;
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct border_right;
+
+impl ElementAttrType<NativeRenderer> for border_right {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(border_right);
+
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         let value = value.into();
+         style.border.right = value;
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct border_top;
+
+impl ElementAttrType<NativeRenderer> for border_top {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(border_top);
+
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         let value = value.into();
+         style.border.top = value;
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct border_bottom;
+
+impl ElementAttrType<NativeRenderer> for border_bottom {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(border_bottom);
+
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         let value = value.into();
+         style.border.bottom = value;
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct border_color;
+
+impl ElementAttrType<NativeRenderer> for border_color {
+   type Value = Color;
+
+   const NAME: &'static str = stringify!(border_color);
+
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.insert(BorderColor(value.into()));
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct display;
+
+impl ElementAttrType<NativeRenderer> for display {
+   type Value = Display;
+
+   const NAME: &'static str = stringify!(display);
+
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.display = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct position_type;
+
+impl ElementAttrType<NativeRenderer> for position_type {
+   type Value = PositionType;
+
+   const NAME: &'static str = stringify!(position_type);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.position_type = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct overflow_x;
+
+impl ElementAttrType<NativeRenderer> for overflow_x {
+   type Value = OverflowAxis;
+
+   const NAME: &'static str = stringify!(overflow_x);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         let value = value.into();
+         style.overflow.x = value;
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct overflow_y;
+
+impl ElementAttrType<NativeRenderer> for overflow_y {
+   type Value = OverflowAxis;
+
+   const NAME: &'static str = stringify!(overflow_y);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         let value = value.into();
+         style.overflow.y = value;
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct direction;
+
+impl ElementAttrType<NativeRenderer> for direction {
+   type Value = Direction;
+
+   const NAME: &'static str = stringify!(direction);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.direction = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct left;
+
+impl ElementAttrType<NativeRenderer> for left {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(left);
+
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.left = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct right;
+
+impl ElementAttrType<NativeRenderer> for right {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(right);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.right = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct top;
+
+impl ElementAttrType<NativeRenderer> for top {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(top);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.top = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct bottom;
+
+impl ElementAttrType<NativeRenderer> for bottom {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(bottom);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.bottom = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct width;
+
+impl ElementAttrType<NativeRenderer> for width {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(width);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.width = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct height;
+
+impl ElementAttrType<NativeRenderer> for height {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(height);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.height = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct min_width;
+
+impl ElementAttrType<NativeRenderer> for min_width {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(min_width);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.min_width = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct min_height;
+
+impl ElementAttrType<NativeRenderer> for min_height {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(min_height);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.min_height = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct max_width;
+
+impl ElementAttrType<NativeRenderer> for max_width {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(max_width);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.max_width = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct max_height;
+
+impl ElementAttrType<NativeRenderer> for max_height {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(max_height);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.max_height = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct margin_left;
+
+impl ElementAttrType<NativeRenderer> for margin_left {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(margin_left);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         let value = value.into();
+         style.margin.left = value;
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct margin_right;
+
+impl ElementAttrType<NativeRenderer> for margin_right {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(margin_right);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         let value = value.into();
+         style.margin.right = value;
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct margin_top;
+
+impl ElementAttrType<NativeRenderer> for margin_top {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(margin_top);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         let value = value.into();
+         style.margin.top = value;
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct margin_bottom;
+
+impl ElementAttrType<NativeRenderer> for margin_bottom {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(margin_bottom);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         let value = value.into();
+         style.margin.bottom = value;
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct padding_left;
+
+impl ElementAttrType<NativeRenderer> for padding_left {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(padding_left);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         let value = value.into();
+         style.padding.left = value;
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct padding_right;
+
+impl ElementAttrType<NativeRenderer> for padding_right {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(padding_right);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         let value = value.into();
+         style.padding.right = value;
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct padding_top;
+
+impl ElementAttrType<NativeRenderer> for padding_top {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(padding_top);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         let value = value.into();
+         style.padding.top = value;
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct padding_bottom;
+
+impl ElementAttrType<NativeRenderer> for padding_bottom {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(padding_bottom);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         let value = value.into();
+         style.padding.bottom = value;
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct aspect_ratio;
+
+impl ElementAttrType<NativeRenderer> for aspect_ratio {
+   type Value = Option<f32>;
+
+   const NAME: &'static str = stringify!(aspect_ratio);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.aspect_ratio = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct align_items;
+
+impl ElementAttrType<NativeRenderer> for align_items {
+   type Value = AlignItems;
+
+   const NAME: &'static str = stringify!(align_items);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.align_items = value.into();
+      });
+   }
+}
+
+#[cfg(feature = "grid")]
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct justify_items;
+
+#[cfg(feature = "grid")]
+impl ElementAttrType<NativeRenderer> for justify_items {
+   type Value = JustifyItems;
+
+   const NAME: &'static str = stringify!(justify_items);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.justify_items = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct align_self;
+
+impl ElementAttrType<NativeRenderer> for align_self {
+   type Value = AlignSelf;
+
+   const NAME: &'static str = stringify!(align_self);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.align_self = value.into();
+      });
+   }
+}
+
+#[cfg(feature = "grid")]
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct justify_self;
+
+#[cfg(feature = "grid")]
+impl ElementAttrType<NativeRenderer> for justify_self {
+   type Value = JustifySelf;
+
+   const NAME: &'static str = stringify!(justify_self);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.justify_self = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct align_content;
+
+impl ElementAttrType<NativeRenderer> for align_content {
+   type Value = AlignContent;
+
+   const NAME: &'static str = stringify!(align_content);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.align_content = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct justify_content;
+
+impl ElementAttrType<NativeRenderer> for justify_content {
+   type Value = JustifyContent;
+
+   const NAME: &'static str = stringify!(justify_content);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.justify_content = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct flex_direction;
+
+impl ElementAttrType<NativeRenderer> for flex_direction {
+   type Value = FlexDirection;
+
+   const NAME: &'static str = stringify!(flex_direction);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.flex_direction = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct flex_wrap;
+
+impl ElementAttrType<NativeRenderer> for flex_wrap {
+   type Value = FlexWrap;
+
+   const NAME: &'static str = stringify!(flex_wrap);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.flex_wrap = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct flex_grow;
+
+impl ElementAttrType<NativeRenderer> for flex_grow {
+   type Value = f32;
+
+   const NAME: &'static str = stringify!(flex_grow);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.flex_grow = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct flex_shrink;
+
+impl ElementAttrType<NativeRenderer> for flex_shrink {
+   type Value = f32;
+
+   const NAME: &'static str = stringify!(flex_shrink);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.flex_shrink = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct flex_basis;
+
+impl ElementAttrType<NativeRenderer> for flex_basis {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(flex_basis);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.flex_basis = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct column_gap;
+
+impl ElementAttrType<NativeRenderer> for column_gap {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(column_gap);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.column_gap = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct row_gap;
+
+impl ElementAttrType<NativeRenderer> for row_gap {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(row_gap);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      entity_world_mut.try_set_style(|style| {
+         style.row_gap = value.into();
+      });
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct visibility;
+
+impl ElementAttrType<NativeRenderer> for visibility {
+   type Value = Visibility;
+
+   const NAME: &'static str = stringify!(visibility);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      if let Some(mut v) = world.get_mut::<Visibility>(node_id) {
+         *v = value.into();
+      }
+   }
+}
+
+// #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+// pub struct translation;
+//
+// impl ElementAttrType<NativeRenderer> for translation {
+//    type Value = Vec2;
+//
+//    const NAME: &'static str = stringify!(translation);
+//    fn update_value(
+//       world: &mut RendererWorld<NativeRenderer>,
+//       node_id: RendererNodeId<NativeRenderer>,
+//       value: impl Into<Self::Value>,
+//    ) {
+//       let value = value.into();
+//       if let Some(tf) = world.get_mut::<Transform>(node_id) {
+//          tf.0.translation = value;
+//       } else {
+//          warn!("no found Transform component!");
+//       }
+//    }
+// }
+
+// #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+// pub struct rotation;
+//
+// impl ElementAttrType<NativeRenderer> for rotation {
+//    type Value = f32;
+//
+//    const NAME: &'static str = stringify!(rotation);
+//    fn update_value(
+//       world: &mut RendererWorld<NativeRenderer>,
+//       node_id: RendererNodeId<NativeRenderer>,
+//       value: impl Into<Self::Value>,
+//    ) {
+//       let value = value.into();
+//       if let Some(mut tf) = world.get_mut::<Transform>(node_id) {
+//           tf.0 *= Affine2::from_angle(value);
+//       } else {
+//          warn!("no found Transform component!");
+//       }
+//    }
+// }
+//
+// #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+// pub struct scale;
+//
+// impl ElementAttrType<NativeRenderer> for scale {
+//    type Value = Vec2;
+//
+//    const NAME: &'static str = stringify!(scale);
+//    fn update_value(
+//       world: &mut RendererWorld<NativeRenderer>,
+//       node_id: RendererNodeId<NativeRenderer>,
+//       value: impl Into<Self::Value>,
+//    ) {
+//       let value = value.into();
+//       if let Some(mut tf) = world.get_mut::<Transform>(node_id) {
+//          tf.0 *= Affine2::from_scale(value);
+//       } else {
+//          warn!("no found Transform component!");
+//       }
+//    }
+// }
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct text_color;
+
+impl ElementAttrType<NativeRenderer> for text_color {
+   type Value = Color;
+
+   const NAME: &'static str = stringify!(text_color);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let value = value.into();
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+
+      if let Some(mut text) = entity_world_mut.get_mut::<Text>() {
+         text.style.color = Brush::Solid(value);
+      }
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct font_size;
+
+impl ElementAttrType<NativeRenderer> for font_size {
+   type Value = f32;
+
+   const NAME: &'static str = stringify!(font_size);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let value = value.into();
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      if let Some(mut text) = entity_world_mut.get_mut::<Text>() {
+         text.style.font_size = value;
+      }
+   }
+}
+
+// #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+// pub struct text_linebreak;
+//
+// impl ElementAttrType<NativeRenderer> for text_linebreak {
+//    type Value = BreakLineOn;
+//
+//    const NAME: &'static str = stringify!(text_linebreak);
+//    fn update_value(
+//       world: &mut RendererWorld<NativeRenderer>,
+//       node_id: RendererNodeId<NativeRenderer>,
+//       value: impl Into<Self::Value>,
+//    ) {
+//       let value = value.into();
+//       let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+//          return;
+//       };
+//       entity_world_mut.scoped_text_styled_element_type(|text_schema_type, entity_ref| {
+//          text_schema_type.set_text_linebreak(entity_ref, value);
+//       });
+//    }
+// }
+//
+// #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+// pub struct text_align;
+//
+// impl ElementAttrType<NativeRenderer> for text_align {
+//    type Value = JustifyText;
+//
+//    const NAME: &'static str = stringify!(text_align);
+//    fn update_value(
+//       world: &mut RendererWorld<NativeRenderer>,
+//       node_id: RendererNodeId<NativeRenderer>,
+//       value: impl Into<Self::Value>,
+//    ) {
+//       let value = value.into();
+//       let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+//          return;
+//       };
+//       entity_world_mut.scoped_text_styled_element_type(|text_schema_type, entity_ref| {
+//          text_schema_type.set_text_align(entity_ref, value);
+//       });
+//    }
+// }
+//
+// #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+// pub struct font;
+//
+// impl ElementAttrType<NativeRenderer> for font {
+//    type Value = Handle<Font>;
+//
+//    const NAME: &'static str = stringify!(font);
+//    fn update_value(
+//       world: &mut RendererWorld<NativeRenderer>,
+//       node_id: RendererNodeId<NativeRenderer>,
+//       value: impl Into<Self::Value>,
+//    ) {
+//       let value = value.into();
+//       let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+//          return;
+//       };
+//       entity_world_mut.scoped_text_styled_element_type(|text_schema_type, entity_ref| {
+//          text_schema_type.set_font(entity_ref, value.clone());
+//       });
+//    }
+// }
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct outline_width;
+
+impl ElementAttrType<NativeRenderer> for outline_width {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(outline_width);
+
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      let value = value.into();
+      if entity_world_mut.contains::<Outline>() {
+         let mut outline = entity_world_mut.get_mut::<Outline>().unwrap();
+         outline.width = value;
+      } else {
+         entity_world_mut.insert(Outline {
+            width: value,
+            color: Color::BLACK,
+            offset: Val::Px(0.),
+         });
+      }
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct outline_offset;
+
+impl ElementAttrType<NativeRenderer> for outline_offset {
+   type Value = Val;
+
+   const NAME: &'static str = stringify!(outline_offset);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      let value = value.into();
+      if entity_world_mut.contains::<Outline>() {
+         let mut outline = entity_world_mut.get_mut::<Outline>().unwrap();
+         outline.offset = value;
+      } else {
+         entity_world_mut.insert(Outline {
+            offset: value,
+            color: Color::BLACK,
+            width: Val::Px(1.),
+         });
+      }
+   }
+}
+
+#[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+pub struct outline_color;
+
+impl ElementAttrType<NativeRenderer> for outline_color {
+   type Value = Color;
+   const NAME: &'static str = stringify!(outline_color);
+   fn update_value(
+      world: &mut RendererWorld<NativeRenderer>,
+      node_id: RendererNodeId<NativeRenderer>,
+      value: impl Into<Self::Value>,
+   ) {
+      let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else {
+         return;
+      };
+      let value = value.into();
+      if entity_world_mut.contains::<Outline>() {
+         let mut outline = entity_world_mut.get_mut::<Outline>().unwrap();
+         outline.color = value;
+      } else {
+         entity_world_mut.insert(Outline {
+            offset: Val::Px(0.),
+            color: value,
+            width: Val::Px(0.),
+         });
+      }
+   }
+}
+
+macro_rules! define_style_attr_type {
+    ($($ident:ident:$value_ty:ty)*) => {
+        $(
+            #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
+            pub struct $ident;
+
+            impl ElementAttrType<NativeRenderer> for $ident {
+                type Value = $value_ty;
+
+                const NAME: &'static str = stringify!($ident);
+
+                fn update_value(
+                    world: &mut RendererWorld<NativeRenderer>,
+                    node_id: RendererNodeId<NativeRenderer>,
+                    value: impl Into<Self::Value>,
+                ) {
+                    let Some(mut entity_world_mut) = world.get_entity_mut(node_id) else{
+                        return;
+                    };
+                    entity_world_mut.try_set_style(|style| {
+                        let value = value.into();
+                        style.$ident = value;
+                    });
+                }
+            }
+        )*
+    };
+}
+
+// define_style_attr_type! {
+//     grid_auto_flow: GridAutoFlow
+//     grid_template_rows: Vec<RepeatedGridTrack>
+//     grid_template_columns: Vec<RepeatedGridTrack>
+//     grid_auto_rows: Vec<GridTrack>
+//     grid_auto_columns: Vec<GridTrack>
+//     grid_row: GridPlacement
+//     grid_column: GridPlacement
+// }
