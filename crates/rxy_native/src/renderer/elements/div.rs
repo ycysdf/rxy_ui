@@ -8,8 +8,8 @@ use rxy_core::{ElementType, ElementTypeUnTyped, RendererNodeId, RendererWorld};
 use crate::{Display, Style, UiRect, Val};
 use crate::NodeBundle;
 use crate::renderer::NativeRenderer;
-use crate::renderer::node_tree::NodeTreeWorldExt;
 use crate::ui_node::{BackgroundColor, BorderColor, BorderRadius, Node, Outline};
+use crate::world_ext::BevyWorldExt;
 
 #[derive(Default, Debug, Clone, Copy)]
 #[cfg_attr(feature = "reflect", derive(bevy_reflect::Reflect))]

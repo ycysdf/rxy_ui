@@ -143,7 +143,7 @@ impl DrawState {
             let insets = Insets::uniform(width_half);
             let shape = match shape {
                Either::Left(shape) => shape.sub_inset(width_half).either_left(),
-               Either::Right(mut shape) => (shape - insets).either_right(),
+               Either::Right(shape) => (*shape - insets).either_right(),
             };
             scene.stroke(
                &Stroke {
@@ -172,7 +172,7 @@ impl DrawState {
             let insets = Insets::uniform(width_half + offset);
             let shape = match shape {
                Either::Left(shape) => shape.sub_inset(-width_half).either_left(),
-               Either::Right(mut shape) => (shape + insets).either_right(),
+               Either::Right(shape) => (*shape + insets).either_right(),
             };
             scene.stroke(
                &Stroke {
@@ -201,7 +201,7 @@ impl DrawState {
                   .glyphs
                   .iter()
                   .enumerate()
-                  .filter_map(|(i, n)| {
+                  .filter_map(|(_i, n)| {
                      n.as_ref().map(|a| Glyph {
                         id: a.glyph_id as _,
                         x: a.position.x,

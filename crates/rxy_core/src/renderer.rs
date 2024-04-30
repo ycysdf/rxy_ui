@@ -1,11 +1,10 @@
-use crate::utils::{HashMap, SyncCell};
 use alloc::borrow::Cow;
 use core::any::TypeId;
 use core::fmt::Debug;
 use core::future::Future;
-use std::ops::{Deref, DerefMut};
 
 use crate::element::{AttrIndex, ElementAttrType};
+use crate::utils::{HashMap, SyncCell};
 use crate::{ElementType, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, ViewKey};
 
 pub type RendererNodeId<R> = <R as Renderer>::NodeId;
@@ -79,6 +78,7 @@ pub trait NodeTree<R>
 where
    R: Renderer<NodeTree = Self>,
 {
+   type NodeTreeScoped: DeferredNodeTreeScoped<R>;
    fn recycle_node<K: ViewKey<R>>(&mut self, key: &K);
    fn cancel_recycle_node<K: ViewKey<R>>(&mut self, key: &K);
 
@@ -86,7 +86,7 @@ where
    fn unset_attr<A: ElementAttrType<R>>(&mut self, node_id: RendererNodeId<R>);
 
    // TODO: rename
-   fn deferred_world_scoped(&self) -> impl DeferredNodeTreeScoped<R>;
+   fn world_scoped(&self) -> Self::NodeTreeScoped;
    fn get_node_state_mut<S: MaybeSend + MaybeSync + 'static>(
       &mut self,
       node_id: &RendererNodeId<R>,
@@ -108,7 +108,7 @@ where
       state: S,
    );
 
-   fn scoped_type_state<S: Send + Sync + Clone + 'static, U>(
+   fn scoped_type_state<S: MaybeSend + MaybeSync + Clone + 'static, U>(
       &self,
       type_id: TypeId,
       f: impl FnOnce(Option<&S>) -> U,
@@ -124,16 +124,6 @@ where
    fn spawn_placeholder(
       &mut self,
       name: impl Into<Cow<'static, str>>,
-      parent: Option<&RendererNodeId<R>>,
-      reserve_node_id: Option<RendererNodeId<R>>,
-   ) -> RendererNodeId<R>;
-
-   // TODO: delete
-   fn ensure_spawn(&mut self, reserve_node_id: RendererNodeId<R>);
-
-   // TODO: delete
-   fn spawn_empty_node(
-      &mut self,
       parent: Option<&RendererNodeId<R>>,
       reserve_node_id: Option<RendererNodeId<R>>,
    ) -> RendererNodeId<R>;
@@ -216,7 +206,10 @@ where
       self.get_node_state_mut::<S>(node_id).unwrap()
    }
 
-   fn get_type_state<S: Send + Sync + Clone + 'static>(&self, type_id: TypeId) -> Option<S> {
+   fn get_type_state<S: MaybeSend + MaybeSync + Clone + 'static>(
+      &self,
+      type_id: TypeId,
+   ) -> Option<S> {
       self.scoped_type_state(type_id, |n| n.cloned())
    }
 }

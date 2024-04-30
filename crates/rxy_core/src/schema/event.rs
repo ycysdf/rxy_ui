@@ -27,7 +27,7 @@ where
       F: FnMut(Args) + MaybeSend + 'static,
    {
       Self {
-         f: Box::new(f),
+         f: alloc::boxed::Box::new(f),
          call_f: |f, args| {
             let f: &mut F = f.downcast_mut::<F>().unwrap();
             f(args);
@@ -100,7 +100,7 @@ where
       let (sender, receiver) = unbounded();
       ctx.prop_state()
          .entry(type_id)
-         .or_insert_with(|| Box::new(EventHandlerState::new(receiver, event_handler)));
+         .or_insert_with(|| alloc::boxed::Box::new(EventHandlerState::new(receiver, event_handler)));
       sender
    }
 }

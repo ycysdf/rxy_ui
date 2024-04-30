@@ -1,0 +1,13 @@
+[package]
+name = "rxy_bevy_ecs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rxy_core = { workspace = true, default-features = false, features = ["common_renderer", "send_sync"] }
+bevy_ecs = { path = "../../../bevy/crates/bevy_ecs", default-features = false }
+#bevy_reflect = { path = "../../../bevy/crates/bevy_reflect", optional = true, default-features = false, features = ["glam"] }
+bevy_hierarchy = { path = "../../../bevy/crates/bevy_hierarchy", default-features = false }
+
+#[features]
+#reflect = ["bevy_ecs/bevy_reflect", "rxy_core/bevy_reflect"]

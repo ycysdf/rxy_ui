@@ -1,8 +1,6 @@
 mod composite_attrs;
 mod tailwind_attrs;
 
-pub use composite_attrs::*;
-pub use tailwind_attrs::*;
 use crate::{ElementAttrMember, ElementAttrType, ElementView, MapToAttrMarker, Renderer, XNest};
 use alloc::borrow::Cow;
 

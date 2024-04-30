@@ -1,5 +1,6 @@
 use bevy_ecs::entity::Entity;
 use bevy_ecs::prelude::{Mut, World};
+use tracing::info;
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoopBuilder};
 use winit::window::WindowBuilder;
@@ -68,6 +69,7 @@ impl XyApp {
    }
 
    pub fn run(mut self) {
+      info!("app run!");
       let XyApp {
          mut world,
          mut window_builder,

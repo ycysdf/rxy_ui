@@ -11,7 +11,7 @@ use rxy_core::AttrIndex;
 
 use crate::attrs::get_attr_by_index;
 
-use super::attr_iter::{EntityStyleWorldQuery, StateOwnerWithNodeId};
+use super::style_state_owner::{EntityStyleWorldQuery, NodeStyleStateOwner};
 use super::node_style_state::NodeStyleSheetsState;
 use super::rxy_bevy_crate::{AttrSetBits, ElementEntityExtraData, FocusedEntity, RendererState};
 use super::Previous;

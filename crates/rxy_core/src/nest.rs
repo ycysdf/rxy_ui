@@ -1,7 +1,6 @@
 use crate::utils::all_tuples;
 use crate::MaybeSend;
 use core::marker::PhantomData;
-
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct InnerIvmToVm<T, M>(pub T, PhantomData<M>);
 
@@ -303,13 +302,13 @@ pub mod impl_reactive {
             U: 'static,
          {
             type MapInnerTo =
-               Reactive<Box<dyn Fn() -> X::MapInnerTo + MaybeSend + 'static>, X::MapInnerTo>;
+               Reactive<alloc::boxed::Box<dyn Fn() -> X::MapInnerTo + MaybeSend + 'static>, X::MapInnerTo>;
 
             fn map_inner_to(
                self,
                f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
             ) -> Self::MapInnerTo {
-               rx(Box::new(move || self.get().map_inner_to(f.clone())))
+               rx(alloc::boxed::Box::new(move || self.get().map_inner_to(f.clone())))
             }
          }
       };
@@ -343,13 +342,13 @@ pub mod impl_reactive {
       U: 'static,
    {
       type MapInnerTo =
-         Reactive<Box<dyn Fn() -> X::MapInnerTo + MaybeSend + 'static>, X::MapInnerTo>;
+         Reactive<alloc::boxed::Box<dyn Fn() -> X::MapInnerTo + MaybeSend + 'static>, X::MapInnerTo>;
 
       fn map_inner_to(
          self,
          f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
       ) -> Self::MapInnerTo {
-         rx(Box::new(move || self.0().map_inner_to(f.clone())))
+         rx(alloc::boxed::Box::new(move || self.0().map_inner_to(f.clone())))
       }
    }
 

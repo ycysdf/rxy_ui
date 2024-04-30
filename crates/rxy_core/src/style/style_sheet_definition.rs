@@ -7,7 +7,7 @@ use crate::style::{NodeAttrStyleItemId, NodeStyleItemId, NodeStyleSheetId};
 use crate::{EitherExt, Renderer, RendererNodeId, RendererWorld};
 
 use super::Result;
-
+use alloc::vec::Vec;
 bitflags! {
     #[repr(transparent)]
     #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, PartialOrd, Ord)]

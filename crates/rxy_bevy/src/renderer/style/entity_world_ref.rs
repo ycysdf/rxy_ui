@@ -13,7 +13,7 @@ use rxy_core::style::{
    StyleSheetLocation,
 };
 
-use super::attr_iter::StateOwnerWithNodeId;
+use super::style_state_owner::NodeStyleStateOwner;
 use super::node_style_state::NodeStyleSheetsState;
 use super::plugin::TypedEntities;
 use super::rxy_bevy_crate::EntityWorldMutExt;

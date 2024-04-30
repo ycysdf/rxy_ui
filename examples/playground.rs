@@ -33,7 +33,10 @@ fn setup(mut commands: Commands) {
 }
 
 fn sample3() -> impl IntoView<BevyRenderer> {
-   div().flex_col().gap(8).children((
+   div().style((
+      x_res(|n:&AppTypeRegistry| x().width(12)),
+      x_res(|n:&AppTypeRegistry| x().height(12))
+   )).flex_col().gap(8).children((
       "HEADER!",
       x_future(async {
          std::thread::sleep(Duration::from_millis(10300));

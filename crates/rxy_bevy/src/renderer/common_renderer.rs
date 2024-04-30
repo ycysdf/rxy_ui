@@ -12,11 +12,14 @@ use crate::{x_bundle, BevyRenderer, Focusable};
 define_common_view_fns!(BevyRenderer);
 
 #[cfg(not(feature = "dynamic_element"))]
+use crate::BevyElement;
+
+#[cfg(not(feature = "dynamic_element"))]
 impl CommonRenderer for BevyRenderer {
    type DivView = BevyElement<element_div, ()>;
    type TextView<T: ElementAttrMember<Self, Self::TextContentEA>> = BevyElement<element_span, (T,)>;
    type ButtonView =
-      BevyElement<element_div, (XBundle<(FocusPolicy, Interaction, Button, Focusable)>,)>;
+      BevyElement<element_div, (crate::XBundle<(FocusPolicy, Interaction, Button, Focusable)>,)>;
    type ImgView = BevyElement<element_img, ()>;
    type TextContentEA = element_span_attrs::content;
 

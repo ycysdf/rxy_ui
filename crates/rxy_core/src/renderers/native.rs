@@ -76,8 +76,8 @@ impl Into<XValueWrapper<i32>> for f32 {
    }
 }
 
-impl Into<XValueWrapper<f32>> for i32 {
-   fn into(self) -> XValueWrapper<f32> {
-      XValueWrapper(self as _)
-   }
-}
+// impl Into<XValueWrapper<f32>> for i32 {
+//    fn into(self) -> XValueWrapper<f32> {
+//       XValueWrapper(self as _)
+//    }
+// }

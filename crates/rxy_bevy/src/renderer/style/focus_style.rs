@@ -4,7 +4,7 @@ use bevy_ecs::system::{Commands, ResMut};
 
 use rxy_core::style::{NodeInterStyleAttrInfos, NodeStyleAttrInfos, StyleInteraction};
 
-use super::attr_iter::{EntityStyleWorldQuery, StateOwnerWithNodeId};
+use super::style_state_owner::{EntityStyleWorldQuery, NodeStyleStateOwner};
 use super::interaction_style::{AttrSetBitsIterExt, SetAttrValuesCommand};
 use super::node_style_state::NodeStyleSheetsState;
 use super::rxy_bevy_crate::{ElementEntityExtraData, FocusedEntity, RendererState};

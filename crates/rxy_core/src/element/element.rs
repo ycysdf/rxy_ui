@@ -6,7 +6,6 @@ use crate::{
    ElementView, IntoView, MemberOwner, NodeTree, Renderer, RendererNodeId, RendererWorld, SoloView,
    View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx, ViewMemberIndex,
 };
-
 #[derive(Clone)]
 pub struct Element<R, E, VM> {
    pub members: VM,
@@ -286,6 +285,8 @@ where
 
 #[cfg(feature = "bevy_reflect")]
 const _: () = {
+   use alloc::boxed::Box;
+   use alloc::string::ToString;
    #[allow(unused_mut)]
    impl<R, VM> bevy_reflect::GetTypeRegistration for ElementViewKey<R, VM>
    where

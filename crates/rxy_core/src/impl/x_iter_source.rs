@@ -572,7 +572,7 @@ where
    let source = for_source.source;
    let view_f = for_source.view_f;
 
-   let world_scoped = ctx.world.deferred_world_scoped();
+   let world_scoped = ctx.world.world_scoped();
    let state_node_id = if let Some(state_node_id) = state_node_id {
       DataOrPlaceholderNodeId::Placeholder(state_node_id)
    } else {

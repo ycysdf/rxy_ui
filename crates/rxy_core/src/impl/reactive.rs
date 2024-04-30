@@ -90,7 +90,7 @@ where
    fn build(self, mut ctx: ViewMemberCtx<R>, _will_rebuild: bool) {
       let index = ctx.index;
       let node_id = ctx.node_id.clone();
-      let deferred_world_scoped = ctx.world.deferred_world_scoped();
+      let deferred_world_scoped = ctx.world.world_scoped();
       let _effect = create_effect_with_init(
          self.0,
          |vm: VM| {
@@ -125,7 +125,7 @@ where
    fn rebuild(self, mut ctx: ViewMemberCtx<R>) {
       drop(ctx.take_indexed_view_member_state::<ReactiveDisposerState>());
 
-      let deferred_world_scoped = ctx.world.deferred_world_scoped();
+      let deferred_world_scoped = ctx.world.world_scoped();
       let index = ctx.index;
       let node_id = ctx.node_id.clone();
       let _effect = create_render_effect(move |_| {
@@ -284,7 +284,7 @@ where
       let (reserve_key, reserve_disposer) = reserve_key
          .map(|n| (n.key, n.disposer_state_node_id))
          .unzip();
-      let world_scoped = ctx.world.deferred_world_scoped();
+      let world_scoped = ctx.world.world_scoped();
       let parent = ctx.parent.clone();
       let _effect = create_effect_with_init(
          self.0,
@@ -337,7 +337,7 @@ where
             .take_node_state::<ReactiveDisposerState>(&disposer_state_node_id),
       );
 
-      let world_scoped = ctx.world.deferred_world_scoped();
+      let world_scoped = ctx.world.world_scoped();
       let parent = ctx.parent.clone();
 
       let _effect = create_effect_with_init(

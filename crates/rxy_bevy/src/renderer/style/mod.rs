@@ -1,7 +1,7 @@
 use std::any::TypeId;
 
 pub use attr_iter::EntityStyleAttrInfoIterArgs;
-pub(crate) use attr_iter::StateOwner;
+pub(crate) use style_state_owner::StyleStateOwner;
 pub use attr_syncer::EntityAttrSyncer;
 pub use element_view_ext::*;
 pub use entity_world_ref::*;
@@ -11,7 +11,6 @@ use rxy_bevy_crate::BevyRenderer;
 use rxy_core::style::{AppliedStyleSheet, StyleSheetCtx, StyleSheetsInfo};
 pub use shared_style_sheets::SharedStyleState;
 pub use shared_style_view::*;
-pub use style_sheets::res;
 
 pub use crate as rxy_bevy_crate;
 
@@ -26,14 +25,15 @@ mod node_tree;
 mod plugin;
 mod shared_style_sheets;
 mod shared_style_view;
-mod style_sheets;
+mod res_style_sheets;
+mod style_state_owner;
 
 pub type Result<T = ()> = rxy_core::style::Result<BevyRenderer, T>;
 pub type StyleError = rxy_core::style::StyleError<BevyRenderer>;
 
 pub mod prelude {
    pub use super::{
-      res, typed_shared_style_sheets, RxyStyleSheetPlugin, SchemaCtxExt, StyleError,
+      typed_shared_style_sheets, RxyStyleSheetPlugin, SchemaCtxExt, StyleError,
       TypedStyleLabel,
    };
 }

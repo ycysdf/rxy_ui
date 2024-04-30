@@ -1,5 +1,6 @@
 use std::ops::DerefMut;
 
+use crate::renderer::RendererState;
 use bevy_ecs::component::Component;
 use bevy_ecs::prelude::{EntityMut, EntityWorldMut, Mut};
 use bevy_ecs::world::World;
@@ -8,7 +9,6 @@ use bevy_hierarchy::{BuildWorldChildren, Parent};
 use rxy_core::{NodeTree, RendererNodeId};
 
 use crate::{NativeRenderer, Style};
-use crate::node_tree::RendererState;
 
 pub trait BevyWorldExt {
    fn get_or_spawn_empty(
@@ -106,7 +106,10 @@ pub trait EntityWorldMutExt {
       S: Send + Sync + 'static;
 }
 
-impl EntityWorldMutExt for EntityWorldMut<'_> {
+impl EntityWorldMutExt for EntityWorldMut<'_>
+// where
+//    World: NodeTree<NativeRenderer>,
+{
    fn insert_if_not_exist<C>(&mut self, component: C)
    where
       C: Component,

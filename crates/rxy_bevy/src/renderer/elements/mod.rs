@@ -4,8 +4,6 @@ pub use div::*;
 pub use img::*;
 pub use span::*;
 
-use crate::BevyRenderer;
-
 mod div;
 mod img;
 mod span;
@@ -53,9 +51,9 @@ impl ElementTypeRegisterAppExt for App {
       use rxy_core::ElementTypeTypeInfo;
       #[cfg(feature = "dynamic_element")]
       self
-         .register_type_data::<element_div, ElementTypeTypeInfo<BevyRenderer>>()
-         .register_type_data::<element_span, ElementTypeTypeInfo<BevyRenderer>>()
-         .register_type_data::<element_img, ElementTypeTypeInfo<BevyRenderer>>();
+         .register_type_data::<element_div, ElementTypeTypeInfo<crate::BevyRenderer>>()
+         .register_type_data::<element_span, ElementTypeTypeInfo<crate::BevyRenderer>>()
+         .register_type_data::<element_img, ElementTypeTypeInfo<crate::BevyRenderer>>();
       self
    }
 }

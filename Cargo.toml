@@ -16,6 +16,7 @@ bevy_mod_picking = { workspace = true, optional = true }
 
 rxy_web_dom = { workspace = true, optional = true }
 rxy_native = { workspace = true, optional = true }
+#rxy_bevy_ecs = { path = "crates/rxy_bevy_ecs", optional = true }
 
 [features]
 default = ["std", "dynamic_element", "x_iter_source", "signal"]
@@ -28,10 +29,12 @@ view_children_erasure = ["rxy_core/view_children_erasure"]
 tailwind_aliases = ["rxy_bevy/tailwind_aliases"]
 style = ["rxy_bevy/style", "rxy_core/style"]
 signal = ["xy_reactive", "rxy_core/xy_reactive", "rxy_bevy?/xy_reactive"]
+#reflect = ["rxy_core/bevy_reflect", "rxy_native?/reflect", "rxy_bevy_ecs?/reflect"]
+reflect = ["rxy_native?/reflect"]
 
 bevy = [
     "std", "rxy_bevy", "bevy_mod_picking", "rxy_bevy_macro", "style", "tailwind_aliases",
-    "xy_reactive?/bevy", "rxy_core/bevy"
+    "xy_reactive?/bevy", "rxy_core/bevy", "reflect"
 ]
 #web = ["std", "rxy_web_dom"]
 native = ["std", "rxy_native", "rxy_native/tokio"]
@@ -292,9 +295,3 @@ doc-scrape-examples = true
 name = "playground"
 path = "examples/playground.rs"
 required-features = ["bevy"]
-
-[[example]]
-doc-scrape-examples = true
-name = "web_playground"
-path = "examples/web_playground"
-required-features = ["web"]

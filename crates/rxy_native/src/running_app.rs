@@ -1,18 +1,17 @@
-use std::sync::Arc;
+use std::time::Instant;
 
 use bevy_ecs::entity::Entity;
 use bevy_ecs::prelude::World;
 use bevy_ecs::system::SystemParam;
-use kurbo::{Affine, Vec2};
-use vello::peniko::{Blob, Brush, Color, Font};
+use tracing::{info_span, instrument};
 use winit::dpi::PhysicalSize;
 
 use crate::draw::DrawState;
-use crate::draw_text::{SceneExt, TextStyle};
+use crate::draw_text::SceneExt;
 use crate::layout::LayoutState;
+use crate::LayoutContext;
 use crate::user_event::EventLoopUserEvent;
 use crate::window::NativeWorldExt;
-use crate::LayoutContext;
 
 pub struct XyRunningApp {
    pub root_entity: Entity,
@@ -22,7 +21,6 @@ pub struct XyRunningApp {
 }
 impl XyRunningApp {
    pub fn new(mut world: World, root_entity: Entity) -> Self {
-
       Self {
          root_entity,
          draw_state: DrawState {
@@ -67,6 +65,8 @@ impl XyRunningApp {
          })
       });
    }
+
+   #[instrument(name = "redraw",skip(self))]
    pub fn redraw_requested(&mut self) {
       let root_entity = self.root_entity;
       // let Some(children) = self
@@ -77,44 +77,30 @@ impl XyRunningApp {
       //    return;
       // };
       self.world.window_scope(|world, xy_window| {
+         // xy_window.window.request_redraw();
          world.window_surface_renderer_scope(|world, surface_renderer| {
             let physical_size = xy_window.window.inner_size();
-
-            let layout_context = LayoutContext::new(
-               1.0,
-               glam::Vec2 {
-                  x: physical_size.width as _,
-                  y: physical_size.height as _,
-               },
-            );
-            self.layout_state.handle(world, root_entity, layout_context);
+            info_span!("compute_layout").in_scope(|| {
+               let layout_context = LayoutContext::new(
+                  1.0,
+                  glam::Vec2 {
+                     x: physical_size.width as _,
+                     y: physical_size.height as _,
+                  },
+               );
+               self.layout_state.handle(world, root_entity, layout_context);
+            });
 
             world.window_scene_scope(|world, window_scene| {
-               self.draw_state.draw_scene(world, &mut window_scene.scene);
+               info_span!("draw_scene").in_scope(|| {
+                  self.draw_state.draw_scene(world, &mut window_scene.scene);
+               });
+               info_span!("render_scene").in_scope(|| {
+                  surface_renderer.render_scene(&mut xy_window.surface, &window_scene.scene, None);
+               });
 
-               // window_scene.scene.draw_text(
-               //    "Hello",
-               //    &TextStyle {
-               //       font_size: 24.,
-               //       brush: Brush::Solid(Color::WHITE),
-               //       font: Some(self.font.clone()),
-               //       ..Default::default()
-               //    },
-               //    Affine::translate(Vec2::new(30., 320.)),
-               // );
-               // window_scene.scene.draw_text(
-               //    "AbcdEFGLK MKLDSFJ YCY",
-               //    &TextStyle {
-               //       font_size: 24.,
-               //       brush: Brush::Solid(Color::RED),
-               //       font: Some(self.font.clone()),
-               //       ..Default::default()
-               //    },
-               //    Affine::translate(Vec2::new(30., 350.)),
-               // );
-               surface_renderer.render_scene(&mut xy_window.surface, &window_scene.scene, None);
                window_scene.scene.reset();
-            })
+            });
          })
       });
    }

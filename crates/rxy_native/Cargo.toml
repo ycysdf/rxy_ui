@@ -15,6 +15,7 @@ glam = { workspace = true }
 bevy_reflect = { path = "../../../bevy/crates/bevy_reflect", optional = true, default-features = false, features = ["glam"] }
 bevy_ecs = { path = "../../../bevy/crates/bevy_ecs", default-features = false }
 bevy_hierarchy = { path = "../../../bevy/crates/bevy_hierarchy", default-features = false }
+rxy_bevy_ecs = { path = "../rxy_bevy_ecs" }
 
 mint = "0.5"
 smallvec.workspace = true

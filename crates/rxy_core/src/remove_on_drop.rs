@@ -29,7 +29,7 @@ where
    where
       K: ViewKey<R>,
    {
-      let deferred_world = self.deferred_world_scoped();
+      let deferred_world = self.world_scoped();
       ViewRemoveOnDrop(SyncCell::new(OnDrop::new(Box::new(move || {
          deferred_world.scoped(|world| view_key.remove(world))
       }))))

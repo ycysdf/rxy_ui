@@ -75,7 +75,7 @@ fn future_view_rebuild<R, T>(
    let Some(state_node_id) = key.state_node_id() else {
       return;
    };
-   let world_scoped = ctx.world.deferred_world_scoped();
+   let world_scoped = ctx.world.world_scoped();
 
    let task = R::spawn_task(async move {
       let view = future.await;
@@ -131,7 +131,7 @@ where
    T::Output: ViewMember<R> + MaybeSend + 'static,
 {
    drop(ctx.take_indexed_view_member_state::<TaskState<R>>());
-   let world_scoped = ctx.world.deferred_world_scoped();
+   let world_scoped = ctx.world.world_scoped();
 
    let node_id = ctx.node_id.clone();
    let task = R::spawn_task(async move {

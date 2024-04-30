@@ -40,7 +40,7 @@ fn stream_vm_rebuild<R, S, VM>(
    }
    let index = ctx.index;
    let node_id = ctx.node_id.clone();
-   let world_scoped = ctx.world.deferred_world_scoped();
+   let world_scoped = ctx.world.world_scoped();
 
    ctx.set_indexed_view_member_state(TaskState::<R>::new(R::spawn_task(async move {
       let mut stream = pin!(stream);
@@ -74,7 +74,7 @@ where
       return key;
    };
 
-   let world_scoped = ctx.world.deferred_world_scoped();
+   let world_scoped = ctx.world.world_scoped();
 
    let task = R::spawn_task({
       let state_node_id = state_node_id.clone();

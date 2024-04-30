@@ -7,7 +7,7 @@ use bevy_reflect::prelude::*;
 use rxy_core::{ElementType, ElementTypeUnTyped, RendererNodeId, RendererWorld};
 
 use crate::{ImageBundle, NativeRenderer};
-use crate::node_tree::NodeTreeWorldExt;
+use crate::world_ext::BevyWorldExt;
 
 #[derive(Default, Debug, Clone, Copy)]
 #[cfg_attr(feature = "reflect", derive(Reflect), reflect(Default))]

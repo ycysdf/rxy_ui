@@ -9,7 +9,7 @@ use crate::{
    RendererNodeId, RendererWorld, SoloView, View, ViewCtx, ViewKey, ViewMember, ViewMemberCtx,
    ViewMemberIndex,
 };
-
+use alloc::boxed::Box;
 #[derive(Clone)]
 pub struct ElementTypeTypeInfo<R>
 where

@@ -11,7 +11,7 @@ use rxy_core::{ElementAttrType, ElementType, ElementTypeUnTyped, RendererNodeId,
 use crate::{Text, TextBundle};
 use crate::draw_text::TextStyle;
 use crate::renderer::NativeRenderer;
-use crate::renderer::node_tree::NodeTreeWorldExt;
+use crate::world_ext::BevyWorldExt;
 
 
 const ROBOTO_FONT: &[u8] =
@@ -141,7 +141,6 @@ pub mod element_span_attrs {
       ) {
          if let Some(mut text) = world.get_mut::<Text>(node_id) {
             text.text = value.into();
-            print!("text.text {:?}",text.text);
          }
       }
    }

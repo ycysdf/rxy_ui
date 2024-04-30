@@ -26,29 +26,41 @@ use crate::{
 };
 
 impl NodeTree<BevyRenderer> for World {
-   fn scoped_type_state<S: Send + Sync + Clone + 'static, U>(
-      &self,
-      type_id: TypeId,
-      f: impl FnOnce(Option<&S>) -> U,
-   ) -> U {
-      f(self
-         .resource::<AppTypeRegistry>()
-         .read()
-         .get_type_data::<S>(type_id))
+   type NodeTreeScoped = BevyDeferredWorldScoped;
+
+   fn recycle_node<K: ViewKey<BevyRenderer>>(&mut self, key: &K) {
+      let Some(first_node) = key.first_node_id(self) else {
+         return;
+      };
+      let parent = self.get_parent(&first_node).unwrap();
+      let placeholder = self
+         .spawn((
+            NodeBundle {
+               visibility: Visibility::Hidden,
+               ..NodeBundle::default()
+            },
+            Name::new("[Recycle Node Placeholder]"),
+         ))
+         .id();
+
+      self.insert_before(Some(&parent), Some(&first_node), &[placeholder]);
+      self.init_resource::<RecycleNodeContainer>();
+      let recycle_node_container = self.resource::<RecycleNodeContainer>().0;
+      self.set_node_state(&first_node, RecycledNode { placeholder });
+      key.set_visibility(self, true);
+      key.insert_before(self, Some(&recycle_node_container), None);
    }
 
-   fn prepare_set_attr_and_get_is_init(
-      &mut self,
-      node_id: &RendererNodeId<BevyRenderer>,
-      attr_index: AttrIndex,
-   ) -> bool {
-      let mut entity_mut = self.entity_mut(*node_id);
-      let mut extra_data = entity_mut.get_mut::<ElementEntityExtraData>().unwrap();
-      let is_init = extra_data.is_init_attr(attr_index);
-      if !is_init {
-         extra_data.init_attr(attr_index, true);
-      }
-      is_init
+   fn cancel_recycle_node<K: ViewKey<BevyRenderer>>(&mut self, key: &K) {
+      let Some(first_node) = key.first_node_id(self) else {
+         return;
+      };
+      let placeholder = self
+         .take_node_state::<RecycledNode>(&first_node)
+         .unwrap()
+         .placeholder;
+      key.insert_before(self, None, Some(&placeholder));
+      key.set_visibility(self, false);
    }
 
    fn set_attr<A: ElementAttrType<BevyRenderer>>(
@@ -82,7 +94,7 @@ impl NodeTree<BevyRenderer> for World {
          .set_attr(A::INDEX, false);
    }
 
-   fn deferred_world_scoped(&self) -> impl DeferredNodeTreeScoped<BevyRenderer> {
+   fn world_scoped(&self) -> Self::NodeTreeScoped {
       BevyDeferredWorldScoped {
          cmd_sender: self.resource::<CmdSender>().clone(),
       }
@@ -122,6 +134,17 @@ impl NodeTree<BevyRenderer> for World {
       self.entity_mut(*node_id).insert(RendererState(state));
    }
 
+   fn scoped_type_state<S: Send + Sync + Clone + 'static, U>(
+      &self,
+      type_id: TypeId,
+      f: impl FnOnce(Option<&S>) -> U,
+   ) -> U {
+      f(self
+         .resource::<AppTypeRegistry>()
+         .read()
+         .get_type_data::<S>(type_id))
+   }
+
    fn exist_node_id(&mut self, node_id: &RendererNodeId<BevyRenderer>) -> bool {
       self.entities().contains(*node_id)
    }
@@ -156,21 +179,6 @@ impl NodeTree<BevyRenderer> for World {
          entity_mut.set_parent(*parent);
       }
       entity_mut.id()
-   }
-
-   fn ensure_spawn(&mut self, reserve_node_id: RendererNodeId<BevyRenderer>) {
-      self
-         .get_or_spawn(reserve_node_id)
-         .unwrap()
-         .insert(Name::new("[TEMP DATA]"));
-   }
-
-   fn spawn_empty_node(
-      &mut self,
-      parent: Option<&RendererNodeId<BevyRenderer>>,
-      reserve_node_id: Option<RendererNodeId<BevyRenderer>>,
-   ) -> RendererNodeId<BevyRenderer> {
-      self.get_or_spawn_empty(parent, reserve_node_id).id()
    }
 
    fn spawn_data_node(&mut self) -> RendererNodeId<BevyRenderer> {
@@ -264,39 +272,18 @@ impl NodeTree<BevyRenderer> for World {
          .is_some_and(|n| *n == Visibility::Hidden)
    }
 
-   fn recycle_node<K: ViewKey<BevyRenderer>>(&mut self, key: &K) {
-      let Some(first_node) = key.first_node_id(self) else {
-         return;
-      };
-      let parent = self.get_parent(&first_node).unwrap();
-      let placeholder = self
-         .spawn((
-            NodeBundle {
-               visibility: Visibility::Hidden,
-               ..NodeBundle::default()
-            },
-            Name::new("[Recycle Node Placeholder]"),
-         ))
-         .id();
-
-      self.insert_before(Some(&parent), Some(&first_node), &[placeholder]);
-      self.init_resource::<RecycleNodeContainer>();
-      let recycle_node_container = self.resource::<RecycleNodeContainer>().0;
-      self.set_node_state(&first_node, RecycledNode { placeholder });
-      key.set_visibility(self, true);
-      key.insert_before(self, Some(&recycle_node_container), None);
-   }
-
-   fn cancel_recycle_node<K: ViewKey<BevyRenderer>>(&mut self, key: &K) {
-      let Some(first_node) = key.first_node_id(self) else {
-         return;
-      };
-      let placeholder = self
-         .take_node_state::<RecycledNode>(&first_node)
-         .unwrap()
-         .placeholder;
-      key.insert_before(self, None, Some(&placeholder));
-      key.set_visibility(self, false);
+   fn prepare_set_attr_and_get_is_init(
+      &mut self,
+      node_id: &RendererNodeId<BevyRenderer>,
+      attr_index: AttrIndex,
+   ) -> bool {
+      let mut entity_mut = self.entity_mut(*node_id);
+      let mut extra_data = entity_mut.get_mut::<ElementEntityExtraData>().unwrap();
+      let is_init = extra_data.is_init_attr(attr_index);
+      if !is_init {
+         extra_data.init_attr(attr_index, true);
+      }
+      is_init
    }
 }
 

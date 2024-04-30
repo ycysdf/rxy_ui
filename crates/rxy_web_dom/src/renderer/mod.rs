@@ -263,7 +263,7 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
       }
    }
 
-   fn deferred_world_scoped(&self) -> impl DeferredNodeTreeScoped<WebRenderer> {
+   fn world_scoped(&self) -> impl DeferredNodeTreeScoped<WebRenderer> {
       WebDomScoped
    }
 
@@ -344,21 +344,6 @@ impl NodeTree<WebRenderer> for WebDomNodeStates {
 
    fn ensure_spawn(&mut self, reserve_node_id: RendererNodeId<WebRenderer>) {
       self.ensure_spawn_data_id(&reserve_node_id)
-   }
-
-   fn spawn_empty_node(
-      &mut self,
-      parent: Option<&RendererNodeId<WebRenderer>>,
-      reserve_node_id: Option<RendererNodeId<WebRenderer>>,
-   ) -> RendererNodeId<WebRenderer> {
-      self.spawn_placeholder("empty", parent, reserve_node_id)
-   }
-
-   fn spawn_data_node(&mut self) -> RendererNodeId<WebRenderer> {
-      let node = self.spawn_placeholder("data", None, None);
-      let id = self.states.insert(NodeStates::new());
-      node.set_state_id(id);
-      node
    }
 
    fn get_parent(

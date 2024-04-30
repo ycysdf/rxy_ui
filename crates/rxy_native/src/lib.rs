@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+#![allow(unused_variables)]
 pub use renderer::*;
 use rxy_core::{Element, ElementAttr, ElementViewChildren};
 

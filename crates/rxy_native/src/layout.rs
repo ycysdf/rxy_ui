@@ -119,7 +119,7 @@ impl LayoutState {
                glam::Vec2::ZERO,
                glam::Vec2::ZERO,
            );
-          layout_tree.print_tree(root_entity);
+          // layout_tree.print_tree(root_entity);
 
            #[inline]
            /// Round `value` to the nearest whole integer, with ties (values with a fractional part equal to 0.5) rounded towards positive infinity.

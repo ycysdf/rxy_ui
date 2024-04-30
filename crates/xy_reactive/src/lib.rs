@@ -1,3 +1,6 @@
+// TODO:
+#![allow(warnings)]
+
 mod arena;
 // pub mod async_signal;
 // pub mod context;

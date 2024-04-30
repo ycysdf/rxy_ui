@@ -33,12 +33,15 @@ impl Name {
       Self(name.into())
    }
 }
+/*
 
 #[derive(Component, Clone)]
 #[cfg_attr(feature = "reflect", derive(Reflect))]
 pub struct RendererState<T: Send + Sync + 'static>(pub T);
 
 impl NodeTree<NativeRenderer> for World {
+   type NodeTreeScoped = UserEventSender;
+
    fn recycle_node<K: ViewKey<NativeRenderer>>(&mut self, key: &K) {
       todo!()
    }
@@ -67,7 +70,7 @@ impl NodeTree<NativeRenderer> for World {
          return;
       };
    }
-   fn deferred_world_scoped(&self) -> impl DeferredNodeTreeScoped<NativeRenderer> {
+   fn world_scoped(&self) -> Self::NodeTreeScoped {
       self.non_send_resource::<UserEventSender>().clone()
    }
 
@@ -157,21 +160,6 @@ impl NodeTree<NativeRenderer> for World {
          entity_mut.set_parent(*parent);
       }
       entity_mut.id()
-   }
-
-   fn ensure_spawn(&mut self, reserve_node_id: RendererNodeId<NativeRenderer>) {
-      self
-         .get_or_spawn(reserve_node_id)
-         .unwrap()
-         .insert(Name::new("[TEMP DATA]"));
-   }
-
-   fn spawn_empty_node(
-      &mut self,
-      parent: Option<&RendererNodeId<NativeRenderer>>,
-      reserve_node_id: Option<RendererNodeId<NativeRenderer>>,
-   ) -> RendererNodeId<NativeRenderer> {
-      self.get_or_spawn_empty(parent, reserve_node_id).id()
    }
 
    fn spawn_data_node(&mut self) -> RendererNodeId<NativeRenderer> {
@@ -298,3 +286,4 @@ impl NodeTreeWorldExt for World {
       entity_world_mut
    }
 }
+*/

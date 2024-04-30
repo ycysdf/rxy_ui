@@ -1,4 +1,7 @@
 use rxy_ui::prelude::*;
+use std::str::FromStr;
+use tracing_subscriber::fmt::format::FmtSpan;
+use tracing_subscriber::EnvFilter;
 
 fn test_view() -> impl IntoView<NativeRenderer> {
    let signal = use_rw_signal(1);
@@ -49,9 +52,57 @@ fn test_view() -> impl IntoView<NativeRenderer> {
 
 #[tokio::main]
 async fn main() {
-   tracing_subscriber::fmt().init();
+   tracing_subscriber::fmt()
+      .pretty()
+      .with_env_filter(EnvFilter::from_str("info").unwrap())
+      .with_line_number(true)
+      .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
+      .with_target(true)
+      .with_thread_ids(true)
+      .init();
    let mut app = XyApp::default();
-   app.add_view(test_view());
+   app.add_view((
+      test_view(),
+      test_view(),
+      test_view(),
+      test_view(),
+      test_view(),
+      (
+         test_view(),
+         test_view(),
+         test_view(),
+         test_view(),
+         (
+            test_view(),
+            test_view(),
+            test_view(),
+            test_view(),
+            test_view(),
+            (
+               test_view(),
+               test_view(),
+               test_view(),
+               test_view(),
+               test_view(),
+               (
+                  test_view(),
+                  test_view(),
+                  test_view(),
+                  test_view(),
+                  test_view(),
+                  (
+                     test_view(),
+                     test_view(),
+                     test_view(),
+                     test_view(),
+                     test_view(),
+                  ),
+               ),
+            ),
+         ),
+         test_view(),
+      ),
+   ));
    tokio::task::block_in_place(|| {
       app.run();
    });

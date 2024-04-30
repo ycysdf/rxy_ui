@@ -1,7 +1,10 @@
 #![allow(clippy::type_complexity)]
-#![cfg_attr(not(feature = "std"), no_std)]
-extern crate alloc;
+#![no_std]
 
+#[cfg(feature = "std")]
+extern crate std;
+
+extern crate alloc;
 // pub use clone_to::*;
 pub use count_macro;
 pub use paste::paste;

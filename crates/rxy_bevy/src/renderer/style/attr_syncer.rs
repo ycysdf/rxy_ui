@@ -5,7 +5,7 @@ use rxy_core::style::{NodeInterStyleItemId, NodeStyleAttrInfo, NodeStyleItemId};
 
 use crate::attrs::get_attr_by_index;
 
-use super::{Result, StateOwner};
+use super::{Result, StyleStateOwner};
 
 pub trait EntityAttrSyncer {
    fn sync_attr_value_to_element(self, entity_world_mut: &mut EntityWorldMut) -> Result;

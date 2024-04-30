@@ -79,7 +79,7 @@ where
 {
    let state_node_id = ctx.state_node_id.clone();
    let prop_type_id = ctx.prop_type_id;
-   let world_scoped = ctx.world.deferred_world_scoped();
+   let world_scoped = ctx.world.world_scoped();
    let effect = create_effect(move |_| {
       let value = signal.get();
       let state_node_id = state_node_id.clone();
