@@ -91,9 +91,9 @@ fn counter_by_signal() -> impl IntoView<BevyRenderer> {
             div()
                 .children("Increment")
                 .style((
-                    x().px(16).py(8).bg_color(Color::DARK_GRAY),
-                    x_hover().bg_color(Color::GRAY),
-                    x_active().outline_color(Color::BLUE).outline_width(2),
+                    x().px(16).py(8).bg_color(palettes::GRAY_600),
+                    x_hover().bg_color(palettes::GRAY_500),
+                    x_active().outline_color(palettes::BLUE).outline_width(2),
                 ))
                 .on_pointer_click(move || count.update(|signal| *signal += 1)),
         )),
@@ -121,8 +121,8 @@ pub fn schema_checkbox(
             x().center()
                 .size(size)
                 .border(1)
-                .border_color(Color::DARK_GRAY),
-            x_hover().bg_color(Color::DARK_GRAY),
+                .border_color(palettes::GRAY_600),
+            x_hover().bg_color(palettes::GRAY_600),
         )
     });
     div()
@@ -160,7 +160,7 @@ use checkbox::*;
 use select::*;
 use slider::*;
 
-pub const COLOR_PRIMARY: Color = Color::BLUE;
+pub const COLOR_PRIMARY: Color = palettes::BLUE;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, States)]
 enum GameState {
@@ -233,8 +233,8 @@ fn schema_main_menu() -> impl IntoView<BevyRenderer> {
                 .py(8)
                 .flex()
                 .center()
-                .bg_color(Color::DARK_GRAY),
-            x_hover().bg_color(Color::GRAY),
+                .bg_color(palettes::GRAY_600),
+            x_hover().bg_color(palettes::GRAY_500),
             x_active().bg_color(COLOR_PRIMARY),
             FocusStyle,
         )),
@@ -304,10 +304,10 @@ fn schema_setting() -> impl IntoView<BevyRenderer> {
                                 button()
                                     .style((
                                         x().flex().py(6).center(),
-                                        x_hover().bg_color(Color::DARK_GRAY),
+                                        x_hover().bg_color(palettes::GRAY_600),
                                         FocusStyle,
                                     ))
-                                    .bg_color(item.is_selected.then_some(Color::BLUE))
+                                    .bg_color(item.is_selected.then_some(palettes::BLUE))
                                     .children((item.value,))
                             })
                         }))
@@ -325,10 +325,10 @@ fn schema_setting() -> impl IntoView<BevyRenderer> {
                     button()
                         .style((
                             x().flex().py(8).px(16).center(),
-                            x_hover().bg_color(Color::DARK_GRAY),
+                            x_hover().bg_color(palettes::GRAY_600),
                             FocusStyle,
                         ))
-                        .bg_color(item.is_selected.then_some(Color::BLUE))
+                        .bg_color(item.is_selected.then_some(palettes::BLUE))
                         .children((item.value,))
                 };
                 selection_list::<&'static str>()
@@ -446,9 +446,9 @@ fn signal_example() -> impl IntoView<BevyRenderer> {
     div()
         .children(rx(move || count.get().to_string())) // `Reactive` 作为 `View`
         .padding(20)
-        .bg_color(Color::BLUE)
+        .bg_color(palettes::BLUE)
         .border_y(count) // 直接将 `RwSignal` 信号 作为 `ViewMember`
-        .border_color(Color::RED)
+        .border_color(palettes::RED)
         .width(100)
         .height(rx(move || count.get() * 4 + 100)) // `Reactive` 作为 `ViewMember`
         .on_pointer_click(move || {
@@ -480,7 +480,7 @@ fn btn(is_show: RwSignal<bool>) -> impl IntoView<BevyRenderer> {
     div()
         .children("Btn")
         .padding(20)
-        .bg_color(Color::GRAY)
+        .bg_color(palettes::GRAY_500)
         .on_pointer_click(move || {
             is_show.update(|x| *x = !*x);
         })
@@ -493,7 +493,7 @@ fn sample_option_view() -> impl IntoView<BevyRenderer> {
         rx(move || {
             let view = div()
                 .padding(10)
-                .bg_color(Color::BLUE)
+                .bg_color(palettes::BLUE)
                 .flex()
                 .center()
                 .children("Show");
@@ -519,16 +519,16 @@ fn sample_option_view_member() -> impl IntoView<BevyRenderer> {
             .children("Show")
             .member(rx(move || {
                 is_show.get().then_some(
-                    ().bg_color(Color::BLUE)
-                        .outline_color(Color::RED)
+                    ().bg_color(palettes::BLUE)
+                        .outline_color(palettes::RED)
                         .outline_width(2),
                 )
             }))
             // 下面写法与上面写法是等价的
             // .rx_member(move || {
             //     is_show.get().then_some(
-            //         ().bg_color(Color::BLUE)
-            //             .outline_color(Color::RED)
+            //         ().bg_color(palettes::BLUE)
+            //             .outline_color(palettes::RED)
             //             .outline_width(2),
             //     )
             // }),
@@ -567,8 +567,8 @@ fn sample_either_view_member() -> impl IntoView<BevyRenderer> {
             .center()
             .children("Show")
             .member(rx(move || {
-                let left_vm = ().bg_color(Color::BLUE);
-                let right_vm = ().outline_color(Color::RED).outline_width(2);
+                let left_vm = ().bg_color(palettes::BLUE);
+                let right_vm = ().outline_color(palettes::RED).outline_width(2);
                 if is_show.get() {
                     left_vm.either_left() // 这等同于 Either::Left(left_vm)
                 } else {
@@ -597,7 +597,7 @@ fn sample_future() -> impl IntoView<BevyRenderer> {
             })
             .children("Ok")
             .on_pointer_click(move || {
-                let _ = sender2.try_send(Color::RED);
+                let _ = sender2.try_send(palettes::RED);
                 if let Some(sender) = sender.get().take() {
                     sender.send("Ok").unwrap();
                 }
@@ -632,11 +632,11 @@ fn sample_x_if() -> impl IntoView<BevyRenderer> {
         div()
             .children("Btn")
             .padding(20)
-            .bg_color(Color::GRAY)
+            .bg_color(palettes::GRAY_500)
             .on_pointer_click(move || {
                 is_show.update(|x| *x = !*x);
             }),
-        x_if(is_show, span("Show1").padding(10).text_color(Color::RED)),
+        x_if(is_show, span("Show1").padding(10).text_color(palettes::RED)),
         x_if(
             is_show,
             div().padding(10).flex().center().children("Show2"),
@@ -680,7 +680,7 @@ fn sample_x_iter_keyed_rx() -> impl IntoView<BevyRenderer> {
     (
         div()
             .padding(10)
-            .bg_color(Color::BLUE)
+            .bg_color(palettes::BLUE)
             .children("Add")
             .on_pointer_click(move || {
                 signal.update(|x| *x += 1);
@@ -721,8 +721,8 @@ fn ui() -> impl IntoView<BevyRenderer> {
 
     (
         BtnStyle::def((
-            x().py(8).px(16).center().bg_color(Color::DARK_GRAY),
-            x_hover().bg_color(Color::GRAY),
+            x().py(8).px(16).center().bg_color(palettes::GRAY_600),
+            x_hover().bg_color(palettes::GRAY_500),
         )),
         div().style(container_style).children((
             div().flex_col().gap(8).children((
@@ -804,9 +804,9 @@ fn sample_style_sheet() -> impl IntoView<BevyRenderer> {
     div()
         .margin(50)
         .style((
-            x().py(8 * 2).px(16 * 2).center().bg_color(Color::DARK_GRAY),
-            x_hover().bg_color(Color::GRAY),
-            x_active().outline_color(Color::GREEN).outline_width(2),
+            x().py(8 * 2).px(16 * 2).center().bg_color(palettes::GRAY_600),
+            x_hover().bg_color(palettes::GRAY_500),
+            x_active().outline_color(palettes::GREEN).outline_width(2),
         ))
         .children("Button")
 }
@@ -823,11 +823,11 @@ fn sample_dynamic_style_sheet() -> impl IntoView<BevyRenderer> {
         .on_pointer_click(move || {
             signal.update(|n| *n = !*n);
         })
-        .style(Some((x().bg_color(Color::GRAY).height(100.).width(100.),)))
+        .style(Some((x().bg_color(palettes::GRAY_500).height(100.).width(100.),)))
         .rx_style(move || {
             signal
                 .get()
-                .then_some((x().bg_color(Color::RED), x_hover().bg_color(Color::WHITE)))
+                .then_some((x().bg_color(palettes::RED), x_hover().bg_color(palettes::WHITE)))
         })
 }
 ```
@@ -848,14 +848,14 @@ fn sample_shared_typed_style_sheet() -> impl IntoView<BevyRenderer> {
                 .py(8)
                 .flex()
                 .center()
-                .bg_color(Color::DARK_GRAY),
-            x_hover().bg_color(Color::GRAY),
-            x_active().outline_color(Color::GREEN).outline_width(2),
+                .bg_color(palettes::GRAY_600),
+            x_hover().bg_color(palettes::GRAY_500),
+            x_active().outline_color(palettes::GREEN).outline_width(2),
         )),
         div().padding(50).gap(10).flex_col().children((
             div().style(MenuBtnStyle).children("Button 1"),
             div()
-                .style((MenuBtnStyle, x().bg_color(Color::RED)))
+                .style((MenuBtnStyle, x().bg_color(palettes::RED)))
                 .children("Button 2"),
             div().style(MenuBtnStyle).children("Button 3"),
         )),
@@ -932,14 +932,14 @@ pub fn schema_checkbox(
             x().center()
                 .size(size)
                 .border(1)
-                .border_color(Color::DARK_GRAY),
-            x_hover().bg_color(Color::DARK_GRAY),
+                .border_color(palettes::GRAY_600),
+            x_hover().bg_color(palettes::GRAY_600),
         )
     });
     div()
         .name("checkbox")
         .style(CheckboxStyle)
-        .bg_color(rx(move || is_checked.get().then_some(Color::BLUE)))
+        .bg_color(rx(move || is_checked.get().then_some(palettes::BLUE)))
         .rx_member(move || {
             (!readonly.get()).then_some(().on_pointer_click(move || {
                 is_checked.update(|is_checked| *is_checked = !*is_checked);
@@ -964,7 +964,7 @@ pub fn schema_checkbox(
 fn sample_checkbox() -> impl IntoView<BevyRenderer> {
     checkbox()
         .padding(50)
-        .style(x().border_color(Color::RED).border(2))
+        .style(x().border_color(palettes::RED).border(2))
         .on_pointer_up(|| {
             println!("checkbox pointer up");
         })
@@ -1006,7 +1006,7 @@ fn schema_sample(head: Slot, foot: Slot) -> impl IntoView<BevyRenderer> {
     div()
         .children((
             head,
-            div().bg_color(Color::GRAY).p(20).children("Body"),
+            div().bg_color(palettes::GRAY_500).p(20).children("Body"),
             foot,
         ))
         .p(20)
@@ -1074,9 +1074,9 @@ fn sample_dynamic() -> impl IntoView<BevyRenderer> {
         div()
             .children("Change State")
             .style((
-                x().padding(20).flex().center().bg_color(Color::DARK_GRAY),
-                x_hover().bg_color(Color::GRAY),
-                x_active().outline_color(Color::GREEN).outline_width(2),
+                x().padding(20).flex().center().bg_color(palettes::GRAY_600),
+                x_hover().bg_color(palettes::GRAY_500),
+                x_active().outline_color(palettes::GREEN).outline_width(2),
             ))
             .on_pointer_click(move || {
                 signal.update(|state| match state {
@@ -1089,12 +1089,12 @@ fn sample_dynamic() -> impl IntoView<BevyRenderer> {
             SampleState::Init => span("Init").margin(30).into_dynamic(),
             SampleState::Loading => div()
                 .padding(30)
-                .bg_color(Color::RED)
+                .bg_color(palettes::RED)
                 .children("Loading")
                 .into_dynamic(),
             SampleState::Loaded => span("Loaded")
                 .margin(30)
-                .text_color(Color::BLUE)
+                .text_color(palettes::BLUE)
                 .into_dynamic(),
         }),
     )
@@ -1116,9 +1116,9 @@ fn sample_system_once() -> impl IntoView<BevyRenderer> {
             div()
                 .children("Spawn 2d Material")
                 .style((
-                    x().padding(20).flex().center().bg_color(Color::DARK_GRAY),
-                    x_hover().bg_color(Color::GRAY),
-                    x_active().outline_color(Color::GREEN).outline_width(2),
+                    x().padding(20).flex().center().bg_color(palettes::GRAY_600),
+                    x_hover().bg_color(palettes::GRAY_500),
+                    x_active().outline_color(palettes::GREEN).outline_width(2),
                 ))
                 .on_pointer_click(move || {
                     cmd_sender.add(|world: &mut World| {
@@ -1126,7 +1126,7 @@ fn sample_system_once() -> impl IntoView<BevyRenderer> {
                         let mesh = meshes.add(shape::Quad::default().into()).into();
 
                         let mut materials = world.resource_mut::<Assets<ColorMaterial>>();
-                        let material = materials.add(Color::PURPLE.into());
+                        let material = materials.add(palettes::PURPLE.into());
 
                         world.spawn(MaterialMesh2dBundle {
                             mesh,
@@ -1262,9 +1262,9 @@ fn sample_context() -> impl IntoView<BevyRenderer> {
                 .py(8)
                 .flex()
                 .center()
-                .bg_color(Color::DARK_GRAY),
-            x_hover().bg_color(Color::GRAY),
-            x_active().outline_color(Color::GREEN).outline_width(2),
+                .bg_color(palettes::GRAY_600),
+            x_hover().bg_color(palettes::GRAY_500),
+            x_active().outline_color(palettes::GREEN).outline_width(2),
         )),
         provide_context(
             MyContext { signal },
