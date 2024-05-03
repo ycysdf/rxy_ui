@@ -647,7 +647,7 @@ fn sample_system() -> impl IntoView<BevyRenderer> {
                   entity,
                   span(format!("Style Entity: {:?}", entity)).margin(10),
                )
-            }))
+            }).collect::<Vec<_>>())
          },
       )
    })
