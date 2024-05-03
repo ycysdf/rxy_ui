@@ -37,15 +37,30 @@ pub struct XValueWrapper<T>(pub T);
 
 #[macro_export]
 macro_rules! impl_x_value_wrappers {
-    ($($ty:ty),*) => {
+    ($($ty:ty $(=>$ty2:ty)?)*) => {
         $(
-            impl Into<XValueWrapper<Self>> for $ty
-            {
-                fn into(self) -> XValueWrapper<Self> {
-                    XValueWrapper(self)
-                }
-            }
+        $crate::impl_x_value_wrapper!($ty $(=>$ty2)?);
         )*
+    };
+}
+
+#[macro_export]
+macro_rules! impl_x_value_wrapper {
+    ($ty:ty) => {
+         impl Into<XValueWrapper<Self>> for $ty
+         {
+             fn into(self) -> XValueWrapper<Self> {
+                 XValueWrapper(self)
+             }
+         }
+    };
+    ($ty:ty=>$ty2:ty) => {
+         impl Into<XValueWrapper<$ty2>> for $ty
+         {
+             fn into(self) -> XValueWrapper<$ty2> {
+                 XValueWrapper(self.into())
+             }
+         }
     };
 }
 
