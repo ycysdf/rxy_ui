@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use rxy_ui::prelude::*;
+use bevy::color::palettes::{tailwind,basic};
 
 use core::sync::atomic::{AtomicUsize, Ordering};
 use futures_lite::StreamExt;
@@ -41,9 +42,9 @@ fn counter() -> impl IntoView<BevyRenderer> {
          div()
             .children("Increment")
             .style((
-               x().px(16).py(8).bg_color(Color::DARK_GRAY),
-               x_hover().bg_color(Color::GRAY),
-               x_active().outline_color(Color::BLUE).outline_width(2),
+               x().px(16).py(8).bg_color(tailwind::GRAY_600),
+               x_hover().bg_color(tailwind::GRAY_500),
+               x_active().outline_color(basic::BLUE).outline_width(2),
             ))
             .on_pointer_click(move || {
                count.fetch_add(1, Ordering::Relaxed);

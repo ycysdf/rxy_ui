@@ -6,6 +6,7 @@ use bevy::{
    prelude::{Color, Res},
 };
 use bevy_mod_picking::prelude::On;
+use bevy::color::palettes::tailwind;
 use std::fmt::Debug;
 
 use super::{FocusStyle, XConfirm, COLOR_PRIMARY};
@@ -67,13 +68,13 @@ pub fn schema_slider(
       });
       ctx.default_typed_style(SliderThumbStyle, || {
          (
-            x().bg_color(Color::DARK_GRAY)
+            x().bg_color(tailwind::GRAY_600)
                .h(thumb_height)
                .w(thumb_width)
                .top(-8)
                .ml(-thumb_width / 2.0)
                .absolute(),
-            x_hover().bg_color(Color::GRAY),
+            x_hover().bg_color(tailwind::GRAY_500),
             FocusStyle,
          )
       });

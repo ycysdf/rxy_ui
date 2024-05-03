@@ -12,6 +12,7 @@ use bevy_mod_picking::prelude::Pickable;
 use rxy_ui::remove_on_drop::RemoveOnDropWorldExt;
 use std::fmt::Debug;
 use std::ops::Deref;
+use bevy::color::palettes::tailwind;
 
 mod components;
 
@@ -142,7 +143,7 @@ fn game_ui() -> impl IntoView<BevyRenderer> {
             .unwrap();
          let source = use_hooked_vec_resource_source::<InventoryItems>(receiver.0);
          div()
-            .bg_color(Color::GRAY)
+            .bg_color(tailwind::GRAY_500)
             .grid()
             .gap(10)
             .padding(10)
@@ -176,8 +177,8 @@ fn hover_inventory_item_ui(item: InventoryItem) -> impl IntoView<BevyRenderer> {
    div()
       .p(10)
       .border(1)
-      .border_color(Color::DARK_GRAY)
-      .bg_color(Color::GRAY)
+      .border_color(tailwind::GRAY_600)
+      .bg_color(tailwind::GRAY_500)
       .absolute()
       .z(2)
       .member(x_res(|cursor_position: &InventoryCursorPosition| {
@@ -259,7 +260,7 @@ impl SchemaElementView<BevyRenderer> for InventoryItemView {
                     .bg_color(Color::WHITE)
                     .border(1)
                     .border_color(Color::BLACK),
-                x_hover().bg_color(Color::GRAY),
+                x_hover().bg_color(tailwind::GRAY_500),
             ))
             .on_pointer_drop(
                 move |e: Res<ListenerInputPointerDrop>,
@@ -296,7 +297,7 @@ impl SchemaElementView<BevyRenderer> for InventoryItemView {
                   .children((
                      img().m(8).src(item.icon).bundle(pickable.clone()),
                      span(count.to_string())
-                        .text_color(Color::BLUE)
+                        .text_color(COLOR_PRIMARY)
                         .font_size(18)
                         .absolute()
                         .top(1)

@@ -22,8 +22,8 @@ pub fn schema_checkbox(
          x().center()
             .size(size)
             .border(1)
-            .border_color(Color::DARK_GRAY),
-         x_hover().bg_color(Color::DARK_GRAY),
+            .border_color(tailwind::GRAY_600),
+         x_hover().bg_color(tailwind::GRAY_600),
          // FocusStyle,
       )
    });

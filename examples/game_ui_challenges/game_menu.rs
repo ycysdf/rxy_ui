@@ -8,6 +8,7 @@ use rxy_bevy::navigation::RxyKeyboardNavigationPlugin;
 use rxy_ui::prelude::*;
 
 use std::fmt::Debug;
+use bevy::color::palettes::tailwind;
 
 mod components;
 
@@ -77,8 +78,8 @@ fn schema_main_menu() -> impl IntoView<BevyRenderer> {
             .py(8)
             .flex()
             .center()
-            .bg_color(Color::DARK_GRAY),
-         x_hover().bg_color(Color::GRAY),
+            .bg_color(tailwind::GRAY_600),
+         x_hover().bg_color(tailwind::GRAY_500),
          x_active().bg_color(COLOR_PRIMARY),
          FocusStyle,
       )),
@@ -100,7 +101,7 @@ fn schema_main_menu() -> impl IntoView<BevyRenderer> {
                button().style(MenuBtnStyle).children("Exit").on(
                   XConfirm,
                   |mut app_exit: EventWriter<AppExit>| {
-                     app_exit.send(AppExit);
+                     app_exit.send(AppExit::Success);
                   },
                ),
             )
@@ -126,7 +127,7 @@ fn schema_setting() -> impl IntoView<BevyRenderer> {
                .gap(20)
                .py(8)
                .px(16),
-            x_hover().bg_color(Color::rgba(0.25, 0.25, 0.25, 0.4)),
+            x_hover().bg_color(Color::srgba(0.25, 0.25, 0.25, 0.4)),
          ))
          .children((label, content))
    }
@@ -148,10 +149,10 @@ fn schema_setting() -> impl IntoView<BevyRenderer> {
                         button()
                            .style((
                               x().flex().py(6).center(),
-                              x_hover().bg_color(Color::DARK_GRAY),
+                              x_hover().bg_color(tailwind::GRAY_600),
                               FocusStyle,
                            ))
-                           .bg_color(item.is_selected.then_some(Color::BLUE))
+                           .bg_color(item.is_selected.then_some(COLOR_PRIMARY))
                            .children((item.value,))
                      })
                   }))
@@ -169,10 +170,10 @@ fn schema_setting() -> impl IntoView<BevyRenderer> {
                button()
                   .style((
                      x().flex().py(8).px(16).center(),
-                     x_hover().bg_color(Color::DARK_GRAY),
+                     x_hover().bg_color(tailwind::GRAY_600),
                      FocusStyle,
                   ))
-                  .bg_color(item.is_selected.then_some(Color::BLUE))
+                  .bg_color(item.is_selected.then_some(COLOR_PRIMARY))
                   .children((item.value,))
             };
             selection_list::<&'static str>()

@@ -1,15 +1,19 @@
 use std::hash::Hash;
 use std::marker::PhantomData;
 
-use bevy_ecs::prelude::IntoSystem;
+use bevy_ecs::prelude::{Component, IntoSystem};
 use bevy_ecs::system::SystemId;
 use bevy_input::keyboard::KeyCode;
+use bevy_reflect::Reflect;
 use bevy_utils::tracing::error;
 
 use rxy_core::{MemberOwner, ViewMember, ViewMemberCtx, ViewMemberOrigin};
 
 use crate::event::*;
 use crate::BevyRenderer;
+
+#[derive(Component, Reflect, Debug, Copy, Clone)]
+pub struct EventSystem;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct FocusInputEventMemberState<T>(pub SystemId, pub T);
@@ -53,6 +57,8 @@ where
 
    fn build(self, mut ctx: ViewMemberCtx<BevyRenderer>, _will_rebuild: bool) {
       let system_id = ctx.world.register_system(self.system);
+
+      ctx.world.entity_mut(system_id.entity()).insert(EventSystem);
 
       for event_id in self.element_event_ids.clone().iter_event_ids() {
          ctx.world.add_event(ctx.node_id, event_id, system_id);

@@ -16,7 +16,7 @@ use rxy_ui::prelude::*;
 pub use select::*;
 pub use slider::*;
 
-pub const COLOR_PRIMARY: Color = Color::BLUE;
+pub const COLOR_PRIMARY: Color = Color::Srgba(bevy::color::palettes::basic::BLUE);
 
 #[derive(Copy, Clone, Debug)]
 pub struct XConfirm;

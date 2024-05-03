@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use rxy_ui::prelude::*;
+use bevy::color::palettes::basic;
 
 fn main() {
    let mut app = App::new();
@@ -88,13 +89,13 @@ fn ui() -> impl IntoView<BevyRenderer> {
             signal.update(|n| *n = !*n);
          })
          .style(Some((
-            x().bg_color(Color::BLUE).height(100.).width(100.),
+            x().bg_color(basic::BLUE).height(100.).width(100.),
             // hover().bg_color(Color::WHITE),
          )))
          .rx_style(move || {
             signal
                .get()
-               .then_some((x().bg_color(Color::RED), x_hover().bg_color(Color::WHITE)))
+               .then_some((x().bg_color(basic::RED), x_hover().bg_color(Color::WHITE)))
          }),
       "--Footer--",
    ))

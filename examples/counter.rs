@@ -1,3 +1,4 @@
+use bevy::color::palettes::{basic,tailwind};
 use bevy::prelude::*;
 
 use rxy_ui::prelude::*;
@@ -28,9 +29,9 @@ fn counter_by_signal() -> impl IntoView<BevyRenderer> {
          div()
             .children("Increment")
             .style((
-               x().px(16).py(8).bg_color(Color::DARK_GRAY),
-               x_hover().bg_color(Color::GRAY),
-               x_active().outline_color(Color::BLUE).outline_width(2),
+               x().px(16).py(8).bg_color(tailwind::GRAY_600),
+               x_hover().bg_color(tailwind::GRAY_500),
+               x_active().outline_color(basic::BLUE).outline_width(2),
             ))
             .on_pointer_click(move || count.update(|signal| *signal += 1)),
       )),

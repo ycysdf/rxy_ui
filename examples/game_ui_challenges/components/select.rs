@@ -2,7 +2,7 @@ use core::fmt::Display;
 use std::fmt::Debug;
 
 use bevy::prelude::*;
-use bevy::render::color::Color;
+use bevy::color::palettes::tailwind;
 use rxy_bevy::FocusedEntity;
 use rxy_bevy::RendererState;
 use rxy_core::utils::SyncCell;
@@ -54,7 +54,7 @@ where
                .relative()
                .py(8)
                .min_w(150),
-            x_hover().bg_color(Color::DARK_GRAY),
+            x_hover().bg_color(tailwind::GRAY_600),
             FocusStyle,
          )
       });
@@ -62,7 +62,7 @@ where
          x().absolute()
             .z(1)
             .top(Val::Percent(100.))
-            .bg_color(Color::GRAY)
+            .bg_color(tailwind::GRAY_500)
             .w_full()
       });
       let (id_sender, id_receiver) = oneshot::channel();

@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use rxy_ui::prelude::*;
+use bevy::color::palettes::tailwind;
 
 fn main() {
    let mut app = App::new();
@@ -25,8 +26,8 @@ fn ui() -> impl IntoView<BevyRenderer> {
          "--Header--",
          div()
             .style((
-               x().flex().py(8).px(16).center().bg_color(Color::DARK_GRAY),
-               x_hover().bg_color(Color::GRAY),
+               x().flex().py(8).px(16).center().bg_color(tailwind::GRAY_600),
+               x_hover().bg_color(tailwind::GRAY_500),
             ))
             .on_pointer_click(move || {
                condition.update(|n| *n = !*n);

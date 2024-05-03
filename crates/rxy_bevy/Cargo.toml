@@ -52,7 +52,9 @@ futures-lite.workspace = true
 oneshot.workspace = true
 
 [features]
-default = ["xy_reactive", "tailwind_aliases", "dynamic_element"]
+default = ["xy_reactive", "tailwind_aliases", "dynamic_element", "flexbox", "grid"]
 tailwind_aliases = []
 dynamic_element = []
 style = ["rxy_core/style"]
+grid = []
+flexbox = []
