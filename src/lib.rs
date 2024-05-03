@@ -30,4 +30,11 @@ pub mod prelude {
    pub use rxy_web_dom::prelude::*;
    #[cfg(feature = "signal")]
    pub use xy_reactive::prelude::*;
+   pub use super::palettes;
+}
+
+pub mod palettes {
+   pub use bevy_color::palettes::tailwind::*;
+   pub use bevy_color::palettes::basic::*;
+   pub use bevy_color::palettes::css::*;
 }

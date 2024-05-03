@@ -16,6 +16,7 @@ bevy_mod_picking = { workspace = true, optional = true }
 
 rxy_web_dom = { workspace = true, optional = true }
 rxy_native = { workspace = true, optional = true }
+bevy_color = { workspace = true }
 #rxy_bevy_ecs = { path = "crates/rxy_bevy_ecs", optional = true }
 
 [features]
@@ -34,11 +35,13 @@ reflect = ["rxy_native?/reflect"]
 
 bevy = [
     "std", "rxy_bevy", "bevy_mod_picking", "rxy_bevy_macro", "style", "tailwind_aliases",
-    "xy_reactive?/bevy", "rxy_core/bevy", "reflect"
+    "xy_reactive?/bevy", "rxy_core/bevy", "reflect", "flexbox", "grid"
 ]
 #web = ["std", "rxy_web_dom"]
 native = ["std", "rxy_native", "rxy_native/tokio"]
 dynamic_element = ["rxy_bevy/dynamic_element", "rxy_core/dynamic_element"]
+grid = ["rxy_bevy?/grid", "rxy_native?/grid"]
+flexbox = ["rxy_bevy?/flexbox", "rxy_native?/flexbox"]
 
 [workspace]
 members = ["crates/*", "examples/native_playground"]
