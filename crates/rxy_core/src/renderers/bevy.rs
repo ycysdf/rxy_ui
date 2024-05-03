@@ -89,7 +89,7 @@ impl Into<XValueWrapper<bevy_render::prelude::Visibility>> for bool {
    fn into(self) -> XValueWrapper<bevy_render::prelude::Visibility> {
       XValueWrapper(
          self
-            .then(|| bevy_render::prelude::Visibility::Visible)
+            .then(|| bevy_render::prelude::Visibility::Inherited)
             .unwrap_or(bevy_render::prelude::Visibility::Hidden),
       )
    }
