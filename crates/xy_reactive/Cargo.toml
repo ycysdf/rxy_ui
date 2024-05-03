@@ -14,7 +14,7 @@ serde_json = "1"
 slotmap = "1"
 smallvec = "1"
 thiserror = "1"
-bevy_tasks = { version = "0.13", features = ["multi-threaded"], optional = true }
+bevy_tasks = { workspace = true, features = ["multi-threaded"], optional = true }
 serde = { version = "1", features = ["derive"], optional = false }
 glib = { version = "0.18", optional = true }
 wasm-bindgen-futures = { version = "0.4", optional = true }

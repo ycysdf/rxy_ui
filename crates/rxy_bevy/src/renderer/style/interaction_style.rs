@@ -1,7 +1,8 @@
 use bevy_derive::{Deref, DerefMut};
 use bevy_ecs::entity::{Entity, EntityHashMap};
 use bevy_ecs::prelude::{Changed, Commands, Query, With, World};
-use bevy_ecs::system::{Command, ResMut};
+use bevy_ecs::system::ResMut;
+use bevy_ecs::world::Command;
 use bevy_ui::Interaction;
 
 use rxy_core::style::{

@@ -1,5 +1,5 @@
 use bevy_ecs::prelude::{Commands, World};
-use bevy_ecs::system::Command;
+use bevy_ecs::world::Command;
 
 use rxy_core::{IntoView, RendererNodeId, RendererWorld, View, ViewCtx};
 

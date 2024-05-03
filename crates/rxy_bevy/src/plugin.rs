@@ -41,7 +41,7 @@ pub struct RxyRootEntity(pub Entity);
 impl Plugin for RxyPlugin {
    fn build(&self, app: &mut App) {
       let root_entity = RxyRootEntity(self.root_entity.unwrap_or_else(|| {
-         app.world
+         app.world_mut()
             .spawn((
                NodeBundle {
                   style: Style {

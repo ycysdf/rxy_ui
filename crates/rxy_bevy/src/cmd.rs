@@ -3,13 +3,14 @@ use bevy_derive::{Deref, DerefMut};
 use bevy_ecs::change_detection::Res;
 use bevy_ecs::prelude::{Deferred, World};
 use bevy_ecs::schedule::IntoSystemConfigs;
-use bevy_ecs::system::{Command, Resource, SystemBuffer, SystemMeta};
+use bevy_ecs::system::{Resource, SystemBuffer, SystemMeta};
+use bevy_ecs::world::{Command, CommandQueue};
 
 #[derive(Resource, Clone, Deref, DerefMut)]
-pub struct CmdReceiver(pub async_channel::Receiver<bevy_ecs::system::CommandQueue>);
+pub struct CmdReceiver(pub async_channel::Receiver<CommandQueue>);
 
 #[derive(Resource, Clone, Deref, DerefMut)]
-pub struct CmdSender(pub async_channel::Sender<bevy_ecs::system::CommandQueue>);
+pub struct CmdSender(pub async_channel::Sender<CommandQueue>);
 
 pub struct CommandChannelPlugin;
 
@@ -25,7 +26,7 @@ impl Plugin for CommandChannelPlugin {
 
 impl CmdSender {
    pub fn add<C: Command>(&self, cmd: C) {
-      let mut command_queue = bevy_ecs::system::CommandQueue::default();
+      let mut command_queue = CommandQueue::default();
       command_queue.push(cmd);
       self.send_blocking(command_queue).unwrap();
    }
@@ -33,7 +34,7 @@ impl CmdSender {
 
 #[derive(Resource, Default)]
 pub struct CommandQueues {
-   pub queues: Vec<bevy_ecs::system::CommandQueue>,
+   pub queues: Vec<CommandQueue>,
 }
 
 impl SystemBuffer for CommandQueues {

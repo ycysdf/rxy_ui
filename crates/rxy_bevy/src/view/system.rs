@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
 use bevy_ecs::entity::Entity;
+use bevy_ecs::intern::Interned;
 use bevy_ecs::prelude::{In, IntoSystem, Resource, Schedules, World};
 use bevy_ecs::schedule::{ScheduleLabel, SystemConfigs};
 use bevy_utils::default;
@@ -73,7 +74,7 @@ where
 #[derive(Resource, Default)]
 pub struct ScheduleSystemAdds {
    pub systems: Vec<(
-      bevy_utils::intern::Interned<dyn ScheduleLabel>,
+      Interned<dyn ScheduleLabel>,
       SystemConfigs,
    )>,
 }

@@ -21,6 +21,7 @@ glam = { workspace = true, optional = true }
 bevy_asset = { workspace = true, optional = true }
 bevy_text = { workspace = true, optional = true }
 bevy_ui = { workspace = true, optional = true }
+bevy_color = { workspace = true }
 #bevy_transform = { workspace = true, optional = true }
 bevy_render = { workspace = true, optional = true }
 

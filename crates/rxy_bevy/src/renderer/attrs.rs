@@ -3,7 +3,7 @@
 use std::borrow::Cow;
 
 use bevy_asset::Handle;
-use bevy_render::color::Color;
+use bevy_color::Color;
 use bevy_render::render_resource::encase::private::RuntimeSizedArray;
 use bevy_render::view::Visibility;
 use bevy_text::{BreakLineOn, Font, JustifyText};

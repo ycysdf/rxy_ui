@@ -3,10 +3,10 @@ use crate::{
    SmallBox, XValueWrapper, S1,
 };
 use bevy_asset::Handle;
-use bevy_render::prelude::Color;
+use bevy_color::{Color, Srgba};
 
 impl_attr_value_and_wrapper! {
-    Color => Color::rgba_u8(0, 0, 0, 0),
+    Color => Color::srgba_u8(0, 0, 0, 0),
     bevy_text::BreakLineOn => bevy_text::BreakLineOn::WordBoundary,
     bevy_text::JustifyText => bevy_text::JustifyText::Left,
     bevy_ui::Val,
@@ -30,6 +30,17 @@ impl_attr_value_and_wrapper! {
     glam::Quat,
     glam::Vec3,
     bevy_ui::OverflowAxis
+}
+
+impl Into<XValueWrapper<Color>> for Srgba {
+   fn into(self) -> XValueWrapper<Color> {
+      XValueWrapper(self.into())
+   }
+}
+impl Into<XValueWrapper<Srgba>> for Srgba {
+   fn into(self) -> XValueWrapper<Srgba> {
+      XValueWrapper(self.into())
+   }
 }
 
 impl Into<XValueWrapper<bevy_ui::ZIndex>> for i32 {

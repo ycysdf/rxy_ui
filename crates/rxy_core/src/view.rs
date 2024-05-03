@@ -2,10 +2,7 @@ use core::fmt::Debug;
 
 use crate::utils::all_tuples;
 
-use crate::{
-   MaybeFromReflect, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, NodeTree, Renderer,
-   RendererNodeId, RendererWorld, ViewCtx,
-};
+use crate::{MaybeFromReflect, MaybeGetTypeRegistration, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, NodeTree, Renderer, RendererNodeId, RendererWorld, ViewCtx};
 
 pub trait View<R: Renderer>: Sized + MaybeSend + 'static {
    type Key: ViewKey<R>;
@@ -17,7 +14,15 @@ pub trait View<R: Renderer>: Sized + MaybeSend + 'static {
 }
 
 pub trait ViewKey<R: Renderer>:
-   MaybeReflect + MaybeFromReflect + MaybeTypePath + MaybeSend + MaybeSync + Clone + Debug + 'static
+   MaybeReflect
+   + MaybeFromReflect
+   + MaybeTypePath
+   + MaybeGetTypeRegistration
+   + MaybeSend
+   + MaybeSync
+   + Clone
+   + Debug
+   + 'static
 {
    fn remove(self, world: &mut RendererWorld<R>);
 

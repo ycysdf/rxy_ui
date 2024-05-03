@@ -8,6 +8,8 @@ use rxy_ui::{
    prelude::*,
 };
 use std::time::Duration;
+use bevy::color::palettes;
+use bevy::color::palettes::basic;
 // use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy::sprite::MaterialMesh2dBundle;
 use futures_lite::{FutureExt, StreamExt};
@@ -57,96 +59,96 @@ fn schema_tt(_ctx: SchemaCtx, value: ReadSignal<bool>) -> impl IntoView<BevyRend
 
 fn sample2() -> impl IntoView<BevyRenderer> {
    div()
-        .style(rx(|| x().bg_color(Color::WHITE)))
+        .style(rx(|| x().bg_color(basic::WHITE)))
         .size(Some(rx(|| Some(20))))
         .padding_right(rx(|| 20))
         .padding_left(Some(Some(Some(20))))
         .children(
             div()
-                .style(rx(|| x().bg_color(Color::WHITE)))
+                .style(rx(|| x().bg_color(basic::WHITE)))
                 .size(Some(rx(|| Some(20))))
                 .padding_right(rx(|| 20))
                 .padding_left(Some(Some(Some(20))))
                 .children(
                     div()
-                        .style(rx(|| x().bg_color(Color::WHITE)))
+                        .style(rx(|| x().bg_color(basic::WHITE)))
                         .size(Some(rx(|| Some(20))))
                         .padding_right(rx(|| 20))
                         .padding_left(Some(Some(Some(20))))
                         .children(
                             div()
-                                .style(rx(|| x().bg_color(Color::WHITE)))
+                                .style(rx(|| x().bg_color(basic::WHITE)))
                                 .size(Some(rx(|| Some(20))))
                                 .padding_right(rx(|| 20))
                                 .padding_left(Some(Some(Some(20))))
                                 .children(
                                     div()
-                                        .style(rx(|| x().bg_color(Color::WHITE)))
+                                        .style(rx(|| x().bg_color(basic::WHITE)))
                                         .size(Some(rx(|| Some(20))))
                                         .padding_right(rx(|| 20))
                                         .padding_left(Some(Some(Some(20))))
                                         .children(div()
-                                            .style(rx(|| x().bg_color(Color::WHITE)))
+                                            .style(rx(|| x().bg_color(basic::WHITE)))
                                             .size(Some(rx(|| Some(20))))
                                             .padding_right(rx(|| 20))
                                             .padding_left(Some(Some(Some(20))))
                                             .children(div()
-                                                .style(rx(|| x().bg_color(Color::WHITE)))
+                                                .style(rx(|| x().bg_color(basic::WHITE)))
                                                 .size(Some(rx(|| Some(20))))
                                                 .padding_right(rx(|| 20))
                                                 .padding_left(Some(Some(Some(20))))
                                                 .children(div()
-                                                    .style(rx(|| x().bg_color(Color::WHITE)))
+                                                    .style(rx(|| x().bg_color(basic::WHITE)))
                                                     .size(Some(rx(|| Some(20))))
                                                     .padding_right(rx(|| 20))
                                                     .padding_left(Some(Some(Some(20))))
                                                     .children(div()
-                                                        .style(rx(|| x().bg_color(Color::WHITE)))
+                                                        .style(rx(|| x().bg_color(basic::WHITE)))
                                                         .size(Some(rx(|| Some(20))))
                                                         .padding_right(rx(|| 20))
                                                         .padding_left(Some(Some(Some(20))))
                                                         .children(div()
-                                                            .style(rx(|| x().bg_color(Color::WHITE)))
+                                                            .style(rx(|| x().bg_color(basic::WHITE)))
                                                             .size(Some(rx(|| Some(20))))
                                                             .padding_right(rx(|| 20))
                                                             .padding_left(Some(Some(Some(20))))
                                                             .children(div()
-                                                                .style(rx(|| x().bg_color(Color::WHITE)))
+                                                                .style(rx(|| x().bg_color(basic::WHITE)))
                                                                 .size(Some(rx(|| Some(20))))
                                                                 .padding_right(rx(|| 20))
                                                                 .padding_left(Some(Some(Some(20))))
                                                                 .children(div()
-                                                                    .style(rx(|| x().bg_color(Color::WHITE)))
+                                                                    .style(rx(|| x().bg_color(basic::WHITE)))
                                                                     .size(Some(rx(|| Some(20))))
                                                                     .padding_right(rx(|| 20))
                                                                     .padding_left(Some(Some(Some(20))))
                                                                     .children(div()
-                                                                        .style(rx(|| x().bg_color(Color::WHITE)))
+                                                                        .style(rx(|| x().bg_color(basic::WHITE)))
                                                                         .size(Some(rx(|| Some(20))))
                                                                         .padding_right(rx(|| 20))
                                                                         .padding_left(Some(Some(Some(20))))
                                                                         .children(div()
-                                                                            .style(rx(|| x().bg_color(Color::WHITE)))
+                                                                            .style(rx(|| x().bg_color(basic::WHITE)))
                                                                             .size(Some(rx(|| Some(20))))
                                                                             .padding_right(rx(|| 20))
                                                                             .padding_left(Some(Some(Some(20))))
                                                                             .children(div()
-                                                                                .style(rx(|| x().bg_color(Color::WHITE)))
+                                                                                .style(rx(|| x().bg_color(basic::WHITE)))
                                                                                 .size(Some(rx(|| Some(20))))
                                                                                 .padding_right(rx(|| 20))
                                                                                 .padding_left(Some(Some(Some(20))))
                                                                                 .children(div()
-                                                                                    .style(rx(|| x().bg_color(Color::WHITE)))
+                                                                                    .style(rx(|| x().bg_color(basic::WHITE)))
                                                                                     .size(Some(rx(|| Some(20))))
                                                                                     .padding_right(rx(|| 20))
                                                                                     .padding_left(Some(Some(Some(20))))
                                                                                     .children(div()
-                                                                                        .style(rx(|| x().bg_color(Color::WHITE)))
+                                                                                        .style(rx(|| x().bg_color(basic::WHITE)))
                                                                                         .size(Some(rx(|| Some(20))))
                                                                                         .padding_right(rx(|| 20))
                                                                                         .padding_left(Some(Some(Some(20))))
                                                                                         .children(div()
-                                                                                            .style(rx(|| x().bg_color(Color::WHITE)))
+                                                                                            .style(rx(|| x().bg_color(basic::WHITE)))
                                                                                             .size(Some(rx(|| Some(20))))
                                                                                             .padding_right(rx(|| 20))
                                                                                             .padding_left(Some(Some(Some(20))))
@@ -161,9 +163,9 @@ fn signal_sample() -> impl IntoView<BevyRenderer> {
    div()
       .children(rx(move || count.get().to_string()))
       .padding(20)
-      .bg_color(Color::BLUE)
+      .bg_color(basic::BLUE)
       .border_y(count)
-      .border_color(Color::RED)
+      .border_color(basic::RED)
       .width(100)
       .height(rx(move || count.get() * 4 + 100))
       .on_pointer_click(move || {
@@ -175,7 +177,7 @@ fn btn(is_show: RwSignal<bool>) -> impl IntoView<BevyRenderer> {
    div()
       .children("Btn")
       .padding(20)
-      .bg_color(Color::GRAY)
+      .bg_color(basic::GRAY)
       .on_pointer_click(move || {
          is_show.update(|x| *x = !*x);
       })
@@ -188,7 +190,7 @@ fn sample_option_view() -> impl IntoView<BevyRenderer> {
       rx(move || {
          let view = div()
             .padding(10)
-            .bg_color(Color::BLUE)
+            .bg_color(basic::BLUE)
             .flex()
             .center()
             .children("Show");
@@ -214,15 +216,15 @@ fn sample_option_view_member() -> impl IntoView<BevyRenderer> {
          .children("Show")
          .member(rx(move || {
             is_show.get().then_some(
-               ().bg_color(Color::BLUE)
-                  .outline_color(Color::RED)
+               ().bg_color(basic::BLUE)
+                  .outline_color(basic::RED)
                   .outline_width(2),
             )
          })), // 下面写法与上面写法是等价的
               // .rx_member(move || {
               //     is_show.get().then_some(
-              //         ().bg_color(Color::BLUE)
-              //             .outline_color(Color::RED)
+              //         ().bg_color(basic::BLUE)
+              //             .outline_color(basic::RED)
               //             .outline_width(2),
               //     )
               // }),
@@ -256,8 +258,8 @@ fn sample_either_view_member() -> impl IntoView<BevyRenderer> {
          .center()
          .children("Show")
          .member(rx(move || {
-            let left_vm = ().bg_color(Color::BLUE);
-            let right_vm = ().outline_color(Color::RED).outline_width(2);
+            let left_vm = ().bg_color(basic::BLUE);
+            let right_vm = ().outline_color(basic::RED).outline_width(2);
             if is_show.get() {
                left_vm.either_left() // 这等同于 Either::Left(left_view)
             } else {
@@ -282,7 +284,7 @@ fn sample_future() -> impl IntoView<BevyRenderer> {
          })
          .children("Ok")
          .on_pointer_click(move || {
-            let _ = sender2.try_send(Color::RED);
+            let _ = sender2.try_send(basic::RED);
             if let Some(sender) = sender.get().take() {
                sender.send("Ok").unwrap();
             }
@@ -307,11 +309,11 @@ fn sample_x_if() -> impl IntoView<BevyRenderer> {
       div()
          .children("Btn")
          .padding(20)
-         .bg_color(Color::GRAY)
+         .bg_color(basic::GRAY)
          .on_pointer_click(move || {
             is_show.update(|x| *x = !*x);
          }),
-      x_if(is_show, span("Show1").padding(10).text_color(Color::RED)),
+      x_if(is_show, span("Show1").padding(10).text_color(basic::RED)),
       x_if(is_show, div().padding(10).flex().center().children("Show2")),
    )
 }
@@ -332,7 +334,7 @@ fn sample_x_iter_keyed() -> impl IntoView<BevyRenderer> {
             n,
             span(format!("Item: {}", n))
                .padding(10)
-               .text_color(Color::rgb_u8(n * 10, 255, 255)),
+               .text_color(Color::srgb_u8(n * 10, 255, 255)),
          )
       })))
 }
@@ -342,7 +344,7 @@ fn sample_x_iter_keyed_rx() -> impl IntoView<BevyRenderer> {
    (
       div()
          .padding(10)
-         .bg_color(Color::BLUE)
+         .bg_color(basic::BLUE)
          .children("Add")
          .on_pointer_click(move || {
             signal.update(|x| *x += 1);
@@ -356,7 +358,7 @@ fn sample_x_iter_keyed_rx() -> impl IntoView<BevyRenderer> {
                   n,
                   span(format!("Item: {}", n))
                      .padding(10)
-                     .text_color(Color::rgb_u8(n * 2, 255, 255)),
+                     .text_color(Color::srgb_u8(n * 2, 255, 255)),
                )
             })))
       }),
@@ -367,9 +369,9 @@ fn sample_style_sheet() -> impl IntoView<BevyRenderer> {
    div()
       .margin(50)
       .style((
-         x().py(8 * 2).px(16 * 2).center().bg_color(Color::DARK_GRAY),
-         x_hover().bg_color(Color::GRAY),
-         x_active().outline_color(Color::GREEN).outline_width(2),
+         x().py(8 * 2).px(16 * 2).center().bg_color(basic::GRAY),
+         x_hover().bg_color(basic::GRAY),
+         x_active().outline_color(basic::GREEN).outline_width(2),
       ))
       .children("Button")
 }
@@ -380,11 +382,11 @@ fn sample_dynamic_style_sheet() -> impl IntoView<BevyRenderer> {
       .on_pointer_click(move || {
          signal.update(|n| *n = !*n);
       })
-      .style((x().bg_color(Color::GRAY).height(100.).width(100.),))
+      .style((x().bg_color(basic::GRAY).height(100.).width(100.),))
       .style(rx(move || {
          signal
             .get()
-            .then_some((x().bg_color(Color::RED), x_hover().bg_color(Color::WHITE)))
+            .then_some((x().bg_color(basic::RED), x_hover().bg_color(basic::WHITE)))
       }))
 }
 
@@ -397,14 +399,14 @@ fn sample_shared_typed_style_sheet() -> impl IntoView<BevyRenderer> {
             .py(8)
             .flex()
             .center()
-            .bg_color(Color::DARK_GRAY),
-         x_hover().bg_color(Color::GRAY),
-         x_active().outline_color(Color::GREEN).outline_width(2),
+            .bg_color(basic::GRAY),
+         x_hover().bg_color(basic::GRAY),
+         x_active().outline_color(basic::GREEN).outline_width(2),
       )),
       div().padding(50).gap(10).flex_col().children((
          div().style(MenuBtnStyle).children("Button 1"),
          div()
-            .style((MenuBtnStyle, x().bg_color(Color::RED)))
+            .style((MenuBtnStyle, x().bg_color(basic::RED)))
             .children("Button 2"),
          div().style(MenuBtnStyle).children("Button 3"),
       )),
@@ -428,14 +430,14 @@ pub fn schema_checkbox(
          x().center()
             .size(size)
             .border(1)
-            .border_color(Color::DARK_GRAY),
-         x_hover().bg_color(Color::DARK_GRAY),
+            .border_color(basic::GRAY),
+         x_hover().bg_color(basic::GRAY),
       );
    });
    div()
       .name("checkbox")
       .style(CheckboxStyle)
-      .bg_color(rx(move || is_checked.get().then_some(Color::BLUE)))
+      .bg_color(rx(move || is_checked.get().then_some(basic::BLUE)))
       .rx_member(move || {
          (!readonly.get()).then_some(().on_pointer_click(move || {
             is_checked.update(|is_checked| *is_checked = !*is_checked);
@@ -447,7 +449,7 @@ fn sample_checkbox() -> impl IntoView<BevyRenderer> {
    let signal = use_rw_signal(false);
    (checkbox()
       .padding(50)
-      .style(x().border_color(Color::RED).border(2))
+      .style(x().border_color(basic::RED).border(2))
       .on_pointer_up(|| {
          println!("checkbox pointer up");
       })
@@ -463,7 +465,7 @@ fn schema_sample(head: Slot, foot: Slot) -> impl IntoView<BevyRenderer> {
    div()
       .children((
          head,
-         div().bg_color(Color::GRAY).p(20).children("Body"),
+         div().bg_color(basic::GRAY).p(20).children("Body"),
          foot,
       ))
       .p(20)
@@ -502,9 +504,9 @@ fn sample_dynamic() -> impl IntoView<BevyRenderer> {
       div()
          .children("Change State")
          .style((
-            x().padding(20).flex().center().bg_color(Color::DARK_GRAY),
-            x_hover().bg_color(Color::GRAY),
-            x_active().outline_color(Color::GREEN).outline_width(2),
+            x().padding(20).flex().center().bg_color(basic::GRAY),
+            x_hover().bg_color(basic::GRAY),
+            x_active().outline_color(basic::GREEN).outline_width(2),
          ))
          .on_pointer_click(move || {
             signal.update(|state| match state {
@@ -517,12 +519,12 @@ fn sample_dynamic() -> impl IntoView<BevyRenderer> {
          SampleState::Init => span("Init").margin(30).into_dynamic(),
          SampleState::Loading => div()
             .padding(30)
-            .bg_color(Color::RED)
+            .bg_color(basic::RED)
             .children("Loading")
             .into_dynamic(),
          SampleState::Loaded => span("Loaded")
             .margin(30)
-            .text_color(Color::BLUE)
+            .text_color(basic::BLUE)
             .into_dynamic(),
       }),
    )
@@ -538,9 +540,9 @@ fn sample_system_once() -> impl IntoView<BevyRenderer> {
          div()
             .children("Spawn 2d Material")
             .style((
-               x().padding(20).flex().center().bg_color(Color::DARK_GRAY),
-               x_hover().bg_color(Color::GRAY),
-               x_active().outline_color(Color::GREEN).outline_width(2),
+               x().padding(20).flex().center().bg_color(basic::GRAY),
+               x_hover().bg_color(basic::GRAY),
+               x_active().outline_color(basic::GREEN).outline_width(2),
             ))
             .on_pointer_click(move || {
                cmd_sender.add(|world: &mut World| {
@@ -548,7 +550,7 @@ fn sample_system_once() -> impl IntoView<BevyRenderer> {
                   let mesh = meshes.add(Rectangle::default()).into();
 
                   let mut materials = world.resource_mut::<Assets<ColorMaterial>>();
-                  let material = materials.add(Color::PURPLE);
+                  let material = materials.add(Color::from(basic::PURPLE));
 
                   world.spawn(MaterialMesh2dBundle {
                      mesh,
@@ -610,9 +612,9 @@ fn sample_context() -> impl IntoView<BevyRenderer> {
             .py(8)
             .flex()
             .center()
-            .bg_color(Color::DARK_GRAY),
-         x_hover().bg_color(Color::GRAY),
-         x_active().outline_color(Color::GREEN).outline_width(2),
+            .bg_color(basic::GRAY),
+         x_hover().bg_color(basic::GRAY),
+         x_active().outline_color(basic::GREEN).outline_width(2),
       )),
       provide_context(
          MyContext { signal },

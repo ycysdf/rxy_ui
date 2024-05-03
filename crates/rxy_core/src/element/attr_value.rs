@@ -1,5 +1,5 @@
 use crate::smallbox::{SmallBox, S1};
-use crate::{impl_x_value_wrappers, XValueWrapper};
+use crate::{impl_x_value_wrappers, MaybeGetTypeRegistration, XValueWrapper};
 use crate::{smallbox, MaybeFromReflect, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath};
 use alloc::borrow::Cow;
 use alloc::string::String;
@@ -130,7 +130,7 @@ impl Into<XValueWrapper<Cow<'static, str>>> for f32 {
 
 impl<T> AttrValue for Option<T>
 where
-   T: AttrValue + Clone + PartialEq + MaybeTypePath + MaybeFromReflect,
+   T: AttrValue + Clone + PartialEq + MaybeTypePath + MaybeFromReflect + MaybeGetTypeRegistration,
 {
    fn clone_att_value(&self) -> SmallBox<dyn AttrValue, S1> {
       smallbox!(self.clone())
@@ -155,7 +155,7 @@ where
 
 impl<T> AttrValue for Vec<T>
 where
-   T: AttrValue + Clone + PartialEq + MaybeTypePath + MaybeFromReflect,
+   T: AttrValue + Clone + PartialEq + MaybeTypePath + MaybeFromReflect + MaybeGetTypeRegistration,
 {
    fn clone_att_value(&self) -> SmallBox<dyn AttrValue, S1> {
       smallbox!(self.clone())

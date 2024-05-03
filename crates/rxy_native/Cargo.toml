@@ -8,13 +8,10 @@ raw-window-handle = "0.6"
 rxy_core = { workspace = true, features = ["common_renderer", "native", "async-channel", "xy_reactive"] }
 vello = { version = "0.1.0" }
 xy_reactive = { workspace = true, optional = true, default-features = false }
-#bevy_ecs = { path = "../../../../SourceProjects/bevy/crates/bevy_ecs", default-features = false }
-#bevy_hierarchy = { path = "../../../../SourceProjects/bevy/crates/bevy_hierarchy", default-features = false }
-
 glam = { workspace = true }
-bevy_reflect = { path = "../../../bevy/crates/bevy_reflect", optional = true, default-features = false, features = ["glam"] }
-bevy_ecs = { path = "../../../bevy/crates/bevy_ecs", default-features = false }
-bevy_hierarchy = { path = "../../../bevy/crates/bevy_hierarchy", default-features = false }
+bevy_reflect = { workspace=true, optional = true, default-features = false, features = ["glam"] }
+bevy_ecs = { workspace=true, default-features = false }
+bevy_hierarchy = { workspace=true, default-features = false }
 rxy_bevy_ecs = { path = "../rxy_bevy_ecs" }
 
 mint = "0.5"

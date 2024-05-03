@@ -1,9 +1,6 @@
 use core::fmt::Debug;
 
-use crate::{
-   MaybeFromReflect, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, NodeTree, Renderer,
-   RendererNodeId, RendererWorld, ViewCtx,
-};
+use crate::{MaybeFromReflect, MaybeGetTypeRegistration, MaybeReflect, MaybeSend, MaybeSync, MaybeTypePath, NodeTree, Renderer, RendererNodeId, RendererWorld, ViewCtx};
 
 // impl MutableView for tuple ?
 
@@ -25,7 +22,15 @@ pub trait MutableView<R: Renderer>: MaybeSend + 'static {
 }
 
 pub trait MutableViewKey<R: Renderer>:
-   MaybeReflect + MaybeFromReflect + MaybeTypePath + MaybeSend + MaybeSync + Clone + Debug + 'static
+   MaybeReflect
+   + MaybeFromReflect
+   + MaybeTypePath
+   + MaybeGetTypeRegistration
+   + MaybeSend
+   + MaybeSync
+   + Clone
+   + Debug
+   + 'static
 {
    fn remove(self, world: &mut RendererWorld<R>);
 

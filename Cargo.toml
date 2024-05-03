@@ -54,7 +54,7 @@ rxy_web_dom = { path = "crates/rxy_web_dom", default-features = false }
 rxy_native = { path = "crates/rxy_native" }
 
 async-channel = { version = "2.1" }
-glam = { version = "0.25", features = ["mint", "std"] }
+glam = { version = "0.27", features = ["mint", "std"] }
 async-broadcast = "0.7.0"
 #event-listener = "5.2"
 hashbrown = "0.14"
@@ -65,7 +65,7 @@ pin-project = { version = "1" }
 serde = { version = "1", features = ["derive"] }
 
 ahash = { version = "0.8", default-features = false }
-bevy_mod_picking = { version = "0.18", default-features = false, features = ["backend_bevy_ui"] }
+bevy_mod_picking = { git = "https://github.com/ycysdf/bevy_mod_picking.git", branch = "main", default-features = false, features = ["backend_bevy_ui"] }
 derive_more = "0.99"
 drain_filter_polyfill = "0.1"
 futures-lite = "1.13"
@@ -75,23 +75,24 @@ thiserror = "1.0"
 smallvec = "1.13"
 slotmap = "1"
 
-bevy_app = "0.13"
-bevy_asset = { version = "0.13", optional = false }
-bevy_core = "0.13"
-bevy_derive = "0.13"
-bevy_ecs = "0.13"
-bevy_hierarchy = "0.13"
-bevy_reflect = { version = "0.13" }
-bevy_render = "0.13"
-bevy_sprite = "0.13"
-bevy_tasks = { version = "0.13", features = ["multi-threaded"], optional = false }
-bevy_text = { version = "0.13", optional = false }
-bevy_transform = { version = "0.13", optional = false }
-bevy_ui = { version = "0.13", features = ["bevy_text"] }
-bevy_utils = "0.13"
-bevy_a11y = "0.13"
-bevy_input = "0.13"
-bevy_window = { version = "0.13" }
+bevy_app = { git = "https://github.com/bevyengine/bevy.git", branch = "main" }
+bevy_asset = { git = "https://github.com/bevyengine/bevy.git", branch = "main", optional = false }
+bevy_core = { git = "https://github.com/bevyengine/bevy.git", branch = "main" }
+bevy_derive = { git = "https://github.com/bevyengine/bevy.git", branch = "main" }
+bevy_ecs = { git = "https://github.com/bevyengine/bevy.git", branch = "main", default-features = false }
+bevy_hierarchy = { git = "https://github.com/bevyengine/bevy.git", branch = "main", default-features = false }
+bevy_reflect = { git = "https://github.com/bevyengine/bevy.git", branch = "main", default-features = false }
+bevy_render = { git = "https://github.com/bevyengine/bevy.git", branch = "main" }
+bevy_sprite = { git = "https://github.com/bevyengine/bevy.git", branch = "main" }
+bevy_tasks = { git = "https://github.com/bevyengine/bevy.git", branch = "main", features = ["multi-threaded"], optional = false }
+bevy_text = { git = "https://github.com/bevyengine/bevy.git", branch = "main", optional = false }
+bevy_transform = { git = "https://github.com/bevyengine/bevy.git", branch = "main", optional = false }
+bevy_ui = { git = "https://github.com/bevyengine/bevy.git", branch = "main", features = ["bevy_text"] }
+bevy_utils = { git = "https://github.com/bevyengine/bevy.git", branch = "main" }
+bevy_a11y = { git = "https://github.com/bevyengine/bevy.git", branch = "main" }
+bevy_input = { git = "https://github.com/bevyengine/bevy.git", branch = "main" }
+bevy_window = { git = "https://github.com/bevyengine/bevy.git", branch = "main" }
+bevy_color = { git = "https://github.com/bevyengine/bevy.git", branch = "main" }
 
 count-macro = "0.2.2"
 paste = "1"
@@ -225,7 +226,7 @@ web-sys = { version = "0.3", features = [
 ] }
 
 [dev-dependencies]
-bevy = { version = "0.13", features = [
+bevy = { git = "https://github.com/bevyengine/bevy.git", branch = "main", features = [
     "dynamic_linking",
     #    "animation",
     "bevy_asset", #    "bevy_audio",  #    "bevy_gilrs",

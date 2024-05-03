@@ -12,6 +12,7 @@ mod reflect {
    pub use bevy_reflect::FromReflect as MaybeFromReflect;
    pub use bevy_reflect::Reflect as MaybeReflect;
    pub use bevy_reflect::TypePath as MaybeTypePath;
+   pub use bevy_reflect::GetTypeRegistration as MaybeGetTypeRegistration;
 }
 
 #[cfg(not(feature = "bevy_reflect"))]
@@ -27,6 +28,10 @@ mod reflect {
    pub trait MaybeTypePath {}
 
    impl<T> MaybeTypePath for T where T: ?Sized {}
+
+   pub trait MaybeGetTypeRegistration {}
+
+   impl<T> MaybeGetTypeRegistration for T where T: ?Sized {}
 }
 
 #[cfg(feature = "send_sync")]
