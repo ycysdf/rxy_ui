@@ -26,14 +26,14 @@ impl<K, V> Keyed<K, V> {
 }
 
 // #[cfg_attr(feature = "dyn", force_into_dynamic_view)]
-pub fn x_iter_keyed<I, K, IV, R>(items: I) -> ForKeyed<Vec<I::Item>, K, IV, R>
+pub fn x_iter_keyed<I, K, IV, R>(items: I) -> ForKeyed<I, K, IV, R>
 where
    I: IntoIterator<Item = Keyed<K, IV>>,
    K: Eq + Debug + Hash + MaybeSend + MaybeSync + 'static,
    IV: IntoView<R> + MaybeSend + 'static,
    R: Renderer,
 {
-   let items = items.into_iter().collect::<Vec<_>>();
+//   let items = items.into_iter().collect::<Vec<_>>();
    ForKeyed {
       items,
       _marker: PhantomData,
