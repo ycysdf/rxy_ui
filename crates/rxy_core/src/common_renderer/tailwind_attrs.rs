@@ -1,15 +1,17 @@
 #[macro_export]
 macro_rules! impl_tailwind_attrs_use {
    () => {
-      use rxy_core::{ElementAttr, ElementAttrMember, ElementView, MapToAttrMarker, MemberOwner, XNest};
+      use rxy_core::{
+         ElementAttr, ElementAttrMember, ElementView, MapToAttrMarker, MemberOwner, XNest,
+      };
 
       use crate::all_attrs::{
-         align_items, column_gap, display, flex_direction, flex_grow, flex_shrink, flex_wrap, height,
-         justify_content, margin_bottom, margin_left, margin_right, margin_top, max_height, max_width,
-         min_height, min_width, overflow_x, overflow_y, padding_bottom, padding_left, padding_right,
-         padding_top, position_type, row_gap, visibility, width,
+         align_items, column_gap, display, flex_direction, flex_grow, flex_shrink, flex_wrap,
+         height, justify_content, margin_bottom, margin_left, margin_right, margin_top, max_height,
+         max_width, min_height, min_width, overflow_x, overflow_y, padding_bottom, padding_left,
+         padding_right, padding_top, position_type, row_gap, visibility, width,
       };
-   }
+   };
 }
 
 #[macro_export]
@@ -44,124 +46,124 @@ macro_rules! impl_tailwind_attrs {
    };
    (@TEXT;$renderer:ident;$name:ident;$ty:ident) => {
          #[inline]
-         fn text_nowrap(self) -> Self::AddMember<ElementAttr<$renderer, crate::all_attrs::text_linebreak>> {
-            self.member(ElementAttr::new(BreakLineOn::NoWrap.into()))
+         fn text_nowrap(self) -> Self::AddMember<StaticElementAttr<$renderer, crate::all_attrs::text_linebreak>> {
+            self.member(StaticElementAttr::new(BreakLineOn::NoWrap.into()))
          }
          #[inline]
-         fn text_left(self) -> Self::AddMember<ElementAttr<$renderer, crate::all_attrs::text_align>> {
-            self.member(ElementAttr::new(JustifyText::Left.into()))
+         fn text_left(self) -> Self::AddMember<StaticElementAttr<$renderer, crate::all_attrs::text_align>> {
+            self.member(StaticElementAttr::new(JustifyText::Left.into()))
          }
          #[inline]
-         fn text_center(self) -> Self::AddMember<ElementAttr<$renderer, crate::all_attrs::text_align>> {
-            self.member(ElementAttr::new(JustifyText::Center.into()))
+         fn text_center(self) -> Self::AddMember<StaticElementAttr<$renderer, crate::all_attrs::text_align>> {
+            self.member(StaticElementAttr::new(JustifyText::Center.into()))
          }
          #[inline]
-         fn text_right(self) -> Self::AddMember<ElementAttr<$renderer, crate::all_attrs::text_align>> {
-            self.member(ElementAttr::new(JustifyText::Right.into()))
+         fn text_right(self) -> Self::AddMember<StaticElementAttr<$renderer, crate::all_attrs::text_align>> {
+            self.member(StaticElementAttr::new(JustifyText::Right.into()))
          }
    };
    (@TAFFY;$renderer:ident;$name:ident;$ty:ident) => {
       #[inline]
-      fn visible(self) -> Self::AddMember<ElementAttr<$renderer, visibility>> {
-         self.member(ElementAttr::new(Visibility::Visible.into()))
+      fn visible(self) -> Self::AddMember<StaticElementAttr<$renderer, visibility>> {
+         self.member(StaticElementAttr::new(Visibility::Visible.into()))
       }
       #[inline]
-      fn invisible(self) -> Self::AddMember<ElementAttr<$renderer, visibility>> {
-         self.member(ElementAttr::new(Visibility::Hidden.into()))
+      fn invisible(self) -> Self::AddMember<StaticElementAttr<$renderer, visibility>> {
+         self.member(StaticElementAttr::new(Visibility::Hidden.into()))
       }
       #[inline]
-      fn flex(self) -> Self::AddMember<ElementAttr<$renderer, display>> {
-         self.member(ElementAttr::new(Display::Flex.into()))
+      fn flex(self) -> Self::AddMember<StaticElementAttr<$renderer, display>> {
+         self.member(StaticElementAttr::new(Display::Flex.into()))
       }
       #[inline]
       fn flex_col(
          self,
       ) -> Self::AddMember<(
-         ElementAttr<$renderer, display>,
-         ElementAttr<$renderer, flex_direction>,
+         StaticElementAttr<$renderer, display>,
+         StaticElementAttr<$renderer, flex_direction>,
       )> {
          self.member((
-            ElementAttr::new(Display::Flex.into()),
-            ElementAttr::new(FlexDirection::Column.into()),
+            StaticElementAttr::new(Display::Flex.into()),
+            StaticElementAttr::new(FlexDirection::Column.into()),
          ))
       }
       #[inline]
       fn flex_row(
          self,
       ) -> Self::AddMember<(
-         ElementAttr<$renderer, display>,
-         ElementAttr<$renderer, flex_direction>,
+         StaticElementAttr<$renderer, display>,
+         StaticElementAttr<$renderer, flex_direction>,
       )> {
          self.member((
-            ElementAttr::new(Display::Flex.into()),
-            ElementAttr::new(FlexDirection::Row.into()),
+            StaticElementAttr::new(Display::Flex.into()),
+            StaticElementAttr::new(FlexDirection::Row.into()),
          ))
       }
       #[cfg(feature="grid")]
       #[inline]
-      fn grid(self) -> Self::AddMember<ElementAttr<$renderer, display>> {
-         self.member(ElementAttr::new(Display::Grid.into()))
+      fn grid(self) -> Self::AddMember<StaticElementAttr<$renderer, display>> {
+         self.member(StaticElementAttr::new(Display::Grid.into()))
       }
       #[inline]
-      fn shrink(self) -> Self::AddMember<ElementAttr<$renderer, flex_shrink>> {
-         self.member(ElementAttr::new(1.0.into()))
+      fn shrink(self) -> Self::AddMember<StaticElementAttr<$renderer, flex_shrink>> {
+         self.member(StaticElementAttr::new(1.0.into()))
       }
       #[inline]
-      fn shrink_0(self) -> Self::AddMember<ElementAttr<$renderer, flex_shrink>> {
-         self.member(ElementAttr::new(0.0.into()))
+      fn shrink_0(self) -> Self::AddMember<StaticElementAttr<$renderer, flex_shrink>> {
+         self.member(StaticElementAttr::new(0.0.into()))
       }
       #[inline]
-      fn grow(self) -> Self::AddMember<ElementAttr<$renderer, flex_grow>> {
-         self.member(ElementAttr::new(1.0.into()))
+      fn grow(self) -> Self::AddMember<StaticElementAttr<$renderer, flex_grow>> {
+         self.member(StaticElementAttr::new(1.0.into()))
       }
       #[inline]
-      fn grow_0(self) -> Self::AddMember<ElementAttr<$renderer, flex_grow>> {
-         self.member(ElementAttr::new(0.0.into()))
+      fn grow_0(self) -> Self::AddMember<StaticElementAttr<$renderer, flex_grow>> {
+         self.member(StaticElementAttr::new(0.0.into()))
       }
 
       #[inline]
-      fn justify_start(self) -> Self::AddMember<ElementAttr<$renderer, justify_content>> {
-         self.member(ElementAttr::new(JustifyContent::Start.into()))
+      fn justify_start(self) -> Self::AddMember<StaticElementAttr<$renderer, justify_content>> {
+         self.member(StaticElementAttr::new(JustifyContent::Start.into()))
       }
       #[inline]
-      fn justify_end(self) -> Self::AddMember<ElementAttr<$renderer, justify_content>> {
-         self.member(ElementAttr::new(JustifyContent::End.into()))
+      fn justify_end(self) -> Self::AddMember<StaticElementAttr<$renderer, justify_content>> {
+         self.member(StaticElementAttr::new(JustifyContent::End.into()))
       }
       #[inline]
-      fn justify_center(self) -> Self::AddMember<ElementAttr<$renderer, justify_content>> {
-         self.member(ElementAttr::new(JustifyContent::Center.into()))
+      fn justify_center(self) -> Self::AddMember<StaticElementAttr<$renderer, justify_content>> {
+         self.member(StaticElementAttr::new(JustifyContent::Center.into()))
       }
       #[inline]
-      fn justify_between(self) -> Self::AddMember<ElementAttr<$renderer, justify_content>> {
-         self.member(ElementAttr::new(JustifyContent::SpaceBetween.into()))
+      fn justify_between(self) -> Self::AddMember<StaticElementAttr<$renderer, justify_content>> {
+         self.member(StaticElementAttr::new(JustifyContent::SpaceBetween.into()))
       }
       #[inline]
-      fn justify_around(self) -> Self::AddMember<ElementAttr<$renderer, justify_content>> {
-         self.member(ElementAttr::new(JustifyContent::SpaceAround.into()))
+      fn justify_around(self) -> Self::AddMember<StaticElementAttr<$renderer, justify_content>> {
+         self.member(StaticElementAttr::new(JustifyContent::SpaceAround.into()))
       }
       #[inline]
-      fn justify_evenly(self) -> Self::AddMember<ElementAttr<$renderer, justify_content>> {
-         self.member(ElementAttr::new(JustifyContent::SpaceEvenly.into()))
+      fn justify_evenly(self) -> Self::AddMember<StaticElementAttr<$renderer, justify_content>> {
+         self.member(StaticElementAttr::new(JustifyContent::SpaceEvenly.into()))
       }
       #[inline]
-      fn items_start(self) -> Self::AddMember<ElementAttr<$renderer, align_items>> {
-         self.member(ElementAttr::new(AlignItems::FlexStart.into()))
+      fn items_start(self) -> Self::AddMember<StaticElementAttr<$renderer, align_items>> {
+         self.member(StaticElementAttr::new(AlignItems::FlexStart.into()))
       }
       #[inline]
-      fn items_end(self) -> Self::AddMember<ElementAttr<$renderer, align_items>> {
-         self.member(ElementAttr::new(AlignItems::FlexEnd.into()))
+      fn items_end(self) -> Self::AddMember<StaticElementAttr<$renderer, align_items>> {
+         self.member(StaticElementAttr::new(AlignItems::FlexEnd.into()))
       }
       #[inline]
-      fn items_center(self) -> Self::AddMember<ElementAttr<$renderer, align_items>> {
-         self.member(ElementAttr::new(AlignItems::Center.into()))
+      fn items_center(self) -> Self::AddMember<StaticElementAttr<$renderer, align_items>> {
+         self.member(StaticElementAttr::new(AlignItems::Center.into()))
       }
       #[inline]
-      fn items_baseline(self) -> Self::AddMember<ElementAttr<$renderer, align_items>> {
-         self.member(ElementAttr::new(AlignItems::Baseline.into()))
+      fn items_baseline(self) -> Self::AddMember<StaticElementAttr<$renderer, align_items>> {
+         self.member(StaticElementAttr::new(AlignItems::Baseline.into()))
       }
       #[inline]
-      fn items_stretch(self) -> Self::AddMember<ElementAttr<$renderer, align_items>> {
-         self.member(ElementAttr::new(AlignItems::Stretch.into()))
+      fn items_stretch(self) -> Self::AddMember<StaticElementAttr<$renderer, align_items>> {
+         self.member(StaticElementAttr::new(AlignItems::Stretch.into()))
       }
 
       #[inline]
@@ -199,30 +201,30 @@ macro_rules! impl_tailwind_attrs {
       }
 
       #[inline]
-      fn relative(self) -> Self::AddMember<ElementAttr<$renderer, position_type>> {
-         self.member(ElementAttr::new(PositionType::Relative.into()))
+      fn relative(self) -> Self::AddMember<StaticElementAttr<$renderer, position_type>> {
+         self.member(StaticElementAttr::new(PositionType::Relative.into()))
       }
       #[inline]
-      fn absolute(self) -> Self::AddMember<ElementAttr<$renderer, position_type>> {
-         self.member(ElementAttr::new(PositionType::Absolute.into()))
+      fn absolute(self) -> Self::AddMember<StaticElementAttr<$renderer, position_type>> {
+         self.member(StaticElementAttr::new(PositionType::Absolute.into()))
       }
       #[inline]
-      fn hidden(self) -> Self::AddMember<ElementAttr<$renderer, display>> {
-         self.member(ElementAttr::new(Display::None.into()))
-      }
-
-      #[inline]
-      fn flex_wrap_wrap(self) -> Self::AddMember<ElementAttr<$renderer, flex_wrap>> {
-         self.member(ElementAttr::new(FlexWrap::Wrap.into()))
+      fn hidden(self) -> Self::AddMember<StaticElementAttr<$renderer, display>> {
+         self.member(StaticElementAttr::new(Display::None.into()))
       }
 
       #[inline]
-      fn flex_wrap_reverse(self) -> Self::AddMember<ElementAttr<$renderer, flex_wrap>> {
-         self.member(ElementAttr::new(FlexWrap::WrapReverse.into()))
+      fn flex_wrap_wrap(self) -> Self::AddMember<StaticElementAttr<$renderer, flex_wrap>> {
+         self.member(StaticElementAttr::new(FlexWrap::Wrap.into()))
+      }
+
+      #[inline]
+      fn flex_wrap_reverse(self) -> Self::AddMember<StaticElementAttr<$renderer, flex_wrap>> {
+         self.member(StaticElementAttr::new(FlexWrap::WrapReverse.into()))
       }
       #[inline]
-      fn flex_nowrap(self) -> Self::AddMember<ElementAttr<$renderer, flex_wrap>> {
-         self.member(ElementAttr::new(FlexWrap::NoWrap.into()))
+      fn flex_nowrap(self) -> Self::AddMember<StaticElementAttr<$renderer, flex_wrap>> {
+         self.member(StaticElementAttr::new(FlexWrap::NoWrap.into()))
       }
 
       #[inline]
@@ -280,47 +282,47 @@ macro_rules! impl_tailwind_attrs {
       }
 
       #[inline]
-      fn w_screen(self) -> Self::AddMember<ElementAttr<$renderer, width>> {
-         self.member(ElementAttr::new(Val::Vw(100.).into()))
+      fn w_screen(self) -> Self::AddMember<StaticElementAttr<$renderer, width>> {
+         self.member(StaticElementAttr::new(Val::Vw(100.).into()))
       }
       #[inline]
-      fn h_screen(self) -> Self::AddMember<ElementAttr<$renderer, height>> {
-         self.member(ElementAttr::new(Val::Vh(100.).into()))
+      fn h_screen(self) -> Self::AddMember<StaticElementAttr<$renderer, height>> {
+         self.member(StaticElementAttr::new(Val::Vh(100.).into()))
       }
 
       #[inline]
       fn size_screen(
          self,
       ) -> Self::AddMember<(
-         ElementAttr<$renderer, width>,
-         ElementAttr<$renderer, height>,
+         StaticElementAttr<$renderer, width>,
+         StaticElementAttr<$renderer, height>,
       )> {
          self.member((
-            ElementAttr::new(Val::Vw(100.).into()),
-            ElementAttr::new(Val::Vh(100.).into()),
+            StaticElementAttr::new(Val::Vw(100.).into()),
+            StaticElementAttr::new(Val::Vh(100.).into()),
          ))
       }
 
       #[inline]
-      fn h_full(self) -> Self::AddMember<ElementAttr<$renderer, height>> {
-         self.member(ElementAttr::new(Val::Percent(100.).into()))
+      fn h_full(self) -> Self::AddMember<StaticElementAttr<$renderer, height>> {
+         self.member(StaticElementAttr::new(Val::Percent(100.).into()))
       }
 
       #[inline]
-      fn w_full(self) -> Self::AddMember<ElementAttr<$renderer, width>> {
-         self.member(ElementAttr::new(Val::Percent(100.).into()))
+      fn w_full(self) -> Self::AddMember<StaticElementAttr<$renderer, width>> {
+         self.member(StaticElementAttr::new(Val::Percent(100.).into()))
       }
 
       #[inline]
       fn size_full(
          self,
       ) -> Self::AddMember<(
-         ElementAttr<$renderer, width>,
-         ElementAttr<$renderer, height>,
+         StaticElementAttr<$renderer, width>,
+         StaticElementAttr<$renderer, height>,
       )> {
          self.member((
-            ElementAttr::new(Val::Percent(100.).into()),
-            ElementAttr::new(Val::Percent(100.).into()),
+            StaticElementAttr::new(Val::Percent(100.).into()),
+            StaticElementAttr::new(Val::Percent(100.).into()),
          ))
       }
 
@@ -345,12 +347,12 @@ macro_rules! impl_tailwind_attrs {
       fn center(
          self,
       ) -> Self::AddMember<(
-         ElementAttr<$renderer, align_items>,
-         ElementAttr<$renderer, justify_content>,
+         StaticElementAttr<$renderer, align_items>,
+         StaticElementAttr<$renderer, justify_content>,
       )> {
          self.member((
-            ElementAttr::new(AlignItems::Center.into()),
-            ElementAttr::new(JustifyContent::Center.into()),
+            StaticElementAttr::new(AlignItems::Center.into()),
+            StaticElementAttr::new(JustifyContent::Center.into()),
          ))
       }
 

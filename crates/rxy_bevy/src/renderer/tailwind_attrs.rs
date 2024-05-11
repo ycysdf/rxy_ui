@@ -1,7 +1,7 @@
 use bevy_render::view::Visibility;
 use bevy_text::{BreakLineOn, JustifyText};
 use bevy_ui::{AlignItems, Display, FlexDirection, FlexWrap, JustifyContent, PositionType, Val};
-use rxy_core::{impl_tailwind_attrs, impl_tailwind_attrs_use};
+use rxy_core::{impl_tailwind_attrs, impl_tailwind_attrs_use, StaticElementAttr};
 
 use crate::BevyRenderer;
 
