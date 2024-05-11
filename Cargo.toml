@@ -87,7 +87,7 @@ bevy_hierarchy = { git = "https://github.com/bevyengine/bevy.git", branch = "mai
 bevy_reflect = { git = "https://github.com/bevyengine/bevy.git", branch = "main", default-features = false }
 bevy_render = { git = "https://github.com/bevyengine/bevy.git", branch = "main" }
 bevy_sprite = { git = "https://github.com/bevyengine/bevy.git", branch = "main" }
-bevy_tasks = { git = "https://github.com/bevyengine/bevy.git", branch = "main", features = ["multi-threaded"], optional = false }
+bevy_tasks = { git = "https://github.com/bevyengine/bevy.git", branch = "main", features = ["multi_threaded"], optional = false }
 bevy_text = { git = "https://github.com/bevyengine/bevy.git", branch = "main", optional = false }
 bevy_transform = { git = "https://github.com/bevyengine/bevy.git", branch = "main", optional = false }
 bevy_ui = { git = "https://github.com/bevyengine/bevy.git", branch = "main", features = ["bevy_text"] }
@@ -240,7 +240,7 @@ bevy = { git = "https://github.com/bevyengine/bevy.git", branch = "main", featur
     #    "bevy_sprite",
     "bevy_text",
     "bevy_ui",
-    "multi-threaded", #    "png",  #    "hdr",  #    "vorbis",  #    "x11",  #    "bevy_gizmos",  #    "android_shared_stdcxx",  #    "tonemapping_luts",
+    "multi_threaded", #    "png",  #    "hdr",  #    "vorbis",  #    "x11",  #    "bevy_gizmos",  #    "android_shared_stdcxx",  #    "tonemapping_luts",
     "default_font", #    "webgl2",
 ] }
 #bevy-inspector-egui = "0.23"
