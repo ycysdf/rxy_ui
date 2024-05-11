@@ -478,6 +478,14 @@ const _: () = {
       fn reflect_partial_eq(&self, value: &dyn bevy_reflect::Reflect) -> Option<bool> {
          bevy_reflect::tuple_struct_partial_eq(self, value)
       }
+
+      fn try_apply(
+         &mut self,
+         value: &dyn bevy_reflect::Reflect,
+      ) -> Result<(), bevy_reflect::ApplyError> {
+         self.apply(value);
+         Ok(())
+      }
    }
    impl<R, VM> bevy_reflect::FromReflect for ElementViewKey<R, VM>
    where
