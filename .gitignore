@@ -8,3 +8,4 @@ Cargo.lock
 /.idea
 /.vscode
 /benches/target
+examples/foo.rs
