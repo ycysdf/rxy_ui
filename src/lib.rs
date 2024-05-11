@@ -37,4 +37,5 @@ pub mod palettes {
    pub use bevy_color::palettes::tailwind::*;
    pub use bevy_color::palettes::basic::*;
    pub use bevy_color::palettes::css::*;
+   pub use bevy_color::palettes::css::AQUA;
 }
