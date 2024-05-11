@@ -1,7 +1,7 @@
 use std::any::TypeId;
 use std::future::Future;
 
-use bevy_ecs::prelude::{Entity};
+use bevy_ecs::prelude::Entity;
 use bevy_ecs::world::World;
 
 pub use layout::*;
@@ -43,9 +43,9 @@ impl EcsRendererAssociated for NativeRenderer {
    cfg_if::cfg_if! {
        if #[cfg(feature = "tokio")] {
            type AssociatedTask<T: Send + 'static> = tokio::task::JoinHandle<T>;
-       } else if #[cfg(feature = "compio")] {
+       } /*else if #[cfg(feature = "compio")] {
            type AssociatedTask<T: Send + 'static> = compio::runtime::Task<T>;
-       } else {
+           } */else {
            compile_error!("No runtime feature enabled");
        }
    }
@@ -58,9 +58,9 @@ impl EcsRenderer for NativeRenderer {
       cfg_if::cfg_if! {
          if #[cfg(feature = "tokio")] {
              tokio::task::spawn(future)
-         } else if #[cfg(feature = "compio")] {
+         } /*else if #[cfg(feature = "compio")] {
              compio::runtime::spawn(future)
-         } else {
+             } */else {
              panic!("No runtime feature enabled")
          }
       }
@@ -86,7 +86,11 @@ impl EcsRenderer for NativeRenderer {
          .is_some_and(|n| *n == Visibility::Hidden)
    }
 
-   fn scoped_type_state<S: Send + Sync + Clone + 'static, U>(world: &World, type_id: TypeId, f: impl FnOnce(Option<&S>) -> U) -> U {
+   fn scoped_type_state<S: Send + Sync + Clone + 'static, U>(
+      world: &World,
+      type_id: TypeId,
+      f: impl FnOnce(Option<&S>) -> U,
+   ) -> U {
       {
          #[cfg(feature = "reflect")]
          f(world

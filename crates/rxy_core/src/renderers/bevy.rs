@@ -1,7 +1,4 @@
-use crate::{
-   impl_attr_value, impl_attr_value_and_wrapper, impl_x_value_wrappers, smallbox, AttrValue,
-   SmallBox, XValueWrapper, S1,
-};
+use crate::{impl_attr_value, impl_attr_value_and_wrapper, impl_x_value_wrappers, smallbox, AttrValue, SmallBox, XValueWrapper, S1, impl_schema_prop_value_wrapper_into};
 use bevy_asset::Handle;
 use bevy_color::*;
 

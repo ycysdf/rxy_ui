@@ -1,9 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::{
-   IntoElementView, IntoView, MaybeSend, MutableView, Renderer, RendererNodeId, RendererWorld,
-   SoloView, View, ViewCtx, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin,
-};
+use crate::{ElementView, IntoElementView, IntoView, MaybeSend, MutableView, Renderer, RendererNodeId, RendererWorld, SoloView, View, ViewCtx, ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin};
 
 #[derive(Clone)]
 pub struct XWorld<R, F>(pub F, PhantomData<R>);

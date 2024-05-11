@@ -163,6 +163,7 @@ where
       let new_items = self.items.into_iter();
 
       let (capacity, _) = new_items.size_hint();
+      // improve: alloc
       let mut new_data_keys = FxIndexSet::with_capacity_and_hasher(capacity, Default::default());
 
       let mut views = Vec::new();
