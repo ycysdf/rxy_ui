@@ -376,7 +376,7 @@ pub fn schema_common<'a, U>(
          }
       } else {
          quote! {
-             rxy_ui::struct_schema_view(<#schema_id as rxy_ui::RendererSchemaView<#renderer>>::view)
+             rxy_ui::struct_schema_view(<#schema_id as rxy_ui::SchemaView<#renderer>>::view)
                  #(#required_fn_params_set)*
          }
       }
