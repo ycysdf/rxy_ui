@@ -117,7 +117,7 @@ pub mod impl_attr {
    use crate::{
       ElementAttr, ElementAttrType, MapToAttrMarker, MapValueWrapper, MaybeSend, Renderer,
       ViewMember, ViewMemberCtx, ViewMemberIndex, ViewMemberOrigin, XNest, XNestMapper,
-      XValueWrapper,
+      XValueWrapper,/*StaticElementAttr*/
    };
 
    impl<R, EA> XNest for ElementAttr<R, EA>
@@ -190,6 +190,40 @@ pub mod impl_attr {
          ElementAttr::<R, EA>::new(self.0.into().0).rebuild(ctx);
       }
    }
+
+/*   impl<R, EA> XNest for StaticElementAttr<R, EA>
+   where
+      R: Renderer,
+      EA: ElementAttrType<R>,
+   {
+      type Inner = Self;
+      type MapInner<M> = Self;
+
+      fn map_inner<M>(self) -> Self::MapInner<M> {
+         self
+      }
+
+      fn is_static() -> bool {
+         true
+      }
+   }
+
+   impl<R, EA, U> XNestMapper<U> for StaticElementAttr<R, EA>
+   where
+      U: 'static,
+      R: Renderer,
+      EA: ElementAttrType<R>,
+   {
+      type MapInnerTo = U;
+
+      fn map_inner_to(
+         self,
+         f: impl FnOnce(Self::Inner) -> U + MaybeSend + Clone + 'static,
+      ) -> Self::MapInnerTo {
+         f(self)
+      }
+   }*/
+
 }
 
 #[cfg(feature = "style")]

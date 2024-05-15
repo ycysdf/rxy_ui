@@ -50,7 +50,7 @@ impl<'w, 's, IV> RxyViewSpawner<IV> for Commands<'w, 's>
 where
    IV: IntoView<BevyRenderer>,
 {
-   type Output = ();
+   type Output = oneshot::Receiver<<IV::View as View<BevyRenderer>>::Key>;
 
    fn spawn_view(
       &mut self,
@@ -63,10 +63,13 @@ where
       IV: IntoView<BevyRenderer>,
    {
       let view = into_view.into_view();
+      let (sender, receiver) = oneshot::channel();
       self.add(move |world: &mut World| {
          let parent = parent_f(world);
-         let _ = view.build(ViewCtx { world, parent }, None, false);
+         let view_key = view.build(ViewCtx { world, parent }, None, false);
+         let _ = sender.send(view_key);
       });
+      receiver
    }
 }
 
