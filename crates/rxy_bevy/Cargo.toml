@@ -12,6 +12,7 @@ rxy_core = { workspace = true, features = ["common_renderer", "async-channel", "
 xy_reactive = { workspace = true, optional = true, features = ["bevy"] }
 bevy_color = { workspace = true }
 rxy_bevy_ecs = { path = "../rxy_bevy_ecs" }
+bevy_async_x = { git = "https://github.com/ycysdf/bevy_async_x", branch = "main", optional = true }
 rxy_macro.workspace = true
 hooked_collection.workspace = true
 
@@ -54,6 +55,7 @@ oneshot.workspace = true
 [features]
 default = ["xy_reactive", "tailwind_aliases", "dynamic_element", "flexbox", "grid"]
 tailwind_aliases = []
+async_x = ["bevy_async_x"]
 dynamic_element = []
 style = ["rxy_core/style"]
 grid = []
