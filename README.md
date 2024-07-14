@@ -56,7 +56,7 @@ But you can specify git repository dependencies
 ```toml
 [dependencies]
 rxy_ui = {git = "https://github.com/ycysdf/rxy_ui", features = ["bevy"]}
-bevy = { git = "https://github.com/ycysdf/bevy", branch = "main" }
+bevy = { version = "0.14" }
 ```
 
 ## Examples
